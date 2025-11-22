@@ -3,12 +3,12 @@ spring:
     name: snackbar-backend
 
   config:
-    import: optional:file:./application-secrets.yml,optional:classpath:application-secrets.yml
+    import: optional:file:./application-secrets.yml
 
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:EXPERIMENTA_AI_DB}?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=America/Sao_Paulo
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:}
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 10
@@ -21,10 +21,10 @@ spring:
     show-sql: ${SHOW_SQL:false}
     properties:
       hibernate:
-        '[format_sql]': true
+        "[format_sql]": true
         # dialect removido - Hibernate detecta automaticamente baseado na URL do datasource
         jdbc:
-          '[time_zone]': America/Sao_Paulo
+          "[time_zone]": America/Sao_Paulo
 
   liquibase:
     enabled: true
@@ -40,9 +40,8 @@ server:
 
 logging:
   level:
-    '[com.snackbar]': ${LOG_LEVEL:DEBUG}
-    '[org.springframework.web]': INFO
-    '[org.hibernate.SQL]': ${SHOW_SQL:false}
-    '[org.hibernate.type.descriptor.sql.BasicBinder]': ${SHOW_SQL:false}
-    '[org.springframework.web.servlet.DispatcherServlet]': DEBUG
-
+    "[com.snackbar]": ${LOG_LEVEL:DEBUG}
+    "[org.springframework.web]": INFO
+    "[org.hibernate.SQL]": ${SHOW_SQL:false}
+    "[org.hibernate.type.descriptor.sql.BasicBinder]": ${SHOW_SQL:false}
+    "[org.springframework.web.servlet.DispatcherServlet]": DEBUG
