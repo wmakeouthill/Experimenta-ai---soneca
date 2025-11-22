@@ -20,6 +20,15 @@ export class HomeComponent {
       rota: '/cardapio',
       cor: 'primary',
       disponivel: true
+    },
+    {
+      id: 'pedidos',
+      nome: 'Gestão de Pedidos',
+      descricao: 'Gerenciar pedidos, fila de preparo e status',
+      icone: '📋',
+      rota: '/pedidos',
+      cor: 'success',
+      disponivel: true
     }
   ]);
 

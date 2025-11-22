@@ -10,6 +10,10 @@ export const routes: Routes = [
     loadComponent: () => import('./components/cardapio/cardapio.component').then(m => m.CardapioComponent)
   },
   {
+    path: 'pedidos',
+    loadComponent: () => import('./components/pedidos/pedidos.component').then(m => m.PedidosComponent)
+  },
+  {
     path: '**',
     redirectTo: ''
   }

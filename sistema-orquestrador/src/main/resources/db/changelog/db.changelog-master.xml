@@ -11,4 +11,10 @@
     <!-- Migration: Adiciona coluna foto na tabela produtos -->
     <include file="changes/002-add-foto-column-produtos.sql" relativeToChangelogFile="true"/>
 
+    <!-- Migration: Criação da tabela de clientes -->
+    <include file="changes/003-create-clientes-table.sql" relativeToChangelogFile="true"/>
+
+    <!-- Migration: Criação das tabelas de pedidos e itens_pedido -->
+    <include file="changes/004-create-pedidos-tables.sql" relativeToChangelogFile="true"/>
+
 </databaseChangeLog>

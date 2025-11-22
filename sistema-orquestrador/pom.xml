@@ -29,18 +29,18 @@
             <artifactId>gestao-cardapio</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <!-- Outros módulos serão adicionados conforme implementados -->
-        <!--
-        <dependency>
-            <groupId>com.snackbar</groupId>
-            <artifactId>gestao-pedidos</artifactId>
-            <version>${project.version}</version>
-        </dependency>
         <dependency>
             <groupId>com.snackbar</groupId>
             <artifactId>gestao-clientes</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.snackbar</groupId>
+            <artifactId>gestao-pedidos</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- Outros módulos serão adicionados conforme implementados -->
+        <!--
         <dependency>
             <groupId>com.snackbar</groupId>
             <artifactId>gestao-financeira</artifactId>

@@ -25,10 +25,10 @@
     <modules>
         <module>kernel-compartilhado</module>
         <module>gestao-cardapio</module>
+        <module>gestao-clientes</module>
+        <module>gestao-pedidos</module>
         <module>sistema-orquestrador</module>
         <!-- Módulos a serem implementados:
-        <module>gestao-pedidos</module>
-        <module>gestao-clientes</module>
         <module>gestao-financeira</module>
         <module>relatorios</module>
         <module>notas-fiscais</module>
