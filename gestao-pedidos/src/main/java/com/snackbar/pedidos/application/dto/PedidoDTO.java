@@ -1,5 +1,6 @@
 package com.snackbar.pedidos.application.dto;
 
+import com.snackbar.pedidos.domain.entities.MeioPagamento;
 import com.snackbar.pedidos.domain.entities.Pedido;
 import com.snackbar.pedidos.domain.entities.StatusPedido;
 import lombok.AllArgsConstructor;
@@ -25,6 +26,7 @@ public class PedidoDTO {
     private List<ItemPedidoDTO> itens;
     private BigDecimal valorTotal;
     private String observacoes;
+    private List<MeioPagamentoDTO> meiosPagamento;
     private String usuarioId;
     private LocalDateTime dataPedido;
     private LocalDateTime createdAt;
@@ -49,6 +51,9 @@ public class PedidoDTO {
                 .collect(Collectors.toList()))
             .valorTotal(pedido.getValorTotal().getAmount())
             .observacoes(pedido.getObservacoes())
+            .meiosPagamento(pedido.getMeiosPagamento().stream()
+                .map(MeioPagamentoDTO::de)
+                .collect(Collectors.toList()))
             .usuarioId(pedido.getUsuarioId())
             .dataPedido(pedido.getDataPedido())
             .createdAt(pedido.getCreatedAt())

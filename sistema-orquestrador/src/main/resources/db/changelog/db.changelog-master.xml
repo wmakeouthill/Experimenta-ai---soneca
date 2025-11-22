@@ -20,4 +20,13 @@
     <!-- Migration: Atualiza pedidos PENDENTE para PREPARANDO -->
     <include file="changes/005-update-pendente-to-preparando.sql" relativeToChangelogFile="true"/>
 
+    <!-- Migration: Adiciona coluna meio_pagamento na tabela pedidos -->
+    <include file="changes/006-add-meio-pagamento-pedidos.sql" relativeToChangelogFile="true"/>
+
+    <!-- Migration: Altera coluna foto de TEXT para LONGTEXT na tabela produtos -->
+    <include file="changes/007-alter-foto-column-produtos-longtext.sql" relativeToChangelogFile="true"/>
+
+    <!-- Migration: Criação da tabela meios_pagamento_pedido para múltiplos meios de pagamento -->
+    <include file="changes/008-create-meios-pagamento-pedido-table.sql" relativeToChangelogFile="true"/>
+
 </databaseChangeLog>

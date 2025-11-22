@@ -3,7 +3,7 @@ spring:
     name: snackbar-backend
 
   config:
-    import: optional:file:./application-secrets.yml
+    import: optional:classpath:application-secrets.yml
 
   datasource:
     url: ${DB_URL}

@@ -42,6 +42,17 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
   letter-spacing: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.home-logo {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .home-subtitulo {
@@ -173,6 +184,13 @@
 
   .home-titulo {
     font-size: 2.5rem;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .home-logo {
+    width: 90px;
+    height: 90px;
   }
 
   .home-modulos {

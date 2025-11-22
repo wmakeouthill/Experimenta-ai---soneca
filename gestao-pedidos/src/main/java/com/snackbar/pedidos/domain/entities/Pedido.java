@@ -19,12 +19,14 @@ public class Pedido extends BaseEntity {
     private List<ItemPedido> itens;
     private Preco valorTotal;
     private String observacoes;
+    private List<MeioPagamentoPedido> meiosPagamento;
     private String usuarioId; // Para futuro login
     private LocalDateTime dataPedido;
     
     private Pedido() {
         super();
         this.itens = new ArrayList<>();
+        this.meiosPagamento = new ArrayList<>();
         this.status = StatusPedido.PREPARANDO;
         this.dataPedido = LocalDateTime.now();
     }
@@ -85,6 +87,36 @@ public class Pedido extends BaseEntity {
         touch();
     }
     
+    public void adicionarMeioPagamento(MeioPagamentoPedido meioPagamentoPedido) {
+        if (meioPagamentoPedido == null) {
+            throw new ValidationException("Meio de pagamento não pode ser nulo");
+        }
+        if (status == StatusPedido.FINALIZADO || status == StatusPedido.CANCELADO) {
+            throw new ValidationException("Não é possível adicionar meios de pagamento a um pedido finalizado ou cancelado");
+        }
+        this.meiosPagamento.add(meioPagamentoPedido);
+        touch();
+    }
+    
+    public void removerMeioPagamento(int indice) {
+        if (indice < 0 || indice >= meiosPagamento.size()) {
+            throw new ValidationException("Índice do meio de pagamento inválido");
+        }
+        if (status == StatusPedido.FINALIZADO || status == StatusPedido.CANCELADO) {
+            throw new ValidationException("Não é possível remover meios de pagamento de um pedido finalizado ou cancelado");
+        }
+        meiosPagamento.remove(indice);
+        touch();
+    }
+    
+    public Preco calcularTotalMeiosPagamento() {
+        Preco total = Preco.zero();
+        for (MeioPagamentoPedido meioPagamento : meiosPagamento) {
+            total = total.add(meioPagamento.getValor());
+        }
+        return total;
+    }
+    
     public void cancelar() {
         if (status == StatusPedido.FINALIZADO) {
             throw new ValidationException("Não é possível cancelar um pedido finalizado");
@@ -129,6 +161,17 @@ public class Pedido extends BaseEntity {
             this.itens = new ArrayList<>(itensRestaurados);
         }
         recalcularValorTotal();
+    }
+    
+    /**
+     * Restaura meios de pagamento do banco de dados sem validações (usado pelos mappers).
+     */
+    public void restaurarMeiosPagamentoDoBanco(List<MeioPagamentoPedido> meiosPagamentoRestaurados) {
+        if (meiosPagamentoRestaurados == null) {
+            this.meiosPagamento = new ArrayList<>();
+        } else {
+            this.meiosPagamento = new ArrayList<>(meiosPagamentoRestaurados);
+        }
     }
     
     private static void validarDados(NumeroPedido numeroPedido, String clienteId, String clienteNome) {

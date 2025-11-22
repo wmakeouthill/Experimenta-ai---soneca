@@ -1,7 +1,10 @@
 <div class="pedidos-container">
   <header class="pedidos-header">
     <div class="pedidos-header-content">
-      <h1 class="pedidos-titulo">📋 Gestão de Pedidos</h1>
+      <h1 class="pedidos-titulo">
+        <img src="/assets/experimenta_ai_banner_circular.png" alt="Experimenta aí" class="pedidos-logo" />
+        Gestão de Pedidos
+      </h1>
       <div class="header-actions">
         <button class="btn-header btn-primary" (click)="abrirFormulario()">
           ➕ Novo Pedido
@@ -298,7 +301,7 @@
               </div>
             } @else {
               <div class="cliente-selecionado">
-                <div class="cliente-info">
+                <div class="cliente-info-linha">
                   <strong>{{ clienteSelecionado()!.nome }}</strong>
                   <span>{{ clienteSelecionado()!.telefone }}</span>
                 </div>
@@ -312,7 +315,17 @@
             <div class="formulario-secao">
               <div class="produtos-header">
                 <h3>Produtos</h3>
-                <div class="produtos-pesquisa">
+                <div class="produtos-filtros">
+                  <select
+                    class="filtro-categoria"
+                    [value]="categoriaFiltro() || ''"
+                    (change)="filtrarPorCategoria($any($event.target).value || null)"
+                  >
+                    <option value="">Todas as categorias</option>
+                    @for (categoria of categoriasUnicas(); track categoria) {
+                      <option [value]="categoria">{{ categoria }}</option>
+                    }
+                  </select>
                   <input
                     type="text"
                     class="input-pesquisa-produto"
@@ -372,22 +385,91 @@
               </div>
             }
 
-            <!-- Observações -->
+            <!-- Layout em 2 colunas: Observações e Meio de Pagamento -->
             <form [formGroup]="pedidoForm">
-              <div class="formulario-secao">
-                <h3>Observações</h3>
-                <textarea
-                  formControlName="observacoes"
-                  class="form-textarea"
-                  placeholder="Observações do pedido..."
-                  rows="3"
-                ></textarea>
+              <div class="formulario-colunas">
+                <div class="formulario-coluna">
+                  <div class="formulario-secao">
+                    <h3>Observações</h3>
+                    <textarea
+                      formControlName="observacoes"
+                      class="form-textarea"
+                      placeholder="Observações do pedido..."
+                      rows="3"
+                    ></textarea>
+                  </div>
+                </div>
+                <div class="formulario-coluna">
+                  <div class="formulario-secao">
+                    <h3>Meios de Pagamento <span class="obrigatorio">*</span></h3>
+                    <div class="meios-pagamento-container">
+                      <div class="meio-pagamento-input-group">
+                        <select
+                          class="form-input form-select"
+                          [value]="meioPagamentoSelecionado() || ''"
+                          (change)="meioPagamentoSelecionado.set($any($event.target).value || null); onMeioPagamentoSelecionado()"
+                        >
+                          <option value="">Selecione...</option>
+                          <option [value]="MeioPagamento.PIX">PIX</option>
+                          <option [value]="MeioPagamento.CARTAO_CREDITO">Cartão de Crédito</option>
+                          <option [value]="MeioPagamento.CARTAO_DEBITO">Cartão de Débito</option>
+                          <option [value]="MeioPagamento.VALE_REFEICAO">Vale Refeição</option>
+                          <option [value]="MeioPagamento.DINHEIRO">Dinheiro</option>
+                        </select>
+                        <input
+                          type="number"
+                          class="form-input input-valor-meio-pagamento"
+                          placeholder="Valor"
+                          step="0.01"
+                          min="0.01"
+                          [value]="valorMeioPagamento()"
+                          (input)="valorMeioPagamento.set(parseValorMeioPagamento($any($event.target).value))"
+                          [max]="valorRestante()"
+                        />
+                        <button
+                          type="button"
+                          class="btn-adicionar-meio-pagamento"
+                          (click)="adicionarMeioPagamento()"
+                          [disabled]="!meioPagamentoSelecionado() || valorMeioPagamento() <= 0 || valorMeioPagamento() > valorRestante()"
+                        >
+                          ➕
+                        </button>
+                      </div>
+                      <div class="valor-total-info">
+                        <span class="valor-label">Total: {{ formatarPreco(calcularTotal()) }}</span>
+                        <span class="valor-restante" [class.completo]="valorRestante() <= 0">
+                          Restante: {{ formatarPreco(valorRestante()) }}
+                        </span>
+                      </div>
+                      @if (meiosPagamento().length > 0) {
+                        <div class="meios-pagamento-lista">
+                          @for (meioPagamento of meiosPagamento(); track $index) {
+                            <div class="meio-pagamento-item">
+                              <span class="meio-pagamento-nome">{{ meioPagamento.meioPagamento }}</span>
+                              <span class="meio-pagamento-valor">{{ formatarPreco(meioPagamento.valor) }}</span>
+                              <button
+                                type="button"
+                                class="btn-remover-meio-pagamento"
+                                (click)="removerMeioPagamento($index)"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          }
+                        </div>
+                      }
+                      @if (meiosPagamento().length === 0) {
+                        <p class="meio-pagamento-hint">Adicione pelo menos um meio de pagamento</p>
+                      }
+                    </div>
+                  </div>
+                </div>
               </div>
             </form>
 
             <!-- Botão Criar Pedido -->
             <div class="formulario-acoes">
-              <button class="btn-primary btn-criar" (click)="criarPedido()" [disabled]="itensSelecionados().length === 0">
+              <button class="btn-primary btn-criar" (click)="criarPedido()" [disabled]="itensSelecionados().length === 0 || meiosPagamento().length === 0 || valorRestante() > 0.01">
                 Criar Pedido
               </button>
             </div>

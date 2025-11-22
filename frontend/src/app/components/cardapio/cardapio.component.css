@@ -28,6 +28,16 @@
   font-weight: 900;
   margin: 0;
   letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.cardapio-logo {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .header-actions {
@@ -555,6 +565,11 @@
 
   .cardapio-titulo {
     font-size: 1.75rem;
+  }
+
+  .cardapio-logo {
+    width: 55px;
+    height: 55px;
   }
 
   .header-actions {

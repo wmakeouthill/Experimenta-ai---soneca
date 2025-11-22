@@ -2,9 +2,11 @@ package com.snackbar.pedidos.infrastructure.mappers;
 
 import com.snackbar.cardapio.domain.valueobjects.Preco;
 import com.snackbar.pedidos.domain.entities.ItemPedido;
+import com.snackbar.pedidos.domain.entities.MeioPagamentoPedido;
 import com.snackbar.pedidos.domain.entities.Pedido;
 import com.snackbar.pedidos.domain.valueobjects.NumeroPedido;
 import com.snackbar.pedidos.infrastructure.persistence.ItemPedidoEntity;
+import com.snackbar.pedidos.infrastructure.persistence.MeioPagamentoPedidoEntity;
 import com.snackbar.pedidos.infrastructure.persistence.PedidoEntity;
 import org.springframework.stereotype.Component;
 
@@ -43,6 +45,17 @@ public class PedidoMapper {
         }
         entity.setItens(itensEntity);
         
+        List<MeioPagamentoPedidoEntity> meiosPagamentoEntity = new ArrayList<>();
+        for (MeioPagamentoPedido meioPagamentoPedido : pedido.getMeiosPagamento()) {
+            MeioPagamentoPedidoEntity meioPagamentoEntity = MeioPagamentoPedidoEntity.builder()
+                .pedido(entity)
+                .meioPagamento(meioPagamentoPedido.getMeioPagamento())
+                .valor(meioPagamentoPedido.getValor().getAmount())
+                .build();
+            meiosPagamentoEntity.add(meioPagamentoEntity);
+        }
+        entity.setMeiosPagamento(meiosPagamentoEntity);
+        
         return entity;
     }
     
@@ -77,7 +90,19 @@ public class PedidoMapper {
         }
         pedido.restaurarItensDoBanco(itensRestaurados);
         
-        // Atualizar status e observações DEPOIS de restaurar os itens
+        // Restaurar meios de pagamento do banco
+        List<MeioPagamentoPedido> meiosPagamentoRestaurados = new ArrayList<>();
+        for (MeioPagamentoPedidoEntity meioPagamentoEntity : entity.getMeiosPagamento()) {
+            Preco valor = Preco.of(meioPagamentoEntity.getValor());
+            MeioPagamentoPedido meioPagamentoPedido = MeioPagamentoPedido.criar(
+                meioPagamentoEntity.getMeioPagamento(),
+                valor
+            );
+            meiosPagamentoRestaurados.add(meioPagamentoPedido);
+        }
+        pedido.restaurarMeiosPagamentoDoBanco(meiosPagamentoRestaurados);
+        
+        // Atualizar status e observações DEPOIS de restaurar os itens e meios de pagamento
         pedido.atualizarStatus(entity.getStatus());
         pedido.atualizarObservacoes(entity.getObservacoes());
         

@@ -35,7 +35,7 @@ public class ProdutoEntity {
     @Column(nullable = false)
     private boolean disponivel;
     
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "LONGTEXT")
     private String foto; // Base64 string da imagem
     
     @Column(nullable = false)

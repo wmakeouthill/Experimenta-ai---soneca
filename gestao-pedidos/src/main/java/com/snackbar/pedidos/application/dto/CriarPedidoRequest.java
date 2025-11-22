@@ -24,6 +24,11 @@ public class CriarPedidoRequest {
     private List<ItemPedidoRequest> itens;
     
     private String observacoes;
+    
+    @NotEmpty(message = "Pedido deve ter pelo menos um meio de pagamento")
+    @Valid
+    private List<MeioPagamentoRequest> meiosPagamento;
+    
     private String usuarioId; // Opcional para futuro login
 }
 

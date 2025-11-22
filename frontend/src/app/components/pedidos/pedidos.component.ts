@@ -1,9 +1,9 @@
-import { Component, inject, PLATFORM_ID, OnInit, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, PLATFORM_ID, OnInit, signal, computed, effect, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { usePedidos } from './composables/use-pedidos';
-import { PedidoService, StatusPedido, CriarPedidoRequest, ItemPedidoRequest, Pedido } from '../../services/pedido.service';
+import { PedidoService, StatusPedido, CriarPedidoRequest, ItemPedidoRequest, Pedido, MeioPagamento, MeioPagamentoPedido } from '../../services/pedido.service';
 import { ClienteService, Cliente, CriarClienteRequest } from '../../services/cliente.service';
 import { Produto } from '../../services/produto.service';
 
@@ -40,13 +40,18 @@ export class PedidosComponent implements OnInit {
   readonly pesquisaTexto = this.pedidosComposable.pesquisaTexto;
   readonly produtos = this.pedidosComposable.produtos;
   readonly pesquisaProduto = signal<string>('');
+  readonly categoriaFiltro = signal<string | null>(null);
 
   // Modal/Formulário states
   readonly mostrarFormulario = signal(false);
   readonly clientes = signal<Cliente[]>([]);
   readonly clienteSelecionado = signal<Cliente | null>(null);
   readonly itensSelecionados = signal<ItemPedidoRequest[]>([]);
+  readonly meiosPagamento = signal<MeioPagamentoPedido[]>([]);
+  readonly meioPagamentoSelecionado = signal<MeioPagamento | null>(null);
+  readonly valorMeioPagamento = signal<number>(0);
   readonly StatusPedido = StatusPedido;
+  readonly MeioPagamento = MeioPagamento;
 
   // Menu de contexto
   readonly menuContexto = signal<{ pedidoId: string; x: number; y: number } | null>(null);
@@ -82,6 +87,26 @@ export class PedidosComponent implements OnInit {
           this.fecharMenuContexto();
         }
       });
+      
+      // Atualiza o valor do meio de pagamento quando o valor restante ou meio selecionado mudar
+      effect(() => {
+        const restante = this.valorRestante();
+        const meioSelecionado = this.meioPagamentoSelecionado();
+        const valorAtual = this.valorMeioPagamento();
+        
+        if (meioSelecionado && restante > 0) {
+          // Se o valor atual é 0 ou maior que o restante, atualiza para o restante
+          if (valorAtual === 0 || valorAtual > restante) {
+            setTimeout(() => {
+              this.valorMeioPagamento.set(restante);
+            }, 0);
+          }
+        } else if (restante <= 0) {
+          setTimeout(() => {
+            this.valorMeioPagamento.set(0);
+          }, 0);
+        }
+      }, { allowSignalWrites: true });
     }
   }
 
@@ -135,6 +160,11 @@ export class PedidosComponent implements OnInit {
     this.mostrarFormulario.set(true);
     this.clienteSelecionado.set(null);
     this.itensSelecionados.set([]);
+    this.meiosPagamento.set([]);
+    this.meioPagamentoSelecionado.set(null);
+    this.valorMeioPagamento.set(0);
+    this.pesquisaProduto.set('');
+    this.categoriaFiltro.set(null);
     this.clienteForm.reset();
     this.pedidoForm.reset();
   }
@@ -143,8 +173,74 @@ export class PedidosComponent implements OnInit {
     this.mostrarFormulario.set(false);
     this.clienteSelecionado.set(null);
     this.itensSelecionados.set([]);
+    this.meiosPagamento.set([]);
+    this.meioPagamentoSelecionado.set(null);
+    this.valorMeioPagamento.set(0);
     this.clienteForm.reset();
     this.pedidoForm.reset();
+  }
+  
+  onMeioPagamentoSelecionado(): void {
+    const valorRestante = this.valorRestante();
+    if (valorRestante > 0) {
+      this.valorMeioPagamento.set(valorRestante);
+    } else {
+      this.valorMeioPagamento.set(0);
+    }
+  }
+  
+  adicionarMeioPagamento(): void {
+    const meioPagamento = this.meioPagamentoSelecionado();
+    const valor = this.valorMeioPagamento();
+    
+    if (!meioPagamento) {
+      return;
+    }
+    
+    if (valor <= 0) {
+      if (this.isBrowser) {
+        alert('O valor deve ser maior que zero.');
+      }
+      return;
+    }
+    
+    const total = this.calcularTotal();
+    const totalJaAdicionado = this.calcularTotalMeiosPagamento();
+    const valorRestante = total - totalJaAdicionado;
+    
+    if (valor > valorRestante) {
+      if (this.isBrowser) {
+        alert(`O valor não pode ser maior que o restante (${this.formatarPreco(valorRestante)}).`);
+      }
+      return;
+    }
+    
+    const novoMeioPagamento: MeioPagamentoPedido = {
+      meioPagamento: meioPagamento,
+      valor: valor
+    };
+    
+    this.meiosPagamento.update(lista => [...lista, novoMeioPagamento]);
+    this.meioPagamentoSelecionado.set(null);
+    this.valorMeioPagamento.set(0);
+    // O effect vai atualizar automaticamente quando o valor restante mudar
+  }
+  
+  removerMeioPagamento(index: number): void {
+    this.meiosPagamento.update(lista => lista.filter((_, i) => i !== index));
+  }
+  
+  calcularTotalMeiosPagamento(): number {
+    return this.meiosPagamento().reduce((total, mp) => total + mp.valor, 0);
+  }
+  
+  valorRestante(): number {
+    return this.calcularTotal() - this.calcularTotalMeiosPagamento();
+  }
+
+  parseValorMeioPagamento(value: string): number {
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? 0 : parsed;
   }
 
   selecionarCliente(cliente: Cliente): void {
@@ -232,6 +328,8 @@ export class PedidosComponent implements OnInit {
     if (this.pedidoForm.value.observacoes && this.pedidoForm.value.observacoes.trim()) {
       request.observacoes = this.pedidoForm.value.observacoes.trim();
     }
+    
+    request.meiosPagamento = this.meiosPagamento();
 
     this.pedidoService.criar(request)
       .subscribe({
@@ -401,15 +499,39 @@ export class PedidosComponent implements OnInit {
   }
 
   produtosFiltrados(): Produto[] {
-    const texto = this.pesquisaProduto().toLowerCase().trim();
-    if (!texto) {
-      return this.produtos();
+    let produtos = this.produtos();
+    
+    // Filtro por categoria
+    const categoria = this.categoriaFiltro();
+    if (categoria) {
+      produtos = produtos.filter(p => p.categoria === categoria);
     }
-    return this.produtos().filter(p => 
-      p.nome.toLowerCase().includes(texto) ||
-      p.descricao?.toLowerCase().includes(texto) ||
-      p.categoria.toLowerCase().includes(texto)
-    );
+    
+    // Filtro por texto
+    const texto = this.pesquisaProduto().toLowerCase().trim();
+    if (texto) {
+      produtos = produtos.filter(p => 
+        p.nome.toLowerCase().includes(texto) ||
+        p.descricao?.toLowerCase().includes(texto) ||
+        p.categoria.toLowerCase().includes(texto)
+      );
+    }
+    
+    return produtos;
+  }
+  
+  categoriasUnicas(): string[] {
+    const categorias = new Set<string>();
+    this.produtos().forEach(p => {
+      if (p.categoria) {
+        categorias.add(p.categoria);
+      }
+    });
+    return Array.from(categorias).sort();
+  }
+  
+  filtrarPorCategoria(categoria: string | null): void {
+    this.categoriaFiltro.set(categoria);
   }
 
   pesquisarProduto(texto: string): void {

@@ -39,6 +39,10 @@ public class PedidoEntity {
     @Builder.Default
     private List<ItemPedidoEntity> itens = new ArrayList<>();
     
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<MeioPagamentoPedidoEntity> meiosPagamento = new ArrayList<>();
+    
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal valorTotal;
     

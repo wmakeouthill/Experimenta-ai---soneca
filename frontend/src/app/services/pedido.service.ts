@@ -19,6 +19,11 @@ export interface ItemPedido {
   observacoes?: string;
 }
 
+export interface MeioPagamentoDTO {
+  meioPagamento: MeioPagamento;
+  valor: number;
+}
+
 export interface Pedido {
   id: string;
   numeroPedido: string;
@@ -28,10 +33,24 @@ export interface Pedido {
   itens: ItemPedido[];
   valorTotal: number;
   observacoes?: string;
+  meiosPagamento?: MeioPagamentoDTO[];
   usuarioId?: string;
   dataPedido: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export enum MeioPagamento {
+  PIX = 'PIX',
+  CARTAO_CREDITO = 'CARTAO_CREDITO',
+  CARTAO_DEBITO = 'CARTAO_DEBITO',
+  VALE_REFEICAO = 'VALE_REFEICAO',
+  DINHEIRO = 'DINHEIRO'
+}
+
+export interface MeioPagamentoPedido {
+  meioPagamento: MeioPagamento;
+  valor: number;
 }
 
 export interface CriarPedidoRequest {
@@ -39,6 +58,7 @@ export interface CriarPedidoRequest {
   clienteNome: string;
   itens: ItemPedidoRequest[];
   observacoes?: string;
+  meiosPagamento: MeioPagamentoPedido[];
   usuarioId?: string;
 }
 
