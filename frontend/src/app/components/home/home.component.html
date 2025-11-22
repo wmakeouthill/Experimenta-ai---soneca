@@ -1,0 +1,23 @@
+<div class="home-container">
+  <div class="home-card">
+    <header class="home-header">
+      <h1 class="home-titulo">🍔 Experimenta aí</h1>
+      <p class="home-subtitulo">Sistema de Gestão para Lanchonetes</p>
+    </header>
+
+    <div class="home-modulos">
+      @for (modulo of modulosDisponiveis(); track modulo.id) {
+        <button
+          [class]="'modulo-card modulo-' + modulo.cor"
+          (click)="navegarParaModulo(modulo)"
+          [disabled]="!modulo.disponivel"
+        >
+          <div class="modulo-icone">{{ modulo.icone }}</div>
+          <h2 class="modulo-titulo">{{ modulo.nome }}</h2>
+          <p class="modulo-descricao">{{ modulo.descricao }}</p>
+        </button>
+      }
+    </div>
+  </div>
+</div>
+

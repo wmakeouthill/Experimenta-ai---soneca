@@ -1,0 +1,215 @@
+<div class="cardapio-container">
+  <header class="cardapio-header">
+    <div class="cardapio-header-content">
+      <h1 class="cardapio-titulo">🍔 Gestão de Cardápio</h1>
+      <div class="header-actions">
+        <button class="btn-header btn-primary" (click)="abrirModalCategoria()">
+          ➕ Nova Categoria
+        </button>
+        <button class="btn-header btn-primary" (click)="abrirModalProduto()">
+          ➕ Novo Produto
+        </button>
+        <button class="btn-voltar" routerLink="/" aria-label="Voltar para home">
+          ← Voltar
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="cardapio-layout">
+    <!-- Sidebar de Filtros -->
+    <aside class="sidebar-filtros">
+      <div class="filtros-container">
+        <h2 class="filtros-titulo">🔍 Filtros</h2>
+        
+        <!-- Busca -->
+        <div class="filtro-grupo">
+          <label class="filtro-label">Buscar</label>
+          <input
+            type="text"
+            class="filtro-input"
+            placeholder="Nome, descrição..."
+            [value]="pesquisaTexto()"
+            (input)="pesquisar($any($event.target).value)"
+          />
+        </div>
+
+        <!-- Filtro por Categoria -->
+        <div class="filtro-grupo">
+          <label class="filtro-label">Categoria</label>
+          <div class="filtro-opcoes">
+            <button
+              class="filtro-opcao"
+              [class.active]="categoriaSelecionada() === null"
+              (click)="filtrarPorCategoria(null)"
+            >
+              Todas
+            </button>
+            @for (categoria of categoriasAtivas(); track categoria.id) {
+              <button
+                class="filtro-opcao"
+                [class.active]="categoriaSelecionada() === categoria.nome"
+                (click)="filtrarPorCategoria(categoria.nome)"
+              >
+                {{ categoria.nome }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Filtro por Disponibilidade -->
+        <div class="filtro-grupo">
+          <label class="filtro-label">Status</label>
+          <div class="filtro-opcoes">
+            <button
+              class="filtro-opcao"
+              [class.active]="produtosComposable.disponivelFiltro() === null"
+              (click)="produtosComposable.filtrarPorDisponibilidade(null)"
+            >
+              Todos
+            </button>
+            <button
+              class="filtro-opcao"
+              [class.active]="produtosComposable.disponivelFiltro() === true"
+              (click)="produtosComposable.filtrarPorDisponibilidade(true)"
+            >
+              Disponível
+            </button>
+            <button
+              class="filtro-opcao"
+              [class.active]="produtosComposable.disponivelFiltro() === false"
+              (click)="produtosComposable.filtrarPorDisponibilidade(false)"
+            >
+              Indisponível
+            </button>
+          </div>
+        </div>
+
+        <button class="btn-limpar-filtros" (click)="limparFiltros()">
+          🗑️ Limpar Filtros
+        </button>
+      </div>
+    </aside>
+
+    <!-- Conteúdo Principal -->
+    <main class="cardapio-conteudo">
+      @if (estaCarregando()) {
+        <div class="estado-carregando">
+          <div class="spinner"></div>
+          <p>Carregando produtos...</p>
+        </div>
+      }
+
+      @if (estado() === 'erro') {
+        <div class="estado-erro">
+          <p class="erro-mensagem">{{ erro() }}</p>
+          <button class="btn-recarregar" (click)="recarregar()">
+            Tentar novamente
+          </button>
+        </div>
+      }
+
+      @if (estado() === 'sucesso') {
+        <!-- Informações de Resultado -->
+        <div class="resultado-info">
+          <p class="resultado-texto">
+            Mostrando {{ produtosPaginados().itens.length }} de {{ produtosPaginados().totalItens }} produtos
+          </p>
+        </div>
+
+        @if (produtosPaginados().totalItens === 0) {
+          <div class="estado-vazio">
+            <p class="vazio-mensagem">Nenhum produto encontrado.</p>
+            <button class="btn-primary" (click)="abrirModalProduto()">
+              ➕ Criar Primeiro Produto
+            </button>
+          </div>
+        } @else {
+          <!-- Grid de Produtos -->
+          <div class="produtos-grid">
+            @for (produto of produtosPaginados().itens; track produto.id) {
+              <article class="produto-card" [class.disponivel]="produto.disponivel">
+                @if (!produto.disponivel) {
+                  <span class="produto-badge indisponivel">Indisponível</span>
+                }
+                
+                @if (produto.foto) {
+                  <div class="produto-imagem-container">
+                    <img [src]="produto.foto" [alt]="produto.nome" class="produto-imagem" />
+                  </div>
+                } @else {
+                  <div class="produto-imagem-placeholder">
+                    <span class="placeholder-icon">📷</span>
+                  </div>
+                }
+                
+                <h3 class="produto-nome">{{ produto.nome }}</h3>
+                <p class="produto-categoria">{{ produto.categoria }}</p>
+                @if (produto.descricao) {
+                  <p class="produto-descricao">{{ produto.descricao }}</p>
+                }
+                <p class="produto-preco">R$ {{ produto.preco.toFixed(2).replace('.', ',') }}</p>
+                <div class="produto-acoes">
+                  <button class="btn-acao btn-editar" (click)="editarProduto(produto)">
+                    ✏️ Editar
+                  </button>
+                  <button class="btn-acao btn-excluir" (click)="excluirProduto(produto.id)">
+                    🗑️ Excluir
+                  </button>
+                </div>
+              </article>
+            }
+          </div>
+
+          <!-- Paginação -->
+          @if (produtosPaginados().totalPaginas > 1) {
+            <div class="paginacao">
+              <button
+                class="btn-paginacao"
+                [disabled]="produtosPaginados().paginaAtual === 1"
+                (click)="irParaPagina(produtosPaginados().paginaAtual - 1)"
+              >
+                ← Anterior
+              </button>
+              
+              <div class="paginacao-numeros">
+                @for (pagina of gerarNumerosPagina(); track pagina) {
+                  <button
+                    class="btn-pagina"
+                    [class.active]="pagina === produtosPaginados().paginaAtual"
+                    [class.disabled]="pagina === '...'"
+                    (click)="pagina !== '...' && irParaPagina(+pagina)"
+                  >
+                    {{ pagina }}
+                  </button>
+                }
+              </div>
+              
+              <button
+                class="btn-paginacao"
+                [disabled]="produtosPaginados().paginaAtual === produtosPaginados().totalPaginas"
+                (click)="irParaPagina(produtosPaginados().paginaAtual + 1)"
+              >
+                Próxima →
+              </button>
+            </div>
+          }
+        }
+      }
+    </main>
+  </div>
+
+  <!-- Modais -->
+  <app-produto-modal
+    [aberto]="mostrarModalProduto()"
+    [produto]="produtoEditando()"
+    (onFechar)="fecharModalProduto()"
+    (onSucesso)="onProdutoSalvo()"
+  />
+
+  <app-categoria-modal
+    [aberto]="mostrarModalCategoria()"
+    (onFechar)="fecharModalCategoria()"
+    (onSucesso)="onCategoriaSalva()"
+  />
+</div>
