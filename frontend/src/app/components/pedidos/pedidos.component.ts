@@ -3,7 +3,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { usePedidos } from './composables/use-pedidos';
-import { PedidoService, StatusPedido, CriarPedidoRequest, ItemPedidoRequest } from '../../services/pedido.service';
+import { PedidoService, StatusPedido, CriarPedidoRequest, ItemPedidoRequest, Pedido } from '../../services/pedido.service';
 import { ClienteService, Cliente, CriarClienteRequest } from '../../services/cliente.service';
 import { Produto } from '../../services/produto.service';
 
@@ -48,6 +48,9 @@ export class PedidosComponent implements OnInit {
   readonly itensSelecionados = signal<ItemPedidoRequest[]>([]);
   readonly StatusPedido = StatusPedido;
 
+  // Menu de contexto
+  readonly menuContexto = signal<{ pedidoId: string; x: number; y: number } | null>(null);
+
   // Formulários
   clienteForm: FormGroup;
   pedidoForm: FormGroup;
@@ -70,6 +73,15 @@ export class PedidosComponent implements OnInit {
   ngOnInit(): void {
     if (this.isBrowser) {
       this.carregarDados();
+      // Fecha menu de contexto ao clicar fora
+      document.addEventListener('click', () => this.fecharMenuContexto());
+      document.addEventListener('contextmenu', (e) => {
+        // Só fecha se não for no card de pedido
+        const target = e.target as HTMLElement;
+        if (!target.closest('.pedido-card')) {
+          this.fecharMenuContexto();
+        }
+      });
     }
   }
 
@@ -336,6 +348,56 @@ export class PedidosComponent implements OnInit {
 
   obterItemId(item: ItemPedidoRequest): string {
     return (item as any).itemId || item.produtoId;
+  }
+
+  // Menu de contexto
+  abrirMenuContexto(event: MouseEvent, pedidoId: string): void {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    this.menuContexto.set({
+      pedidoId,
+      x: event.clientX,
+      y: event.clientY
+    });
+  }
+
+  fecharMenuContexto(): void {
+    this.menuContexto.set(null);
+  }
+
+  obterStatusDisponiveis(statusAtual: StatusPedido): StatusPedido[] {
+    // Status disponíveis para mudança (exceto CANCELADO que não pode ser alterado)
+    const todosStatus = [
+      StatusPedido.PREPARANDO,
+      StatusPedido.PRONTO,
+      StatusPedido.FINALIZADO
+    ];
+    
+    // Retorna todos os status exceto o atual
+    return todosStatus.filter(s => s !== statusAtual);
+  }
+
+  obterNomeStatus(status: StatusPedido): string {
+    const nomes: Record<StatusPedido, string> = {
+      [StatusPedido.PREPARANDO]: 'Preparando',
+      [StatusPedido.PRONTO]: 'Pronto',
+      [StatusPedido.FINALIZADO]: 'Finalizado',
+      [StatusPedido.PENDENTE]: 'Pendente',
+      [StatusPedido.CANCELADO]: 'Cancelado'
+    };
+    return nomes[status] || status;
+  }
+
+  mudarStatusViaMenu(pedidoId: string, novoStatus: StatusPedido): void {
+    this.fecharMenuContexto();
+    this.atualizarStatus(pedidoId, novoStatus);
+  }
+
+  obterPedidoDoMenu(): Pedido | null {
+    const menu = this.menuContexto();
+    if (!menu) return null;
+    return this.pedidosFiltrados().find(p => p.id === menu.pedidoId) || null;
   }
 
   produtosFiltrados(): Produto[] {

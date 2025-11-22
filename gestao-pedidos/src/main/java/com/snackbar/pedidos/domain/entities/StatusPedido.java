@@ -18,10 +18,13 @@ public enum StatusPedido {
     }
     
     public boolean podeSerAtualizadoPara(StatusPedido novoStatus) {
-        if (this == CANCELADO || this == FINALIZADO) {
+        // Permite mudanças reversas para flexibilidade operacional
+        // Apenas CANCELADO não pode ser alterado (regra de negócio)
+        if (this == CANCELADO) {
             return false;
         }
         
+        // Permite todas as outras transições, incluindo voltar de FINALIZADO
         return true;
     }
 }
