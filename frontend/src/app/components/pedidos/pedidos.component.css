@@ -425,21 +425,27 @@
   box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
 }
 
-/* Lista de Pedidos */
+/* Lista de Pedidos - Grid com Largura Fixa */
 .pedidos-lista {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(400px);
+  gap: 0.8rem;
+  align-items: start;
+  justify-content: start;
 }
 
 .pedido-card {
   background: white;
   border: 2px solid #e0e0e0;
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 1.25rem;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: fit-content;
 }
 
 .pedido-card::before {
@@ -479,38 +485,46 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
+  gap: 0.75rem;
 }
 
 .pedido-info-principal {
   flex: 1;
+  min-width: 0;
 }
 
 .pedido-numero {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: #333;
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.35rem 0;
+  line-height: 1.2;
 }
 
 .pedido-cliente {
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: #666;
-  margin: 0 0 0.25rem 0;
+  margin: 0 0 0.2rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pedido-data {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #999;
   margin: 0;
 }
 
 .pedido-status-badge {
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-size: 0.85rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 16px;
+  font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .badge-pendente {
@@ -539,17 +553,19 @@
 }
 
 .pedido-itens {
-  margin-bottom: 1rem;
-  padding: 1rem;
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
   background: #f9f9f9;
   border-radius: 8px;
+  flex: 1;
+  min-height: 0;
 }
 
 .itens-titulo {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: #666;
-  margin: 0 0 0.75rem 0;
+  margin: 0 0 0.5rem 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -560,15 +576,16 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .item-lista {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.5rem 0;
+  padding: 0.4rem 0;
   border-bottom: 1px solid #e0e0e0;
+  gap: 0.5rem;
 }
 
 .item-lista:last-child {
@@ -578,47 +595,66 @@
 .item-quantidade {
   font-weight: 600;
   color: #4CAF50;
-  min-width: 40px;
+  min-width: 35px;
+  font-size: 0.85rem;
+  flex-shrink: 0;
 }
 
 .item-nome {
   flex: 1;
-  margin-left: 1rem;
+  margin-left: 0.5rem;
   color: #333;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .item-preco {
   font-weight: 600;
   color: #2e7d32;
+  font-size: 0.85rem;
+  flex-shrink: 0;
 }
 
 .pedido-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 1rem;
+  padding-top: 0.75rem;
   border-top: 2px solid #e0e0e0;
+  margin-top: auto;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .pedido-total {
-  font-size: 1.3rem;
+  font-size: 1.15rem;
   color: #2e7d32;
+  font-weight: 700;
+  flex-shrink: 0;
 }
 
 .pedido-acoes {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  flex: 1;
+  justify-content: flex-end;
 }
 
 .btn-acao {
-  padding: 0.5rem 1rem;
+  padding: 0.45rem 0.85rem;
   border: 2px solid;
   border-radius: 6px;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   background: white;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .btn-preparando {
@@ -1084,6 +1120,11 @@
   .status-cards {
     grid-template-columns: 1fr;
   }
+
+  .pedidos-lista {
+    grid-template-columns: repeat(auto-fill, 380px);
+    gap: 1rem;
+  }
 }
 
 @media (max-width: 768px) {
@@ -1123,9 +1164,19 @@
     padding: 1rem;
   }
 
+  .pedidos-lista {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .pedido-card {
+    max-width: 100%;
+  }
+
   .formulario-sidebar {
     width: 100%;
     max-width: 100vw;
   }
 }
+
 
