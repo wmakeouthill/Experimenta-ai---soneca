@@ -117,6 +117,20 @@ public class Pedido extends BaseEntity {
         restaurarTimestamps(createdAt, updatedAt);
     }
     
+    /**
+     * Restaura itens do banco de dados sem validações (usado pelos mappers).
+     * Este método é usado quando estamos apenas restaurando dados existentes,
+     * não adicionando novos itens, então não precisa validar status.
+     */
+    public void restaurarItensDoBanco(List<ItemPedido> itensRestaurados) {
+        if (itensRestaurados == null) {
+            this.itens = new ArrayList<>();
+        } else {
+            this.itens = new ArrayList<>(itensRestaurados);
+        }
+        recalcularValorTotal();
+    }
+    
     private static void validarDados(NumeroPedido numeroPedido, String clienteId, String clienteNome) {
         if (numeroPedido == null) {
             throw new ValidationException("Número do pedido não pode ser nulo");

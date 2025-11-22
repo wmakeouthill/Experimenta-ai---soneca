@@ -1,4 +1,4 @@
-import { Component, inject, PLATFORM_ID, OnInit, signal, computed } from '@angular/core';
+import { Component, inject, PLATFORM_ID, OnInit, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -17,7 +17,8 @@ import { Produto } from '../../services/produto.service';
     ReactiveFormsModule
   ],
   templateUrl: './pedidos.component.html',
-  styleUrl: './pedidos.component.css'
+  styleUrl: './pedidos.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PedidosComponent implements OnInit {
   private readonly platformId = inject(PLATFORM_ID);
@@ -222,8 +223,13 @@ export class PedidosComponent implements OnInit {
 
     this.pedidoService.criar(request)
       .subscribe({
-        next: () => {
-          this.carregarDados();
+        next: (pedidoCriado) => {
+          // Atualiza o signal imediatamente para atualizar contadores em tempo real
+          this.pedidosComposable.atualizarPedidoNoSignal(pedidoCriado);
+          // Recarrega todos os pedidos de forma assíncrona para garantir sincronização
+          setTimeout(() => {
+            this.pedidosComposable.carregarPedidos();
+          }, 0);
           this.fecharFormulario();
         },
         error: (error) => {
@@ -251,13 +257,32 @@ export class PedidosComponent implements OnInit {
   atualizarStatus(pedidoId: string, novoStatus: StatusPedido): void {
     this.pedidoService.atualizarStatus(pedidoId, novoStatus)
       .subscribe({
-        next: () => {
-          this.carregarDados();
+        next: (pedidoAtualizado) => {
+          // Atualiza o pedido no signal imediatamente para atualizar os contadores em tempo real
+          this.pedidosComposable.atualizarPedidoNoSignal(pedidoAtualizado);
+          // Recarrega todos os pedidos de forma assíncrona para garantir sincronização completa
+          // Usa setTimeout para garantir que a atualização imediata seja processada primeiro
+          setTimeout(() => {
+            this.pedidosComposable.carregarPedidos();
+          }, 0);
         },
         error: (error) => {
           console.error('Erro ao atualizar status:', error);
+          let mensagem = 'Erro ao atualizar status. Tente novamente.';
+          
+          if (error.error) {
+            if (error.error.message) {
+              mensagem = error.error.message;
+            } else if (error.error.errors) {
+              const erros = Object.values(error.error.errors).join(', ');
+              mensagem = `Erro de validação: ${erros}`;
+            }
+          } else if (error.message) {
+            mensagem = error.message;
+          }
+          
           if (this.isBrowser) {
-            alert('Erro ao atualizar status. Tente novamente.');
+            alert(mensagem);
           }
         }
       });
@@ -270,8 +295,13 @@ export class PedidosComponent implements OnInit {
 
     this.pedidoService.cancelar(pedidoId)
       .subscribe({
-        next: () => {
-          this.carregarDados();
+        next: (pedidoCancelado) => {
+          // Atualiza o signal imediatamente para atualizar contadores em tempo real
+          this.pedidosComposable.atualizarPedidoNoSignal(pedidoCancelado);
+          // Recarrega todos os pedidos de forma assíncrona para garantir sincronização
+          setTimeout(() => {
+            this.pedidosComposable.carregarPedidos();
+          }, 0);
         },
         error: (error) => {
           console.error('Erro ao cancelar pedido:', error);

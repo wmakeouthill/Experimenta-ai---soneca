@@ -62,9 +62,8 @@ public class PedidoMapper {
             entity.getUpdatedAt()
         );
         
-        pedido.atualizarStatus(entity.getStatus());
-        pedido.atualizarObservacoes(entity.getObservacoes());
-        
+        // Restaurar itens do banco SEM validações (não estamos adicionando, apenas restaurando)
+        List<ItemPedido> itensRestaurados = new ArrayList<>();
         for (ItemPedidoEntity itemEntity : entity.getItens()) {
             Preco precoUnitario = Preco.of(itemEntity.getPrecoUnitario());
             ItemPedido item = ItemPedido.criar(
@@ -74,8 +73,13 @@ public class PedidoMapper {
                 precoUnitario,
                 itemEntity.getObservacoes()
             );
-            pedido.adicionarItem(item);
+            itensRestaurados.add(item);
         }
+        pedido.restaurarItensDoBanco(itensRestaurados);
+        
+        // Atualizar status e observações DEPOIS de restaurar os itens
+        pedido.atualizarStatus(entity.getStatus());
+        pedido.atualizarObservacoes(entity.getObservacoes());
         
         return pedido;
     }

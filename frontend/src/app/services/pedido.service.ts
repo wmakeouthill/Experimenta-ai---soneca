@@ -65,21 +65,26 @@ export class PedidoService {
     dataInicio?: string;
     dataFim?: string;
   }): Observable<Pedido[]> {
+    // Se não há filtros, faz requisição sem parâmetros
+    if (!filters || Object.keys(filters).length === 0) {
+      return this.http.get<Pedido[]>(this.apiUrl);
+    }
+    
     let params = new HttpParams();
     
-    if (filters?.status) {
+    if (filters.status) {
       params = params.set('status', filters.status);
     }
     
-    if (filters?.clienteId) {
+    if (filters.clienteId) {
       params = params.set('clienteId', filters.clienteId);
     }
     
-    if (filters?.dataInicio) {
+    if (filters.dataInicio) {
       params = params.set('dataInicio', filters.dataInicio);
     }
     
-    if (filters?.dataFim) {
+    if (filters.dataFim) {
       params = params.set('dataFim', filters.dataFim);
     }
     

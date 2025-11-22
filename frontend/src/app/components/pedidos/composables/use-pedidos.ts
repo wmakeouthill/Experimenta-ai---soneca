@@ -60,10 +60,9 @@ export function usePedidos() {
     estado.set('carregando');
     erro.set(null);
 
-    // Se não há filtros, usa o status selecionado por padrão
-    const filtrosParaEnviar = filters || { status: statusSelecionado() };
-
-    pedidoService.listar(filtrosParaEnviar)
+    // Sempre carrega TODOS os pedidos (sem filtro) para que os contadores funcionem
+    // O filtro é aplicado pelo computed pedidosFiltrados
+    pedidoService.listar()
       .pipe(
         catchError((error) => {
           const mensagem = error.error?.message || error.message || 'Erro ao carregar pedidos';
@@ -98,8 +97,7 @@ export function usePedidos() {
 
   const filtrarPorStatus = (status: StatusPedido) => {
     statusSelecionado.set(status);
-    // Recarrega pedidos com o novo status
-    carregarPedidos({ status });
+    // Não precisa recarregar, o computed pedidosFiltrados já filtra automaticamente
   };
 
   const pesquisar = (texto: string) => {
@@ -109,6 +107,46 @@ export function usePedidos() {
   const limparFiltros = () => {
     // Não limpa o status, apenas a pesquisa (sempre mantém um status selecionado)
     pesquisaTexto.set('');
+  };
+
+  const atualizarPedidoNoSignal = (pedidoAtualizado: Pedido) => {
+    // Sempre cria uma nova referência para garantir detecção de mudança
+    pedidos.update(lista => {
+      const index = lista.findIndex(p => p.id === pedidoAtualizado.id);
+      if (index >= 0) {
+        // Atualiza o pedido existente - cria nova array e novo objeto
+        const novaLista = [...lista];
+        novaLista[index] = { ...pedidoAtualizado }; // Garante novo objeto
+        return novaLista;
+      } else {
+        // Se não encontrou, adiciona (novo pedido ou mudou de status)
+        return [...lista, { ...pedidoAtualizado }]; // Garante novo objeto
+      }
+    });
+  };
+
+  const carregarTodosPedidos = () => {
+    estado.set('carregando');
+    erro.set(null);
+
+    pedidoService.listar()
+      .pipe(
+        catchError((error) => {
+          const mensagem = error.error?.message || error.message || 'Erro ao carregar pedidos';
+          erro.set(mensagem);
+          estado.set('erro');
+          console.error('Erro ao carregar pedidos:', error);
+          return of([]);
+        }),
+        finalize(() => {
+          if (estado() === 'carregando') {
+            estado.set('sucesso');
+          }
+        })
+      )
+      .subscribe((resultado) => {
+        pedidos.set(resultado);
+      });
   };
 
   return {
@@ -128,10 +166,12 @@ export function usePedidos() {
 
     // Métodos
     carregarPedidos,
+    carregarTodosPedidos,
     carregarProdutos,
     filtrarPorStatus,
     pesquisar,
-    limparFiltros
+    limparFiltros,
+    atualizarPedidoNoSignal
   };
 }
 
