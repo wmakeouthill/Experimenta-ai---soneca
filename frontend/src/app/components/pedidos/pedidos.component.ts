@@ -38,6 +38,7 @@ export class PedidosComponent implements OnInit {
   readonly temPedidos = this.pedidosComposable.temPedidos;
   readonly pesquisaTexto = this.pedidosComposable.pesquisaTexto;
   readonly produtos = this.pedidosComposable.produtos;
+  readonly pesquisaProduto = signal<string>('');
 
   // Modal/Formulário states
   readonly mostrarFormulario = signal(false);
@@ -85,15 +86,23 @@ export class PedidosComponent implements OnInit {
       });
   }
 
-  buscarClientesPorTelefone(telefone: string): void {
-    if (telefone && telefone.trim().length >= 3) {
-      this.carregarClientes(telefone.trim());
+  buscarClientes(texto: string): void {
+    if (texto && texto.trim().length >= 2) {
+      const textoLimpo = texto.trim();
+      // Tenta buscar por telefone primeiro, depois por nome
+      if (/^\d/.test(textoLimpo)) {
+        // Se começa com número, busca por telefone
+        this.carregarClientes(textoLimpo, undefined);
+      } else {
+        // Se começa com letra, busca por nome
+        this.carregarClientes(undefined, textoLimpo);
+      }
     } else {
       this.carregarClientes();
     }
   }
 
-  filtrarPorStatus(status: StatusPedido | null): void {
+  filtrarPorStatus(status: StatusPedido): void {
     this.pedidosComposable.filtrarPorStatus(status);
   }
 
@@ -191,13 +200,25 @@ export class PedidosComponent implements OnInit {
       return;
     }
 
-    const request: CriarPedidoRequest = {
+    // Prepara request removendo campos vazios/undefined
+    const request: any = {
       clienteId: this.clienteSelecionado()!.id,
       clienteNome: this.clienteSelecionado()!.nome,
-      itens: this.itensSelecionados(),
-      observacoes: this.pedidoForm.value.observacoes,
-      usuarioId: undefined // TODO: pegar do login futuro
+      itens: this.itensSelecionados().map(item => {
+        const itemRequest: any = {
+          produtoId: item.produtoId,
+          quantidade: item.quantidade
+        };
+        if (item.observacoes && item.observacoes.trim()) {
+          itemRequest.observacoes = item.observacoes.trim();
+        }
+        return itemRequest;
+      })
     };
+    
+    if (this.pedidoForm.value.observacoes && this.pedidoForm.value.observacoes.trim()) {
+      request.observacoes = this.pedidoForm.value.observacoes.trim();
+    }
 
     this.pedidoService.criar(request)
       .subscribe({
@@ -207,8 +228,21 @@ export class PedidosComponent implements OnInit {
         },
         error: (error) => {
           console.error('Erro ao criar pedido:', error);
+          let mensagem = 'Erro ao criar pedido. Verifique se todos os campos estão preenchidos corretamente.';
+          
+          if (error.error) {
+            if (error.error.message) {
+              mensagem = error.error.message;
+            } else if (error.error.errors) {
+              const erros = Object.values(error.error.errors).join(', ');
+              mensagem = `Erro de validação: ${erros}`;
+            }
+          } else if (error.message) {
+            mensagem = error.message;
+          }
+          
           if (this.isBrowser) {
-            alert('Erro ao criar pedido. Tente novamente.');
+            alert(mensagem);
           }
         }
       });
@@ -272,6 +306,22 @@ export class PedidosComponent implements OnInit {
 
   obterItemId(item: ItemPedidoRequest): string {
     return (item as any).itemId || item.produtoId;
+  }
+
+  produtosFiltrados(): Produto[] {
+    const texto = this.pesquisaProduto().toLowerCase().trim();
+    if (!texto) {
+      return this.produtos();
+    }
+    return this.produtos().filter(p => 
+      p.nome.toLowerCase().includes(texto) ||
+      p.descricao?.toLowerCase().includes(texto) ||
+      p.categoria.toLowerCase().includes(texto)
+    );
+  }
+
+  pesquisarProduto(texto: string): void {
+    this.pesquisaProduto.set(texto);
   }
 
   formatarData(data: string): string {

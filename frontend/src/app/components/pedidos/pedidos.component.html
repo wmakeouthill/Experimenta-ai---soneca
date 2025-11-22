@@ -37,13 +37,6 @@
           <div class="filtro-opcoes">
             <button
               class="filtro-opcao"
-              [class.active]="pedidosComposable.statusSelecionado() === null"
-              (click)="filtrarPorStatus(null)"
-            >
-              Todos
-            </button>
-            <button
-              class="filtro-opcao"
               [class.active]="pedidosComposable.statusSelecionado() === StatusPedido.PREPARANDO"
               (click)="filtrarPorStatus(StatusPedido.PREPARANDO)"
             >
@@ -93,24 +86,36 @@
       @if (estado() === 'sucesso') {
         <!-- Cards de Status Horizontais -->
         <div class="status-cards">
-          <div class="status-card preparando">
+          <button 
+            class="status-card preparando"
+            [class.selected]="pedidosComposable.statusSelecionado() === StatusPedido.PREPARANDO"
+            (click)="filtrarPorStatus(StatusPedido.PREPARANDO)"
+          >
             <div class="status-card-header">
               <h3>🔄 Preparando</h3>
               <span class="status-count">{{ pedidosPorStatus().preparando.length }}</span>
             </div>
-          </div>
-          <div class="status-card pronto">
+          </button>
+          <button 
+            class="status-card pronto"
+            [class.selected]="pedidosComposable.statusSelecionado() === StatusPedido.PRONTO"
+            (click)="filtrarPorStatus(StatusPedido.PRONTO)"
+          >
             <div class="status-card-header">
               <h3>✅ Pronto</h3>
               <span class="status-count">{{ pedidosPorStatus().pronto.length }}</span>
             </div>
-          </div>
-          <div class="status-card finalizado">
+          </button>
+          <button 
+            class="status-card finalizado"
+            [class.selected]="pedidosComposable.statusSelecionado() === StatusPedido.FINALIZADO"
+            (click)="filtrarPorStatus(StatusPedido.FINALIZADO)"
+          >
             <div class="status-card-header">
               <h3>✔️ Finalizado (Hoje)</h3>
               <span class="status-count">{{ pedidosPorStatus().finalizado.length }}</span>
             </div>
-          </div>
+          </button>
         </div>
 
         <!-- Informações de Resultado -->
@@ -161,11 +166,6 @@
                     <strong>Total: {{ formatarPreco(pedido.valorTotal) }}</strong>
                   </div>
                   <div class="pedido-acoes">
-                    @if (pedido.status === StatusPedido.PENDENTE) {
-                      <button class="btn-acao btn-preparando" (click)="atualizarStatus(pedido.id, StatusPedido.PREPARANDO)">
-                        Iniciar Preparo
-                      </button>
-                    }
                     @if (pedido.status === StatusPedido.PREPARANDO) {
                       <button class="btn-acao btn-pronto" (click)="atualizarStatus(pedido.id, StatusPedido.PRONTO)">
                         Marcar como Pronto
@@ -211,9 +211,9 @@
                   <input
                     type="text"
                     class="input-busca"
-                    placeholder="Buscar cliente por telefone..."
+                    placeholder="Buscar cliente por nome ou telefone..."
                     #buscaCliente
-                    (input)="buscarClientesPorTelefone($any($event.target).value)"
+                    (input)="buscarClientes($any($event.target).value)"
                   />
                 </div>
                 
@@ -244,7 +244,7 @@
                       <input type="email" formControlName="email" class="form-input" />
                     </div>
                     <div class="form-group">
-                      <label>CPF</label>
+                      <label>CPF (Opcional)</label>
                       <input type="text" formControlName="cpf" class="form-input" />
                     </div>
                     <button type="submit" class="btn-primary" [disabled]="clienteForm.invalid">
@@ -267,13 +267,36 @@
           <!-- Seleção de Produtos -->
           @if (clienteSelecionado()) {
             <div class="formulario-secao">
-              <h3>Produtos</h3>
+              <div class="produtos-header">
+                <h3>Produtos</h3>
+                <div class="produtos-pesquisa">
+                  <input
+                    type="text"
+                    class="input-pesquisa-produto"
+                    placeholder="🔍 Pesquisar produto..."
+                    [value]="pesquisaProduto()"
+                    (input)="pesquisarProduto($any($event.target).value)"
+                  />
+                </div>
+              </div>
               <div class="produtos-grid-form">
-                @for (produto of produtos(); track produto.id) {
+                @for (produto of produtosFiltrados(); track produto.id) {
                   <button class="produto-item-form" (click)="adicionarItem(produto)">
-                    <span class="produto-nome-form">{{ produto.nome }}</span>
-                    <span class="produto-preco-form">{{ formatarPreco(produto.preco) }}</span>
+                    @if (produto.foto) {
+                      <img [src]="produto.foto" [alt]="produto.nome" class="produto-foto-mini" />
+                    } @else {
+                      <div class="produto-foto-placeholder-mini">📷</div>
+                    }
+                    <div class="produto-info-form">
+                      <span class="produto-nome-form">{{ produto.nome }}</span>
+                      <span class="produto-preco-form">{{ formatarPreco(produto.preco) }}</span>
+                    </div>
                   </button>
+                }
+                @if (produtosFiltrados().length === 0 && pesquisaProduto().trim()) {
+                  <div class="produto-sem-resultado">
+                    <p>Nenhum produto encontrado para "{{ pesquisaProduto() }}"</p>
+                  </div>
                 }
               </div>
             </div>

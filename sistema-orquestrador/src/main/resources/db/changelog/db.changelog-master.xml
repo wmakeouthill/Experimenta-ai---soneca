@@ -17,4 +17,7 @@
     <!-- Migration: Criação das tabelas de pedidos e itens_pedido -->
     <include file="changes/004-create-pedidos-tables.sql" relativeToChangelogFile="true"/>
 
+    <!-- Migration: Atualiza pedidos PENDENTE para PREPARANDO -->
+    <include file="changes/005-update-pendente-to-preparando.sql" relativeToChangelogFile="true"/>
+
 </databaseChangeLog>

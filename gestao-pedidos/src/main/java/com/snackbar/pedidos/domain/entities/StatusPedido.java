@@ -22,10 +22,6 @@ public enum StatusPedido {
             return false;
         }
         
-        if (novoStatus == PENDENTE) {
-            return false;
-        }
-        
         return true;
     }
 }

@@ -16,18 +16,16 @@ export function usePedidos() {
   const estado = signal<EstadoCarregamento>('idle');
   const erro = signal<string | null>(null);
 
-  // Filtros
-  const statusSelecionado = signal<StatusPedido | null>(null);
+  // Filtros - sempre inicia com PREPARANDO selecionado
+  const statusSelecionado = signal<StatusPedido>(StatusPedido.PREPARANDO);
   const pesquisaTexto = signal<string>('');
 
   // Computed
   const pedidosFiltrados = computed(() => {
     let resultado = [...pedidos()];
 
-    // Filtro por status
-    if (statusSelecionado()) {
-      resultado = resultado.filter(p => p.status === statusSelecionado());
-    }
+    // Filtro por status (sempre filtra, pois sempre tem um status selecionado)
+    resultado = resultado.filter(p => p.status === statusSelecionado());
 
     // Filtro por texto (busca em número do pedido, nome do cliente)
     if (pesquisaTexto().trim()) {
@@ -62,7 +60,10 @@ export function usePedidos() {
     estado.set('carregando');
     erro.set(null);
 
-    pedidoService.listar(filters)
+    // Se não há filtros, usa o status selecionado por padrão
+    const filtrosParaEnviar = filters || { status: statusSelecionado() };
+
+    pedidoService.listar(filtrosParaEnviar)
       .pipe(
         catchError((error) => {
           const mensagem = error.error?.message || error.message || 'Erro ao carregar pedidos';
@@ -95,8 +96,10 @@ export function usePedidos() {
       });
   };
 
-  const filtrarPorStatus = (status: StatusPedido | null) => {
+  const filtrarPorStatus = (status: StatusPedido) => {
     statusSelecionado.set(status);
+    // Recarrega pedidos com o novo status
+    carregarPedidos({ status });
   };
 
   const pesquisar = (texto: string) => {
@@ -104,7 +107,7 @@ export function usePedidos() {
   };
 
   const limparFiltros = () => {
-    statusSelecionado.set(null);
+    // Não limpa o status, apenas a pesquisa (sempre mantém um status selecionado)
     pesquisaTexto.set('');
   };
 

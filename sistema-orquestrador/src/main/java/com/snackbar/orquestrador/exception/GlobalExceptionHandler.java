@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.beans.TypeMismatchException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -67,6 +68,26 @@ public class GlobalExceptionHandler {
             "Dados inválidos fornecidos"
         );
         body.put("errors", errors);
+        
+        return ResponseEntity.badRequest().body(body);
+    }
+    
+    @ExceptionHandler(TypeMismatchException.class)
+    public ResponseEntity<Map<String, Object>> handleTypeMismatchException(TypeMismatchException ex) {
+        String mensagem = String.format(
+            "Valor inválido para o parâmetro '%s'. Esperado: %s, recebido: %s",
+            ex.getPropertyName(),
+            ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "tipo desconhecido",
+            ex.getValue() != null ? ex.getValue().toString() : "null"
+        );
+        
+        Map<String, Object> body = criarRespostaErro(
+            HttpStatus.BAD_REQUEST.value(),
+            "Erro de Conversão de Tipo",
+            mensagem
+        );
+        
+        logger.warn("Erro de conversão de tipo: {}", mensagem);
         
         return ResponseEntity.badRequest().body(body);
     }
