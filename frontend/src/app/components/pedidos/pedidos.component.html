@@ -165,6 +165,13 @@
                   </ul>
                 </div>
 
+                @if (pedido.observacoes && pedido.observacoes.trim()) {
+                  <div class="pedido-observacoes">
+                    <strong class="observacoes-titulo">Observações:</strong>
+                    <p class="observacoes-texto">{{ pedido.observacoes }}</p>
+                  </div>
+                }
+
                 <div class="pedido-footer">
                   <div class="pedido-total">
                     <strong>Total: {{ formatarPreco(pedido.valorTotal) }}</strong>

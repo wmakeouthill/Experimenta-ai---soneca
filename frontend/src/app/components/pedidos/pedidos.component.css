@@ -428,9 +428,9 @@
 /* Lista de Pedidos - Grid com Largura Fixa */
 .pedidos-lista {
   display: grid;
-  grid-template-columns: repeat(400px);
-  gap: 0.8rem;
-  align-items: start;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 1.5rem;
+  align-items: stretch; /* Estica os cards para preencher a altura da linha */
   justify-content: start;
 }
 
@@ -444,8 +444,8 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  min-height: fit-content;
+  width: 100%;
+  height: 100%; /* Preenche toda a altura da célula do grid */
 }
 
 .pedido-card::before {
@@ -598,6 +598,30 @@
   min-width: 35px;
   font-size: 0.85rem;
   flex-shrink: 0;
+}
+
+.pedido-observacoes {
+  margin: 0.8rem 0;
+  padding: 0.8rem;
+  background: #fff9e6;
+  border-left: 3px solid #ff9800;
+  border-radius: 4px;
+}
+
+.observacoes-titulo {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #e65100;
+  margin: 0 0 0.4rem 0;
+}
+
+.observacoes-texto {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 0;
+  line-height: 1.4;
+  word-wrap: break-word;
 }
 
 .item-nome {
@@ -1159,7 +1183,7 @@
   }
 
   .pedidos-lista {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 1rem;
   }
 
