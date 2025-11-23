@@ -5,7 +5,7 @@
         <img src="/assets/experimenta_ai_banner_circular.png" alt="Experimenta aí" class="pedidos-logo" />
         Gestão de Pedidos
       </h1>
-      
+
       <!-- Sessão Ativa no Header -->
       <div class="sessao-ativa-wrapper">
         @if (sessaoAtiva()) {
@@ -21,7 +21,7 @@
           </div>
         }
       </div>
-      
+
       <div class="header-actions">
         <button class="btn-header btn-primary" (click)="abrirFormulario()" [disabled]="!temSessaoAtiva()">
           ➕ Novo Pedido
@@ -199,7 +199,7 @@
                   <div class="pedido-acoes">
                     @if (pedido.status === StatusPedido.PREPARANDO) {
                       <button class="btn-acao btn-pronto" (click)="atualizarStatus(pedido.id, StatusPedido.PRONTO)">
-                        Marcar como Pronto
+                        Pronto
                       </button>
                     }
                     @if (pedido.status === StatusPedido.PRONTO) {

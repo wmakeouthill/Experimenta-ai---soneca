@@ -34,6 +34,7 @@
   </div>
   <div class="valor-total-info">
     <span class="valor-label">Total: {{ formatarPreco(valorTotal()) }}</span>
+    <span class="separador">-</span>
     <span class="valor-restante" [class.completo]="valorRestante() <= 0">
       Restante: {{ formatarPreco(valorRestante()) }}
     </span>
@@ -42,7 +43,7 @@
     <div class="meios-pagamento-lista">
       @for (meioPagamento of meiosPagamento(); track $index) {
         <div class="meio-pagamento-item">
-          <span class="meio-pagamento-nome">{{ meioPagamento.meioPagamento }}</span>
+          <span class="meio-pagamento-nome">{{ formatarNomeMeioPagamento(meioPagamento.meioPagamento) }}</span>
           <span class="meio-pagamento-valor">{{ formatarPreco(meioPagamento.valor) }}</span>
           <button
             type="button"

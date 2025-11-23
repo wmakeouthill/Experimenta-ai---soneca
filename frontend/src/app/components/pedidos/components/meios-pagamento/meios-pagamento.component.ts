@@ -109,5 +109,16 @@ export class MeiosPagamentoComponent {
   formatarPreco(preco: number): string {
     return `R$ ${preco.toFixed(2).replace('.', ',')}`;
   }
+
+  formatarNomeMeioPagamento(meioPagamento: MeioPagamento): string {
+    const nomes: Record<MeioPagamento, string> = {
+      [MeioPagamento.PIX]: 'Pix',
+      [MeioPagamento.CARTAO_CREDITO]: 'Crédito',
+      [MeioPagamento.CARTAO_DEBITO]: 'Débito',
+      [MeioPagamento.VALE_REFEICAO]: 'Voucher',
+      [MeioPagamento.DINHEIRO]: 'Dinheiro'
+    };
+    return nomes[meioPagamento] || meioPagamento;
+  }
 }
 
