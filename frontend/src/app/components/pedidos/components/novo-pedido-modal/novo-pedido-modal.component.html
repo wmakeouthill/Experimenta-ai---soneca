@@ -7,7 +7,7 @@
       </div>
 
       <div class="formulario-conteudo">
-        <div class="formulario-secao">
+        <div class="formulario-secao" [class.cliente-selecionado]="!!clienteSelecionado()">
           <h3>Cliente</h3>
           <app-selecao-cliente
             [clienteSelecionado]="clienteSelecionado()"
@@ -36,39 +36,41 @@
             </div>
           }
 
-          <form [formGroup]="pedidoForm">
-            <div class="formulario-colunas">
-              <div class="formulario-coluna">
-                <div class="formulario-secao">
-                  <h3>Observações</h3>
-                  <textarea
-                    formControlName="observacoes"
-                    class="form-textarea"
-                    placeholder="Observações do pedido..."
-                    rows="3"
-                  ></textarea>
+          <div class="formulario-rodape">
+            <form [formGroup]="pedidoForm">
+              <div class="formulario-colunas">
+                <div class="formulario-coluna">
+                  <div class="formulario-secao">
+                    <h3>Observações</h3>
+                    <textarea
+                      formControlName="observacoes"
+                      class="form-textarea"
+                      placeholder="Observações do pedido..."
+                      rows="3"
+                    ></textarea>
+                  </div>
+                </div>
+                <div class="formulario-coluna">
+                  <div class="formulario-secao">
+                    <app-meios-pagamento
+                      [valorTotal]="valorTotal()"
+                      [meiosPagamento]="meiosPagamento()"
+                      (onMeiosPagamentoChange)="onMeiosPagamentoChange($event)"
+                    />
+                  </div>
                 </div>
               </div>
-              <div class="formulario-coluna">
-                <div class="formulario-secao">
-                  <app-meios-pagamento
-                    [valorTotal]="valorTotal()"
-                    [meiosPagamento]="meiosPagamento()"
-                    (onMeiosPagamentoChange)="onMeiosPagamentoChange($event)"
-                  />
-                </div>
-              </div>
-            </div>
-          </form>
+            </form>
 
-          <div class="formulario-acoes">
-            <button 
-              class="btn-primary btn-criar" 
-              (click)="criarPedido()" 
-              [disabled]="!podeCriarPedido()"
-            >
-              Criar Pedido
-            </button>
+            <div class="formulario-acoes">
+              <button 
+                class="btn-primary btn-criar" 
+                (click)="criarPedido()" 
+                [disabled]="!podeCriarPedido()"
+              >
+                Criar Pedido
+              </button>
+            </div>
           </div>
         }
       </div>
