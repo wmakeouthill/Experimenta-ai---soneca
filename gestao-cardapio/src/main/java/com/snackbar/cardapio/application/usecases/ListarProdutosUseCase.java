@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -17,19 +16,19 @@ public class ListarProdutosUseCase {
     public List<ProdutoDTO> executar() {
         return produtoRepository.buscarTodos().stream()
             .map(ProdutoDTO::de)
-            .collect(Collectors.toList());
+            .toList();
     }
     
     public List<ProdutoDTO> executarPorCategoria(String categoria) {
         return produtoRepository.buscarPorCategoria(categoria).stream()
             .map(ProdutoDTO::de)
-            .collect(Collectors.toList());
+            .toList();
     }
     
     public List<ProdutoDTO> executarDisponiveis() {
         return produtoRepository.buscarDisponiveis().stream()
             .map(ProdutoDTO::de)
-            .collect(Collectors.toList());
+            .toList();
     }
 }
 

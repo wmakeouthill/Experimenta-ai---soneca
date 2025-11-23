@@ -74,11 +74,24 @@ public class GlobalExceptionHandler {
     
     @ExceptionHandler(TypeMismatchException.class)
     public ResponseEntity<Map<String, Object>> handleTypeMismatchException(TypeMismatchException ex) {
+        Class<?> requiredType = ex.getRequiredType();
+        String tipoEsperado = "tipo desconhecido";
+        if (requiredType != null) {
+            String simpleName = requiredType.getSimpleName();
+            tipoEsperado = simpleName != null ? simpleName : requiredType.getName();
+        }
+        
+        Object value = ex.getValue();
+        String valorRecebido = "null";
+        if (value != null) {
+            valorRecebido = value.toString();
+        }
+        
         String mensagem = String.format(
             "Valor inválido para o parâmetro '%s'. Esperado: %s, recebido: %s",
             ex.getPropertyName(),
-            ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "tipo desconhecido",
-            ex.getValue() != null ? ex.getValue().toString() : "null"
+            tipoEsperado,
+            valorRecebido
         );
         
         Map<String, Object> body = criarRespostaErro(

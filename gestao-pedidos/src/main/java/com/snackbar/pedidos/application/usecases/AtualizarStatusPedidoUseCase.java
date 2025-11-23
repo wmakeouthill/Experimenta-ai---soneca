@@ -7,6 +7,7 @@ import com.snackbar.pedidos.domain.entities.Pedido;
 import com.snackbar.pedidos.domain.services.PedidoValidator;
 import com.snackbar.kernel.domain.exceptions.ValidationException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,7 +17,8 @@ public class AtualizarStatusPedidoUseCase {
     private final PedidoRepositoryPort pedidoRepository;
     private final PedidoValidator pedidoValidator;
     
-    public PedidoDTO executar(String id, AtualizarStatusPedidoRequest request) {
+    @SuppressWarnings("null") // repository.salvar() nunca retorna null, .orElseThrow() nunca retorna null
+    public PedidoDTO executar(@NonNull String id, AtualizarStatusPedidoRequest request) {
         Pedido pedido = pedidoRepository.buscarPorId(id)
             .orElseThrow(() -> new ValidationException("Pedido não encontrado com ID: " + id));
         

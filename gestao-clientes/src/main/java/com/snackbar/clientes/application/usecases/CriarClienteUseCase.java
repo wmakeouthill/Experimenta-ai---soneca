@@ -22,6 +22,7 @@ public class CriarClienteUseCase {
             request.getObservacoes()
         );
         
+        @SuppressWarnings("null") // repository.salvar() nunca retorna null
         Cliente clienteSalvo = clienteRepository.salvar(cliente);
         
         return ClienteDTO.de(clienteSalvo);

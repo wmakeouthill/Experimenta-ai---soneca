@@ -1,15 +1,16 @@
 package com.snackbar.pedidos.application.ports;
 
 import com.snackbar.pedidos.domain.entities.SessaoTrabalho;
+import org.springframework.lang.NonNull;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 public interface SessaoTrabalhoRepositoryPort {
-    SessaoTrabalho salvar(SessaoTrabalho sessao);
+    SessaoTrabalho salvar(@NonNull SessaoTrabalho sessao);
     
-    Optional<SessaoTrabalho> buscarPorId(String id);
+    Optional<SessaoTrabalho> buscarPorId(@NonNull String id);
     
     Optional<SessaoTrabalho> buscarSessaoAtiva();
     

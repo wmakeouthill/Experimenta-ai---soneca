@@ -1,5 +1,6 @@
 package com.snackbar.orquestrador.config;
 
+import org.springframework.lang.NonNull;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -20,7 +21,7 @@ import java.io.IOException;
 public class WebMvcConfig implements WebMvcConfigurer {
     
     @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+    public void addResourceHandlers(@NonNull ResourceHandlerRegistry registry) {
         // Servir arquivos estáticos do frontend (quando existir)
         // Prioridade: /api/** tem precedência sobre recursos estáticos
         registry.addResourceHandler("/**")
@@ -28,7 +29,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .resourceChain(true)
                 .addResolver(new PathResourceResolver() {
                     @Override
-                    protected Resource getResource(String resourcePath, Resource location) throws IOException {
+                    protected Resource getResource(@NonNull String resourcePath, @NonNull Resource location) throws IOException {
                         // Ignorar rotas de API - deixar os controllers REST tratarem
                         if (resourcePath.startsWith("api/")) {
                             return null;
@@ -50,7 +51,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     }
     
     @Override
-    public void addViewControllers(ViewControllerRegistry registry) {
+    public void addViewControllers(@NonNull ViewControllerRegistry registry) {
         // Se houver index.html, redirecionar raiz para ele (frontend Angular)
         // Caso contrário, o RootController retornará informações da API
         // Não configurar aqui para que o RootController tenha prioridade

@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Data
 @Builder
@@ -48,12 +47,12 @@ public class PedidoDTO {
                     .subtotal(item.calcularSubtotal().getAmount())
                     .observacoes(item.getObservacoes())
                     .build())
-                .collect(Collectors.toList()))
+                .toList())
             .valorTotal(pedido.getValorTotal().getAmount())
             .observacoes(pedido.getObservacoes())
             .meiosPagamento(pedido.getMeiosPagamento().stream()
                 .map(MeioPagamentoDTO::de)
-                .collect(Collectors.toList()))
+                .toList())
             .usuarioId(pedido.getUsuarioId())
             .sessaoId(pedido.getSessaoId())
             .dataPedido(pedido.getDataPedido())

@@ -25,6 +25,7 @@ public class CriarProdutoUseCase {
             request.getFoto()
         );
         
+        @SuppressWarnings("null") // repository.salvar() nunca retorna null
         Produto produtoSalvo = produtoRepository.salvar(produto);
         
         return ProdutoDTO.de(produtoSalvo);

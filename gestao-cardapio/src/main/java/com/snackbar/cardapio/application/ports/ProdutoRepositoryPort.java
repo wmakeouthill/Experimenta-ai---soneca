@@ -1,16 +1,18 @@
 package com.snackbar.cardapio.application.ports;
 
 import com.snackbar.cardapio.domain.entities.Produto;
+import org.springframework.lang.NonNull;
+
 import java.util.List;
 import java.util.Optional;
 
 public interface ProdutoRepositoryPort {
-    Produto salvar(Produto produto);
-    Optional<Produto> buscarPorId(String id);
+    Produto salvar(@NonNull Produto produto);
+    Optional<Produto> buscarPorId(@NonNull String id);
     List<Produto> buscarTodos();
     List<Produto> buscarPorCategoria(String categoria);
     List<Produto> buscarDisponiveis();
-    void excluir(String id);
-    boolean existePorId(String id);
+    void excluir(@NonNull String id);
+    boolean existePorId(@NonNull String id);
 }
 

@@ -19,6 +19,7 @@ public class CriarCategoriaUseCase {
             request.getDescricao()
         );
         
+        @SuppressWarnings("null") // repository.salvar() nunca retorna null
         Categoria categoriaSalva = categoriaRepository.salvar(categoria);
         
         return CategoriaDTO.de(categoriaSalva);

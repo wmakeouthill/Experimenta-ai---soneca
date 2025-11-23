@@ -69,7 +69,7 @@ public class Cliente extends BaseEntity {
         if (nome == null || nome.trim().isEmpty()) {
             throw new ValidationException("Nome do cliente não pode ser nulo ou vazio");
         }
-        if (telefone == null || telefone.trim().isEmpty()) {
+        if (telefone == null || telefone.isBlank()) {
             throw new ValidationException("Telefone do cliente não pode ser nulo ou vazio");
         }
     }

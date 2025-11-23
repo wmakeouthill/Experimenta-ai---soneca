@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -19,12 +18,12 @@ public class ListarSessoesTrabalhoUseCase {
         if (dataInicio != null) {
             return repository.buscarPorDataInicio(dataInicio).stream()
                 .map(SessaoTrabalhoDTO::de)
-                .collect(Collectors.toList());
+                .toList();
         }
         
         return repository.buscarTodas().stream()
             .map(SessaoTrabalhoDTO::de)
-            .collect(Collectors.toList());
+            .toList();
     }
 }
 

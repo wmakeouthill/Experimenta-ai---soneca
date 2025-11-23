@@ -15,6 +15,7 @@ public class AtualizarProdutoUseCase {
     
     private final ProdutoRepositoryPort produtoRepository;
     
+    @SuppressWarnings("null") // repository.salvar() nunca retorna null, .orElseThrow() nunca retorna null
     public ProdutoDTO executar(String id, AtualizarProdutoRequest request) {
         if (id == null || id.trim().isEmpty()) {
             throw new ValidationException("ID do produto não pode ser nulo ou vazio");

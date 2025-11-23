@@ -21,8 +21,8 @@ public class IniciarSessaoTrabalhoUseCase {
         
         Integer numeroSessao = calcularProximoNumeroSessao();
         SessaoTrabalho sessao = SessaoTrabalho.criar(numeroSessao, usuarioId);
+        @SuppressWarnings("null") // repository.salvar() nunca retorna null
         SessaoTrabalho sessaoSalva = repository.salvar(sessao);
-        
         return SessaoTrabalhoDTO.de(sessaoSalva);
     }
     

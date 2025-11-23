@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -59,21 +60,21 @@ public class PedidoRestController {
     }
     
     @GetMapping("/{id}")
-    public ResponseEntity<PedidoDTO> buscarPorId(@PathVariable String id) {
+    public ResponseEntity<PedidoDTO> buscarPorId(@NonNull @PathVariable String id) {
         PedidoDTO pedido = buscarPedidoPorIdUseCase.executar(id);
         return ResponseEntity.ok(pedido);
     }
     
     @PutMapping("/{id}/status")
     public ResponseEntity<PedidoDTO> atualizarStatus(
-            @PathVariable String id,
+            @NonNull @PathVariable String id,
             @Valid @RequestBody AtualizarStatusPedidoRequest request) {
         PedidoDTO pedido = atualizarStatusPedidoUseCase.executar(id, request);
         return ResponseEntity.ok(pedido);
     }
     
     @PutMapping("/{id}/cancelar")
-    public ResponseEntity<PedidoDTO> cancelar(@PathVariable String id) {
+    public ResponseEntity<PedidoDTO> cancelar(@NonNull @PathVariable String id) {
         PedidoDTO pedido = cancelarPedidoUseCase.executar(id);
         return ResponseEntity.ok(pedido);
     }

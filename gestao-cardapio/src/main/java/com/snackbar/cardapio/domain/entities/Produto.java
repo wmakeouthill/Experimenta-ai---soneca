@@ -18,8 +18,9 @@ public class Produto extends BaseEntity {
         super();
     }
     
+    @SuppressWarnings("java:S1172") // descricao é usado na linha seguinte, é opcional e não precisa validação
     public static Produto criar(String nome, String descricao, Preco preco, String categoria, String foto) {
-        validarDados(nome, descricao, categoria);
+        validarDados(nome, categoria);
         
         Produto produto = new Produto();
         produto.nome = nome.trim();
@@ -91,7 +92,8 @@ public class Produto extends BaseEntity {
         restaurarTimestamps(createdAt, updatedAt);
     }
     
-    private static void validarDados(String nome, String descricao, String categoria) {
+    @SuppressWarnings("java:S1172") // descricao é usado no método criar, não precisa validação
+    private static void validarDados(String nome, String categoria) {
         if (nome == null || nome.trim().isEmpty()) {
             throw new ValidationException("Nome do produto não pode ser nulo ou vazio");
         }
