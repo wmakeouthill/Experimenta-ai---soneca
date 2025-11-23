@@ -21,6 +21,7 @@
   flex-direction: column;
   animation: slideIn 0.5s ease-out;
   overflow: hidden;
+  position: relative;
 }
 
 @keyframes slideIn {
@@ -37,6 +38,8 @@
 .home-header {
   margin-bottom: 25px;
   flex-shrink: 0;
+  position: relative;
+  z-index: 2;
 }
 
 .home-header-top {
@@ -168,10 +171,12 @@
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 20px;
   flex: 1;
-  overflow: hidden;
+  overflow: visible;
   min-height: 0;
   align-content: stretch;
   grid-auto-rows: 1fr;
+  padding-top: 10px;
+  margin-top: -10px;
 }
 
 .modulo-card {
@@ -189,6 +194,7 @@
   min-height: 0;
   position: relative;
   overflow: hidden;
+  z-index: 1;
 }
 
 .modulo-card::before {
@@ -211,6 +217,7 @@
   transform: translateY(-10px);
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
   border-color: #FF6B35;
+  z-index: 10;
 }
 
 .modulo-card:disabled {
