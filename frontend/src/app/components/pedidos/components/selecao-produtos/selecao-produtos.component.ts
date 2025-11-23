@@ -56,6 +56,9 @@ export class SelecaoProdutosComponent {
   }
 
   selecionarProduto(produto: Produto): void {
+    if (!produto.disponivel) {
+      return;
+    }
     this.onProdutoSelecionado.emit(produto);
   }
 

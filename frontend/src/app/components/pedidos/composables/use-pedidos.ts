@@ -84,7 +84,7 @@ export function usePedidos() {
   };
 
   const carregarProdutos = () => {
-    produtoService.listar({ disponivel: true })
+    produtoService.listar()
       .pipe(
         catchError((error) => {
           console.error('Erro ao carregar produtos:', error);

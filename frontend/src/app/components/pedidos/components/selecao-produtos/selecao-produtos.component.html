@@ -23,7 +23,13 @@
   </div>
   <div class="produtos-grid-form">
     @for (produto of produtosFiltrados(); track produto.id) {
-      <button class="produto-item-form" (click)="selecionarProduto(produto)">
+      <button 
+        class="produto-item-form"
+        [class.disponivel]="produto.disponivel"
+        [class.indisponivel]="!produto.disponivel"
+        [title]="!produto.disponivel ? 'Produto indisponível' : produto.nome"
+        (click)="selecionarProduto(produto)"
+      >
         @if (produto.foto) {
           <img [src]="produto.foto" [alt]="produto.nome" class="produto-foto-mini" />
         } @else {
@@ -33,6 +39,11 @@
           <span class="produto-nome-form" [title]="produto.nome">{{ produto.nome }}</span>
           <span class="produto-preco-form">{{ formatarPreco(produto.preco) }}</span>
         </div>
+        @if (!produto.disponivel) {
+          <div class="produto-indisponivel-overlay">
+            <span class="produto-indisponivel-texto">Indisponível</span>
+          </div>
+        }
       </button>
     }
     @if (produtosFiltrados().length === 0 && pesquisaProduto().trim()) {

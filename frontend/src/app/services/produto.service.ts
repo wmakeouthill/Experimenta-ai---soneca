@@ -72,4 +72,8 @@ export class ProdutoService {
   excluir(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
+
+  alternarDisponibilidade(id: string, disponivel: boolean): Observable<Produto> {
+    return this.atualizar(id, { disponivel });
+  }
 }

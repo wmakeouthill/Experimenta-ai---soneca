@@ -117,6 +117,27 @@ export class CardapioComponent implements OnInit {
       });
   }
 
+  alternarDisponibilidade(produto: any): void {
+    if (!this.isBrowser) {
+      return;
+    }
+
+    const novaDisponibilidade = !produto.disponivel;
+    
+    this.produtoService.alternarDisponibilidade(produto.id, novaDisponibilidade)
+      .subscribe({
+        next: () => {
+          this.carregarDados();
+        },
+        error: (error) => {
+          console.error('Erro ao alterar disponibilidade do produto:', error);
+          if (this.isBrowser) {
+            alert('Erro ao alterar disponibilidade do produto. Tente novamente.');
+          }
+        }
+      });
+  }
+
   onProdutoSalvo(): void {
     this.carregarDados();
     this.produtosComposable.carregarCategorias();

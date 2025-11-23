@@ -131,9 +131,11 @@
           <!-- Grid de Produtos -->
           <div class="produtos-grid">
             @for (produto of produtosPaginados().itens; track produto.id) {
-              <article class="produto-card" [class.disponivel]="produto.disponivel">
+              <article class="produto-card" [class.disponivel]="produto.disponivel" [class.indisponivel]="!produto.disponivel">
                 @if (!produto.disponivel) {
-                  <span class="produto-badge indisponivel">Indisponível</span>
+                  <div class="produto-badge-wrapper">
+                    <span class="produto-badge indisponivel">Indisponível</span>
+                  </div>
                 }
                 
                 @if (produto.foto) {
@@ -151,7 +153,18 @@
                 @if (produto.descricao) {
                   <p class="produto-descricao">{{ produto.descricao }}</p>
                 }
-                <p class="produto-preco">R$ {{ produto.preco.toFixed(2).replace('.', ',') }}</p>
+                <div class="produto-preco-wrapper">
+                  <p class="produto-preco">R$ {{ produto.preco.toFixed(2).replace('.', ',') }}</p>
+                  <button 
+                    class="btn-toggle-disponibilidade"
+                    [class.ativo]="produto.disponivel"
+                    [class.inativo]="!produto.disponivel"
+                    [title]="produto.disponivel ? 'Desativar produto' : 'Ativar produto'"
+                    (click)="alternarDisponibilidade(produto)"
+                  >
+                    {{ produto.disponivel ? '🟢' : '⚫' }}
+                  </button>
+                </div>
                 <div class="produto-acoes">
                   <button class="btn-acao btn-editar" (click)="editarProduto(produto)">
                     ✏️ Editar
