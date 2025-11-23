@@ -78,13 +78,14 @@
 
 .produtos-grid-form {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 0.3rem;
   min-height: 0;
   overflow-y: auto;
   padding: 0.25rem;
   align-items: start;
   margin-top: 0.2rem;
+  flex: 1;
 }
 
 .produto-item-form {
@@ -192,29 +193,17 @@
   font-style: italic;
 }
 
-@media (max-width: 1200px) {
-  .produtos-grid-form {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
 @media (max-width: 768px) {
   .produtos-filtros {
     flex-direction: column;
     width: 100%;
   }
-
+  
   .filtro-categoria {
     width: 100%;
     min-width: auto;
   }
-
-  .produtos-grid-form {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 480px) {
+  
   .produtos-grid-form {
     grid-template-columns: 1fr;
   }

@@ -1,5 +1,5 @@
-import { Component, inject, input, output, signal, computed, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, input, output, signal, computed, ChangeDetectionStrategy, effect, OnDestroy, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { SelecaoClienteComponent } from '../selecao-cliente/selecao-cliente.component';
 import { SelecaoProdutosComponent } from '../selecao-produtos/selecao-produtos.component';
@@ -25,8 +25,11 @@ import { ItemPedidoRequest, MeioPagamentoPedido } from '../../../../services/ped
   styleUrl: './novo-pedido-modal.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class NovoPedidoModalComponent {
+export class NovoPedidoModalComponent implements OnDestroy {
   private readonly fb = inject(FormBuilder);
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly isBrowser = isPlatformBrowser(this.platformId);
+  private scrollPosition = 0;
 
   readonly aberto = input.required<boolean>();
   readonly produtos = input.required<Produto[]>();
@@ -65,6 +68,49 @@ export class NovoPedidoModalComponent {
     this.pedidoForm = this.fb.group({
       observacoes: ['']
     });
+
+    // Bloqueia o scroll do body quando o modal estiver aberto
+    effect(() => {
+      if (this.isBrowser) {
+        if (this.aberto()) {
+          this.bloquearScroll();
+        } else {
+          this.liberarScroll();
+        }
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.isBrowser) {
+      this.liberarScroll();
+    }
+  }
+
+  private bloquearScroll(): void {
+    if (!this.isBrowser) return;
+    
+    // Salva a posição atual do scroll
+    this.scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    
+    // Aplica estilos para bloquear o scroll
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${this.scrollPosition}px`;
+    document.body.style.width = '100%';
+  }
+
+  private liberarScroll(): void {
+    if (!this.isBrowser) return;
+    
+    // Remove os estilos de bloqueio
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
+    
+    // Restaura a posição do scroll
+    window.scrollTo(0, this.scrollPosition);
   }
 
   onClienteSelecionado(cliente: Cliente): void {

@@ -18,15 +18,15 @@
         </div>
 
         @if (clienteSelecionado()) {
-          <div class="formulario-secao">
-            <app-selecao-produtos
-              [produtos]="produtos()"
-              (onProdutoSelecionado)="onProdutoSelecionado($event)"
-            />
-          </div>
+          <div class="produtos-itens-layout">
+            <div class="formulario-secao produtos-coluna">
+              <app-selecao-produtos
+                [produtos]="produtos()"
+                (onProdutoSelecionado)="onProdutoSelecionado($event)"
+              />
+            </div>
 
-          @if (itensSelecionados().length > 0) {
-            <div class="formulario-secao">
+            <div class="formulario-secao itens-coluna">
               <app-itens-pedido
                 [itens]="itensSelecionados()"
                 [produtos]="produtos()"
@@ -34,7 +34,7 @@
                 (onItemRemovido)="onItemRemovido($event)"
               />
             </div>
-          }
+          </div>
 
           <div class="formulario-rodape">
             <form [formGroup]="pedidoForm">

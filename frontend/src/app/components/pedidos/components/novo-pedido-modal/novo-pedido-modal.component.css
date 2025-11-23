@@ -186,15 +186,42 @@
   max-height: fit-content !important;
 }
 
+/* Layout de duas colunas: produtos e itens */
+.produtos-itens-layout {
+  display: grid;
+  grid-template-columns: 1fr 350px;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
 /* Seção de produtos - ocupa espaço restante */
 .formulario-secao:has(app-selecao-produtos) {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  margin-top: 0.75rem;
+  margin-top: 0;
   margin-bottom: 0;
   overflow: hidden;
+}
+
+.produtos-coluna {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Seção de itens do pedido - sempre visível à direita */
+.itens-coluna {
+  flex: 0 0 auto;
+  min-height: 0;
+  overflow: hidden;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Remove margem extra quando há cliente selecionado */
@@ -202,10 +229,9 @@
   margin-bottom: 0;
 }
 
-/* Seção de itens do pedido - não ocupa espaço flexível */
-.formulario-secao:has(app-itens-pedido) {
-  flex: 0 0 auto;
-  margin-top: 0.75rem;
+/* Seção de itens do pedido no layout de duas colunas */
+.itens-coluna {
+  margin-top: 0;
   margin-bottom: 0;
 }
 
@@ -310,8 +336,12 @@
     width: 100%;
     max-width: 100vw;
   }
-
+ 
   .formulario-colunas {
+    grid-template-columns: 1fr;
+  }
+
+  .produtos-itens-layout {
     grid-template-columns: 1fr;
   }
 }

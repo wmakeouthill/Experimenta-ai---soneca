@@ -30,7 +30,7 @@
           <div class="produto-foto-placeholder-mini">📷</div>
         }
         <div class="produto-info-form">
-          <span class="produto-nome-form">{{ produto.nome }}</span>
+          <span class="produto-nome-form" [title]="produto.nome">{{ produto.nome }}</span>
           <span class="produto-preco-form">{{ formatarPreco(produto.preco) }}</span>
         </div>
       </button>

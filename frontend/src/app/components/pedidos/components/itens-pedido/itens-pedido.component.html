@@ -3,7 +3,7 @@
   @for (item of itens(); track obterItemId(item); let i = $index) {
     @if (buscarProdutoPorId(item.produtoId); as produto) {
       <div class="item-selecionado">
-        <span class="item-nome">{{ produto.nome }}</span>
+        <span class="item-nome" [title]="produto.nome">{{ produto.nome }}</span>
         <div class="item-controles">
           <button class="btn-quantidade" (click)="atualizarQuantidade(i, item.quantidade - 1)">-</button>
           <span class="item-quantidade">{{ item.quantidade }}</span>
