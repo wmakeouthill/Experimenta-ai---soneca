@@ -10,7 +10,7 @@
         />
       </div>
       
-      <div class="clientes-lista" #listaClientes>
+      <div class="clientes-lista" #listaClientes [style.gap]="gapCalculado()">
         @for (cliente of clientesPaginados(); track cliente.id) {
           <button class="cliente-item" (click)="selecionarCliente(cliente)">
             <div class="cliente-info">

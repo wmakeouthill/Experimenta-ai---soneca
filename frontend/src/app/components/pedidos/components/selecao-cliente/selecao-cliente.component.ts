@@ -27,6 +27,7 @@ export class SelecaoClienteComponent implements OnInit, AfterViewInit, OnDestroy
   readonly clientes = signal<Cliente[]>([]);
   readonly paginaClientes = signal<number>(1);
   readonly clientesPorPagina = signal<number>(6);
+  readonly gapCalculado = signal<string>('0.5rem');
 
   private resizeObserver?: ResizeObserver;
 
@@ -53,6 +54,7 @@ export class SelecaoClienteComponent implements OnInit, AfterViewInit, OnDestroy
         if (this.listaClientesRef) {
           this.calcularClientesPorPagina();
           this.observarMudancasTamanho();
+          this.calcularGapProporcional();
         }
       }, 0);
     }
@@ -71,6 +73,7 @@ export class SelecaoClienteComponent implements OnInit, AfterViewInit, OnDestroy
 
     this.resizeObserver = new ResizeObserver(() => {
       this.calcularClientesPorPagina();
+      this.calcularGapProporcional();
     });
 
     this.resizeObserver.observe(this.listaClientesRef.nativeElement);
@@ -122,6 +125,73 @@ export class SelecaoClienteComponent implements OnInit, AfterViewInit, OnDestroy
         }
       }
     }
+    
+    // Calcula o gap proporcional
+    this.calcularGapProporcional();
+  }
+
+  private calcularGapProporcional(): void {
+    if (!this.isBrowser || !this.listaClientesRef?.nativeElement) {
+      return;
+    }
+
+    const listaElement = this.listaClientesRef.nativeElement;
+    const alturaDisponivel = listaElement.clientHeight;
+    const itens = listaElement.querySelectorAll('.cliente-item');
+    const quantidadeItens = itens.length;
+
+    if (alturaDisponivel <= 0 || quantidadeItens === 0) {
+      this.gapCalculado.set('0.5rem');
+      return;
+    }
+
+    // Obtém o padding do elemento
+    const estilo = window.getComputedStyle(listaElement);
+    const paddingTop = parseFloat(estilo.paddingTop) || 0;
+    const paddingBottom = parseFloat(estilo.paddingBottom) || 0;
+    const paddingTotal = paddingTop + paddingBottom;
+
+    // Calcula a altura total dos itens
+    let alturaTotalItens = 0;
+    itens.forEach(item => {
+      const elemento = item as HTMLElement;
+      alturaTotalItens += elemento.offsetHeight;
+    });
+
+    // Altura disponível para conteúdo (descontando padding)
+    const alturaConteudo = alturaDisponivel - paddingTotal;
+    
+    // Se há mais de 1 item, calcula o gap proporcional
+    if (quantidadeItens > 1) {
+      // Número de gaps = quantidade de itens - 1
+      const numeroGaps = quantidadeItens - 1;
+      
+      // Calcula o espaço disponível para gaps
+      const espacoParaGaps = alturaConteudo - alturaTotalItens;
+      
+      if (espacoParaGaps > 0) {
+        // Distribui o espaço proporcionalmente entre os gaps
+        const gapPorItem = espacoParaGaps / numeroGaps;
+        // Limita o gap entre 0.25rem (4px) e 2rem (32px)
+        const gapLimitado = Math.max(4, Math.min(32, gapPorItem));
+        this.gapCalculado.set(`${gapLimitado}px`);
+      } else {
+        // Se não há espaço suficiente, usa gap mínimo
+        // Mas verifica se com gap mínimo ainda cabe tudo
+        const gapMinimo = 8; // 0.5rem = 8px
+        const alturaNecessaria = alturaTotalItens + (gapMinimo * numeroGaps);
+        
+        if (alturaNecessaria <= alturaConteudo) {
+          this.gapCalculado.set('0.5rem');
+        } else {
+          // Não cabe mesmo com gap mínimo, usa gap mínimo mesmo (vai ter scroll)
+          this.gapCalculado.set('0.5rem');
+        }
+      }
+    } else {
+      // Se só há 1 item, usa gap mínimo
+      this.gapCalculado.set('0.5rem');
+    }
   }
 
   readonly clientesPaginados = computed(() => {
@@ -148,7 +218,10 @@ export class SelecaoClienteComponent implements OnInit, AfterViewInit, OnDestroy
           this.clientes.set(clientes);
           // Recalcula após os clientes serem carregados
           if (this.isBrowser) {
-            setTimeout(() => this.calcularClientesPorPagina(), 100);
+            setTimeout(() => {
+              this.calcularClientesPorPagina();
+              this.calcularGapProporcional();
+            }, 100);
           }
         },
         error: (error) => console.error('Erro ao carregar clientes:', error)
