@@ -68,6 +68,13 @@ public class PedidoRepositoryAdapter implements PedidoRepositoryPort {
     }
     
     @Override
+    public List<Pedido> buscarPorSessaoId(String sessaoId) {
+        return jpaRepository.findBySessaoId(sessaoId).stream()
+            .map(mapper::paraDomain)
+            .collect(Collectors.toList());
+    }
+    
+    @Override
     public int buscarUltimoNumeroPedido() {
         return jpaRepository.findMaxNumeroPedido()
             .orElse(0);

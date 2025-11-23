@@ -45,5 +45,11 @@ public class ListarPedidosUseCase {
             .map(PedidoDTO::de)
             .collect(Collectors.toList());
     }
+    
+    public List<PedidoDTO> executarPorSessaoId(String sessaoId) {
+        return pedidoRepository.buscarPorSessaoId(sessaoId).stream()
+            .map(PedidoDTO::de)
+            .collect(Collectors.toList());
+    }
 }
 

@@ -37,10 +37,13 @@ public class PedidoRestController {
             @RequestParam(name = "status", required = false) StatusPedido status,
             @RequestParam(name = "clienteId", required = false) String clienteId,
             @RequestParam(name = "dataInicio", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dataInicio,
-            @RequestParam(name = "dataFim", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dataFim) {
+            @RequestParam(name = "dataFim", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dataFim,
+            @RequestParam(name = "sessaoId", required = false) String sessaoId) {
         List<PedidoDTO> pedidos;
         
-        if (status != null && dataInicio != null && dataFim != null) {
+        if (sessaoId != null) {
+            pedidos = listarPedidosUseCase.executarPorSessaoId(sessaoId);
+        } else if (status != null && dataInicio != null && dataFim != null) {
             pedidos = listarPedidosUseCase.executarPorStatusEData(status, dataInicio, dataFim);
         } else if (status != null) {
             pedidos = listarPedidosUseCase.executarPorStatus(status);

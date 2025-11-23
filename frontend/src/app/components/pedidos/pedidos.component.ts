@@ -84,8 +84,9 @@ export class PedidosComponent implements OnInit {
 
   ngOnInit(): void {
     if (this.isBrowser) {
+      // verificarSessaoAtiva já chama carregarDados internamente
       this.verificarSessaoAtiva();
-      this.carregarDados();
+      this.pedidosComposable.carregarProdutos();
       document.addEventListener('click', () => this.fecharMenuContexto());
       document.addEventListener('contextmenu', (e) => {
         const target = e.target as HTMLElement;
@@ -102,10 +103,14 @@ export class PedidosComponent implements OnInit {
         if (sessao) {
           this.temSessaoAtiva.set(true);
           this.sessaoAtiva.set(sessao);
+          // Recarrega pedidos quando sessão mudar para filtrar pela nova sessão
+          this.carregarDados();
         } else {
           // null significa que não há sessão ativa (404 esperado e tratado silenciosamente)
           this.temSessaoAtiva.set(false);
           this.sessaoAtiva.set(null);
+          // Recarrega pedidos sem filtro de sessão quando não há sessão ativa
+          this.carregarDados();
         }
       },
       error: (error) => {
@@ -114,12 +119,15 @@ export class PedidosComponent implements OnInit {
         // Não logar erro aqui para evitar logs desnecessários
         this.temSessaoAtiva.set(false);
         this.sessaoAtiva.set(null);
+        // Recarrega pedidos sem filtro de sessão em caso de erro
+        this.carregarDados();
       }
     });
   }
 
   private carregarDados(): void {
-    this.pedidosComposable.carregarPedidos();
+    const sessaoId = this.sessaoAtiva()?.id;
+    this.pedidosComposable.carregarPedidos(sessaoId ? { sessaoId } : undefined);
     this.pedidosComposable.carregarProdutos();
   }
 
@@ -136,7 +144,9 @@ export class PedidosComponent implements OnInit {
   }
 
   recarregar(): void {
-    this.carregarDados();
+    const sessaoId = this.sessaoAtiva()?.id;
+    this.pedidosComposable.carregarPedidos(sessaoId ? { sessaoId } : undefined);
+    this.pedidosComposable.carregarProdutos();
   }
 
   abrirFormulario(): void {
@@ -172,7 +182,8 @@ export class PedidosComponent implements OnInit {
         next: (pedidoCriado) => {
           this.pedidosComposable.atualizarPedidoNoSignal(pedidoCriado);
           setTimeout(() => {
-            this.pedidosComposable.carregarPedidos();
+            const sessaoId = this.sessaoAtiva()?.id;
+            this.pedidosComposable.carregarPedidos(sessaoId ? { sessaoId } : undefined);
           }, 0);
           this.fecharFormulario();
         },
@@ -205,7 +216,8 @@ export class PedidosComponent implements OnInit {
           // Recarrega todos os pedidos de forma assíncrona para garantir sincronização completa
           // Usa setTimeout para garantir que a atualização imediata seja processada primeiro
           setTimeout(() => {
-            this.pedidosComposable.carregarPedidos();
+            const sessaoId = this.sessaoAtiva()?.id;
+            this.pedidosComposable.carregarPedidos(sessaoId ? { sessaoId } : undefined);
           }, 0);
         },
         error: (error) => {
@@ -242,7 +254,8 @@ export class PedidosComponent implements OnInit {
           this.pedidosComposable.atualizarPedidoNoSignal(pedidoCancelado);
           // Recarrega todos os pedidos de forma assíncrona para garantir sincronização
           setTimeout(() => {
-            this.pedidosComposable.carregarPedidos();
+            const sessaoId = this.sessaoAtiva()?.id;
+            this.pedidosComposable.carregarPedidos(sessaoId ? { sessaoId } : undefined);
           }, 0);
         },
         error: (error) => {

@@ -15,6 +15,7 @@ public interface PedidoRepositoryPort {
     List<Pedido> buscarPorClienteId(String clienteId);
     List<Pedido> buscarPorDataPedido(LocalDateTime dataInicio, LocalDateTime dataFim);
     List<Pedido> buscarPorStatusEData(StatusPedido status, LocalDateTime dataInicio, LocalDateTime dataFim);
+    List<Pedido> buscarPorSessaoId(String sessaoId);
     int buscarUltimoNumeroPedido();
 }
 

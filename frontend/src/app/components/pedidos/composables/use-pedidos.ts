@@ -56,13 +56,14 @@ export function usePedidos() {
     status?: StatusPedido;
     dataInicio?: string;
     dataFim?: string;
+    sessaoId?: string;
   }) => {
     estado.set('carregando');
     erro.set(null);
 
-    // Sempre carrega TODOS os pedidos (sem filtro) para que os contadores funcionem
-    // O filtro é aplicado pelo computed pedidosFiltrados
-    pedidoService.listar()
+    // Carrega pedidos com filtros (incluindo sessão se fornecida)
+    // O filtro por status é aplicado pelo computed pedidosFiltrados
+    pedidoService.listar(filters)
       .pipe(
         catchError((error) => {
           const mensagem = error.error?.message || error.message || 'Erro ao carregar pedidos';
@@ -125,11 +126,12 @@ export function usePedidos() {
     });
   };
 
-  const carregarTodosPedidos = () => {
+  const carregarTodosPedidos = (sessaoId?: string) => {
     estado.set('carregando');
     erro.set(null);
 
-    pedidoService.listar()
+    const filters = sessaoId ? { sessaoId } : undefined;
+    pedidoService.listar(filters)
       .pipe(
         catchError((error) => {
           const mensagem = error.error?.message || error.message || 'Erro ao carregar pedidos';

@@ -35,6 +35,7 @@ export interface Pedido {
   observacoes?: string;
   meiosPagamento?: MeioPagamentoDTO[];
   usuarioId?: string;
+  sessaoId?: string;
   dataPedido: string;
   createdAt: string;
   updatedAt: string;
@@ -84,6 +85,7 @@ export class PedidoService {
     clienteId?: string;
     dataInicio?: string;
     dataFim?: string;
+    sessaoId?: string;
   }): Observable<Pedido[]> {
     // Se não há filtros, faz requisição sem parâmetros
     if (!filters || Object.keys(filters).length === 0) {
@@ -106,6 +108,10 @@ export class PedidoService {
     
     if (filters.dataFim) {
       params = params.set('dataFim', filters.dataFim);
+    }
+    
+    if (filters.sessaoId) {
+      params = params.set('sessaoId', filters.sessaoId);
     }
     
     return this.http.get<Pedido[]>(this.apiUrl, { params });
