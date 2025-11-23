@@ -27,6 +27,11 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'historico-sessoes',
+    loadComponent: () => import('./components/historico-sessoes/historico-sessoes.component').then(m => m.HistoricoSessoesComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: 'administracao',
     loadComponent: () => import('./components/administracao/administracao.component').then(m => m.AdministracaoComponent),
     canActivate: [adminGuard]

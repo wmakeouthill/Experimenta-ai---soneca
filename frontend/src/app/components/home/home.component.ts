@@ -47,6 +47,15 @@ export class HomeComponent {
         rota: '/sessoes',
         cor: 'info',
         disponivel: true
+      },
+      {
+        id: 'historico-sessoes',
+        nome: 'Histórico de Sessões',
+        descricao: 'Visualizar relatórios e histórico de pedidos por sessão',
+        icone: '📊',
+        rota: '/historico-sessoes',
+        cor: 'warning',
+        disponivel: true
       }
     ];
     
