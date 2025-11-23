@@ -3,6 +3,7 @@ import { catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { PedidoService, Pedido, MeioPagamento } from '../../../services/pedido.service';
 import { SessaoTrabalhoService, SessaoTrabalho } from '../../../services/sessao-trabalho.service';
+import { paginar, PaginacaoResult } from '../../../utils/paginacao.util';
 
 type EstadoCarregamento = 'idle' | 'carregando' | 'sucesso' | 'erro';
 
@@ -23,12 +24,68 @@ export function useHistoricoSessoes() {
   const estado = signal<EstadoCarregamento>('idle');
   const erro = signal<string | null>(null);
 
-  // Computed
+  // Filtros e paginação de sessões
+  const dataFiltroSessoes = signal<string | null>(null);
+  const paginaSessoes = signal<number>(1);
+  const itensPorPaginaSessoes = signal<number>(8);
+
+  // Filtros e paginação de pedidos
+  const pesquisaPedidos = signal<string>('');
+  const paginaPedidos = signal<number>(1);
+  const itensPorPaginaPedidos = signal<number>(6);
+
+  // Computed - Sessões
+  const sessoesFiltradas = computed(() => {
+    let resultado = [...sessoes()];
+
+    // Filtro por data de início
+    if (dataFiltroSessoes()) {
+      const dataFiltroValue = dataFiltroSessoes()!;
+      resultado = resultado.filter(s => {
+        const dataSessao = new Date(s.dataInicio).toISOString().split('T')[0];
+        return dataSessao === dataFiltroValue;
+      });
+    }
+
+    return resultado;
+  });
+
+  const sessoesPaginadas = computed(() => {
+    const resultado = sessoesFiltradas();
+    return paginar(resultado, itensPorPaginaSessoes(), paginaSessoes());
+  });
+
+  // Computed - Pedidos
+  const pedidosFiltrados = computed(() => {
+    let resultado = [...pedidos()];
+
+    // Filtro por texto (nome do cliente ou itens)
+    if (pesquisaPedidos().trim()) {
+      const texto = pesquisaPedidos().toLowerCase();
+      resultado = resultado.filter(p => {
+        const matchCliente = p.clienteNome.toLowerCase().includes(texto);
+        const matchItens = p.itens.some(item => 
+          item.produtoNome.toLowerCase().includes(texto)
+        );
+        return matchCliente || matchItens;
+      });
+    }
+
+    return resultado;
+  });
+
+  const pedidosPaginados = computed(() => {
+    const resultado = pedidosFiltrados();
+    return paginar(resultado, itensPorPaginaPedidos(), paginaPedidos());
+  });
+
+  // Computed - Estados
   const estaCarregando = computed(() => estado() === 'carregando');
   const temSessaoSelecionada = computed(() => sessaoSelecionada() !== null);
   const temPedidos = computed(() => pedidos().length > 0);
 
   const resumoFaturamento = computed((): ResumoFaturamento => {
+    // Usar todos os pedidos (não apenas os filtrados) para o resumo
     const pedidosAtuais = pedidos();
     
     if (pedidosAtuais.length === 0) {
@@ -93,11 +150,37 @@ export function useHistoricoSessoes() {
 
   const selecionarSessao = (sessao: SessaoTrabalho | null) => {
     sessaoSelecionada.set(sessao);
+    paginaPedidos.set(1);
+    pesquisaPedidos.set('');
     
     if (sessao) {
       carregarPedidosPorSessao(sessao.id);
     } else {
       pedidos.set([]);
+    }
+  };
+
+  const filtrarSessoesPorData = (data: string | null) => {
+    dataFiltroSessoes.set(data);
+    paginaSessoes.set(1);
+  };
+
+  const irParaPaginaSessoes = (pagina: number) => {
+    const totalPaginas = sessoesPaginadas().totalPaginas;
+    if (pagina >= 1 && pagina <= totalPaginas) {
+      paginaSessoes.set(pagina);
+    }
+  };
+
+  const pesquisarPedidos = (texto: string) => {
+    pesquisaPedidos.set(texto);
+    paginaPedidos.set(1);
+  };
+
+  const irParaPaginaPedidos = (pagina: number) => {
+    const totalPaginas = pedidosPaginados().totalPaginas;
+    if (pagina >= 1 && pagina <= totalPaginas) {
+      paginaPedidos.set(pagina);
     }
   };
 
@@ -141,6 +224,16 @@ export function useHistoricoSessoes() {
     estado,
     erro,
 
+    // Filtros e paginação de sessões
+    dataFiltroSessoes,
+    paginaSessoes,
+    sessoesPaginadas,
+
+    // Filtros e paginação de pedidos
+    pesquisaPedidos,
+    paginaPedidos,
+    pedidosPaginados,
+
     // Computed
     estaCarregando,
     temSessaoSelecionada,
@@ -151,7 +244,11 @@ export function useHistoricoSessoes() {
     carregarSessoes,
     selecionarSessao,
     carregarPedidosPorSessao,
-    recarregar
+    recarregar,
+    filtrarSessoesPorData,
+    irParaPaginaSessoes,
+    pesquisarPedidos,
+    irParaPaginaPedidos
   };
 }
 

@@ -39,8 +39,23 @@
     grid-template-columns: 1fr;
   }
 
+  .pedidos-secao-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pedidos-busca {
+    min-width: 100%;
+  }
+
   .meios-pagamento-lista {
     flex-direction: column;
+  }
+}
+
+@media (max-width: 1200px) {
+  .pedidos-lista {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 

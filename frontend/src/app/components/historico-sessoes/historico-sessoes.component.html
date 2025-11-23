@@ -19,6 +19,17 @@
       <div class="sessoes-container">
         <h2 class="sessoes-titulo">📋 Sessões</h2>
 
+        <!-- Filtro por Data -->
+        <div class="filtro-grupo">
+          <label class="filtro-label">Buscar por Data</label>
+          <input
+            type="date"
+            class="filtro-input"
+            [value]="dataFiltroSessoes() || ''"
+            (change)="filtrarSessoesPorData($any($event.target).value || null)"
+          />
+        </div>
+
         @if (estaCarregando() && sessoes().length === 0) {
           <div class="estado-carregando">
             <div class="spinner"></div>
@@ -35,15 +46,15 @@
           </div>
         }
 
-        @if (sessoes().length === 0 && !estaCarregando() && estado() !== 'erro') {
+        @if (sessoesPaginadas().totalItens === 0 && !estaCarregando() && estado() !== 'erro') {
           <div class="estado-vazio">
             <p class="vazio-mensagem">Nenhuma sessão encontrada.</p>
           </div>
         }
 
-        @if (sessoes().length > 0) {
+        @if (sessoesPaginadas().totalItens > 0) {
           <div class="sessoes-lista">
-            @for (sessao of sessoes(); track sessao.id) {
+            @for (sessao of sessoesPaginadas().itens; track sessao.id) {
               <button
                 class="sessao-item"
                 [class.selected]="sessaoSelecionada()?.id === sessao.id"
@@ -62,6 +73,39 @@
               </button>
             }
           </div>
+
+          <!-- Paginação de Sessões -->
+          @if (sessoesPaginadas().totalPaginas > 1) {
+            <div class="paginacao">
+              <button
+                class="btn-pagina"
+                [disabled]="sessoesPaginadas().paginaAtual === 1"
+                (click)="irParaPaginaSessoes(sessoesPaginadas().paginaAtual - 1)"
+              >
+                ‹
+              </button>
+              @for (num of gerarNumerosPaginaSessoes(); track num) {
+                @if (num === '...') {
+                  <span class="pagina-ellipsis">...</span>
+                } @else {
+                  <button
+                    class="btn-pagina"
+                    [class.active]="num === sessoesPaginadas().paginaAtual"
+                    (click)="irParaPaginaSessoes(+num)"
+                  >
+                    {{ num }}
+                  </button>
+                }
+              }
+              <button
+                class="btn-pagina"
+                [disabled]="sessoesPaginadas().paginaAtual === sessoesPaginadas().totalPaginas"
+                (click)="irParaPaginaSessoes(sessoesPaginadas().paginaAtual + 1)"
+              >
+                ›
+              </button>
+            </div>
+          }
         }
 
         @if (temSessaoSelecionada()) {
@@ -163,9 +207,21 @@
           <!-- Lista de Pedidos -->
           @if (temPedidos()) {
             <div class="pedidos-secao">
-              <h3 class="pedidos-secao-titulo">📋 Pedidos da Sessão</h3>
+              <div class="pedidos-secao-header">
+                <h3 class="pedidos-secao-titulo">📋 Pedidos da Sessão</h3>
+                <!-- Busca de Pedidos -->
+                <div class="pedidos-busca">
+                  <input
+                    type="text"
+                    class="pedidos-busca-input"
+                    placeholder="Buscar por cliente ou item..."
+                    [value]="pesquisaPedidos()"
+                    (input)="pesquisarPedidos($any($event.target).value)"
+                  />
+                </div>
+              </div>
               <div class="pedidos-lista">
-                @for (pedido of pedidos(); track pedido.id) {
+                @for (pedido of pedidosPaginados().itens; track pedido.id) {
                   <article class="pedido-card">
                     <div class="pedido-header">
                       <div class="pedido-info-principal">
@@ -219,6 +275,45 @@
                   </article>
                 }
               </div>
+
+              <!-- Paginação de Pedidos -->
+              @if (pedidosPaginados().totalPaginas > 1) {
+                <div class="paginacao">
+                  <button
+                    class="btn-pagina"
+                    [disabled]="pedidosPaginados().paginaAtual === 1"
+                    (click)="irParaPaginaPedidos(pedidosPaginados().paginaAtual - 1)"
+                  >
+                    ‹
+                  </button>
+                  @for (num of gerarNumerosPaginaPedidos(); track num) {
+                    @if (num === '...') {
+                      <span class="pagina-ellipsis">...</span>
+                    } @else {
+                      <button
+                        class="btn-pagina"
+                        [class.active]="num === pedidosPaginados().paginaAtual"
+                        (click)="irParaPaginaPedidos(+num)"
+                      >
+                        {{ num }}
+                      </button>
+                    }
+                  }
+                  <button
+                    class="btn-pagina"
+                    [disabled]="pedidosPaginados().paginaAtual === pedidosPaginados().totalPaginas"
+                    (click)="irParaPaginaPedidos(pedidosPaginados().paginaAtual + 1)"
+                  >
+                    ›
+                  </button>
+                </div>
+              }
+
+              @if (pedidosPaginados().totalItens === 0) {
+                <div class="estado-vazio">
+                  <p class="vazio-mensagem">Nenhum pedido encontrado com os filtros aplicados.</p>
+                </div>
+              }
             </div>
           } @else {
             <div class="estado-vazio">

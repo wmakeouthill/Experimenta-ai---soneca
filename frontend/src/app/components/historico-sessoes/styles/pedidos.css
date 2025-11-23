@@ -3,16 +3,44 @@
   margin-top: 1rem;
 }
 
+.pedidos-secao-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
 .pedidos-secao-titulo {
   font-size: 1.2rem;
   font-weight: 700;
   color: #333;
-  margin: 0 0 1rem 0;
+  margin: 0;
+}
+
+.pedidos-busca {
+  flex: 1;
+  min-width: 250px;
+}
+
+.pedidos-busca-input {
+  width: 100%;
+  padding: 0.6rem 0.9rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  transition: border-color 0.3s ease;
+}
+
+.pedidos-busca-input:focus {
+  outline: none;
+  border-color: #FF6B35;
 }
 
 .pedidos-lista {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
 }
 

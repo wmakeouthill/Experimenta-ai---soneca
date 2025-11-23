@@ -25,6 +25,34 @@
   border-bottom: 2px solid #FF6B35;
 }
 
+.filtro-grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filtro-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filtro-input {
+  padding: 0.6rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  transition: border-color 0.3s ease;
+  font-family: inherit;
+}
+
+.filtro-input:focus {
+  outline: none;
+  border-color: #FF6B35;
+}
+
 .sessoes-lista {
   display: flex;
   flex-direction: column;
