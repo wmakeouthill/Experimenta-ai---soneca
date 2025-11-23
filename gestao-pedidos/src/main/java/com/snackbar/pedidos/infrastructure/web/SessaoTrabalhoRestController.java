@@ -1,0 +1,66 @@
+package com.snackbar.pedidos.infrastructure.web;
+
+import com.snackbar.pedidos.application.dto.SessaoTrabalhoDTO;
+import com.snackbar.pedidos.application.usecases.*;
+import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/api/sessoes-trabalho")
+@RequiredArgsConstructor
+public class SessaoTrabalhoRestController {
+    
+    private final IniciarSessaoTrabalhoUseCase iniciarSessaoUseCase;
+    private final PausarSessaoTrabalhoUseCase pausarSessaoUseCase;
+    private final RetomarSessaoTrabalhoUseCase retomarSessaoUseCase;
+    private final FinalizarSessaoTrabalhoUseCase finalizarSessaoUseCase;
+    private final BuscarSessaoAtivaUseCase buscarSessaoAtivaUseCase;
+    private final ListarSessoesTrabalhoUseCase listarSessoesUseCase;
+    
+    @PostMapping
+    public ResponseEntity<SessaoTrabalhoDTO> iniciar(@RequestParam String usuarioId) {
+        SessaoTrabalhoDTO sessao = iniciarSessaoUseCase.executar(usuarioId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(sessao);
+    }
+    
+    @PutMapping("/{id}/pausar")
+    public ResponseEntity<SessaoTrabalhoDTO> pausar(@PathVariable String id) {
+        SessaoTrabalhoDTO sessao = pausarSessaoUseCase.executar(id);
+        return ResponseEntity.ok(sessao);
+    }
+    
+    @PutMapping("/{id}/retomar")
+    public ResponseEntity<SessaoTrabalhoDTO> retomar(@PathVariable String id) {
+        SessaoTrabalhoDTO sessao = retomarSessaoUseCase.executar(id);
+        return ResponseEntity.ok(sessao);
+    }
+    
+    @PutMapping("/{id}/finalizar")
+    public ResponseEntity<SessaoTrabalhoDTO> finalizar(@PathVariable String id) {
+        SessaoTrabalhoDTO sessao = finalizarSessaoUseCase.executar(id);
+        return ResponseEntity.ok(sessao);
+    }
+    
+    @GetMapping("/ativa")
+    public ResponseEntity<SessaoTrabalhoDTO> buscarAtiva() {
+        Optional<SessaoTrabalhoDTO> sessao = buscarSessaoAtivaUseCase.executar();
+        return sessao.map(ResponseEntity::ok)
+            .orElse(ResponseEntity.notFound().build());
+    }
+    
+    @GetMapping
+    public ResponseEntity<List<SessaoTrabalhoDTO>> listar(
+            @RequestParam(name = "dataInicio", required = false) 
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio) {
+        List<SessaoTrabalhoDTO> sessoes = listarSessoesUseCase.executar(dataInicio);
+        return ResponseEntity.ok(sessoes);
+    }
+}
+

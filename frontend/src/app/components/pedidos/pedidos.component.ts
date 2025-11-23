@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { usePedidos } from './composables/use-pedidos';
 import { PedidoService, StatusPedido, Pedido } from '../../services/pedido.service';
+import { SessaoTrabalhoService, SessaoTrabalho } from '../../services/sessao-trabalho.service';
 import { NovoPedidoModalComponent } from './components/novo-pedido-modal/novo-pedido-modal.component';
 import { MenuContextoPedidoComponent } from './components/menu-contexto-pedido/menu-contexto-pedido.component';
 
@@ -25,6 +26,7 @@ export class PedidosComponent implements OnInit {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
   private readonly pedidoService = inject(PedidoService);
+  private readonly sessaoService = inject(SessaoTrabalhoService);
 
   // Composable com toda a lógica de pedidos - inicializado no construtor para contexto de injeção válido
   readonly pedidosComposable!: ReturnType<typeof usePedidos>;
@@ -70,12 +72,17 @@ export class PedidosComponent implements OnInit {
   // Menu de contexto
   readonly menuContexto = signal<{ pedidoId: string; x: number; y: number } | null>(null);
 
+  // Sessão ativa
+  readonly temSessaoAtiva = signal<boolean>(false);
+  readonly sessaoAtiva = signal<SessaoTrabalho | null>(null);
+
   constructor() {
     this.pedidosComposable = usePedidos();
   }
 
   ngOnInit(): void {
     if (this.isBrowser) {
+      this.verificarSessaoAtiva();
       this.carregarDados();
       document.addEventListener('click', () => this.fecharMenuContexto());
       document.addEventListener('contextmenu', (e) => {
@@ -85,6 +92,28 @@ export class PedidosComponent implements OnInit {
         }
       });
     }
+  }
+
+  verificarSessaoAtiva(): void {
+    this.sessaoService.buscarAtiva().subscribe({
+      next: (sessao) => {
+        if (sessao) {
+          this.temSessaoAtiva.set(true);
+          this.sessaoAtiva.set(sessao);
+        } else {
+          // null significa que não há sessão ativa (404 esperado e tratado silenciosamente)
+          this.temSessaoAtiva.set(false);
+          this.sessaoAtiva.set(null);
+        }
+      },
+      error: (error) => {
+        // Apenas erros reais (não 404) chegam aqui
+        // 404 é tratado no serviço e retorna null no next, não chega aqui
+        // Não logar erro aqui para evitar logs desnecessários
+        this.temSessaoAtiva.set(false);
+        this.sessaoAtiva.set(null);
+      }
+    });
   }
 
   private carregarDados(): void {
@@ -109,6 +138,12 @@ export class PedidosComponent implements OnInit {
   }
 
   abrirFormulario(): void {
+    if (!this.temSessaoAtiva()) {
+      if (this.isBrowser) {
+        alert('É necessário iniciar uma sessão de trabalho para criar pedidos.');
+      }
+      return;
+    }
     this.mostrarFormulario.set(true);
   }
 

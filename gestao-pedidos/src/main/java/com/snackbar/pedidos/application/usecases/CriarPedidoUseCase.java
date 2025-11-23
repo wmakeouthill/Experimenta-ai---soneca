@@ -7,6 +7,7 @@ import com.snackbar.pedidos.application.dto.MeioPagamentoRequest;
 import com.snackbar.pedidos.application.dto.PedidoDTO;
 import com.snackbar.pedidos.application.ports.CardapioServicePort;
 import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
+import com.snackbar.pedidos.application.ports.SessaoTrabalhoRepositoryPort;
 import com.snackbar.pedidos.domain.entities.ItemPedido;
 import com.snackbar.pedidos.domain.entities.MeioPagamentoPedido;
 import com.snackbar.pedidos.domain.entities.Pedido;
@@ -22,6 +23,7 @@ public class CriarPedidoUseCase {
     private final PedidoRepositoryPort pedidoRepository;
     private final CardapioServicePort cardapioService;
     private final PedidoValidator pedidoValidator;
+    private final SessaoTrabalhoRepositoryPort sessaoTrabalhoRepository;
     
     public PedidoDTO executar(CriarPedidoRequest request) {
         int ultimoNumero = pedidoRepository.buscarUltimoNumeroPedido();
@@ -67,9 +69,16 @@ public class CriarPedidoUseCase {
         validarTotalMeiosPagamento(pedido);
         pedidoValidator.validarCriacao(pedido);
         
+        vincularSessaoAtiva(pedido);
+        
         Pedido pedidoSalvo = pedidoRepository.salvar(pedido);
         
         return PedidoDTO.de(pedidoSalvo);
+    }
+    
+    private void vincularSessaoAtiva(Pedido pedido) {
+        sessaoTrabalhoRepository.buscarSessaoAtiva()
+            .ifPresent(sessao -> pedido.definirSessaoId(sessao.getId()));
     }
     
     private void validarProdutoDisponivel(String produtoId) {

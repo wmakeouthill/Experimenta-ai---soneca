@@ -21,6 +21,7 @@ public class Pedido extends BaseEntity {
     private String observacoes;
     private List<MeioPagamentoPedido> meiosPagamento;
     private String usuarioId; // Para futuro login
+    private String sessaoId; // ID da sessão de trabalho
     private LocalDateTime dataPedido;
     
     private Pedido() {
@@ -123,6 +124,10 @@ public class Pedido extends BaseEntity {
         }
         this.status = StatusPedido.CANCELADO;
         touch();
+    }
+    
+    public void definirSessaoId(String sessaoId) {
+        this.sessaoId = sessaoId;
     }
     
     public boolean estaFinalizado() {

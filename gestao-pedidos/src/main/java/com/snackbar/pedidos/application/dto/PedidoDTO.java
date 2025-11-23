@@ -27,6 +27,7 @@ public class PedidoDTO {
     private String observacoes;
     private List<MeioPagamentoDTO> meiosPagamento;
     private String usuarioId;
+    private String sessaoId;
     private LocalDateTime dataPedido;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -54,6 +55,7 @@ public class PedidoDTO {
                 .map(MeioPagamentoDTO::de)
                 .collect(Collectors.toList()))
             .usuarioId(pedido.getUsuarioId())
+            .sessaoId(pedido.getSessaoId())
             .dataPedido(pedido.getDataPedido())
             .createdAt(pedido.getCreatedAt())
             .updatedAt(pedido.getUpdatedAt())

@@ -24,6 +24,14 @@
   padding: 0 1rem;
 }
 
+.sessao-ativa-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-left: auto;
+  margin-right: 1rem;
+}
+
 .pedidos-titulo {
   font-size: 2rem;
   font-weight: 900;
@@ -69,6 +77,65 @@
   background: rgba(255, 255, 255, 0.35);
   border-color: rgba(255, 255, 255, 0.5);
   transform: translateY(-2px);
+}
+
+/* Sessão Ativa no Header */
+.sessao-ativa-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  min-width: fit-content;
+}
+
+.sessao-ativa-label {
+  font-weight: 600;
+  opacity: 0.9;
+  font-size: 0.9rem;
+}
+
+.sessao-ativa-nome {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.sessao-ativa-status {
+  padding: 0.3rem 0.65rem;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+.sessao-aberta-badge {
+  background: rgba(76, 175, 80, 0.3);
+  color: #fff;
+  border: 1px solid rgba(76, 175, 80, 0.5);
+}
+
+.sessao-sem-sessao {
+  background: rgba(255, 193, 7, 0.2);
+  border: 1px solid rgba(255, 193, 7, 0.4);
+}
+
+.sessao-link-criar {
+  color: white;
+  text-decoration: underline;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+  font-size: 0.85rem;
+  margin-left: 0.5rem;
+}
+
+.sessao-link-criar:hover {
+  opacity: 0.8;
 }
 
 /* Layout Principal */

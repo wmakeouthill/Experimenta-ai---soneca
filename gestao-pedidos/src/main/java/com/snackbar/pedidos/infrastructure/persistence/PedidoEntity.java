@@ -52,6 +52,9 @@ public class PedidoEntity {
     @Column(length = 36)
     private String usuarioId;
     
+    @Column(length = 36)
+    private String sessaoId;
+    
     @Column(nullable = false)
     private LocalDateTime dataPedido;
     

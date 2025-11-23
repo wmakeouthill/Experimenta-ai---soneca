@@ -42,5 +42,23 @@ export class FormatoUtil {
     
     return num.toFixed(2).replace('.', ',');
   }
+
+  /**
+   * Formata data/hora para exibição em português brasileiro.
+   */
+  static dataHora(data: string | Date | null | undefined): string {
+    if (!data) return '';
+    
+    const dataObj = typeof data === 'string' ? new Date(data) : data;
+    if (isNaN(dataObj.getTime())) return '';
+    
+    return dataObj.toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
 }
 

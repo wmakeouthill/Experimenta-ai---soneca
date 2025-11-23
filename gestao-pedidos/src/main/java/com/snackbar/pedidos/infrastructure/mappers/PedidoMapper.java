@@ -26,6 +26,7 @@ public class PedidoMapper {
             .valorTotal(pedido.getValorTotal().getAmount())
             .observacoes(pedido.getObservacoes())
             .usuarioId(pedido.getUsuarioId())
+            .sessaoId(pedido.getSessaoId())
             .dataPedido(pedido.getDataPedido())
             .createdAt(pedido.getCreatedAt())
             .updatedAt(pedido.getUpdatedAt())
@@ -105,6 +106,7 @@ public class PedidoMapper {
         // Atualizar status e observações DEPOIS de restaurar os itens e meios de pagamento
         pedido.atualizarStatus(entity.getStatus());
         pedido.atualizarObservacoes(entity.getObservacoes());
+        pedido.definirSessaoId(entity.getSessaoId());
         
         return pedido;
     }

@@ -38,6 +38,15 @@ export class HomeComponent {
         rota: '/pedidos',
         cor: 'success',
         disponivel: true
+      },
+      {
+        id: 'sessoes',
+        nome: 'Gestão de Sessões',
+        descricao: 'Gerenciar sessões de trabalho, iniciar, pausar e finalizar',
+        icone: '📅',
+        rota: '/sessoes',
+        cor: 'info',
+        disponivel: true
       }
     ];
     

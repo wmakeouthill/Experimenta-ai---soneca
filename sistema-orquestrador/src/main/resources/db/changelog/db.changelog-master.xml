@@ -32,6 +32,12 @@
     <!-- Migration: Criação da tabela de usuários para autenticação -->
     <include file="changes/009-create-usuarios-table.sql" relativeToChangelogFile="true"/>
 
+    <!-- Migration: Criação da tabela de sessões de trabalho -->
+    <include file="changes/010-create-sessoes-trabalho-table.sql" relativeToChangelogFile="true"/>
+
+    <!-- Migration: Adiciona coluna sessao_id na tabela pedidos -->
+    <include file="changes/011-add-sessao-id-to-pedidos.sql" relativeToChangelogFile="true"/>
+
     <!-- 
     NOTA: O usuário administrador inicial é criado automaticamente via CommandLineRunner
     (UsuarioInicialConfig) na primeira execução da aplicação.

@@ -5,8 +5,25 @@
         <img src="/assets/experimenta_ai_banner_circular.png" alt="Experimenta aí" class="pedidos-logo" />
         Gestão de Pedidos
       </h1>
+      
+      <!-- Sessão Ativa no Header -->
+      <div class="sessao-ativa-wrapper">
+        @if (sessaoAtiva()) {
+          <div class="sessao-ativa-header">
+            <span class="sessao-ativa-label">Sessão:</span>
+            <span class="sessao-ativa-nome">{{ sessaoAtiva()!.nome }}</span>
+            <span class="sessao-ativa-status sessao-aberta-badge">● ABERTA</span>
+          </div>
+        } @else {
+          <div class="sessao-ativa-header sessao-sem-sessao">
+            <span class="sessao-ativa-label">⚠️ Sem sessão</span>
+            <a routerLink="/sessoes" class="sessao-link-criar">Criar</a>
+          </div>
+        }
+      </div>
+      
       <div class="header-actions">
-        <button class="btn-header btn-primary" (click)="abrirFormulario()">
+        <button class="btn-header btn-primary" (click)="abrirFormulario()" [disabled]="!temSessaoAtiva()">
           ➕ Novo Pedido
         </button>
         <button class="btn-voltar" routerLink="/" aria-label="Voltar para home">
