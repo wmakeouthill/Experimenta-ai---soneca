@@ -1,8 +1,9 @@
-import { Component, ChangeDetectionStrategy, output, OnInit, effect } from '@angular/core';
+import { Component, ChangeDetectionStrategy, output, OnInit, effect, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { StatusSessao } from '../../../../services/sessao-trabalho.service';
 import { useSessaoAtiva } from './composables/use-sessao-ativa';
 import { FormatoUtil } from '../../../../utils/formato.util';
+import { AuthService } from '../../../../services/auth.service';
 
 /**
  * Componente de apresentação para gerenciamento de sessão ativa.
@@ -17,6 +18,8 @@ import { FormatoUtil } from '../../../../utils/formato.util';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class GerenciarSessaoComponent implements OnInit {
+  private readonly authService = inject(AuthService);
+
   readonly StatusSessao = StatusSessao;
   readonly onSessaoAlterada = output<void>();
 
@@ -53,8 +56,12 @@ export class GerenciarSessaoComponent implements OnInit {
   }
 
   iniciar(): void {
-    const usuarioId = 'usuario-temporario'; // TODO: obter do serviço de autenticação
-    this.sessaoComposable.iniciar(usuarioId);
+    const usuario = this.authService.usuarioAtual();
+    if (!usuario) {
+      alert('É necessário estar autenticado para iniciar uma sessão.');
+      return;
+    }
+    this.sessaoComposable.iniciar(usuario.id);
   }
 
   pausar(): void {

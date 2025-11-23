@@ -1,9 +1,11 @@
-import { Component, inject, PLATFORM_ID, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, PLATFORM_ID, OnInit, ChangeDetectionStrategy, computed } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { useSessoes } from './composables/use-sessoes';
+import { useUsuarios } from './composables/use-usuarios';
 import { SessaoTrabalhoService, SessaoTrabalho, StatusSessao } from '../../services/sessao-trabalho.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-sessoes',
@@ -21,8 +23,10 @@ export class SessoesComponent implements OnInit {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
   private readonly sessaoService = inject(SessaoTrabalhoService);
+  private readonly authService = inject(AuthService);
 
   readonly sessoesComposable = useSessoes();
+  readonly usuariosComposable = useUsuarios();
 
   readonly StatusSessao = StatusSessao;
 
@@ -34,10 +38,30 @@ export class SessoesComponent implements OnInit {
   readonly pesquisaTexto = this.sessoesComposable.pesquisaTexto;
   readonly dataFiltro = this.sessoesComposable.dataFiltro;
 
+  // Expor usuários para garantir reatividade
+  readonly usuariosCarregando = this.usuariosComposable.carregando;
+  readonly usuarios = this.usuariosComposable.usuarios;
+
+  // Computed para mapear nomes de usuário - garante reatividade
+  readonly nomesUsuarios = computed(() => {
+    const map = new Map<string, string>();
+    this.usuarios().forEach(usuario => {
+      map.set(usuario.id, usuario.nome);
+    });
+    return map;
+  });
+
   ngOnInit(): void {
     if (this.isBrowser) {
+      this.usuariosComposable.carregarUsuarios();
       this.carregarDados();
     }
+  }
+
+  obterNomeUsuario(usuarioId: string): string {
+    // Usar o computed reativo para garantir atualização
+    const map = this.nomesUsuarios();
+    return map.get(usuarioId) || usuarioId;
   }
 
   private carregarDados(): void {
@@ -65,8 +89,15 @@ export class SessoesComponent implements OnInit {
   }
 
   iniciarSessao(): void {
-    const usuarioId = 'usuario-temporario'; // TODO: obter do serviço de autenticação
-    this.sessaoService.iniciar(usuarioId).subscribe({
+    const usuario = this.authService.usuarioAtual();
+    if (!usuario) {
+      if (this.isBrowser) {
+        alert('É necessário estar autenticado para iniciar uma sessão.');
+      }
+      return;
+    }
+
+    this.sessaoService.iniciar(usuario.id).subscribe({
       next: () => {
         this.carregarDados();
       },

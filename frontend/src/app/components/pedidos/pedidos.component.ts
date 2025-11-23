@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { usePedidos } from './composables/use-pedidos';
 import { PedidoService, StatusPedido, Pedido } from '../../services/pedido.service';
 import { SessaoTrabalhoService, SessaoTrabalho } from '../../services/sessao-trabalho.service';
+import { AuthService } from '../../services/auth.service';
 import { NovoPedidoModalComponent } from './components/novo-pedido-modal/novo-pedido-modal.component';
 import { MenuContextoPedidoComponent } from './components/menu-contexto-pedido/menu-contexto-pedido.component';
 
@@ -27,6 +28,7 @@ export class PedidosComponent implements OnInit {
   private readonly isBrowser = isPlatformBrowser(this.platformId);
   private readonly pedidoService = inject(PedidoService);
   private readonly sessaoService = inject(SessaoTrabalhoService);
+  private readonly authService = inject(AuthService);
 
   // Composable com toda a lógica de pedidos - inicializado no construtor para contexto de injeção válido
   readonly pedidosComposable!: ReturnType<typeof usePedidos>;
@@ -158,7 +160,14 @@ export class PedidosComponent implements OnInit {
     meiosPagamento: any[];
     observacoes?: string;
   }): void {
-    this.pedidoService.criar(request)
+    // Adicionar usuarioId do usuário logado
+    const usuario = this.authService.usuarioAtual();
+    const requestComUsuario = {
+      ...request,
+      usuarioId: usuario?.id
+    };
+    
+    this.pedidoService.criar(requestComUsuario)
       .subscribe({
         next: (pedidoCriado) => {
           this.pedidosComposable.atualizarPedidoNoSignal(pedidoCriado);
