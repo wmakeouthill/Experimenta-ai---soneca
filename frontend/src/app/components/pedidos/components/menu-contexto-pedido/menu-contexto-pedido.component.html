@@ -1,0 +1,31 @@
+@if (aberto() && posicao() && pedido()) {
+  <div 
+    class="context-menu-overlay"
+    (click)="fechar()"
+    (contextmenu)="$event.preventDefault(); fechar()"
+  >
+    <div 
+      class="context-menu"
+      [style.left.px]="posicao()!.x"
+      [style.top.px]="posicao()!.y"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="context-menu-header">
+        <span>Alterar Status</span>
+      </div>
+      <div class="context-menu-items">
+        @if (pedido(); as pedidoAtual) {
+          @for (status of obterStatusDisponiveis(pedidoAtual.status); track status) {
+            <button 
+              class="context-menu-item"
+              (click)="alterarStatus(status)"
+            >
+              {{ obterNomeStatus(status) }}
+            </button>
+          }
+        }
+      </div>
+    </div>
+  </div>
+}
+

@@ -1,15 +1,20 @@
 <div class="administracao-container">
-  <div class="header">
-    <div class="header-left">
-      <button class="btn-voltar" routerLink="/" aria-label="Voltar para home">
-        ← Voltar
-      </button>
-      <h1>Administração de Usuários</h1>
+  <header class="administracao-header">
+    <div class="administracao-header-content">
+      <h1 class="administracao-titulo">
+        <img src="/assets/experimenta_ai_banner_circular.png" alt="Experimenta aí" class="administracao-logo" />
+        Administração
+      </h1>
+      <div class="header-actions">
+        <button class="btn-header btn-primary" (click)="abrirModalCriar()">
+          ➕ Novo Usuário
+        </button>
+        <button class="btn-voltar" routerLink="/" aria-label="Voltar para home">
+          ← Voltar
+        </button>
+      </div>
     </div>
-    <button class="btn-primary" (click)="abrirModalCriar()">
-      + Novo Usuário
-    </button>
-  </div>
+  </header>
 
   @if (erro()) {
     <div class="error-message">

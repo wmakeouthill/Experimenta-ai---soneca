@@ -21,7 +21,7 @@
     <aside class="sidebar-filtros">
       <div class="filtros-container">
         <h2 class="filtros-titulo">🔍 Filtros</h2>
-        
+
         <!-- Busca -->
         <div class="filtro-grupo">
           <label class="filtro-label">Buscar</label>
@@ -89,7 +89,7 @@
       @if (estado() === 'sucesso') {
         <!-- Cards de Status Horizontais -->
         <div class="status-cards">
-          <button 
+          <button
             class="status-card preparando"
             [class.selected]="pedidosComposable.statusSelecionado() === StatusPedido.PREPARANDO"
             (click)="filtrarPorStatus(StatusPedido.PREPARANDO)"
@@ -99,7 +99,7 @@
               <span class="status-count">{{ pedidosPorStatus().preparando.length }}</span>
             </div>
           </button>
-          <button 
+          <button
             class="status-card pronto"
             [class.selected]="pedidosComposable.statusSelecionado() === StatusPedido.PRONTO"
             (click)="filtrarPorStatus(StatusPedido.PRONTO)"
@@ -109,7 +109,7 @@
               <span class="status-count">{{ pedidosPorStatus().pronto.length }}</span>
             </div>
           </button>
-          <button 
+          <button
             class="status-card finalizado"
             [class.selected]="pedidosComposable.statusSelecionado() === StatusPedido.FINALIZADO"
             (click)="filtrarPorStatus(StatusPedido.FINALIZADO)"
@@ -139,8 +139,8 @@
           <!-- Lista de Pedidos -->
           <div class="pedidos-lista">
             @for (pedido of pedidosFiltrados(); track pedido.id) {
-              <article 
-                class="pedido-card" 
+              <article
+                class="pedido-card"
                 [class]="'status-' + pedido.status.toLowerCase()"
                 (contextmenu)="abrirMenuContexto($event, pedido.id)"
               >
@@ -205,278 +205,19 @@
     </main>
   </div>
 
-  <!-- Menu de Contexto (Botão Direito) -->
-  @if (menuContexto()) {
-    <div 
-      class="context-menu-overlay"
-      (click)="fecharMenuContexto()"
-      (contextmenu)="$event.preventDefault(); fecharMenuContexto()"
-    >
-      <div 
-        class="context-menu"
-        [style.left.px]="menuContexto()!.x"
-        [style.top.px]="menuContexto()!.y"
-        (click)="$event.stopPropagation()"
-      >
-        <div class="context-menu-header">
-          <span>Alterar Status</span>
-        </div>
-        <div class="context-menu-items">
-          @if (obterPedidoDoMenu(); as pedido) {
-            @for (status of obterStatusDisponiveis(pedido.status); track status) {
-              <button 
-                class="context-menu-item"
-                (click)="mudarStatusViaMenu(menuContexto()!.pedidoId, status)"
-              >
-                {{ obterNomeStatus(status) }}
-              </button>
-            }
-          }
-        </div>
-      </div>
-    </div>
-  }
+  <app-menu-contexto-pedido
+    [aberto]="!!menuContexto()"
+    [posicao]="menuContexto()"
+    [pedido]="obterPedidoDoMenu()"
+    (onFechar)="fecharMenuContexto()"
+    (onStatusAlterado)="onStatusAlteradoViaMenu($event)"
+  />
 
-  <!-- Formulário Lateral de Novo Pedido -->
-  @if (mostrarFormulario()) {
-    <div class="formulario-overlay" (click)="fecharFormulario()">
-      <div class="formulario-sidebar" (click)="$event.stopPropagation()">
-        <div class="formulario-header">
-          <h2>➕ Novo Pedido</h2>
-          <button class="btn-fechar" (click)="fecharFormulario()">×</button>
-        </div>
-
-        <div class="formulario-conteudo">
-          <!-- Seleção/Criação de Cliente -->
-          <div class="formulario-secao">
-            <h3>Cliente</h3>
-            
-            @if (!clienteSelecionado()) {
-              <div class="cliente-opcoes">
-                <div class="cliente-busca">
-                  <input
-                    type="text"
-                    class="input-busca"
-                    placeholder="Buscar cliente por nome ou telefone..."
-                    #buscaCliente
-                    (input)="buscarClientes($any($event.target).value)"
-                  />
-                </div>
-                
-                <div class="clientes-lista">
-                  @for (cliente of clientes(); track cliente.id) {
-                    <button class="cliente-item" (click)="selecionarCliente(cliente)">
-                      <div class="cliente-info">
-                        <strong>{{ cliente.nome }}</strong>
-                        <span>{{ cliente.telefone }}</span>
-                      </div>
-                    </button>
-                  }
-                </div>
-
-                <div class="cliente-novo">
-                  <h4>Cadastrar Novo Cliente</h4>
-                  <form [formGroup]="clienteForm" (ngSubmit)="criarCliente()">
-                    <div class="form-group">
-                      <label>Nome *</label>
-                      <input type="text" formControlName="nome" class="form-input" />
-                    </div>
-                    <div class="form-group">
-                      <label>Telefone *</label>
-                      <input type="text" formControlName="telefone" class="form-input" />
-                    </div>
-                    <div class="form-group">
-                      <label>Email</label>
-                      <input type="email" formControlName="email" class="form-input" />
-                    </div>
-                    <div class="form-group">
-                      <label>CPF (Opcional)</label>
-                      <input type="text" formControlName="cpf" class="form-input" />
-                    </div>
-                    <button type="submit" class="btn-primary" [disabled]="clienteForm.invalid">
-                      Cadastrar Cliente
-                    </button>
-                  </form>
-                </div>
-              </div>
-            } @else {
-              <div class="cliente-selecionado">
-                <div class="cliente-info-linha">
-                  <strong>{{ clienteSelecionado()!.nome }}</strong>
-                  <span>{{ clienteSelecionado()!.telefone }}</span>
-                </div>
-                <button class="btn-trocar" (click)="clienteSelecionado.set(null)">Trocar</button>
-              </div>
-            }
-          </div>
-
-          <!-- Seleção de Produtos -->
-          @if (clienteSelecionado()) {
-            <div class="formulario-secao">
-              <div class="produtos-header">
-                <h3>Produtos</h3>
-                <div class="produtos-filtros">
-                  <select
-                    class="filtro-categoria"
-                    [value]="categoriaFiltro() || ''"
-                    (change)="filtrarPorCategoria($any($event.target).value || null)"
-                  >
-                    <option value="">Todas as categorias</option>
-                    @for (categoria of categoriasUnicas(); track categoria) {
-                      <option [value]="categoria">{{ categoria }}</option>
-                    }
-                  </select>
-                  <input
-                    type="text"
-                    class="input-pesquisa-produto"
-                    placeholder="🔍 Pesquisar produto..."
-                    [value]="pesquisaProduto()"
-                    (input)="pesquisarProduto($any($event.target).value)"
-                  />
-                </div>
-              </div>
-              <div class="produtos-grid-form">
-                @for (produto of produtosFiltrados(); track produto.id) {
-                  <button class="produto-item-form" (click)="adicionarItem(produto)">
-                    @if (produto.foto) {
-                      <img [src]="produto.foto" [alt]="produto.nome" class="produto-foto-mini" />
-                    } @else {
-                      <div class="produto-foto-placeholder-mini">📷</div>
-                    }
-                    <div class="produto-info-form">
-                      <span class="produto-nome-form">{{ produto.nome }}</span>
-                      <span class="produto-preco-form">{{ formatarPreco(produto.preco) }}</span>
-                    </div>
-                  </button>
-                }
-                @if (produtosFiltrados().length === 0 && pesquisaProduto().trim()) {
-                  <div class="produto-sem-resultado">
-                    <p>Nenhum produto encontrado para "{{ pesquisaProduto() }}"</p>
-                  </div>
-                }
-              </div>
-            </div>
-
-            <!-- Itens Selecionados -->
-            @if (itensSelecionados().length > 0) {
-              <div class="formulario-secao">
-                <h3>Itens do Pedido</h3>
-                <div class="itens-selecionados">
-                  @for (item of itensSelecionados(); track obterItemId(item); let i = $index) {
-                    @if (buscarProdutoPorId(item.produtoId); as produto) {
-                      <div class="item-selecionado">
-                        <span class="item-nome">{{ produto.nome }}</span>
-                        <div class="item-controles">
-                          <button class="btn-quantidade" (click)="atualizarQuantidade(i, item.quantidade - 1)">-</button>
-                          <span class="item-quantidade">{{ item.quantidade }}</span>
-                          <button class="btn-quantidade" (click)="atualizarQuantidade(i, item.quantidade + 1)">+</button>
-                          <button class="btn-remover" (click)="removerItem(i)">🗑️</button>
-                        </div>
-                        <span class="item-subtotal">
-                          {{ formatarPreco(calcularSubtotalItem(item)) }}
-                        </span>
-                      </div>
-                    }
-                  }
-                </div>
-                <div class="pedido-total-form">
-                  <strong>Total: {{ formatarPreco(calcularTotal()) }}</strong>
-                </div>
-              </div>
-            }
-
-            <!-- Layout em 2 colunas: Observações e Meio de Pagamento -->
-            <form [formGroup]="pedidoForm">
-              <div class="formulario-colunas">
-                <div class="formulario-coluna">
-                  <div class="formulario-secao">
-                    <h3>Observações</h3>
-                    <textarea
-                      formControlName="observacoes"
-                      class="form-textarea"
-                      placeholder="Observações do pedido..."
-                      rows="3"
-                    ></textarea>
-                  </div>
-                </div>
-                <div class="formulario-coluna">
-                  <div class="formulario-secao">
-                    <h3>Meios de Pagamento <span class="obrigatorio">*</span></h3>
-                    <div class="meios-pagamento-container">
-                      <div class="meio-pagamento-input-group">
-                        <select
-                          class="form-input form-select"
-                          [value]="meioPagamentoSelecionado() || ''"
-                          (change)="meioPagamentoSelecionado.set($any($event.target).value || null); onMeioPagamentoSelecionado()"
-                        >
-                          <option value="">Selecione...</option>
-                          <option [value]="MeioPagamento.PIX">PIX</option>
-                          <option [value]="MeioPagamento.CARTAO_CREDITO">Cartão de Crédito</option>
-                          <option [value]="MeioPagamento.CARTAO_DEBITO">Cartão de Débito</option>
-                          <option [value]="MeioPagamento.VALE_REFEICAO">Vale Refeição</option>
-                          <option [value]="MeioPagamento.DINHEIRO">Dinheiro</option>
-                        </select>
-                        <input
-                          type="number"
-                          class="form-input input-valor-meio-pagamento"
-                          placeholder="Valor"
-                          step="0.01"
-                          min="0.01"
-                          [value]="valorMeioPagamento()"
-                          (input)="valorMeioPagamento.set(parseValorMeioPagamento($any($event.target).value))"
-                          [max]="valorRestante()"
-                        />
-                        <button
-                          type="button"
-                          class="btn-adicionar-meio-pagamento"
-                          (click)="adicionarMeioPagamento()"
-                          [disabled]="!meioPagamentoSelecionado() || valorMeioPagamento() <= 0 || valorMeioPagamento() > valorRestante()"
-                        >
-                          ➕
-                        </button>
-                      </div>
-                      <div class="valor-total-info">
-                        <span class="valor-label">Total: {{ formatarPreco(calcularTotal()) }}</span>
-                        <span class="valor-restante" [class.completo]="valorRestante() <= 0">
-                          Restante: {{ formatarPreco(valorRestante()) }}
-                        </span>
-                      </div>
-                      @if (meiosPagamento().length > 0) {
-                        <div class="meios-pagamento-lista">
-                          @for (meioPagamento of meiosPagamento(); track $index) {
-                            <div class="meio-pagamento-item">
-                              <span class="meio-pagamento-nome">{{ meioPagamento.meioPagamento }}</span>
-                              <span class="meio-pagamento-valor">{{ formatarPreco(meioPagamento.valor) }}</span>
-                              <button
-                                type="button"
-                                class="btn-remover-meio-pagamento"
-                                (click)="removerMeioPagamento($index)"
-                              >
-                                🗑️
-                              </button>
-                            </div>
-                          }
-                        </div>
-                      }
-                      @if (meiosPagamento().length === 0) {
-                        <p class="meio-pagamento-hint">Adicione pelo menos um meio de pagamento</p>
-                      }
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </form>
-
-            <!-- Botão Criar Pedido -->
-            <div class="formulario-acoes">
-              <button class="btn-primary btn-criar" (click)="criarPedido()" [disabled]="itensSelecionados().length === 0 || meiosPagamento().length === 0 || valorRestante() > 0.01">
-                Criar Pedido
-              </button>
-            </div>
-          }
-        </div>
-      </div>
-    </div>
-  }
+  <app-novo-pedido-modal
+    [aberto]="mostrarFormulario()"
+    [produtos]="produtos()"
+    (onFechar)="fecharFormulario()"
+    (onCriarPedido)="onPedidoCriado($event)"
+  />
 </div>
 
