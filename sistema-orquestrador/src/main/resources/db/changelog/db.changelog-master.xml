@@ -29,4 +29,13 @@
     <!-- Migration: Criação da tabela meios_pagamento_pedido para múltiplos meios de pagamento -->
     <include file="changes/008-create-meios-pagamento-pedido-table.sql" relativeToChangelogFile="true"/>
 
+    <!-- Migration: Criação da tabela de usuários para autenticação -->
+    <include file="changes/009-create-usuarios-table.sql" relativeToChangelogFile="true"/>
+
+    <!-- 
+    NOTA: O usuário administrador inicial é criado automaticamente via CommandLineRunner
+    (UsuarioInicialConfig) na primeira execução da aplicação.
+    Credenciais: admin@snackbar.com / admin123
+    -->
+
 </databaseChangeLog>

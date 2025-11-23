@@ -1,6 +1,7 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 import { Modulo } from '../../models/modulo.model';
 
 @Component({
@@ -11,37 +12,58 @@ import { Modulo } from '../../models/modulo.model';
   styleUrl: './home.component.css'
 })
 export class HomeComponent {
-  private readonly modulos = signal<Modulo[]>([
-    {
-      id: 'cardapio',
-      nome: 'Gestão de Cardápio',
-      descricao: 'Gerenciar produtos, categorias e itens do cardápio',
-      icone: '🍔',
-      rota: '/cardapio',
-      cor: 'primary',
-      disponivel: true
-    },
-    {
-      id: 'pedidos',
-      nome: 'Gestão de Pedidos',
-      descricao: 'Gerenciar pedidos, fila de preparo e status',
-      icone: '📋',
-      rota: '/pedidos',
-      cor: 'success',
-      disponivel: true
+  private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
+  
+  readonly usuarioAtual = this.authService.usuarioAtual;
+  readonly estaAutenticado = this.authService.estaAutenticado;
+  readonly isAdministrador = this.authService.isAdministrador;
+  
+  readonly modulosDisponiveis = computed(() => {
+    const modulos: Modulo[] = [
+      {
+        id: 'cardapio',
+        nome: 'Gestão de Cardápio',
+        descricao: 'Gerenciar produtos, categorias e itens do cardápio',
+        icone: '🍔',
+        rota: '/cardapio',
+        cor: 'primary',
+        disponivel: true
+      },
+      {
+        id: 'pedidos',
+        nome: 'Gestão de Pedidos',
+        descricao: 'Gerenciar pedidos, fila de preparo e status',
+        icone: '📋',
+        rota: '/pedidos',
+        cor: 'success',
+        disponivel: true
+      }
+    ];
+    
+    if (this.isAdministrador()) {
+      modulos.push({
+        id: 'administracao',
+        nome: 'Administração',
+        descricao: 'Gerenciar usuários, senhas e contas do sistema',
+        icone: '⚙️',
+        rota: '/administracao',
+        cor: 'warning',
+        disponivel: true
+      });
     }
-  ]);
-
-  readonly modulosDisponiveis = computed(() => 
-    this.modulos().filter(m => m.disponivel)
-  );
-
-  constructor(private router: Router) {}
+    
+    return modulos;
+  });
 
   navegarParaModulo(modulo: Modulo): void {
     if (modulo.disponivel) {
       this.router.navigate([modulo.rota]);
     }
+  }
+
+  logout(): void {
+    this.authService.logout();
   }
 }
 

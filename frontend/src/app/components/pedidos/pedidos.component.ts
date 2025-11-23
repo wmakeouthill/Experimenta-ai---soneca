@@ -27,18 +27,41 @@ export class PedidosComponent implements OnInit {
   private readonly clienteService = inject(ClienteService);
   private readonly fb = inject(FormBuilder);
 
-  // Composable com toda a lógica de pedidos
-  readonly pedidosComposable = usePedidos();
+  // Composable com toda a lógica de pedidos - inicializado no construtor para contexto de injeção válido
+  readonly pedidosComposable!: ReturnType<typeof usePedidos>;
 
-  // Expor propriedades necessárias
-  readonly pedidosFiltrados = this.pedidosComposable.pedidosFiltrados;
-  readonly pedidosPorStatus = this.pedidosComposable.pedidosPorStatus;
-  readonly estado = this.pedidosComposable.estado;
-  readonly erro = this.pedidosComposable.erro;
-  readonly estaCarregando = this.pedidosComposable.estaCarregando;
-  readonly temPedidos = this.pedidosComposable.temPedidos;
-  readonly pesquisaTexto = this.pedidosComposable.pesquisaTexto;
-  readonly produtos = this.pedidosComposable.produtos;
+  // Expor propriedades necessárias (usando getters para acessar após inicialização)
+  get pedidosFiltrados() {
+    return this.pedidosComposable.pedidosFiltrados;
+  }
+  
+  get pedidosPorStatus() {
+    return this.pedidosComposable.pedidosPorStatus;
+  }
+  
+  get estado() {
+    return this.pedidosComposable.estado;
+  }
+  
+  get erro() {
+    return this.pedidosComposable.erro;
+  }
+  
+  get estaCarregando() {
+    return this.pedidosComposable.estaCarregando;
+  }
+  
+  get temPedidos() {
+    return this.pedidosComposable.temPedidos;
+  }
+  
+  get pesquisaTexto() {
+    return this.pedidosComposable.pesquisaTexto;
+  }
+  
+  get produtos() {
+    return this.pedidosComposable.produtos;
+  }
   readonly pesquisaProduto = signal<string>('');
   readonly categoriaFiltro = signal<string | null>(null);
 
@@ -61,6 +84,9 @@ export class PedidosComponent implements OnInit {
   pedidoForm: FormGroup;
 
   constructor() {
+    // Inicializar composable no construtor para garantir contexto de injeção válido
+    this.pedidosComposable = usePedidos();
+    
     this.clienteForm = this.fb.group({
       nome: ['', [Validators.required]],
       telefone: ['', [Validators.required]],

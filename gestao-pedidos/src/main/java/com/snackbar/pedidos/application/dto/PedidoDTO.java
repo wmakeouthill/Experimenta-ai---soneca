@@ -1,6 +1,5 @@
 package com.snackbar.pedidos.application.dto;
 
-import com.snackbar.pedidos.domain.entities.MeioPagamento;
 import com.snackbar.pedidos.domain.entities.Pedido;
 import com.snackbar.pedidos.domain.entities.StatusPedido;
 import lombok.AllArgsConstructor;

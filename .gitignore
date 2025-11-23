@@ -6,10 +6,62 @@
 **/.env
 **/.env.local
 **/.env.*.local
+**/.env.*
 **/secrets/
 **/*secret*
 **/*password*
 **/*credential*
+**/*credentials*
+
+# Chaves e tokens (arquivos com padrões específicos)
+**/*.private.key
+**/*.private-key
+**/*.api.key
+**/*.api-key
+**/*.token
+**/*_key
+**/*_KEY
+**/*_SECRET
+**/*_TOKEN
+**/*_PASSWORD
+**/*_PASS
+
+# Arquivos de configuração que podem conter credenciais hardcoded
+**/application-local.yml
+**/application-local.properties
+**/application-prod.yml
+**/application-prod.properties
+**/application-dev.yml
+**/application-dev.properties
+
+# Certificados e Chaves
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.truststore
+
+# Arquivos de configuração de IDEs com credenciais
+.idea/dataSources.local.xml
+.idea/dataSources.xml
+.idea/dbnavigator.xml
+.idea/sqldialects.xml
+.idea/db/*.xml
+**/dataSources.local.xml
+**/dataSources.xml
+**/dbnavigator.xml
+**/sqldialects.xml
+
+# Arquivos de backup que podem conter credenciais
+*.bak
+*.backup
+*~
+*.swp
+*.swo
 
 # ============================================
 # Logs
@@ -147,8 +199,7 @@ replay_pid*
 # ============================================
 # Spring Boot
 # ============================================
-application-local.yml
-application-local.properties
+# Nota: application-local.yml e application-local.properties já estão na seção de Secrets
 
 # ============================================
 # Documentação Markdown

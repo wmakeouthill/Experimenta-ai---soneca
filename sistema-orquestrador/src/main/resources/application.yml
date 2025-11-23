@@ -26,11 +26,17 @@ spring:
         jdbc:
           "[time_zone]": America/Sao_Paulo
 
+  # Liquibase configurado via LiquibaseConfig.java para garantir uso do arquivo XML
   liquibase:
-    enabled: true
-    change-log: classpath:db/changelog/db.changelog-master.xml
-    drop-first: false
-    contexts: ${LIQUIBASE_CONTEXTS:}
+    enabled: false # Desabilitado aqui - usando configuração Java explícita
+
+# JWT Configuration
+# Configurado via JwtProperties (@ConfigurationProperties)
+# IMPORTANTE: Defina JWT_SECRET e JWT_EXPIRATION no application-secrets.yml ou variáveis de ambiente
+# NUNCA hardcode valores de secrets no application.yml!
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION:86400}
 
 server:
   port: ${SERVER_PORT:8080}

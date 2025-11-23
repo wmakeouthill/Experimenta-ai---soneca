@@ -1,11 +1,26 @@
 <div class="home-container">
   <div class="home-card">
     <header class="home-header">
-      <h1 class="home-titulo">
-        <img src="/assets/experimenta_ai_banner_circular.png" alt="Experimenta aí" class="home-logo" />
-        Experimenta aí
-      </h1>
-      <p class="home-subtitulo">Sistema de Gestão para Lanchonetes</p>
+      <div class="home-header-top">
+        <div>
+          <h1 class="home-titulo">
+            <img src="/assets/experimenta_ai_banner_circular.png" alt="Experimenta aí" class="home-logo" />
+            Experimenta aí
+          </h1>
+          <p class="home-subtitulo">Sistema de Gestão para Lanchonetes</p>
+        </div>
+        @if (estaAutenticado()) {
+          <div class="home-user-info">
+            <div class="user-info-content">
+              <span class="user-name">{{ usuarioAtual()?.nome }}</span>
+              <span class="user-role">{{ usuarioAtual()?.descricaoRole }}</span>
+            </div>
+            <button class="btn-logout" (click)="logout()">
+              Sair
+            </button>
+          </div>
+        }
+      </div>
     </header>
 
     <div class="home-modulos">

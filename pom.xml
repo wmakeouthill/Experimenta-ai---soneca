@@ -27,6 +27,7 @@
         <module>gestao-cardapio</module>
         <module>gestao-clientes</module>
         <module>gestao-pedidos</module>
+        <module>autenticacao</module>
         <module>sistema-orquestrador</module>
         <!-- Módulos a serem implementados:
         <module>gestao-financeira</module>
