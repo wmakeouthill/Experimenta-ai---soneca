@@ -2,6 +2,7 @@ import { Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { AuthorizationService } from '../../services/authorization.service';
 import { Modulo } from '../../models/modulo.model';
 
 @Component({
@@ -14,13 +15,14 @@ import { Modulo } from '../../models/modulo.model';
 export class HomeComponent {
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
+  private readonly authorizationService = inject(AuthorizationService);
 
   readonly usuarioAtual = this.authService.usuarioAtual;
   readonly estaAutenticado = this.authService.estaAutenticado;
   readonly isAdministrador = this.authService.isAdministrador;
 
   readonly modulosDisponiveis = computed(() => {
-    const modulos: Modulo[] = [
+    const modulosBase: Omit<Modulo, 'rolesPermitidos' | 'bloqueado'>[] = [
       {
         id: 'cardapio',
         nome: 'Gestão de Cardápio',
@@ -83,11 +85,8 @@ export class HomeComponent {
         rota: '/relatorio-financeiro',
         cor: 'success',
         disponivel: true
-      }
-    ];
-
-    if (this.isAdministrador()) {
-      modulos.push({
+      },
+      {
         id: 'administracao',
         nome: 'Administração',
         descricao: 'Gerenciar usuários, senhas e contas do sistema',
@@ -95,14 +94,26 @@ export class HomeComponent {
         rota: '/administracao',
         cor: 'warning',
         disponivel: true
-      });
-    }
+      }
+    ];
 
-    return modulos;
+    return modulosBase.map(modulo => {
+      const podeAcessar = this.authorizationService.podeAcessarModulo(modulo.id);
+      const rolesPermitidos = this.authorizationService.getRolesPermitidos(modulo.id);
+      
+      return {
+        ...modulo,
+        rolesPermitidos,
+        bloqueado: !podeAcessar,
+        disponivel: podeAcessar
+      };
+    });
   });
 
   navegarParaModulo(modulo: Modulo, event: MouseEvent): void {
-    if (!modulo.disponivel) {
+    if (!modulo.disponivel || modulo.bloqueado) {
+      event.preventDefault();
+      event.stopPropagation();
       return;
     }
 

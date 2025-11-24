@@ -230,6 +230,68 @@
   cursor: not-allowed;
 }
 
+.modulo-card.modulo-bloqueado {
+  position: relative;
+  opacity: 0.6;
+  cursor: not-allowed;
+  filter: grayscale(0.3);
+}
+
+.modulo-card.modulo-bloqueado:hover {
+  transform: none;
+  border-color: #dc3545;
+  box-shadow: 0 15px 40px rgba(220, 53, 69, 0.2);
+}
+
+.modulo-card.modulo-bloqueado::after {
+  content: 'Bloqueado apenas para administração';
+  position: absolute;
+  bottom: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.modulo-card.modulo-bloqueado:hover::after {
+  opacity: 1;
+}
+
+.modulo-bloqueado-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(220, 53, 69, 0.9);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  z-index: 10;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.bloqueado-icon {
+  font-size: 0.9rem;
+}
+
+.bloqueado-texto {
+  font-size: 0.65rem;
+  white-space: nowrap;
+}
+
 .modulo-card.modulo-primary:hover {
   border-color: #FF6B35;
   box-shadow: 0 15px 40px rgba(255, 107, 53, 0.3);

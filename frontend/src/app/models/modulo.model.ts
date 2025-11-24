@@ -1,3 +1,5 @@
+export type Role = 'ADMINISTRADOR' | 'OPERADOR';
+
 export interface Modulo {
   id: string;
   nome: string;
@@ -6,5 +8,7 @@ export interface Modulo {
   rota: string;
   cor: 'primary' | 'success' | 'warning' | 'info' | 'secondary' | 'purple';
   disponivel: boolean;
+  rolesPermitidos: Role[];
+  bloqueado: boolean;
 }
 

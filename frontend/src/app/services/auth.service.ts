@@ -50,6 +50,7 @@ export class AuthService {
   readonly usuarioAtual = signal<UsuarioDTO | null>(null);
   readonly estaAutenticado = signal<boolean>(false);
   readonly isAdministrador = signal<boolean>(false);
+  readonly isOperador = signal<boolean>(false);
 
   private get isBrowser(): boolean {
     return isPlatformBrowser(this.platformId);
@@ -78,6 +79,7 @@ export class AuthService {
     this.usuarioAtual.set(null);
     this.estaAutenticado.set(false);
     this.isAdministrador.set(false);
+    this.isOperador.set(false);
     this.router.navigate(['/login']);
   }
 
@@ -122,6 +124,7 @@ export class AuthService {
         this.usuarioAtual.set(null);
         this.estaAutenticado.set(false);
         this.isAdministrador.set(false);
+        this.isOperador.set(false);
       }
     }
   }
@@ -130,6 +133,7 @@ export class AuthService {
     this.usuarioAtual.set(usuario);
     this.estaAutenticado.set(true);
     this.isAdministrador.set(usuario.role === 'ADMINISTRADOR');
+    this.isOperador.set(usuario.role === 'OPERADOR');
   }
 
   listarUsuarios(): Observable<UsuarioDTO[]> {
@@ -150,6 +154,18 @@ export class AuthService {
 
   excluirUsuario(id: string): Observable<void> {
     return this.http.delete<void>(`${this.adminUrl}/${id}`);
+  }
+
+  getRoleAtual(): string | null {
+    return this.usuarioAtual()?.role ?? null;
+  }
+
+  temAcessoA(rolesPermitidos: string[]): boolean {
+    const roleAtual = this.getRoleAtual();
+    if (!roleAtual || !this.estaAutenticado()) {
+      return false;
+    }
+    return rolesPermitidos.includes(roleAtual);
   }
 }
 
