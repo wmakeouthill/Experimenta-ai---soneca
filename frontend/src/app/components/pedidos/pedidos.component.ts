@@ -312,5 +312,13 @@ export class PedidosComponent implements OnInit {
     };
     return nomes[status] || status;
   }
+
+  truncarNomeCliente(nomeCompleto: string): string {
+    const palavras = nomeCompleto.trim().split(/\s+/);
+    if (palavras.length <= 3) {
+      return nomeCompleto;
+    }
+    return palavras.slice(0, 3).join(' ') + '...';
+  }
 }
 

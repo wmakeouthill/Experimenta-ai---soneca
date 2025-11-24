@@ -33,10 +33,41 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authorizeHttpRequests(auth -> auth
+                // Endpoints públicos (sem autenticação)
                 .requestMatchers("/api/auth/login").permitAll()
+                
+                // Endpoints de autenticação (exigem autenticação)
                 .requestMatchers("/api/auth/**").authenticated()
+                
+                // Endpoints administrativos (exigem role ADMINISTRADOR)
                 .requestMatchers("/api/admin/**").hasRole("ADMINISTRADOR")
-                .anyRequest().permitAll()
+                
+                // Endpoints de pedidos - TODAS AS AÇÕES EXIGEM AUTENTICAÇÃO (CRÍTICO)
+                .requestMatchers("/api/pedidos", "/api/pedidos/**").authenticated()
+                
+                // Endpoints de cardápio - leitura pública (GET), escrita exige autenticação
+                .requestMatchers("GET", "/api/produtos", "/api/produtos/**").permitAll()
+                .requestMatchers("GET", "/api/categorias", "/api/categorias/**").permitAll()
+                .requestMatchers("POST", "/api/produtos", "/api/produtos/**").authenticated()
+                .requestMatchers("PUT", "/api/produtos/**").authenticated()
+                .requestMatchers("DELETE", "/api/produtos/**").hasRole("ADMINISTRADOR")
+                .requestMatchers("POST", "/api/categorias", "/api/categorias/**").authenticated()
+                
+                // Endpoints de sessões de trabalho - exige autenticação
+                .requestMatchers("/api/sessoes-trabalho", "/api/sessoes-trabalho/**").authenticated()
+                
+                // Endpoints de clientes - exige autenticação
+                .requestMatchers("/api/clientes", "/api/clientes/**").authenticated()
+                
+                // Endpoints de configuração de animação - exige autenticação
+                .requestMatchers("GET", "/api/config-animacao", "/api/config-animacao/**").authenticated()
+                .requestMatchers("POST", "/api/config-animacao", "/api/config-animacao/**").hasRole("ADMINISTRADOR")
+                
+                // Endpoint de status da API - público (apenas informações básicas)
+                .requestMatchers("GET", "/api/status").permitAll()
+                
+                // Qualquer outro endpoint exige autenticação por padrão
+                .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         

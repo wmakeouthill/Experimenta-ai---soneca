@@ -226,8 +226,11 @@
                     <div class="pedido-header">
                       <div class="pedido-info-principal">
                         <h4 class="pedido-numero">Pedido #{{ pedido.numeroPedido }}</h4>
-                        <p class="pedido-cliente">{{ pedido.clienteNome }}</p>
-                        <p class="pedido-data">{{ formatarData(pedido.dataPedido) }}</p>
+                        <p class="pedido-cliente-data">
+                          <span class="pedido-cliente" [title]="pedido.clienteNome">{{ truncarNomeCliente(pedido.clienteNome) }}</span>
+                          <span class="pedido-separador"> - </span>
+                          <span class="pedido-data">{{ formatarDataHora(pedido.dataPedido) }}</span>
+                        </p>
                       </div>
                       <div class="pedido-status-badge" [class]="'badge-' + pedido.status.toLowerCase()">
                         {{ pedido.status }}
@@ -235,7 +238,6 @@
                     </div>
 
                     <div class="pedido-itens">
-                      <h5 class="itens-titulo">Itens:</h5>
                       <ul class="itens-lista">
                         @for (item of pedido.itens; track item.produtoId) {
                           <li class="item-lista">

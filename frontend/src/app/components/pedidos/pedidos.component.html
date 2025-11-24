@@ -6,20 +6,29 @@
         Gestão de Pedidos
       </h1>
 
-      <!-- Sessão Ativa no Header -->
-      <div class="sessao-ativa-wrapper">
-        @if (sessaoAtiva()) {
+      <!-- Informações do Header -->
+      <div class="header-info-wrapper">
+        @if (estado() === 'sucesso') {
           <div class="sessao-ativa-header">
-            <span class="sessao-ativa-label">Sessão:</span>
-            <span class="sessao-ativa-nome">{{ sessaoAtiva()!.nome }}</span>
-            <span class="sessao-ativa-status sessao-aberta-badge">● ABERTA</span>
-          </div>
-        } @else {
-          <div class="sessao-ativa-header sessao-sem-sessao">
-            <span class="sessao-ativa-label">⚠️ Sem sessão</span>
-            <a routerLink="/sessoes" class="sessao-link-criar">Criar</a>
+            <span class="sessao-ativa-label">Mostrando {{ pedidosFiltrados().length }} pedido(s)</span>
           </div>
         }
+        
+        <!-- Sessão Ativa no Header -->
+        <div class="sessao-ativa-wrapper">
+          @if (sessaoAtiva()) {
+            <div class="sessao-ativa-header">
+              <span class="sessao-ativa-label">Sessão:</span>
+              <span class="sessao-ativa-nome">{{ sessaoAtiva()!.nome }}</span>
+              <span class="sessao-ativa-status sessao-aberta-badge">● ABERTA</span>
+            </div>
+          } @else {
+            <div class="sessao-ativa-header sessao-sem-sessao">
+              <span class="sessao-ativa-label">⚠️ Sem sessão</span>
+              <a routerLink="/sessoes" class="sessao-link-criar">Criar</a>
+            </div>
+          }
+        </div>
       </div>
 
       <div class="header-actions">
@@ -172,13 +181,6 @@
           </button>
         </div>
 
-        <!-- Informações de Resultado -->
-        <div class="resultado-info">
-          <p class="resultado-texto">
-            Mostrando {{ pedidosFiltrados().length }} pedido(s)
-          </p>
-        </div>
-
         @if (pedidosFiltrados().length === 0) {
           <div class="estado-vazio">
             <p class="vazio-mensagem">Nenhum pedido encontrado.</p>
@@ -198,8 +200,11 @@
                 <div class="pedido-header">
                   <div class="pedido-info-principal">
                     <h3 class="pedido-numero">Pedido #{{ pedido.numeroPedido }}</h3>
-                    <p class="pedido-cliente">{{ pedido.clienteNome }}</p>
-                    <p class="pedido-data">{{ formatarData(pedido.dataPedido) }}</p>
+                    <p class="pedido-cliente-data">
+                      <span class="pedido-cliente" [title]="pedido.clienteNome">{{ truncarNomeCliente(pedido.clienteNome) }}</span>
+                      <span class="pedido-separador"> - </span>
+                      <span class="pedido-data">{{ formatarData(pedido.dataPedido) }}</span>
+                    </p>
                   </div>
                   <div class="pedido-status-badge" [class]="'badge-' + pedido.status.toLowerCase()">
                     {{ formatarStatus(pedido.status) }}
@@ -207,7 +212,6 @@
                 </div>
 
                 <div class="pedido-itens">
-                  <h4 class="itens-titulo">Itens:</h4>
                   <ul class="itens-lista">
                     @for (item of pedido.itens; track item.produtoId) {
                       <li class="item-lista">
