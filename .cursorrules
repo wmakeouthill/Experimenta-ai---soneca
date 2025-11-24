@@ -9,6 +9,7 @@ Estas diretrizes são **OBRIGATÓRIAS** e devem ser seguidas em **TODAS** as imp
 ## 1️⃣ STACK TECNOLÓGICA PADRÃO
 
 ### Frontend (Angular 17+)
+
 - **Angular**: 17.3.0 ou superior
 - **TypeScript**: 5.4.2 ou superior
 - **RxJS**: 7.8.0
@@ -18,6 +19,7 @@ Estas diretrizes são **OBRIGATÓRIAS** e devem ser seguidas em **TODAS** as imp
 - **Change Detection**: OnPush quando possível
 
 ### Backend (Java 17)
+
 - **Java**: 17 (exatamente esta versão)
 - **Spring Boot**: 3.2.3 ou superior
 - **Liquibase**: 4.25.0 para migrações de banco
@@ -29,6 +31,7 @@ Estas diretrizes são **OBRIGATÓRIAS** e devem ser seguidas em **TODAS** as imp
 ## 2️⃣ CLEAN CODE - REGRAS OBRIGATÓRIAS
 
 ### 2.1 Código Enxuto - MANTENHA CLASSES PEQUENAS
+
 - ✅ **SEMPRE** mantenha código enxuto e classes pequenas
 - ✅ Máximo **300 linhas** por classe (exceto casos muito especiais justificados)
 - ✅ Se passar de 300 linhas, **OBRIGATÓRIO** refatorar dividindo em classes menores
@@ -41,6 +44,7 @@ Estas diretrizes são **OBRIGATÓRIAS** e devem ser seguidas em **TODAS** as imp
 - ❌ **NUNCA** justifique classes grandes com "está tudo relacionado" - divida mesmo assim
 
 **Benefícios de classes enxutas:**
+
 - ✅ Mais fácil de entender e manter
 - ✅ Mais fácil de testar
 - ✅ Melhor reutilização
@@ -48,6 +52,7 @@ Estas diretrizes são **OBRIGATÓRIAS** e devem ser seguidas em **TODAS** as imp
 - ✅ Código mais limpo e profissional
 
 ### 2.2 Nomenclatura
+
 - ✅ **SEMPRE** use nomes descritivos e autoexplicativos
 - ✅ Classes: PascalCase (ex: `ProdutoService`, `CriarProdutoUseCase`)
 - ✅ Métodos: camelCase verbos (ex: `buscarProdutoPorId`, `salvarProduto`)
@@ -57,24 +62,27 @@ Estas diretrizes são **OBRIGATÓRIAS** e devem ser seguidas em **TODAS** as imp
 - ❌ **NUNCA** use nomes genéricos (ex: `data`, `info`, `util`, `helper` sem contexto)
 
 ### 2.3 Tamanho de Funções/Métodos
+
 - ✅ Máximo **20 linhas** por método (exceto casos especiais justificados)
 - ✅ Se passar de 20 linhas, **OBRIGATÓRIO** extrair para métodos privados
 - ✅ Métodos devem fazer **UMA ÚNICA** coisa bem feita
 
-
 ### 2.4 Responsabilidade Única
+
 - ✅ Uma classe = uma responsabilidade
 - ✅ Um método = uma ação específica
 - ❌ **NUNCA** misture lógica de negócio com apresentação
 - ❌ **NUNCA** misture acesso a dados com validação
 
 ### 2.5 Comentários
+
 - ✅ **APENAS** comentários que explicam **PORQUÊ**, não **O QUÊ**
 - ✅ Documentação JavaDoc para APIs públicas
 - ❌ **NUNCA** comente código óbvio ou autoexplicativo
 - ✅ Se precisa comentar, refatore para tornar o código mais claro
 
 ### 2.6 Tratamento de Erros
+
 - ✅ Use exceções específicas (não genéricas)
 - ✅ Mensagens de erro claras e acionáveis
 - ✅ **SEMPRE** trate exceções, nunca deixe `catch` vazio
@@ -85,7 +93,8 @@ Estas diretrizes são **OBRIGATÓRIAS** e devem ser seguidas em **TODAS** as imp
 ## 3️⃣ CLEAN ARCHITECTURE - ESTRUTURA OBRIGATÓRIA
 
 ### 3.1 Camadas (Backend Java)
-```
+
+```estrutura
 Domain (Núcleo)
   └─ Entidades, Value Objects, Regras de Negócio
   └─ ❌ NUNCA depende de frameworks
@@ -101,13 +110,16 @@ Infrastructure (Adaptadores)
 ```
 
 ### 3.2 Regra de Dependência
-```
+
+```estrutura
 Infrastructure → Application → Domain
 ```
+
 ❌ **NUNCA** inverta essa ordem!
 
 ### 3.3 Estrutura de Pacotes (Java)
-```
+
+```estrutura
 com.snackbar.{modulo}
 ├── domain/
 │   ├── entities/
@@ -124,7 +136,8 @@ com.snackbar.{modulo}
 ```
 
 ### 3.4 Estrutura de Pastas (Angular)
-```
+
+```estrutura
 src/app/
 ├── components/
 │   └── {feature}/
@@ -142,6 +155,7 @@ src/app/
 ## 4️⃣ DRY (Don't Repeat Yourself) - OBRIGATÓRIO
 
 ### 4.1 Mappers - SINGLETON OBRIGATÓRIO
+
 - ✅ **SEMPRE** use `MapperUtils.getInstance()` do `kernel-compartilhado` para conversões simples
 - ✅ **SEMPRE** verifique se já existe um mapper antes de criar novo
 - ✅ Use `MapperRegistry.getInstance()` para mappers complexos
@@ -149,6 +163,7 @@ src/app/
 - ❌ **NUNCA** use `new MapperUtils()` - sempre use `.getInstance()`
 
 **Exemplo CORRETO:**
+
 ```java
 private final MapperUtils mapper = MapperUtils.getInstance();
 
@@ -158,6 +173,7 @@ public ProdutoDTO toDTO(Produto produto) {
 ```
 
 **Exemplo INCORRETO:**
+
 ```java
 // ❌ ERRADO - não cria nova instância
 private final MapperUtils mapper = new MapperUtils();
@@ -167,12 +183,14 @@ public class MeuMapper implements Mapper<A, B> { ... }
 ```
 
 ### 4.2 Utilitários Comuns
+
 - ✅ **SEMPRE** verifique `kernel-compartilhado` antes de criar utilitários
 - ✅ **SEMPRE** verifique `frontend/src/app/utils/` antes de criar utilitários no frontend
 - ✅ Use composables no Angular para lógica reutilizável
 - ❌ **NUNCA** duplique código existente
 
 ### 4.3 Exemplos de Reutilização
+
 - ✅ Validações comuns → `ValidationUtils`
 - ✅ Formatação → `FormatoUtil` (frontend) ou utilitários compartilhados
 - ✅ Paginação → `PaginacaoUtil`
@@ -183,10 +201,12 @@ public class MeuMapper implements Mapper<A, B> { ... }
 ## 5️⃣ ANGULAR 17+ - PRÁTICAS MODERNAS OBRIGATÓRIAS
 
 ### 5.1 Injeção de Dependência
+
 - ✅ **SEMPRE** use `inject()` ao invés de constructor injection
 - ❌ **NUNCA** use constructor injection quando `inject()` é possível
 
 **Exemplo CORRETO:**
+
 ```typescript
 export class ProdutoComponent {
   private readonly produtoService = inject(ProdutoService);
@@ -195,6 +215,7 @@ export class ProdutoComponent {
 ```
 
 **Exemplo INCORRETO:**
+
 ```typescript
 // ❌ ERRADO - forma antiga
 export class ProdutoComponent {
@@ -206,6 +227,7 @@ export class ProdutoComponent {
 ```
 
 ### 5.2 Signals - OBRIGATÓRIO
+
 - ✅ **SEMPRE** use `signal()` para estado reativo
 - ✅ **SEMPRE** use `computed()` para valores derivados
 - ✅ **SEMPRE** use `effect()` para efeitos colaterais (no injection context)
@@ -213,6 +235,7 @@ export class ProdutoComponent {
 - ❌ **NUNCA** use `ChangeDetectorRef.detectChanges()` manualmente se usar signals corretamente
 
 **Exemplo CORRETO:**
+
 ```typescript
 readonly produtos = signal<Produto[]>([]);
 readonly produtosFiltrados = computed(() => 
@@ -221,11 +244,13 @@ readonly produtosFiltrados = computed(() =>
 ```
 
 ### 5.3 Input/Output - Nova Sintaxe
+
 - ✅ **SEMPRE** use `input()` e `output()` ao invés de `@Input()` e `@Output()`
 - ✅ Use `input.required()` para inputs obrigatórios
 - ✅ Use `input()` com valor padrão quando opcional
 
 **Exemplo CORRETO:**
+
 ```typescript
 readonly produto = input.required<Produto>();
 readonly aberto = input<boolean>(false);
@@ -234,6 +259,7 @@ readonly onSalvar = output<Produto>();
 ```
 
 **Exemplo INCORRETO:**
+
 ```typescript
 // ❌ ERRADO - sintaxe antiga
 @Input() produto!: Produto;
@@ -242,10 +268,12 @@ readonly onSalvar = output<Produto>();
 ```
 
 ### 5.4 HTML - Nova Sintaxe de Controle
+
 - ✅ **SEMPRE** use `@if`, `@for`, `@switch`, `@defer` ao invés de `*ngIf`, `*ngFor`, `[ngSwitch]`
 - ❌ **NUNCA** use diretivas estruturais antigas
 
 **Exemplo CORRETO:**
+
 ```html
 @if (produto()) {
   <div>{{ produto().nome }}</div>
@@ -257,6 +285,7 @@ readonly onSalvar = output<Produto>();
 ```
 
 **Exemplo INCORRETO:**
+
 ```html
 <!-- ❌ ERRADO - sintaxe antiga -->
 <div *ngIf="produto">{{ produto.nome }}</div>
@@ -264,21 +293,25 @@ readonly onSalvar = output<Produto>();
 ```
 
 ### 5.5 Standalone Components
+
 - ✅ **SEMPRE** use `standalone: true`
 - ✅ **SEMPRE** importe apenas o que precisa no array `imports`
 - ❌ **NUNCA** crie módulos Angular (exceto para casos muito específicos)
 
 ### 5.6 Change Detection
+
 - ✅ **SEMPRE** use `ChangeDetectionStrategy.OnPush` em componentes com signals
 - ✅ **SEMPRE** use signals para estado reativo
 - ❌ **NUNCA** manipule `ChangeDetectorRef` manualmente sem necessidade
 
 ### 5.7 Composables (Lógica Reutilizável)
+
 - ✅ **SEMPRE** crie composables para lógica reutilizável
 - ✅ Use padrão `use{Nome}` (ex: `useProdutos`, `useFormulario`)
 - ✅ Composables devem usar `inject()` internamente
 
 **Exemplo:**
+
 ```typescript
 export function useProdutos() {
   const produtoService = inject(ProdutoService);
@@ -293,6 +326,7 @@ export function useProdutos() {
 ## 6️⃣ JAVA 17 - PRÁTICAS OBRIGATÓRIAS
 
 ### 6.1 Recursos do Java 17
+
 - ✅ Use `records` para DTOs imutáveis
 - ✅ Use `sealed classes` para hierarquias controladas (quando apropriado)
 - ✅ Use `pattern matching` com `instanceof` (Java 16+)
@@ -300,6 +334,7 @@ export function useProdutos() {
 - ✅ Use `var` para tipos óbvios (quando melhora legibilidade)
 
 ### 6.2 Lombok - OBRIGATÓRIO PARA CONSTRUTORES E BOILERPLATE
+
 - ✅ **SEMPRE** use `@RequiredArgsConstructor` ao invés de construtores manuais
 - ✅ **SEMPRE** prefira Lombok quando possível para reduzir boilerplate e manter código enxuto
 - ✅ **SEMPRE** use `@RequiredArgsConstructor` para campos `final` ou `@NonNull`
@@ -313,6 +348,7 @@ export function useProdutos() {
 - ❌ **NUNCA** use `@Data` em entidades JPA com relacionamentos bidirecionais (evita loops infinitos)
 
 **Exemplo CORRETO:**
+
 ```java
 @Service
 @RequiredArgsConstructor  // ✅ OBRIGATÓRIO - cria construtor com campos final
@@ -331,6 +367,7 @@ public class CriarProdutoUseCase {
 ```
 
 **Exemplo INCORRETO:**
+
 ```java
 // ❌ ERRADO - construtor manual desnecessário
 @Service
@@ -348,17 +385,20 @@ public class CriarProdutoUseCase {
 ```
 
 ### 6.3 Optional
+
 - ✅ **SEMPRE** use `Optional` para valores que podem ser nulos
 - ✅ **SEMPRE** trate `Optional` adequadamente (não apenas `.get()`)
 - ❌ **NUNCA** retorne `null` quando pode retornar `Optional.empty()`
 
 ### 6.4 Streams API
+
 - ✅ Use Streams para transformações de coleções
 - ✅ Use `Collectors` para agregações
 - ❌ **NUNCA** use loops tradicionais quando Streams são mais claros
 - ✅ Prefira `stream().toList()` (Java 16+) ao invés de `collect(Collectors.toList())`
 
 ### 6.5 Try-With-Resources
+
 - ✅ **SEMPRE** use try-with-resources para recursos que implementam `AutoCloseable`
 - ❌ **NUNCA** deixe recursos abertos sem gerenciamento adequado
 
@@ -367,12 +407,14 @@ public class CriarProdutoUseCase {
 ## 7️⃣ LIQUIBASE - MIGRAÇÕES DE BANCO
 
 ### 7.1 Estrutura de Arquivos
+
 - ✅ **SEMPRE** crie changelogs no formato YAML ou XML
 - ✅ **SEMPRE** use nomenclatura: `{YYYYMMDDHHmmss}_{descricao}.yml`
 - ✅ **SEMPRE** inclua rollback quando possível
 - ✅ Organize changelogs por módulo/funcionalidade
 
 ### 7.2 Boas Práticas
+
 - ✅ **SEMPRE** teste rollback antes de aplicar em produção
 - ✅ **SEMPRE** use constraints apropriadas (NOT NULL, UNIQUE, FOREIGN KEY)
 - ✅ **SEMPRE** crie índices para campos de busca frequente
@@ -380,7 +422,8 @@ public class CriarProdutoUseCase {
 - ❌ **NUNCA** deixe migrações sem rollback
 
 ### 7.3 Estrutura Recomendada
-```
+
+```estrutura
 src/main/resources/db/changelog/
 ├── db.changelog-master.yml
 ├── 001-initial-schema.yml
@@ -393,12 +436,14 @@ src/main/resources/db/changelog/
 ## 8️⃣ VALIDAÇÕES E SEGURANÇA
 
 ### 8.1 Backend (Java)
+
 - ✅ **SEMPRE** valide entradas nos Use Cases
 - ✅ Use `@Valid` e Bean Validation (JSR-303) em DTOs
 - ✅ **SEMPRE** sanitize entradas de usuário
 - ✅ Use prepared statements (JPA automaticamente, mas cuidado com queries nativas)
 
 ### 8.2 Frontend (Angular)
+
 - ✅ **SEMPRE** valide formulários com `Validators` do Angular
 - ✅ **SEMPRE** valide no frontend E no backend
 - ✅ Use `FormControl`, `FormGroup`, `FormArray` com validações apropriadas
@@ -409,12 +454,14 @@ src/main/resources/db/changelog/
 ## 9️⃣ TESTES
 
 ### 9.1 Princípios
+
 - ✅ **SEMPRE** escreva testes unitários para lógica de negócio
 - ✅ **SEMPRE** teste casos de erro, não apenas sucesso
 - ✅ Use nomes descritivos: `deveLancarExcecaoQuandoProdutoNaoExiste()`
 - ✅ Mantenha testes simples e focados
 
 ### 9.2 Estrutura AAA
+
 - ✅ Arrange (preparar)
 - ✅ Act (executar)
 - ✅ Assert (verificar)
@@ -424,6 +471,7 @@ src/main/resources/db/changelog/
 ## 🔟 NUNCA FAÇA (ANTI-PATTERNS)
 
 ### ❌ Proibições Absolutas
+
 1. ❌ **NUNCA** crie mappers duplicados - sempre use singleton
 2. ❌ **NUNCA** use sintaxe antiga do Angular quando existe sintaxe moderna
 3. ❌ **NUNCA** misture responsabilidades (SRP violado)
@@ -464,6 +512,7 @@ Antes de finalizar qualquer implementação, verifique:
 ## 1️⃣2️⃣ EXEMPLOS DE REFERÊNCIA
 
 ### Angular - Componente Completo (Correto)
+
 ```typescript
 import { Component, inject, input, output, signal, computed } from '@angular/core';
 import { ProdutoService } from '../../services/produto.service';
@@ -491,6 +540,7 @@ export class ProdutoListaComponent {
 ```
 
 ### Java - Use Case (Correto)
+
 ```java
 @Service
 @RequiredArgsConstructor  // ✅ OBRIGATÓRIO - Lombok gera construtor automaticamente
@@ -525,6 +575,7 @@ public class CriarProdutoUseCase {
 ```
 
 ### Java - Repository Adapter (Correto)
+
 ```java
 @Component
 @RequiredArgsConstructor  // ✅ OBRIGATÓRIO - não crie construtor manual
@@ -561,19 +612,21 @@ public class ProdutoRepositoryAdapter implements ProdutoRepositoryPort {
 ## 📚 RECURSOS DO REPOSITÓRIO
 
 ### Kernel Compartilhado
+
 - `MapperUtils.getInstance()` - Mapeamento genérico (singleton)
 - `MapperRegistry.getInstance()` - Registro de mappers complexos
 - Utilitários comuns para reutilização
 
 ### Frontend Utils
+
 - `frontend/src/app/utils/` - Utilitários do frontend
 - Composables em `components/{feature}/composables/`
 
 ### Documentação
+
 - `DOCUMENTACAO_ARQUITETURA_SISTEMA.md` - Arquitetura completa
 - `EXEMPLO_USO_MAPPER_UTILS.md` - Exemplos de mappers
 
 ---
 
 **🚨 LEMBRE-SE: Estas diretrizes são INEGOCIÁVEIS. Sempre siga todas as regras acima antes de implementar qualquer funcionalidade!**
-

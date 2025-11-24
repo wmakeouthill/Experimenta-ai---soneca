@@ -42,6 +42,8 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
      * fallback.
      */
     private static final String DATA_BASE_EXPR = "COALESCE(st.data_inicio, DATE(p.data_pedido))";
+    private static final String PARAMETRO_INICIO = "inicio";
+    private static final String PARAMETRO_FIM = "fim";
 
     @PersistenceContext
     private final EntityManager entityManager;
@@ -67,11 +69,11 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
                 "ORDER BY data_base";
         Query query = entityManager.createNativeQuery(sql);
 
-        query.setParameter("inicio", filtro.inicio());
-        query.setParameter("fim", filtro.fim());
+        query.setParameter(PARAMETRO_INICIO, filtro.inicio());
+        query.setParameter(PARAMETRO_FIM, filtro.fim());
 
         @SuppressWarnings("unchecked")
-        List<Object[]> resultados = (List<Object[]>) query.getResultList();
+        List<Object[]> resultados = query.getResultList();
         for (Object[] registro : resultados) {
             bucketFactory.acumular(
                     buckets,
@@ -223,8 +225,8 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
                 "AND " + DATA_BASE_EXPR + " < :fim " +
                 "AND p.status <> 'CANCELADO'";
         Query query = entityManager.createNativeQuery(sql);
-        query.setParameter("inicio", inicio);
-        query.setParameter("fim", fim);
+        query.setParameter(PARAMETRO_INICIO, inicio);
+        query.setParameter(PARAMETRO_FIM, fim);
         Object[] resultado = (Object[]) query.getSingleResult();
         BigDecimal total = converterDecimal(resultado[0]);
         long pedidos = converterLong(resultado[1]);
@@ -240,8 +242,8 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
     }
 
     private void configurarIntervalo(Query query, FiltroRelatorioTemporalDTO filtro) {
-        query.setParameter("inicio", filtro.inicio());
-        query.setParameter("fim", filtro.fim());
+        query.setParameter(PARAMETRO_INICIO, filtro.inicio());
+        query.setParameter(PARAMETRO_FIM, filtro.fim());
     }
 
     private LocalDate converterData(Object valor) {
