@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed, effect, ChangeDetectionStrategy, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed, effect, ChangeDetectionStrategy, PLATFORM_ID, afterNextRender, runInInjectionContext, Injector } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { StatusPedido, Pedido } from '../../services/pedido.service';
 import { useLobbyPedidos } from './composables/use-lobby-pedidos';
@@ -26,6 +26,7 @@ import { ConfigAnimacaoService } from '../../services/config-animacao.service';
 export class LobbyPedidosComponent implements OnInit, OnDestroy {
   private readonly configAnimacaoService = inject(ConfigAnimacaoService);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly injector = inject(Injector);
   
   readonly pedidosAnteriores = signal<Pedido[]>([]);
   
@@ -46,29 +47,34 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
   }
 
   constructor() {
-    // Effect apenas no browser (não durante SSR)
-    if (isPlatformBrowser(this.platformId)) {
-      effect(() => {
-        const pedidosAtuais = this.lobbyPedidos.pedidos();
-        const pedidosAnt = this.pedidosAnteriores();
-        
-        if (pedidosAtuais.length !== pedidosAnt.length || 
-            pedidosAtuais.some((p, i) => p.id !== pedidosAnt[i]?.id || p.status !== pedidosAnt[i]?.status)) {
-          this.verificarMudancas(pedidosAnt, pedidosAtuais);
-          this.pedidosAnteriores.set([...pedidosAtuais]);
-        }
-      }, { allowSignalWrites: true });
-    }
-  }
+    // Effect para detectar mudanças nos pedidos (no contexto de injeção)
+    effect(() => {
+      if (!isPlatformBrowser(this.platformId)) return;
+      
+      const pedidosAtuais = this.lobbyPedidos.pedidos();
+      const pedidosAnt = this.pedidosAnteriores();
+      
+      if (pedidosAtuais.length !== pedidosAnt.length || 
+          pedidosAtuais.some((p, i) => p.id !== pedidosAnt[i]?.id || p.status !== pedidosAnt[i]?.status)) {
+        this.verificarMudancas(pedidosAnt, pedidosAtuais);
+        this.pedidosAnteriores.set([...pedidosAtuais]);
+      }
+    }, { allowSignalWrites: true });
 
-  ngOnInit() {
-    // Executar apenas no browser (não durante SSR)
-    if (this.isBrowser) {
+    // Aguardar hidratação completar antes de inicializar dados
+    afterNextRender(() => {
+      if (!isPlatformBrowser(this.platformId)) return;
+
+      // Inicializar dados
       this.lobbyPedidos.carregarSessaoAtiva();
       this.lobbyPedidos.carregarPedidos();
       this.iniciarPolling();
       this.carregarConfigAnimacao();
-    }
+    });
+  }
+
+  ngOnInit() {
+    // Tudo é feito no afterNextRender do constructor para evitar problemas de hidratação
   }
 
   private carregarConfigAnimacao() {

@@ -1,4 +1,4 @@
-import { Component, input, output, computed, ElementRef, ViewChild, effect, OnDestroy, PLATFORM_ID, inject } from '@angular/core';
+import { Component, input, output, computed, ElementRef, ViewChild, effect, OnDestroy, PLATFORM_ID, inject, afterNextRender } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Pedido, StatusPedido } from '../../../../services/pedido.service';
 import { OrderCardComponent } from '../order-card/order-card.component';
@@ -13,7 +13,8 @@ import { usePagination } from '../../composables/use-pagination';
 })
 export class OrderListComponent implements OnDestroy {
   private readonly platformId = inject(PLATFORM_ID);
-  private readonly resizeHandler?: () => void;
+  private resizeHandler?: () => void;
+  private autoPaginaIniciada = false;
 
   readonly title = input.required<string>();
   readonly status = input.required<StatusPedido>();
@@ -28,7 +29,7 @@ export class OrderListComponent implements OnDestroy {
 
   @ViewChild('listRef', { static: false }) listRef!: ElementRef<HTMLElement>;
 
-  private readonly pagination = usePagination(() => this.isModoGestor());
+  private readonly pagination = usePagination(() => this.isModoGestor(), this.platformId);
 
   readonly pedidosFiltrados = computed(() => {
     const lista = this.pedidos().filter(p => {
@@ -46,7 +47,8 @@ export class OrderListComponent implements OnDestroy {
     if (animandoDados && animandoStatus === this.status() && animandoDados.status === this.status()) {
       const jaExiste = lista.some(p => p.id === animandoDados.id);
       if (!jaExiste) {
-        lista.push(animandoDados);
+        // Criar nova referência do array ao invés de mutar
+        return [...lista, animandoDados];
       }
     }
     return lista;
@@ -74,48 +76,88 @@ export class OrderListComponent implements OnDestroy {
   readonly emptyText = computed(() => this.isPreparando() ? 'Nenhum pedido em preparação' : 'Nenhum pedido pronto');
 
   constructor() {
-    if (isPlatformBrowser(this.platformId)) {
-      // Effect para recalcular quando pedidos ou referência mudarem
-      effect(() => {
-        const pedidos = this.pedidosComAnimacao();
+    // Effects devem estar no contexto de injeção (constructor)
+    // Effect para recalcular quando pedidos ou referência mudarem
+    effect(() => {
+      if (!isPlatformBrowser(this.platformId)) return;
 
-        if (this.listRef?.nativeElement && !this.isModoGestor()) {
+      const pedidos = this.pedidosComAnimacao();
+
+      if (this.listRef?.nativeElement && !this.isModoGestor()) {
+        setTimeout(() => {
+          this.pagination.calcularItensPorPagina(this.listRef);
+          this.pagination.ajustarPagina(pedidos);
+        }, 100);
+      } else {
+        this.pagination.pararAutoPagina();
+      }
+    });
+
+    // Effect separado para iniciar/parar auto-paginação quando houver múltiplas páginas
+    effect(() => {
+      if (!isPlatformBrowser(this.platformId)) return;
+
+      const pedidos = this.pedidosComAnimacao();
+      const itensPorPagina = this.pagination.itensPorPagina();
+      const info = this.pagination.getInfoPagina(pedidos);
+
+      // Só inicia auto-paginação se:
+      // 1. Não for modo gestor
+      // 2. Tiver múltiplas páginas
+      // 3. Tiver itensPorPagina calculado
+      // 4. Tiver referência do elemento
+      const deveTerAutoPagina = !this.isModoGestor() && info.temPagina && info.totalPaginas > 1 &&
+        itensPorPagina && this.listRef?.nativeElement;
+
+      if (deveTerAutoPagina) {
+        // Verificar se já está rodando antes de tentar iniciar novamente
+        if (!this.autoPaginaIniciada && !this.pagination.estaAutoPaginaRodando()) {
+          this.autoPaginaIniciada = true;
+          // Aguardar um pouco para garantir que o cálculo de itens por página foi feito
+          // e que o ViewChild está disponível
           setTimeout(() => {
-            this.pagination.calcularItensPorPagina(this.listRef);
-            this.pagination.ajustarPagina(pedidos);
-          }, 100);
-        } else {
-          this.pagination.pararAutoPagina();
+            if (this.listRef?.nativeElement && !this.pagination.estaAutoPaginaRodando()) {
+              this.pagination.iniciarAutoPagina(() => this.pedidosComAnimacao());
+            }
+          }, 800);
         }
-      });
+      } else if (this.autoPaginaIniciada || this.pagination.estaAutoPaginaRodando()) {
+        // Se não atende mais as condições, parar e resetar flag
+        this.autoPaginaIniciada = false;
+        this.pagination.pararAutoPagina();
+      }
+    });
 
-      // Effect separado para iniciar/parar auto-paginação quando houver múltiplas páginas
-      effect(() => {
+    // Aguardar hidratação para configurar event listeners e iniciar auto-paginação
+    afterNextRender(() => {
+      if (!isPlatformBrowser(this.platformId)) return;
+
+      // Aguardar um pouco mais para garantir que ViewChild está disponível
+      setTimeout(() => {
+        // Verificar condições e iniciar auto-paginação se necessário
         const pedidos = this.pedidosComAnimacao();
+        const itensPorPagina = this.pagination.itensPorPagina();
         const info = this.pagination.getInfoPagina(pedidos);
 
-        if (!this.isModoGestor() && info.temPagina && this.listRef?.nativeElement) {
-          // Aguardar um pouco para garantir que o cálculo de itens por página foi feito
-          setTimeout(() => {
-            this.pagination.iniciarAutoPagina(() => this.pedidosComAnimacao());
-          }, 200);
-        } else {
-          this.pagination.pararAutoPagina();
+        if (!this.isModoGestor() && info.temPagina && info.totalPaginas > 1 &&
+          itensPorPagina && this.listRef?.nativeElement && !this.pagination.estaAutoPaginaRodando()) {
+          this.autoPaginaIniciada = true;
+          this.pagination.iniciarAutoPagina(() => this.pedidosComAnimacao());
         }
-      });
 
-      // Recalcular quando a janela redimensionar
-      this.resizeHandler = () => {
-        if (this.listRef?.nativeElement && !this.isModoGestor()) {
-          setTimeout(() => {
-            this.pagination.calcularItensPorPagina(this.listRef);
-            this.pagination.ajustarPagina(this.pedidosComAnimacao());
-          }, 100);
-        }
-      };
+        // Recalcular quando a janela redimensionar
+        this.resizeHandler = () => {
+          if (this.listRef?.nativeElement && !this.isModoGestor()) {
+            setTimeout(() => {
+              this.pagination.calcularItensPorPagina(this.listRef);
+              this.pagination.ajustarPagina(this.pedidosComAnimacao());
+            }, 100);
+          }
+        };
 
-      window.addEventListener('resize', this.resizeHandler);
-    }
+        window.addEventListener('resize', this.resizeHandler);
+      }, 1000);
+    });
   }
 
   ngOnDestroy() {
@@ -123,6 +165,7 @@ export class OrderListComponent implements OnDestroy {
       if (this.resizeHandler) {
         window.removeEventListener('resize', this.resizeHandler);
       }
+      this.autoPaginaIniciada = false;
       this.pagination.pararAutoPagina();
     }
   }

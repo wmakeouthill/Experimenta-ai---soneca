@@ -1,4 +1,5 @@
 import { signal, ElementRef } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 interface PaginationInfo {
   totalPaginas: number;
@@ -6,7 +7,7 @@ interface PaginationInfo {
   temPagina: boolean;
 }
 
-export function usePagination(isModoGestor: () => boolean) {
+export function usePagination(isModoGestor: () => boolean, platformId: Object) {
   const pagina = signal(0);
   const itensPorPagina = signal<number | null>(null);
   let autoPaginaInterval: any = null;
@@ -82,19 +83,36 @@ export function usePagination(isModoGestor: () => boolean) {
   };
 
   const iniciarAutoPagina = (items: () => any[]) => {
-    pararAutoPagina();
+    // Se já existe um intervalo rodando, não reiniciar
+    if (autoPaginaInterval) {
+      return;
+    }
 
     if (isModoGestor()) return;
+    if (!isPlatformBrowser(platformId)) return;
 
-    // Verificar se está no browser
-    if (typeof window === 'undefined') return;
+    // Verificar se já tem itensPorPagina calculado
+    if (!itensPorPagina()) {
+      // Se não tem ainda, aguardar um pouco e tentar novamente
+      setTimeout(() => iniciarAutoPagina(items), 100);
+      return;
+    }
 
+    // Verificar se há páginas antes de iniciar
+    const listaInicial = items();
+    const infoInicial = getInfoPagina(listaInicial);
+    if (!infoInicial.temPagina || infoInicial.totalPaginas <= 1) {
+      return; // Não inicia se não há múltiplas páginas
+    }
+
+    // Iniciar intervalo de auto-paginação
     autoPaginaInterval = setInterval(() => {
       const lista = items();
       const info = getInfoPagina(lista);
-      if (info.temPagina) {
+      if (info.temPagina && info.totalPaginas > 1) {
         avancarPagina(lista);
       } else {
+        // Se não há mais páginas, parar o intervalo
         pararAutoPagina();
       }
     }, 5000); // 5 segundos
@@ -107,6 +125,10 @@ export function usePagination(isModoGestor: () => boolean) {
     }
   };
 
+  const estaAutoPaginaRodando = () => {
+    return autoPaginaInterval !== null;
+  };
+
   return {
     pagina,
     itensPorPagina,
@@ -115,7 +137,8 @@ export function usePagination(isModoGestor: () => boolean) {
     getInfoPagina,
     ajustarPagina,
     iniciarAutoPagina,
-    pararAutoPagina
+    pararAutoPagina,
+    estaAutoPaginaRodando
   };
 }
 
