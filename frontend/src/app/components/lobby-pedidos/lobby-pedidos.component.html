@@ -1,0 +1,50 @@
+<div [class]="'fila-pedidos-container ' + (isAnimating() ? 'animando' : '')">
+  <div [class]="'coluna-lateral ' + (isAnimating() ? 'escondido' : '')">
+    <app-lobby-header
+      [isAnimating]="isAnimating()"
+      [isModoGestor]="false"
+      (onTrocarModo)="handleTrocarModo()"
+      (onAnimacaoManual)="handleAnimacaoManual()"
+      (onAbrirConfig)="handleAbrirConfig()"
+    />
+
+    <app-surfer-animation
+      [isModoGestor]="false"
+      [isAnimating]="isAnimating()"
+    />
+  </div>
+
+  <app-order-list
+    title="PREPARANDO"
+    [status]="StatusPedido.PREPARANDO"
+    [pedidos]="lobbyPedidos.pedidos()"
+    [isModoGestor]="false"
+    [isAnimating]="isAnimating()"
+    [pedidoAnimando]="animations.pedidoAnimando()"
+    [pedidoAnimandoDados]="animations.pedidoAnimandoDados()"
+    [pedidoAnimandoStatus]="animations.pedidoAnimandoStatus()"
+    (onMarcarComoPronto)="handleMarcarComoPronto($event)"
+    (onRemover)="handleRemover($event)"
+  />
+
+  <app-order-list
+    title="PRONTO"
+    [status]="StatusPedido.PRONTO"
+    [pedidos]="lobbyPedidos.pedidos()"
+    [isModoGestor]="false"
+    [isAnimating]="isAnimating()"
+    [pedidoAnimando]="animations.pedidoAnimando()"
+    [pedidoAnimandoDados]="animations.pedidoAnimandoDados()"
+    [pedidoAnimandoStatus]="animations.pedidoAnimandoStatus()"
+    (onMarcarComoPronto)="handleMarcarComoPronto($event)"
+    (onRemover)="handleRemover($event)"
+  />
+</div>
+
+<app-config-animacao-modal
+  [aberto]="mostrarConfigModal()"
+  [configInicial]="configAtual()"
+  (onSalvar)="handleSalvarConfig($event)"
+  (onFechar)="handleFecharConfig()"
+/>
+

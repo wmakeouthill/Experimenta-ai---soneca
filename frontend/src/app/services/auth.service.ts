@@ -1,4 +1,5 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { Router } from '@angular/router';
@@ -42,6 +43,7 @@ export interface AtualizarUsuarioRequest {
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly platformId = inject(PLATFORM_ID);
   private readonly apiUrl = '/api/auth';
   private readonly adminUrl = '/api/admin/usuarios';
   
@@ -49,9 +51,13 @@ export class AuthService {
   readonly estaAutenticado = signal<boolean>(false);
   readonly isAdministrador = signal<boolean>(false);
 
+  private get isBrowser(): boolean {
+    return isPlatformBrowser(this.platformId);
+  }
+
   constructor() {
-    // Carregar usuário do storage de forma segura
-    if (typeof window !== 'undefined' && window.localStorage) {
+    // Carregar usuário do storage de forma segura (apenas no browser)
+    if (this.isBrowser) {
       this.carregarUsuarioDoStorage();
     }
   }
@@ -76,26 +82,32 @@ export class AuthService {
   }
 
   getToken(): string | null {
+    if (!this.isBrowser) return null;
     return localStorage.getItem('token');
   }
 
   private salvarToken(token: string): void {
+    if (!this.isBrowser) return;
     localStorage.setItem('token', token);
   }
 
   private removerToken(): void {
+    if (!this.isBrowser) return;
     localStorage.removeItem('token');
   }
 
   private salvarUsuario(usuario: UsuarioDTO): void {
+    if (!this.isBrowser) return;
     localStorage.setItem('usuario', JSON.stringify(usuario));
   }
 
   private removerUsuario(): void {
+    if (!this.isBrowser) return;
     localStorage.removeItem('usuario');
   }
 
   private carregarUsuarioDoStorage(): void {
+    if (!this.isBrowser) return;
     const token = this.getToken();
     const usuarioStr = localStorage.getItem('usuario');
     

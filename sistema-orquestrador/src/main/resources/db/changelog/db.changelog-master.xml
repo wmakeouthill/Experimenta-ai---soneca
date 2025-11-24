@@ -38,6 +38,9 @@
     <!-- Migration: Adiciona coluna sessao_id na tabela pedidos -->
     <include file="changes/011-add-sessao-id-to-pedidos.sql" relativeToChangelogFile="true"/>
 
+    <!-- Migration: Criação da tabela de configuração de animação -->
+    <include file="changes/012-create-config-animacao-table.sql" relativeToChangelogFile="true"/>
+
     <!-- 
     NOTA: O usuário administrador inicial é criado automaticamente via CommandLineRunner
     (UsuarioInicialConfig) na primeira execução da aplicação.

@@ -40,6 +40,15 @@ export class HomeComponent {
         disponivel: true
       },
       {
+        id: 'lobby-pedidos',
+        nome: 'Lobby de Pedidos',
+        descricao: 'Visualizar fila de pedidos em tempo real (preparando/pronto)',
+        icone: '🖥️',
+        rota: '/lobby-pedidos',
+        cor: 'secondary',
+        disponivel: true
+      },
+      {
         id: 'sessoes',
         nome: 'Gestão de Sessões',
         descricao: 'Gerenciar sessões de trabalho, iniciar, pausar e finalizar',

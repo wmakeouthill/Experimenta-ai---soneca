@@ -37,6 +37,10 @@ export const routes: Routes = [
     canActivate: [adminGuard]
   },
   {
+    path: 'lobby-pedidos',
+    loadComponent: () => import('./components/lobby-pedidos/lobby-pedidos.component').then(m => m.LobbyPedidosComponent)
+  },
+  {
     path: '**',
     redirectTo: ''
   }

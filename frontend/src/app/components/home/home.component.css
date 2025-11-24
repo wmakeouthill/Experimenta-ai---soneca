@@ -245,6 +245,11 @@
   box-shadow: 0 15px 40px rgba(33, 150, 243, 0.3);
 }
 
+.modulo-card.modulo-secondary:hover {
+  border-color: #9C27B0;
+  box-shadow: 0 15px 40px rgba(156, 39, 176, 0.3);
+}
+
 .modulo-icone {
   font-size: clamp(2.5rem, 4vw, 4.5rem);
   margin-bottom: clamp(4px, 1vh, 8px);
@@ -285,6 +290,10 @@
 
 .modulo-card.modulo-info .modulo-titulo {
   color: #2196F3;
+}
+
+.modulo-card.modulo-secondary .modulo-titulo {
+  color: #9C27B0;
 }
 
 .modulo-descricao {

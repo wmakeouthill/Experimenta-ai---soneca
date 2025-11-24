@@ -8,10 +8,10 @@ export class FormatoUtil {
    */
   static moeda(valor: number | string | null | undefined): string {
     if (valor == null) return 'R$ 0,00';
-    
+
     const num = typeof valor === 'string' ? parseFloat(valor) : valor;
     if (isNaN(num)) return 'R$ 0,00';
-    
+
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
@@ -23,7 +23,7 @@ export class FormatoUtil {
    */
   static moedaParaNumero(valor: string): number {
     if (!valor) return 0;
-    
+
     return parseFloat(
       valor
         .replace(/[^\d,]/g, '')
@@ -36,11 +36,20 @@ export class FormatoUtil {
    */
   static numeroParaInputMoeda(valor: number | string | null | undefined): string {
     if (valor == null) return '';
-    
+
     const num = typeof valor === 'string' ? parseFloat(valor) : valor;
     if (isNaN(num)) return '';
-    
+
     return num.toFixed(2).replace('.', ',');
+  }
+
+  /**
+   * Limita o texto às primeiras N palavras.
+   */
+  static limitarPalavras(texto: string | null | undefined, maxPalavras: number = 3): string {
+    if (!texto) return '';
+    const palavras = texto.trim().split(/\s+/);
+    return palavras.slice(0, maxPalavras).join(' ');
   }
 
   /**
@@ -48,10 +57,10 @@ export class FormatoUtil {
    */
   static dataHora(data: string | Date | null | undefined): string {
     if (!data) return '';
-    
+
     const dataObj = typeof data === 'string' ? new Date(data) : data;
     if (isNaN(dataObj.getTime())) return '';
-    
+
     return dataObj.toLocaleString('pt-BR', {
       day: '2-digit',
       month: '2-digit',
