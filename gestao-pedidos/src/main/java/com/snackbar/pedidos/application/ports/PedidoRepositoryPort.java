@@ -4,6 +4,7 @@ import com.snackbar.pedidos.domain.entities.Pedido;
 import com.snackbar.pedidos.domain.entities.StatusPedido;
 import org.springframework.lang.NonNull;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +18,7 @@ public interface PedidoRepositoryPort {
     List<Pedido> buscarPorDataPedido(LocalDateTime dataInicio, LocalDateTime dataFim);
     List<Pedido> buscarPorStatusEData(StatusPedido status, LocalDateTime dataInicio, LocalDateTime dataFim);
     List<Pedido> buscarPorSessaoId(String sessaoId);
+    List<Pedido> buscarPorDataInicioSessao(LocalDate dataInicio);
     int buscarUltimoNumeroPedido();
 }
 

@@ -74,6 +74,15 @@ export class HomeComponent {
         rota: '/relatorios',
         cor: 'purple',
         disponivel: true
+      },
+      {
+        id: 'relatorio-financeiro',
+        nome: 'Relatório Financeiro',
+        descricao: 'Relatório detalhado de pedidos e análise financeira do dia',
+        icone: '💰',
+        rota: '/relatorio-financeiro',
+        cor: 'success',
+        disponivel: true
       }
     ];
 
@@ -92,10 +101,23 @@ export class HomeComponent {
     return modulos;
   });
 
-  navegarParaModulo(modulo: Modulo): void {
-    if (modulo.disponivel) {
-      this.router.navigate([modulo.rota]);
+  navegarParaModulo(modulo: Modulo, event: MouseEvent): void {
+    if (!modulo.disponivel) {
+      return;
     }
+
+    const url = this.router.serializeUrl(this.router.createUrlTree([modulo.rota]));
+    const urlCompleta = window.location.origin + url;
+
+    // Ctrl+Clique ou Clique com a rodinha → Abrir em nova guia
+    if (event.ctrlKey || event.metaKey || event.button === 1) {
+      event.preventDefault();
+      window.open(urlCompleta, '_blank');
+      return;
+    }
+
+    // Clique normal → Navegar na mesma página
+    this.router.navigate([modulo.rota]);
   }
 
   logout(): void {

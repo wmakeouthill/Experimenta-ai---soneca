@@ -37,6 +37,11 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'relatorio-financeiro',
+    loadComponent: () => import('./components/relatorio-financeiro/relatorio-financeiro.component').then(m => m.RelatorioFinanceiroComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: 'administracao',
     loadComponent: () => import('./components/administracao/administracao.component').then(m => m.AdministracaoComponent),
     canActivate: [adminGuard]

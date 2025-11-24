@@ -27,7 +27,8 @@
       @for (modulo of modulosDisponiveis(); track modulo.id) {
         <button
           [class]="'modulo-card modulo-' + modulo.cor"
-          (click)="navegarParaModulo(modulo)"
+          (click)="navegarParaModulo(modulo, $event)"
+          (auxclick)="navegarParaModulo(modulo, $event)"
           [disabled]="!modulo.disponivel"
         >
           <div class="modulo-icone">{{ modulo.icone }}</div>

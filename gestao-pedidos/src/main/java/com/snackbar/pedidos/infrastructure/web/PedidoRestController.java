@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -39,11 +40,14 @@ public class PedidoRestController {
             @RequestParam(name = "clienteId", required = false) String clienteId,
             @RequestParam(name = "dataInicio", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dataInicio,
             @RequestParam(name = "dataFim", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dataFim,
-            @RequestParam(name = "sessaoId", required = false) String sessaoId) {
+            @RequestParam(name = "sessaoId", required = false) String sessaoId,
+            @RequestParam(name = "dataInicioSessao", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicioSessao) {
         List<PedidoDTO> pedidos;
         
         if (sessaoId != null) {
             pedidos = listarPedidosUseCase.executarPorSessaoId(sessaoId);
+        } else if (dataInicioSessao != null) {
+            pedidos = listarPedidosUseCase.executarPorDataInicioSessao(dataInicioSessao);
         } else if (status != null && dataInicio != null && dataFim != null) {
             pedidos = listarPedidosUseCase.executarPorStatusEData(status, dataInicio, dataFim);
         } else if (status != null) {

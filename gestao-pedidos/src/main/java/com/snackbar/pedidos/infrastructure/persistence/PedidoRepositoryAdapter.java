@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -71,6 +72,13 @@ public class PedidoRepositoryAdapter implements PedidoRepositoryPort {
     @Override
     public List<Pedido> buscarPorSessaoId(String sessaoId) {
         return jpaRepository.findBySessaoId(sessaoId).stream()
+                .map(mapper::paraDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Pedido> buscarPorDataInicioSessao(LocalDate dataInicio) {
+        return jpaRepository.findByDataInicioSessao(java.sql.Date.valueOf(dataInicio)).stream()
                 .map(mapper::paraDomain)
                 .toList();
     }

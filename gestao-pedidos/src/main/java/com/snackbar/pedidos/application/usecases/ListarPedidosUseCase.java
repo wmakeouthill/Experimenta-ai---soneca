@@ -6,6 +6,7 @@ import com.snackbar.pedidos.domain.entities.StatusPedido;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -47,6 +48,12 @@ public class ListarPedidosUseCase {
     
     public List<PedidoDTO> executarPorSessaoId(String sessaoId) {
         return pedidoRepository.buscarPorSessaoId(sessaoId).stream()
+            .map(PedidoDTO::de)
+            .toList();
+    }
+    
+    public List<PedidoDTO> executarPorDataInicioSessao(LocalDate dataInicio) {
+        return pedidoRepository.buscarPorDataInicioSessao(dataInicio).stream()
             .map(PedidoDTO::de)
             .toList();
     }

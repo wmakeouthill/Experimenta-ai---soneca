@@ -86,6 +86,7 @@ export class PedidoService {
     dataInicio?: string;
     dataFim?: string;
     sessaoId?: string;
+    dataInicioSessao?: string;
   }): Observable<Pedido[]> {
     // Se não há filtros, faz requisição sem parâmetros
     if (!filters || Object.keys(filters).length === 0) {
@@ -112,6 +113,10 @@ export class PedidoService {
     
     if (filters.sessaoId) {
       params = params.set('sessaoId', filters.sessaoId);
+    }
+    
+    if (filters.dataInicioSessao) {
+      params = params.set('dataInicioSessao', filters.dataInicioSessao);
     }
     
     return this.http.get<Pedido[]>(this.apiUrl, { params });
