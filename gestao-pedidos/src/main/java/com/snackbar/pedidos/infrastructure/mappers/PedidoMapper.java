@@ -28,6 +28,7 @@ public class PedidoMapper {
             .usuarioId(pedido.getUsuarioId())
             .sessaoId(pedido.getSessaoId())
             .dataPedido(pedido.getDataPedido())
+            .dataFinalizacao(pedido.getDataFinalizacao())
             .createdAt(pedido.getCreatedAt())
             .updatedAt(pedido.getUpdatedAt())
             .build();
@@ -110,6 +111,9 @@ public class PedidoMapper {
         
         // Restaurar data do pedido do banco (preserva a data original de criação)
         pedido.restaurarDataPedidoDoBanco(entity.getDataPedido());
+        
+        // Restaurar data de finalização do banco (preserva a data original de finalização)
+        pedido.restaurarDataFinalizacaoDoBanco(entity.getDataFinalizacao());
         
         return pedido;
     }

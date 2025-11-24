@@ -58,6 +58,9 @@ public class PedidoEntity {
     @Column(nullable = false)
     private LocalDateTime dataPedido;
     
+    @Column(nullable = true)
+    private LocalDateTime dataFinalizacao;
+    
     @Column(nullable = false)
     private LocalDateTime createdAt;
     

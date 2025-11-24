@@ -28,6 +28,7 @@ public class PedidoDTO {
     private String usuarioId;
     private String sessaoId;
     private LocalDateTime dataPedido;
+    private LocalDateTime dataFinalizacao;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
@@ -56,6 +57,7 @@ public class PedidoDTO {
             .usuarioId(pedido.getUsuarioId())
             .sessaoId(pedido.getSessaoId())
             .dataPedido(pedido.getDataPedido())
+            .dataFinalizacao(pedido.getDataFinalizacao())
             .createdAt(pedido.getCreatedAt())
             .updatedAt(pedido.getUpdatedAt())
             .build();

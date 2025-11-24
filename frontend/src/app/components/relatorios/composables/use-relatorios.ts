@@ -30,10 +30,10 @@ interface RelatoriosPayload {
 
 const criarFiltroPadrao = (): FiltroRelatorioTemporal => {
   const agora = new Date();
-  const inicioMes = new Date(Date.UTC(agora.getFullYear(), agora.getMonth(), 1));
+  const hoje = new Date(Date.UTC(agora.getFullYear(), agora.getMonth(), agora.getDate()));
   return {
-    granularidade: 'MES',
-    dataReferencia: inicioMes.toISOString()
+    granularidade: 'DIA',
+    dataReferencia: hoje.toISOString()
   };
 };
 

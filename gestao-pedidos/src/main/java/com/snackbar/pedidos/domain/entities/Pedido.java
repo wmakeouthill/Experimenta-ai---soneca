@@ -23,6 +23,7 @@ public class Pedido extends BaseEntity {
     private String usuarioId; // Para futuro login
     private String sessaoId; // ID da sessão de trabalho
     private LocalDateTime dataPedido;
+    private LocalDateTime dataFinalizacao; // Data definitiva de finalização (imutável após definida)
     
     private Pedido() {
         super();
@@ -30,6 +31,7 @@ public class Pedido extends BaseEntity {
         this.meiosPagamento = new ArrayList<>();
         this.status = StatusPedido.PENDENTE;
         this.dataPedido = LocalDateTime.now();
+        this.dataFinalizacao = null; // Inicialmente nulo, será definido apenas quando finalizado
     }
     
     public static Pedido criar(NumeroPedido numeroPedido, String clienteId, String clienteNome, String usuarioId) {
@@ -77,6 +79,11 @@ public class Pedido extends BaseEntity {
         }
         if (!status.podeSerAtualizadoPara(novoStatus)) {
             throw new ValidationException("Não é possível atualizar o status de " + status.getDescricao() + " para " + novoStatus.getDescricao());
+        }
+        
+        // Define data de finalização apenas quando o status muda para FINALIZADO pela primeira vez
+        if (novoStatus == StatusPedido.FINALIZADO && this.dataFinalizacao == null) {
+            this.dataFinalizacao = LocalDateTime.now();
         }
         
         this.status = novoStatus;
@@ -187,6 +194,17 @@ public class Pedido extends BaseEntity {
         if (dataPedido != null) {
             this.dataPedido = dataPedido;
         }
+    }
+    
+    /**
+     * Restaura a data de finalização do banco de dados (usado pelos mappers).
+     * Este método preserva a data original de finalização do pedido.
+     * IMPORTANTE: A data de finalização é imutável após ser definida.
+     * Este método é usado apenas ao restaurar do banco, então sempre restaura o valor do banco.
+     */
+    public void restaurarDataFinalizacaoDoBanco(LocalDateTime dataFinalizacao) {
+        // Sempre restaura do banco (este método é usado apenas na restauração)
+        this.dataFinalizacao = dataFinalizacao;
     }
     
     private static void validarDados(NumeroPedido numeroPedido, String clienteId, String clienteNome) {
