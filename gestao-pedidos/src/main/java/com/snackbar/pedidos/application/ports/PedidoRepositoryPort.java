@@ -20,5 +20,6 @@ public interface PedidoRepositoryPort {
     List<Pedido> buscarPorSessaoId(String sessaoId);
     List<Pedido> buscarPorDataInicioSessao(LocalDate dataInicio);
     int buscarUltimoNumeroPedido();
+    void excluir(@NonNull String id);
 }
 

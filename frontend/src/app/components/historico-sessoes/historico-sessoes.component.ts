@@ -1,10 +1,11 @@
-import { Component, inject, PLATFORM_ID, OnInit, ChangeDetectionStrategy, ViewChild, ElementRef } from '@angular/core';
+import { Component, inject, PLATFORM_ID, OnInit, ChangeDetectionStrategy, ViewChild, ElementRef, signal } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { useHistoricoSessoes } from './composables/use-historico-sessoes';
 import { SessaoTrabalho, StatusSessao } from '../../services/sessao-trabalho.service';
-import { MeioPagamento } from '../../services/pedido.service';
+import { MeioPagamento, Pedido } from '../../services/pedido.service';
 import { FormatoUtil } from '../../utils/formato.util';
+import { AuthService } from '../../services/auth.service';
 
 /**
  * Componente de apresentação para histórico de sessões.
@@ -21,12 +22,20 @@ import { FormatoUtil } from '../../utils/formato.util';
 export class HistoricoSessoesComponent implements OnInit {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
+  private readonly authService = inject(AuthService);
 
   readonly historicoComposable = useHistoricoSessoes();
   readonly StatusSessao = StatusSessao;
   readonly MeioPagamento = MeioPagamento;
+  readonly isAdministrador = this.authService.isAdministrador;
 
   @ViewChild('pedidosSecao', { static: false }) pedidosSecaoRef?: ElementRef<HTMLElement>;
+
+  // Modal de confirmação de exclusão
+  readonly mostrarModalExclusao = signal(false);
+  readonly pedidoParaExcluir = signal<Pedido | null>(null);
+  readonly textoConfirmacao = signal('');
+  readonly textoEsperado = 'Sim, desejo apagar o pedido.';
 
   // Expor propriedades do composable
   readonly sessoes = this.historicoComposable.sessoes;
@@ -171,6 +180,32 @@ export class HistoricoSessoesComponent implements OnInit {
       return nomeCompleto;
     }
     return palavras.slice(0, 3).join(' ') + '...';
+  }
+
+  abrirModalConfirmacaoExclusao(pedido: Pedido): void {
+    this.pedidoParaExcluir.set(pedido);
+    this.textoConfirmacao.set('');
+    this.mostrarModalExclusao.set(true);
+  }
+
+  fecharModalExclusao(): void {
+    this.mostrarModalExclusao.set(false);
+    this.pedidoParaExcluir.set(null);
+    this.textoConfirmacao.set('');
+  }
+
+  podeConfirmarExclusao(): boolean {
+    return this.textoConfirmacao().trim() === this.textoEsperado;
+  }
+
+  confirmarExclusao(): void {
+    const pedido = this.pedidoParaExcluir();
+    if (!pedido || !this.podeConfirmarExclusao()) {
+      return;
+    }
+
+    this.historicoComposable.excluirPedido(pedido.id);
+    this.fecharModalExclusao();
   }
 }
 

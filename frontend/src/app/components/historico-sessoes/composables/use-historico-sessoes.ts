@@ -230,6 +230,33 @@ export function useHistoricoSessoes() {
     }
   };
 
+  const excluirPedido = (pedidoId: string) => {
+    estado.set('carregando');
+    erro.set(null);
+
+    pedidoService.excluir(pedidoId)
+      .pipe(
+        catchError((error) => {
+          const mensagem = error.error?.message || error.message || 'Erro ao excluir pedido';
+          erro.set(mensagem);
+          estado.set('erro');
+          console.error('Erro ao excluir pedido:', error);
+          return of(null);
+        }),
+        finalize(() => {
+          if (estado() === 'carregando') {
+            estado.set('sucesso');
+          }
+        })
+      )
+      .subscribe(() => {
+        // Recarregar pedidos após exclusão
+        if (sessaoSelecionada()) {
+          carregarPedidosPorSessao(sessaoSelecionada()!.id);
+        }
+      });
+  };
+
   return {
     // Estados
     sessoes,
@@ -262,7 +289,8 @@ export function useHistoricoSessoes() {
     filtrarSessoesPorData,
     irParaPaginaSessoes,
     pesquisarPedidos,
-    irParaPaginaPedidos
+    irParaPaginaPedidos,
+    excluirPedido
   };
 }
 

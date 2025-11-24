@@ -88,4 +88,9 @@ public class PedidoRepositoryAdapter implements PedidoRepositoryPort {
         return jpaRepository.findMaxNumeroPedido()
                 .orElse(0);
     }
+
+    @Override
+    public void excluir(@NonNull String id) {
+        jpaRepository.deleteById(id);
+    }
 }

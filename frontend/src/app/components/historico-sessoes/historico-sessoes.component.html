@@ -273,6 +273,15 @@
                       <div class="pedido-total">
                         <strong>Total: {{ formatarMoeda(pedido.valorTotal) }}</strong>
                       </div>
+                      @if (isAdministrador()) {
+                        <button 
+                          class="btn-cancelar-pedido"
+                          (click)="abrirModalConfirmacaoExclusao(pedido)"
+                          title="Excluir pedido"
+                        >
+                          🗑️ Cancelar
+                        </button>
+                      }
                     </div>
                   </article>
                 }
@@ -327,4 +336,48 @@
     </main>
   </div>
 </div>
+
+<!-- Modal de Confirmação de Exclusão -->
+@if (mostrarModalExclusao()) {
+  <div class="modal-overlay" (click)="fecharModalExclusao()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-titulo">⚠️ Confirmar Exclusão de Pedido</h3>
+        <button class="modal-fechar" (click)="fecharModalExclusao()" aria-label="Fechar">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-mensagem">
+          Você está prestes a <strong>excluir permanentemente</strong> o pedido 
+          <strong>#{{ pedidoParaExcluir()?.numeroPedido }}</strong>.
+        </p>
+        <p class="modal-aviso">
+          Esta ação não pode ser desfeita. Para confirmar, digite exatamente:
+        </p>
+        <div class="modal-texto-confirmacao">
+          <strong>"{{ textoEsperado }}"</strong>
+        </div>
+        <input
+          type="text"
+          class="modal-input"
+          placeholder="Digite o texto de confirmação..."
+          [value]="textoConfirmacao()"
+          (input)="textoConfirmacao.set($any($event.target).value)"
+          autofocus
+        />
+      </div>
+      <div class="modal-footer">
+        <button class="btn-modal btn-cancelar" (click)="fecharModalExclusao()">
+          Cancelar
+        </button>
+        <button 
+          class="btn-modal btn-confirmar"
+          [disabled]="!podeConfirmarExclusao()"
+          (click)="confirmarExclusao()"
+        >
+          Excluir Pedido
+        </button>
+      </div>
+    </div>
+  </div>
+}
 

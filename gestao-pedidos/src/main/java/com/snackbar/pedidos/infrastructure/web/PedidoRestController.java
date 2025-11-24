@@ -27,6 +27,7 @@ public class PedidoRestController {
     private final BuscarPedidoPorIdUseCase buscarPedidoPorIdUseCase;
     private final AtualizarStatusPedidoUseCase atualizarStatusPedidoUseCase;
     private final CancelarPedidoUseCase cancelarPedidoUseCase;
+    private final ExcluirPedidoUseCase excluirPedidoUseCase;
     
     @PostMapping
     public ResponseEntity<PedidoDTO> criar(@Valid @RequestBody CriarPedidoRequest request) {
@@ -81,6 +82,12 @@ public class PedidoRestController {
     public ResponseEntity<PedidoDTO> cancelar(@NonNull @PathVariable String id) {
         PedidoDTO pedido = cancelarPedidoUseCase.executar(id);
         return ResponseEntity.ok(pedido);
+    }
+    
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> excluir(@NonNull @PathVariable String id) {
+        excluirPedidoUseCase.executar(id);
+        return ResponseEntity.noContent().build();
     }
 }
 

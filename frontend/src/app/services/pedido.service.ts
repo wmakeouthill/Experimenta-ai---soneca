@@ -137,5 +137,9 @@ export class PedidoService {
   cancelar(id: string): Observable<Pedido> {
     return this.http.put<Pedido>(`${this.apiUrl}/${id}/cancelar`, {});
   }
+
+  excluir(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
 }
 
