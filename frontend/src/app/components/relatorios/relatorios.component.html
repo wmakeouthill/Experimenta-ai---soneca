@@ -1,41 +1,45 @@
 <div class="relatorios-container">
-  <section class="page-header">
-    <div>
-      <p class="breadcrumbs">Home / Inteligência</p>
-      <h1>Relatórios e insights de vendas</h1>
-      <p class="subtitle">
-        Acompanhamento por sessão sempre considera a data de início mesmo que a operação avance após a meia-noite.
-      </p>
-    </div>
-    <button type="button" class="ghost-btn" (click)="recarregar()">Recarregar dados</button>
-  </section>
-
-  <section class="filtros">
-    <div class="granularidades">
-      @for (opcao of granularidades; track opcao.id) {
-        <button
-          type="button"
-          class="granularidade-card"
-          [class.granularidade-card--ativa]="opcao.id === filtro().granularidade"
-          (click)="alterarGranularidade(opcao.id)"
-        >
-          <strong>{{ opcao.label }}</strong>
-          <span>{{ opcao.descricao }}</span>
+  <header class="relatorios-header">
+    <div class="relatorios-header-content">
+      <h1 class="relatorios-titulo">
+        <img src="/assets/experimenta_ai_banner_circular.png" alt="Experimenta aí" class="relatorios-logo" />
+        Relatórios e Insights de Vendas
+      </h1>
+      <div class="header-actions">
+        <button class="btn-header" (click)="recarregar()">🔄 Recarregar</button>
+        <button class="btn-voltar" routerLink="/" aria-label="Voltar para home">
+          ← Voltar
         </button>
-      }
+      </div>
     </div>
+  </header>
 
-    <div class="data-referencia">
-      <label for="dataReferencia">Data de referência</label>
-      <input
-        id="dataReferencia"
-        type="date"
-        [value]="dataReferenciaInput()"
-        (change)="alterarData(($any($event.target).value) ?? '')"
-      />
-      <small>Usamos a data de início das sessões para montar a linha do tempo.</small>
-    </div>
-  </section>
+  <div class="relatorios-content">
+    <section class="filtros-compactos">
+      <div class="data-referencia-wrapper">
+        <label for="dataReferencia">Data de referência:</label>
+        <input
+          id="dataReferencia"
+          type="date"
+          [value]="dataReferenciaInput()"
+          (change)="alterarData($event)"
+        />
+      </div>
+
+      <div class="granularidades">
+        @for (opcao of granularidades; track opcao.id) {
+          <button
+            type="button"
+            class="granularidade-card"
+            [class.granularidade-card--ativa]="opcao.id === filtro().granularidade"
+            [title]="opcao.descricao"
+            (click)="alterarGranularidade(opcao.id)"
+          >
+            <strong>{{ opcao.label }}</strong>
+          </button>
+        }
+      </div>
+    </section>
 
   @if (estaCarregando()) {
     <div class="estado estado--loading">Carregando relatórios...</div>
@@ -51,36 +55,38 @@
     </div>
   }
 
-  @if (!estaCarregando() && !erro() && possuiDados()) {
-    @if (indicadores()) {
-      <section class="indicadores">
-        <article class="indicador-card">
-          <p>Total faturado</p>
-          <strong>{{ formatarMoeda(indicadores()?.totalFaturamento) }}</strong>
-        </article>
-        <article class="indicador-card">
-          <p>Total de pedidos</p>
-          <strong>{{ formatarNumero(indicadores()?.totalPedidos) }}</strong>
-        </article>
-        <article class="indicador-card">
-          <p>Ticket médio</p>
-          <strong>{{ formatarMoeda(indicadores()?.ticketMedio) }}</strong>
-        </article>
-        <article class="indicador-card indicador-card--delta">
-          <p>Crescimento vs período anterior</p>
-          <strong>{{ formatarPercentual(indicadores()?.crescimentoPercentual) }}</strong>
-        </article>
+    @if (!estaCarregando() && !erro() && possuiDados()) {
+      @if (indicadores()) {
+        <section class="indicadores">
+          <article class="indicador-card">
+            <p>Total faturado</p>
+            <strong>{{ formatarMoeda(indicadores()?.totalFaturamento) }}</strong>
+          </article>
+          <article class="indicador-card">
+            <p>Total de pedidos</p>
+            <strong>{{ formatarNumero(indicadores()?.totalPedidos) }}</strong>
+          </article>
+          <article class="indicador-card">
+            <p>Ticket médio</p>
+            <strong>{{ formatarMoeda(indicadores()?.ticketMedio) }}</strong>
+          </article>
+          <article class="indicador-card indicador-card--delta">
+            <p>Crescimento vs período anterior</p>
+            <strong>{{ formatarPercentual(indicadores()?.crescimentoPercentual) }}</strong>
+          </article>
+        </section>
+      }
+
+      <section class="graficos-grid">
+        <app-vendas-evolucao-chart [dados]="evolucaoVendas()"></app-vendas-evolucao-chart>
+        <app-categorias-vendas-chart [dados]="categorias()"></app-categorias-vendas-chart>
+        <app-top-produtos-chart [dados]="produtos()"></app-top-produtos-chart>
+        <app-vendas-por-cliente-chart [dados]="clientes()"></app-vendas-por-cliente-chart>
+        <app-vendas-por-horario-chart [dados]="horarios()"></app-vendas-por-horario-chart>
+        <app-pedidos-por-horario-chart [dados]="pedidosPorHorario()"></app-pedidos-por-horario-chart>
+        <app-meios-pagamento-chart [dados]="meiosPagamento()"></app-meios-pagamento-chart>
       </section>
     }
-
-    <section class="graficos-grid">
-      <app-vendas-evolucao-chart [dados]="evolucaoVendas()"></app-vendas-evolucao-chart>
-      <app-categorias-vendas-chart [dados]="categorias()"></app-categorias-vendas-chart>
-      <app-top-produtos-chart [dados]="produtos()"></app-top-produtos-chart>
-      <app-vendas-por-horario-chart [dados]="horarios()"></app-vendas-por-horario-chart>
-      <app-vendas-por-cliente-chart [dados]="clientes()"></app-vendas-por-cliente-chart>
-      <app-meios-pagamento-chart [dados]="meiosPagamento()"></app-meios-pagamento-chart>
-    </section>
-  }
+  </div>
 </div>
 

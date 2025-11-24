@@ -9,7 +9,7 @@
 .cardapio-header {
   background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
   color: white;
-  padding: 1.5rem 2rem;
+  padding: 1rem 2rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -617,6 +617,10 @@
 }
 
 @media (max-width: 768px) {
+  .cardapio-header {
+    padding: 0.75rem 1rem;
+  }
+
   .cardapio-header-content {
     flex-direction: column;
     align-items: flex-start;

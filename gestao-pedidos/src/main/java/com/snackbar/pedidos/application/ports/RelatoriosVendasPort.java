@@ -7,6 +7,7 @@ import com.snackbar.pedidos.application.dtos.relatorios.DistribuicaoMeioPagament
 import com.snackbar.pedidos.application.dtos.relatorios.EvolucaoVendasPontoDTO;
 import com.snackbar.pedidos.application.dtos.relatorios.FiltroRelatorioTemporalDTO;
 import com.snackbar.pedidos.application.dtos.relatorios.IndicadoresResumoDTO;
+import com.snackbar.pedidos.application.dtos.relatorios.PedidosPorHorarioDTO;
 import com.snackbar.pedidos.application.dtos.relatorios.ProdutoMaisVendidoDTO;
 
 import java.util.List;
@@ -20,10 +21,11 @@ public interface RelatoriosVendasPort {
 
     List<DistribuicaoHorariaDTO> obterDistribuicaoHoraria(FiltroRelatorioTemporalDTO filtro);
 
+    List<PedidosPorHorarioDTO> obterPedidosPorHorario(FiltroRelatorioTemporalDTO filtro);
+
     List<DistribuicaoClientesDTO> obterClientes(FiltroRelatorioTemporalDTO filtro, int limite);
 
     List<DistribuicaoMeioPagamentoDTO> obterMeiosPagamento(FiltroRelatorioTemporalDTO filtro);
 
     IndicadoresResumoDTO obterIndicadores(FiltroRelatorioTemporalDTO filtro);
 }
-

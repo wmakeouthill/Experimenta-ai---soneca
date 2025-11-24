@@ -34,6 +34,11 @@ export interface DistribuicaoHoraria {
   quantidadePedidos: number;
 }
 
+export interface PedidosPorHorario {
+  horaReferencia: string;
+  quantidadePedidos: number;
+}
+
 export interface DistribuicaoClientes {
   clienteId: string;
   clienteNome: string;

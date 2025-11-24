@@ -4,6 +4,7 @@ import com.snackbar.pedidos.application.dtos.relatorios.CategoriaVendasResumoDTO
 import com.snackbar.pedidos.application.dtos.relatorios.DistribuicaoClientesDTO;
 import com.snackbar.pedidos.application.dtos.relatorios.DistribuicaoHorariaDTO;
 import com.snackbar.pedidos.application.dtos.relatorios.DistribuicaoMeioPagamentoDTO;
+import com.snackbar.pedidos.application.dtos.relatorios.PedidosPorHorarioDTO;
 import com.snackbar.pedidos.application.dtos.relatorios.ProdutoMaisVendidoDTO;
 
 import java.math.BigDecimal;
@@ -46,6 +47,16 @@ final class RelatorioResultMapper {
                         Objects.toString(registro[0], "00"),
                         toDecimal(registro[1]).doubleValue(),
                         toLong(registro[2])
+                ))
+                .toList();
+    }
+
+    static List<PedidosPorHorarioDTO> pedidosPorHorario(List<?> registros) {
+        return registros.stream()
+                .map(Object[].class::cast)
+                .map(registro -> new PedidosPorHorarioDTO(
+                        Objects.toString(registro[0], "00"),
+                        toLong(registro[1])
                 ))
                 .toList();
     }

@@ -7,6 +7,7 @@ import com.snackbar.pedidos.application.dtos.relatorios.DistribuicaoMeioPagament
 import com.snackbar.pedidos.application.dtos.relatorios.EvolucaoVendasPontoDTO;
 import com.snackbar.pedidos.application.dtos.relatorios.FiltroRelatorioTemporalDTO;
 import com.snackbar.pedidos.application.dtos.relatorios.IndicadoresResumoDTO;
+import com.snackbar.pedidos.application.dtos.relatorios.PedidosPorHorarioDTO;
 import com.snackbar.pedidos.application.dtos.relatorios.ProdutoMaisVendidoDTO;
 import com.snackbar.pedidos.application.ports.RelatoriosVendasPort;
 import jakarta.persistence.EntityManager;
@@ -29,12 +30,16 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
     /**
      * Expressão SQL que define a data base para agrupamento de relatórios.
      * 
-     * REGRA IMPORTANTE: Quando um pedido está associado a uma sessão, usa-se a data de INÍCIO da sessão
+     * REGRA IMPORTANTE: Quando um pedido está associado a uma sessão, usa-se a data
+     * de INÍCIO da sessão
      * (st.data_inicio), não a data do pedido. Isso garante que:
-     * - Se uma sessão iniciou no dia 23 e fechou no dia 24, TODOS os pedidos dessa sessão
-     *   aparecerão apenas no dia 23 (data de início), mesmo que alguns pedidos tenham sido
-     *   criados após a meia-noite do dia 24.
-     * - Apenas pedidos sem sessão associada usam a data do próprio pedido como fallback.
+     * - Se uma sessão iniciou no dia 23 e fechou no dia 24, TODOS os pedidos dessa
+     * sessão
+     * aparecerão apenas no dia 23 (data de início), mesmo que alguns pedidos tenham
+     * sido
+     * criados após a meia-noite do dia 24.
+     * - Apenas pedidos sem sessão associada usam a data do próprio pedido como
+     * fallback.
      */
     private static final String DATA_BASE_EXPR = "COALESCE(st.data_inicio, DATE(p.data_pedido))";
 
@@ -72,8 +77,7 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
                     buckets,
                     converterData(registro[0]),
                     converterDecimal(registro[1]),
-                    converterLong(registro[2])
-            );
+                    converterLong(registro[2]));
         }
 
         return buckets.stream()
@@ -134,10 +138,27 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
                 "AND " + DATA_BASE_EXPR + " < :fim " +
                 "AND p.status <> 'CANCELADO' " +
                 "GROUP BY hora " +
-                "ORDER BY hora";
+                "ORDER BY MIN(p.data_pedido)";
         Query query = entityManager.createNativeQuery(sql);
         configurarIntervalo(query, filtro);
         return RelatorioResultMapper.horarios(query.getResultList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PedidosPorHorarioDTO> obterPedidosPorHorario(FiltroRelatorioTemporalDTO filtro) {
+        String sql = "SELECT LPAD(HOUR(p.data_pedido), 2, '0') AS hora, " +
+                "COUNT(*) AS quantidade_pedidos " +
+                "FROM pedidos p " +
+                "LEFT JOIN sessoes_trabalho st ON st.id = p.sessao_id " +
+                "WHERE " + DATA_BASE_EXPR + " >= :inicio " +
+                "AND " + DATA_BASE_EXPR + " < :fim " +
+                "AND p.status <> 'CANCELADO' " +
+                "GROUP BY hora " +
+                "ORDER BY MIN(p.data_pedido)";
+        Query query = entityManager.createNativeQuery(sql);
+        configurarIntervalo(query, filtro);
+        return RelatorioResultMapper.pedidosPorHorario(query.getResultList());
     }
 
     @Override
@@ -190,8 +211,7 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
                 atual.totalVendas().doubleValue(),
                 atual.totalPedidos(),
                 ticket,
-                crescimento
-        );
+                crescimento);
     }
 
     private TotaisPeriodo buscarTotais(LocalDate inicio, LocalDate fim) {
@@ -254,4 +274,3 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
     private record TotaisPeriodo(BigDecimal totalVendas, long totalPedidos) {
     }
 }
-

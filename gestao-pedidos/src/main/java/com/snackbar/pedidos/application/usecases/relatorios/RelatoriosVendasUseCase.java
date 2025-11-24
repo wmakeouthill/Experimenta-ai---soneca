@@ -7,6 +7,7 @@ import com.snackbar.pedidos.application.dtos.relatorios.DistribuicaoMeioPagament
 import com.snackbar.pedidos.application.dtos.relatorios.EvolucaoVendasPontoDTO;
 import com.snackbar.pedidos.application.dtos.relatorios.FiltroRelatorioTemporalDTO;
 import com.snackbar.pedidos.application.dtos.relatorios.IndicadoresResumoDTO;
+import com.snackbar.pedidos.application.dtos.relatorios.PedidosPorHorarioDTO;
 import com.snackbar.pedidos.application.dtos.relatorios.ProdutoMaisVendidoDTO;
 import com.snackbar.pedidos.application.ports.RelatoriosVendasPort;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,10 @@ public class RelatoriosVendasUseCase {
         return relatoriosVendasPort.obterDistribuicaoHoraria(filtro);
     }
 
+    public List<PedidosPorHorarioDTO> obterPedidosPorHorario(FiltroRelatorioTemporalDTO filtro) {
+        return relatoriosVendasPort.obterPedidosPorHorario(filtro);
+    }
+
     public List<DistribuicaoClientesDTO> obterClientes(FiltroRelatorioTemporalDTO filtro, int limite) {
         return relatoriosVendasPort.obterClientes(filtro, limite);
     }
@@ -48,4 +53,3 @@ public class RelatoriosVendasUseCase {
         return relatoriosVendasPort.obterIndicadores(filtro);
     }
 }
-

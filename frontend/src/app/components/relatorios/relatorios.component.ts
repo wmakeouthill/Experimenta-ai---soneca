@@ -1,11 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { useRelatorios } from './composables/use-relatorios';
 import { GranularidadeTempo } from '../../models/relatorios.model';
 import { VendasEvolucaoChartComponent } from './charts/vendas-evolucao-chart/vendas-evolucao-chart.component';
 import { CategoriasVendasChartComponent } from './charts/categorias-vendas-chart/categorias-vendas-chart.component';
 import { TopProdutosChartComponent } from './charts/top-produtos-chart/top-produtos-chart.component';
 import { VendasPorHorarioChartComponent } from './charts/vendas-por-horario-chart/vendas-por-horario-chart.component';
+import { PedidosPorHorarioChartComponent } from './charts/pedidos-por-horario-chart/pedidos-por-horario-chart.component';
 import { VendasPorClienteChartComponent } from './charts/vendas-por-cliente-chart/vendas-por-cliente-chart.component';
 import { MeiosPagamentoChartComponent } from './charts/meios-pagamento-chart/meios-pagamento-chart.component';
 
@@ -20,10 +22,12 @@ interface GranularidadeOption {
   standalone: true,
   imports: [
     CommonModule,
+    RouterModule,
     VendasEvolucaoChartComponent,
     CategoriasVendasChartComponent,
     TopProdutosChartComponent,
     VendasPorHorarioChartComponent,
+    PedidosPorHorarioChartComponent,
     VendasPorClienteChartComponent,
     MeiosPagamentoChartComponent
   ],
@@ -41,6 +45,7 @@ export class RelatoriosComponent {
   readonly categorias = this.store.categorias;
   readonly produtos = this.store.produtos;
   readonly horarios = this.store.horarios;
+  readonly pedidosPorHorario = this.store.pedidosPorHorario;
   readonly clientes = this.store.clientes;
   readonly meiosPagamento = this.store.meiosPagamento;
   readonly indicadores = this.store.indicadores;
@@ -64,8 +69,11 @@ export class RelatoriosComponent {
     this.store.alterarGranularidade(granularidade);
   }
 
-  alterarData(valor: string): void {
-    this.store.alterarDataReferencia(valor);
+  alterarData(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input?.value) {
+      this.store.alterarDataReferencia(input.value);
+    }
   }
 
   recarregar(): void {

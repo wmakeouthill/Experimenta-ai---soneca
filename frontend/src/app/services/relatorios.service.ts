@@ -9,6 +9,7 @@ import {
   EvolucaoVendasPonto,
   FiltroRelatorioTemporal,
   IndicadoresResumo,
+  PedidosPorHorario,
   ProdutoMaisVendido
 } from '../models/relatorios.model';
 
@@ -38,6 +39,12 @@ export class RelatoriosService {
 
   obterDistribuicaoHoraria(filtro: FiltroRelatorioTemporal): Observable<DistribuicaoHoraria[]> {
     return this.http.get<DistribuicaoHoraria[]>(`${this.apiUrl}/vendas/horarios`, {
+      params: this.criarParamsDeTempo(filtro)
+    });
+  }
+
+  obterPedidosPorHorario(filtro: FiltroRelatorioTemporal): Observable<PedidosPorHorario[]> {
+    return this.http.get<PedidosPorHorario[]>(`${this.apiUrl}/vendas/pedidos-horario`, {
       params: this.criarParamsDeTempo(filtro)
     });
   }

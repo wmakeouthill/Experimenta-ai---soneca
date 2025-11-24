@@ -10,6 +10,7 @@ import {
   FiltroRelatorioTemporal,
   GranularidadeTempo,
   IndicadoresResumo,
+  PedidosPorHorario,
   ProdutoMaisVendido
 } from '../../../models/relatorios.model';
 import { RelatoriosService } from '../../../services/relatorios.service';
@@ -21,6 +22,7 @@ interface RelatoriosPayload {
   categorias: CategoriaVendasResumo[];
   produtos: ProdutoMaisVendido[];
   horarios: DistribuicaoHoraria[];
+  pedidosPorHorario: PedidosPorHorario[];
   clientes: DistribuicaoClientes[];
   meiosPagamento: DistribuicaoMeioPagamento[];
   indicadores: IndicadoresResumo;
@@ -52,6 +54,7 @@ export function useRelatorios() {
   const categorias = signal<CategoriaVendasResumo[]>([]);
   const produtos = signal<ProdutoMaisVendido[]>([]);
   const horarios = signal<DistribuicaoHoraria[]>([]);
+  const pedidosPorHorario = signal<PedidosPorHorario[]>([]);
   const clientes = signal<DistribuicaoClientes[]>([]);
   const meiosPagamento = signal<DistribuicaoMeioPagamento[]>([]);
   const indicadores = signal<IndicadoresResumo | null>(null);
@@ -78,6 +81,7 @@ export function useRelatorios() {
     categorias.set(payload.categorias);
     produtos.set(payload.produtos);
     horarios.set(payload.horarios);
+    pedidosPorHorario.set(payload.pedidosPorHorario);
     clientes.set(payload.clientes);
     meiosPagamento.set(payload.meiosPagamento);
     indicadores.set(payload.indicadores);
@@ -89,6 +93,7 @@ export function useRelatorios() {
     categorias: relatoriosService.obterResumoCategorias(filtroAtual),
     produtos: relatoriosService.obterTopProdutos(filtroAtual),
     horarios: relatoriosService.obterDistribuicaoHoraria(filtroAtual),
+    pedidosPorHorario: relatoriosService.obterPedidosPorHorario(filtroAtual),
     clientes: relatoriosService.obterDistribuicaoClientes(filtroAtual),
     meiosPagamento: relatoriosService.obterDistribuicaoMeiosPagamento(filtroAtual),
     indicadores: relatoriosService.obterIndicadores(filtroAtual)
@@ -137,6 +142,7 @@ export function useRelatorios() {
     categorias,
     produtos,
     horarios,
+    pedidosPorHorario,
     clientes,
     meiosPagamento,
     indicadores,

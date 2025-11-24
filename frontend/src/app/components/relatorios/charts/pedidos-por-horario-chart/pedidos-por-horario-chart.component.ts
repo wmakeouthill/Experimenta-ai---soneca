@@ -10,27 +10,26 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Chart, ChartConfiguration, ChartOptions } from 'chart.js';
-import { DistribuicaoClientes } from '../../../../models/relatorios.model';
+import { PedidosPorHorario } from '../../../../models/relatorios.model';
 import {
   corPorIndice,
   defaultChartOptions,
   destruirChart,
-  formatarValor,
   renderizarChart
 } from '../../../../utils/chart.util';
 
 @Component({
-  selector: 'app-vendas-por-cliente-chart',
+  selector: 'app-pedidos-por-horario-chart',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './vendas-por-cliente-chart.component.html',
-  styleUrl: './vendas-por-cliente-chart.component.css',
+  templateUrl: './pedidos-por-horario-chart.component.html',
+  styleUrl: './pedidos-por-horario-chart.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class VendasPorClienteChartComponent {
+export class PedidosPorHorarioChartComponent {
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly dados = input.required<DistribuicaoClientes[]>();
+  readonly dados = input.required<PedidosPorHorario[]>();
 
   @ViewChild('canvas')
   set canvasRef(elemento: ElementRef<HTMLCanvasElement> | undefined) {
@@ -66,48 +65,40 @@ export class VendasPorClienteChartComponent {
     this.chart = renderizarChart(this.canvas.nativeElement, configuracao, this.chart);
   }
 
-  private limitarNome(nomeCompleto: string): string {
-    const palavras = nomeCompleto.trim().split(/\s+/);
-    return palavras.slice(0, 3).join(' ');
-  }
-
-  private montarConfiguracao(dados: DistribuicaoClientes[]): ChartConfiguration<'bar'> {
-    const labels = dados.map(item => this.limitarNome(item.clienteNome));
-    const valores = dados.map(item => item.valorTotal);
+  private montarConfiguracao(dados: PedidosPorHorario[]): ChartConfiguration<'bar'> {
+    const labels = dados.map(item => item.horaReferencia);
+    const valores = dados.map(item => item.quantidadePedidos);
 
     const options: ChartOptions<'bar'> = {
       ...defaultChartOptions,
-      indexAxis: 'y',
       plugins: {
         ...defaultChartOptions.plugins,
+        legend: { display: false },
         tooltip: {
           ...defaultChartOptions.plugins?.tooltip,
           callbacks: {
-            title: (context) => {
-              const indice = context[0].dataIndex;
-              return dados[indice]?.clienteNome || '';
-            },
             label: (context) => {
-              const valor = context.parsed.x ?? context.parsed;
-              return `Faturamento: ${formatarValor(Number(valor))}`;
+              const valor = context.parsed.y ?? context.parsed;
+              return `Pedidos: ${Number(valor).toLocaleString('pt-BR')}`;
             }
           }
         }
       },
       scales: {
         x: {
-          type: 'linear',
-          beginAtZero: true,
-          ticks: {
-            color: '#d4d4d8',
-            callback: (valor) => formatarValor(Number(valor))
-          },
+          type: 'category',
+          ticks: { color: '#d4d4d8' },
           grid: { color: 'rgba(255,255,255,0.08)' }
         },
         y: {
-          type: 'category',
-          ticks: { color: '#e2e8f0' },
-          grid: { display: false }
+          type: 'linear',
+          beginAtZero: true,
+          ticks: {
+            color: '#a1a1aa',
+            stepSize: 1,
+            callback: (valor) => Number(valor).toLocaleString('pt-BR')
+          },
+          grid: { color: 'rgba(255,255,255,0.05)' }
         }
       }
     };
@@ -118,10 +109,11 @@ export class VendasPorClienteChartComponent {
         labels,
         datasets: [
           {
-            label: 'Faturamento',
+            label: 'Pedidos por horário',
             data: valores,
-            borderRadius: 8,
-            backgroundColor: labels.map((_, indice) => corPorIndice(indice))
+            backgroundColor: corPorIndice(3),
+            borderColor: corPorIndice(3),
+            borderWidth: 1
           }
         ]
       },

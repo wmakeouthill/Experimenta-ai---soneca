@@ -8,6 +8,7 @@ import com.snackbar.pedidos.application.dtos.relatorios.EvolucaoVendasPontoDTO;
 import com.snackbar.pedidos.application.dtos.relatorios.FiltroRelatorioTemporalDTO;
 import com.snackbar.pedidos.application.dtos.relatorios.GranularidadeTempo;
 import com.snackbar.pedidos.application.dtos.relatorios.IndicadoresResumoDTO;
+import com.snackbar.pedidos.application.dtos.relatorios.PedidosPorHorarioDTO;
 import com.snackbar.pedidos.application.dtos.relatorios.ProdutoMaisVendidoDTO;
 import com.snackbar.pedidos.application.usecases.relatorios.FiltroRelatorioTemporalFactory;
 import com.snackbar.pedidos.application.usecases.relatorios.RelatoriosVendasUseCase;
@@ -30,60 +31,67 @@ public class RelatoriosVendasRestController {
 
     @GetMapping("/evolucao")
     public List<EvolucaoVendasPontoDTO> evolucao(@RequestParam GranularidadeTempo granularidade,
-                                                 @RequestParam("dataReferencia") String dataReferencia,
-                                                 @RequestParam(value = "dataFim", required = false) String dataFim) {
+            @RequestParam("dataReferencia") String dataReferencia,
+            @RequestParam(value = "dataFim", required = false) String dataFim) {
         FiltroRelatorioTemporalDTO filtro = filtroFactory.criar(granularidade, dataReferencia, dataFim);
         return useCase.obterEvolucao(filtro);
     }
 
     @GetMapping("/categorias")
     public List<CategoriaVendasResumoDTO> categorias(@RequestParam GranularidadeTempo granularidade,
-                                                     @RequestParam("dataReferencia") String dataReferencia,
-                                                     @RequestParam(value = "dataFim", required = false) String dataFim) {
+            @RequestParam("dataReferencia") String dataReferencia,
+            @RequestParam(value = "dataFim", required = false) String dataFim) {
         FiltroRelatorioTemporalDTO filtro = filtroFactory.criar(granularidade, dataReferencia, dataFim);
         return useCase.obterCategorias(filtro);
     }
 
     @GetMapping("/top-produtos")
     public List<ProdutoMaisVendidoDTO> topProdutos(@RequestParam GranularidadeTempo granularidade,
-                                                   @RequestParam("dataReferencia") String dataReferencia,
-                                                   @RequestParam(value = "dataFim", required = false) String dataFim,
-                                                   @RequestParam(value = "limite", defaultValue = "15") int limite) {
+            @RequestParam("dataReferencia") String dataReferencia,
+            @RequestParam(value = "dataFim", required = false) String dataFim,
+            @RequestParam(value = "limite", defaultValue = "15") int limite) {
         FiltroRelatorioTemporalDTO filtro = filtroFactory.criar(granularidade, dataReferencia, dataFim);
         return useCase.obterTopProdutos(filtro, Math.min(Math.max(limite, 1), 50));
     }
 
     @GetMapping("/horarios")
     public List<DistribuicaoHorariaDTO> horarios(@RequestParam GranularidadeTempo granularidade,
-                                                 @RequestParam("dataReferencia") String dataReferencia,
-                                                 @RequestParam(value = "dataFim", required = false) String dataFim) {
+            @RequestParam("dataReferencia") String dataReferencia,
+            @RequestParam(value = "dataFim", required = false) String dataFim) {
         FiltroRelatorioTemporalDTO filtro = filtroFactory.criar(granularidade, dataReferencia, dataFim);
         return useCase.obterDistribuicaoHoraria(filtro);
     }
 
+    @GetMapping("/pedidos-horario")
+    public List<PedidosPorHorarioDTO> pedidosHorario(@RequestParam GranularidadeTempo granularidade,
+            @RequestParam("dataReferencia") String dataReferencia,
+            @RequestParam(value = "dataFim", required = false) String dataFim) {
+        FiltroRelatorioTemporalDTO filtro = filtroFactory.criar(granularidade, dataReferencia, dataFim);
+        return useCase.obterPedidosPorHorario(filtro);
+    }
+
     @GetMapping("/clientes")
     public List<DistribuicaoClientesDTO> clientes(@RequestParam GranularidadeTempo granularidade,
-                                                  @RequestParam("dataReferencia") String dataReferencia,
-                                                  @RequestParam(value = "dataFim", required = false) String dataFim,
-                                                  @RequestParam(value = "limite", defaultValue = "20") int limite) {
+            @RequestParam("dataReferencia") String dataReferencia,
+            @RequestParam(value = "dataFim", required = false) String dataFim,
+            @RequestParam(value = "limite", defaultValue = "20") int limite) {
         FiltroRelatorioTemporalDTO filtro = filtroFactory.criar(granularidade, dataReferencia, dataFim);
         return useCase.obterClientes(filtro, Math.min(Math.max(limite, 1), 100));
     }
 
     @GetMapping("/meios-pagamento")
     public List<DistribuicaoMeioPagamentoDTO> meiosPagamento(@RequestParam GranularidadeTempo granularidade,
-                                                             @RequestParam("dataReferencia") String dataReferencia,
-                                                             @RequestParam(value = "dataFim", required = false) String dataFim) {
+            @RequestParam("dataReferencia") String dataReferencia,
+            @RequestParam(value = "dataFim", required = false) String dataFim) {
         FiltroRelatorioTemporalDTO filtro = filtroFactory.criar(granularidade, dataReferencia, dataFim);
         return useCase.obterMeiosPagamento(filtro);
     }
 
     @GetMapping("/indicadores")
     public IndicadoresResumoDTO indicadores(@RequestParam GranularidadeTempo granularidade,
-                                            @RequestParam("dataReferencia") String dataReferencia,
-                                            @RequestParam(value = "dataFim", required = false) String dataFim) {
+            @RequestParam("dataReferencia") String dataReferencia,
+            @RequestParam(value = "dataFim", required = false) String dataFim) {
         FiltroRelatorioTemporalDTO filtro = filtroFactory.criar(granularidade, dataReferencia, dataFim);
         return useCase.obterIndicadores(filtro);
     }
 }
-

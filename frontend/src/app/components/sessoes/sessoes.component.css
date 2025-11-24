@@ -9,7 +9,7 @@
 .sessoes-header {
   background: linear-gradient(135deg, #6C5CE7 0%, #5A4FCF 100%);
   color: white;
-  padding: 1.5rem 2rem;
+  padding: 1rem 2rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -491,5 +491,26 @@
   cursor: default;
   border: none;
   background: transparent;
+}
+
+@media (max-width: 768px) {
+  .sessoes-header {
+    padding: 0.75rem 1rem;
+  }
+
+  .sessoes-header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0 1rem;
+  }
+
+  .sessoes-titulo {
+    font-size: 1.75rem;
+  }
+
+  .sessoes-logo {
+    width: 55px;
+    height: 55px;
+  }
 }
 
