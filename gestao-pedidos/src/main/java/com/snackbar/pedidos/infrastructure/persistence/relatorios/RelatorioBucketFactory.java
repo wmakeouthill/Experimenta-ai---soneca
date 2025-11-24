@@ -17,17 +17,47 @@ final class RelatorioBucketFactory {
     List<RelatorioBucket> criarBuckets(FiltroRelatorioTemporalDTO filtro) {
         List<RelatorioBucket> buckets = new ArrayList<>();
         LocalDate cursor = filtro.inicio();
+
         while (cursor.isBefore(filtro.fim())) {
-            LocalDate proximo = filtro.granularidade().adicionar(cursor, 1);
+            LocalDate proximo = calcularProximoPeriodo(cursor, filtro.granularidade());
             buckets.add(new RelatorioBucket(
                     gerarPeriodoId(cursor, filtro.granularidade()),
                     gerarLabel(cursor, filtro.granularidade()),
                     cursor,
-                    proximo
-            ));
+                    proximo));
             cursor = proximo;
         }
         return buckets;
+    }
+
+    private LocalDate calcularProximoPeriodo(LocalDate data, GranularidadeTempo granularidade) {
+        return switch (granularidade) {
+            case DIA -> data.plusDays(1);
+            case SEMANA -> calcularProximaSemana(data);
+            case MES -> data.plusMonths(1).withDayOfMonth(1);
+            case TRIMESTRE -> {
+                int trimestreAtual = (data.getMonthValue() - 1) / 3;
+                int mesProximoTrimestre = (trimestreAtual + 1) * 3 + 1;
+                if (mesProximoTrimestre > 12) {
+                    yield LocalDate.of(data.getYear() + 1, 1, 1);
+                }
+                yield LocalDate.of(data.getYear(), mesProximoTrimestre, 1);
+            }
+            case SEMESTRE -> {
+                if (data.getMonthValue() <= 6) {
+                    yield LocalDate.of(data.getYear(), 7, 1);
+                } else {
+                    yield LocalDate.of(data.getYear() + 1, 1, 1);
+                }
+            }
+            case ANO -> LocalDate.of(data.getYear() + 1, 1, 1);
+        };
+    }
+
+    private LocalDate calcularProximaSemana(LocalDate data) {
+        int diaDaSemana = data.getDayOfWeek().getValue();
+        LocalDate inicioSemana = data.minusDays((long) diaDaSemana - 1);
+        return inicioSemana.plusWeeks(1);
     }
 
     void acumular(List<RelatorioBucket> buckets, LocalDate referencia, BigDecimal total, long pedidos) {
@@ -35,6 +65,16 @@ final class RelatorioBucketFactory {
                 .filter(bucket -> bucket.contem(referencia))
                 .findFirst()
                 .ifPresent(bucket -> bucket.acumular(total, pedidos));
+    }
+
+    RelatorioBucket criarBucketAno(int ano) {
+        LocalDate inicioAno = LocalDate.of(ano, 1, 1);
+        LocalDate fimAno = LocalDate.of(ano + 1, 1, 1);
+        return new RelatorioBucket(
+                String.valueOf(ano),
+                "Ano " + ano,
+                inicioAno,
+                fimAno);
     }
 
     private String gerarPeriodoId(LocalDate data, GranularidadeTempo granularidade) {
@@ -92,4 +132,3 @@ final class RelatorioBucketFactory {
         }
     }
 }
-

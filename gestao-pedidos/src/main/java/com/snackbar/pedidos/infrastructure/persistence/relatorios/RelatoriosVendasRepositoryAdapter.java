@@ -45,6 +45,7 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
     private static final String DATA_BASE_EXPR = "COALESCE(st.data_inicio, DATE(p.data_pedido))";
     private static final String PARAMETRO_INICIO = "inicio";
     private static final String PARAMETRO_FIM = "fim";
+    private static final String SELECT_DATE_CONCAT_YEAR = "SELECT DATE(CONCAT(YEAR(";
 
     @PersistenceContext
     private final EntityManager entityManager;
@@ -53,25 +54,28 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
     @Override
     @Transactional(readOnly = true)
     public List<EvolucaoVendasPontoDTO> obterEvolucao(FiltroRelatorioTemporalDTO filtro) {
-        List<RelatorioBucketFactory.RelatorioBucket> buckets = bucketFactory.criarBuckets(filtro);
+        List<RelatorioBucketFactory.RelatorioBucket> buckets;
+
+        if (filtro.granularidade() == com.snackbar.pedidos.application.dtos.relatorios.GranularidadeTempo.ANO) {
+            buckets = criarBucketsAnoCompleto();
+        } else {
+            buckets = bucketFactory.criarBuckets(filtro);
+        }
+
         if (buckets.isEmpty()) {
             return List.of();
         }
 
-        String sql = "SELECT " + DATA_BASE_EXPR + " AS data_base, " +
-                "SUM(p.valor_total) AS total_vendas, " +
-                "COUNT(*) AS total_pedidos " +
-                "FROM pedidos p " +
-                "LEFT JOIN sessoes_trabalho st ON st.id = p.sessao_id " +
-                "WHERE " + DATA_BASE_EXPR + " >= :inicio " +
-                "AND " + DATA_BASE_EXPR + " < :fim " +
-                "AND p.status <> 'CANCELADO' " +
-                "GROUP BY data_base " +
-                "ORDER BY data_base";
+        String sql = construirSqlEvolucao(filtro);
         Query query = entityManager.createNativeQuery(sql);
 
-        query.setParameter(PARAMETRO_INICIO, filtro.inicio());
-        query.setParameter(PARAMETRO_FIM, filtro.fim());
+        if (filtro.granularidade() == com.snackbar.pedidos.application.dtos.relatorios.GranularidadeTempo.ANO) {
+            query.setParameter(PARAMETRO_INICIO, LocalDate.of(1, 1, 1));
+            query.setParameter(PARAMETRO_FIM, LocalDate.now().plusYears(1));
+        } else {
+            query.setParameter(PARAMETRO_INICIO, filtro.inicio());
+            query.setParameter(PARAMETRO_FIM, filtro.fim());
+        }
 
         @SuppressWarnings("unchecked")
         List<Object[]> resultados = query.getResultList();
@@ -86,6 +90,90 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
         return buckets.stream()
                 .map(RelatorioBucketFactory.RelatorioBucket::toDto)
                 .toList();
+    }
+
+    private String construirSqlEvolucao(FiltroRelatorioTemporalDTO filtro) {
+        return switch (filtro.granularidade()) {
+            case DIA -> "SELECT " + DATA_BASE_EXPR + " AS data_base, " +
+                    "SUM(p.valor_total) AS total_vendas, " +
+                    "COUNT(*) AS total_pedidos " +
+                    "FROM pedidos p " +
+                    "LEFT JOIN sessoes_trabalho st ON st.id = p.sessao_id " +
+                    "WHERE " + DATA_BASE_EXPR + " >= :inicio " +
+                    "AND " + DATA_BASE_EXPR + " < :fim " +
+                    "AND p.status <> 'CANCELADO' " +
+                    "GROUP BY data_base " +
+                    "ORDER BY data_base";
+            case SEMANA -> "SELECT DATE(" + DATA_BASE_EXPR + ") AS data_base, " +
+                    "SUM(p.valor_total) AS total_vendas, " +
+                    "COUNT(*) AS total_pedidos " +
+                    "FROM pedidos p " +
+                    "LEFT JOIN sessoes_trabalho st ON st.id = p.sessao_id " +
+                    "WHERE " + DATA_BASE_EXPR + " >= :inicio " +
+                    "AND " + DATA_BASE_EXPR + " < :fim " +
+                    "AND p.status <> 'CANCELADO' " +
+                    "GROUP BY YEAR(" + DATA_BASE_EXPR + "), WEEK(" + DATA_BASE_EXPR + ", 1) " +
+                    "ORDER BY data_base";
+            case MES -> SELECT_DATE_CONCAT_YEAR + DATA_BASE_EXPR + "), '-', MONTH(" + DATA_BASE_EXPR
+                    + "), '-01')) AS data_base, " +
+                    "SUM(p.valor_total) AS total_vendas, " +
+                    "COUNT(*) AS total_pedidos " +
+                    "FROM pedidos p " +
+                    "LEFT JOIN sessoes_trabalho st ON st.id = p.sessao_id " +
+                    "WHERE " + DATA_BASE_EXPR + " >= :inicio " +
+                    "AND " + DATA_BASE_EXPR + " < :fim " +
+                    "AND p.status <> 'CANCELADO' " +
+                    "GROUP BY YEAR(" + DATA_BASE_EXPR + "), MONTH(" + DATA_BASE_EXPR + ") " +
+                    "ORDER BY data_base";
+            case TRIMESTRE -> SELECT_DATE_CONCAT_YEAR + DATA_BASE_EXPR + "), '-', ((QUARTER(" + DATA_BASE_EXPR
+                    + ") - 1) * 3 + 1), '-01')) AS data_base, " +
+                    "SUM(p.valor_total) AS total_vendas, " +
+                    "COUNT(*) AS total_pedidos " +
+                    "FROM pedidos p " +
+                    "LEFT JOIN sessoes_trabalho st ON st.id = p.sessao_id " +
+                    "WHERE " + DATA_BASE_EXPR + " >= :inicio " +
+                    "AND " + DATA_BASE_EXPR + " < :fim " +
+                    "AND p.status <> 'CANCELADO' " +
+                    "GROUP BY YEAR(" + DATA_BASE_EXPR + "), QUARTER(" + DATA_BASE_EXPR + ") " +
+                    "ORDER BY data_base";
+            case SEMESTRE -> SELECT_DATE_CONCAT_YEAR + DATA_BASE_EXPR + "), '-', IF(MONTH(" + DATA_BASE_EXPR
+                    + ") <= 6, 1, 7), '-01')) AS data_base, " +
+                    "SUM(p.valor_total) AS total_vendas, " +
+                    "COUNT(*) AS total_pedidos " +
+                    "FROM pedidos p " +
+                    "LEFT JOIN sessoes_trabalho st ON st.id = p.sessao_id " +
+                    "WHERE " + DATA_BASE_EXPR + " >= :inicio " +
+                    "AND " + DATA_BASE_EXPR + " < :fim " +
+                    "AND p.status <> 'CANCELADO' " +
+                    "GROUP BY YEAR(" + DATA_BASE_EXPR + "), IF(MONTH(" + DATA_BASE_EXPR + ") <= 6, 1, 2) " +
+                    "ORDER BY data_base";
+            case ANO -> SELECT_DATE_CONCAT_YEAR + DATA_BASE_EXPR + "), '-01-01')) AS data_base, " +
+                    "SUM(p.valor_total) AS total_vendas, " +
+                    "COUNT(*) AS total_pedidos " +
+                    "FROM pedidos p " +
+                    "LEFT JOIN sessoes_trabalho st ON st.id = p.sessao_id " +
+                    "WHERE p.status <> 'CANCELADO' " +
+                    "GROUP BY YEAR(" + DATA_BASE_EXPR + ") " +
+                    "ORDER BY data_base";
+        };
+    }
+
+    private List<RelatorioBucketFactory.RelatorioBucket> criarBucketsAnoCompleto() {
+        String sql = "SELECT DISTINCT YEAR(" + DATA_BASE_EXPR + ") AS ano " +
+                "FROM pedidos p " +
+                "LEFT JOIN sessoes_trabalho st ON st.id = p.sessao_id " +
+                "WHERE p.status <> 'CANCELADO' " +
+                "ORDER BY ano";
+        Query query = entityManager.createNativeQuery(sql);
+        @SuppressWarnings("unchecked")
+        List<Object> anos = query.getResultList();
+
+        List<RelatorioBucketFactory.RelatorioBucket> buckets = new java.util.ArrayList<>();
+        for (Object anoObj : anos) {
+            int ano = ((Number) anoObj).intValue();
+            buckets.add(bucketFactory.criarBucketAno(ano));
+        }
+        return buckets;
     }
 
     @Override
