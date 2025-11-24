@@ -16,6 +16,7 @@ export class MenuContextoPedidoComponent {
   readonly pedido = input<Pedido | null>(null);
   readonly onFechar = output<void>();
   readonly onStatusAlterado = output<{ pedidoId: string; novoStatus: StatusPedido }>();
+  readonly onCancelar = output<string>();
 
   readonly StatusPedido = StatusPedido;
 
@@ -27,11 +28,28 @@ export class MenuContextoPedidoComponent {
       StatusPedido.FINALIZADO
     ];
     // CANCELADO não pode ser alterado (regra de negócio)
-    // FINALIZADO e CANCELADO não podem ser alterados para outros status
-    if (statusAtual === StatusPedido.CANCELADO || statusAtual === StatusPedido.FINALIZADO) {
+    // FINALIZADO não pode ser alterado para outros status, mas pode ser cancelado
+    if (statusAtual === StatusPedido.CANCELADO) {
+      return [];
+    }
+    // FINALIZADO não pode ser alterado para outros status, mas pode ser cancelado
+    if (statusAtual === StatusPedido.FINALIZADO) {
       return [];
     }
     return todosStatus.filter(s => s !== statusAtual);
+  }
+
+  podeCancelar(statusAtual: StatusPedido): boolean {
+    // Permite cancelar pedidos finalizados para casos especiais
+    return statusAtual !== StatusPedido.CANCELADO;
+  }
+
+  cancelarPedido(): void {
+    const pedido = this.pedido();
+    if (pedido) {
+      this.onCancelar.emit(pedido.id);
+    }
+    this.fechar();
   }
 
   obterNomeStatus(status: StatusPedido): string {

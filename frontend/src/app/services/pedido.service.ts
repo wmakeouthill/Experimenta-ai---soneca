@@ -60,7 +60,7 @@ export interface CriarPedidoRequest {
   itens: ItemPedidoRequest[];
   observacoes?: string;
   meiosPagamento: MeioPagamentoPedido[];
-  usuarioId?: string;
+  usuarioId: string; // Obrigatório - deve ser enviado sempre
 }
 
 export interface ItemPedidoRequest {

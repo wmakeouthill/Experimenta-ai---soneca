@@ -25,8 +25,10 @@ public class PedidoValidator {
     }
     
     public void validarCancelamento(Pedido pedido) {
-        if (pedido.estaFinalizado()) {
-            throw new ValidationException("Não é possível cancelar um pedido finalizado");
+        // Permite cancelar pedidos finalizados para casos especiais
+        // Apenas verifica se o pedido não está já cancelado
+        if (pedido.estaCancelado()) {
+            throw new ValidationException("Pedido já está cancelado");
         }
     }
 }

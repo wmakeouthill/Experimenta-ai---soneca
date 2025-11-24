@@ -250,7 +250,7 @@
                         Finalizar
                       </button>
                     }
-                    @if (pedido.status !== StatusPedido.FINALIZADO && pedido.status !== StatusPedido.CANCELADO) {
+                    @if (pedido.status !== StatusPedido.CANCELADO) {
                       <button class="btn-acao btn-cancelar" (click)="cancelarPedido(pedido.id)">
                         Cancelar
                       </button>
@@ -271,6 +271,7 @@
     [pedido]="obterPedidoDoMenu()"
     (onFechar)="fecharMenuContexto()"
     (onStatusAlterado)="onStatusAlteradoViaMenu($event)"
+    (onCancelar)="onCancelarViaMenu($event)"
   />
 
   <app-novo-pedido-modal

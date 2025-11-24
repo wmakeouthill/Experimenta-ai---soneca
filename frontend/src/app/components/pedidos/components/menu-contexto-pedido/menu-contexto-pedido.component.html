@@ -23,6 +23,14 @@
               {{ obterNomeStatus(status) }}
             </button>
           }
+          @if (podeCancelar(pedidoAtual.status)) {
+            <button 
+              class="context-menu-item context-menu-item-cancelar"
+              (click)="cancelarPedido()"
+            >
+              ❌ Cancelar Pedido
+            </button>
+          }
         }
       </div>
     </div>

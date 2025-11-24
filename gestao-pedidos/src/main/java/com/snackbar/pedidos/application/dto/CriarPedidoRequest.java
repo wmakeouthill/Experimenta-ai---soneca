@@ -29,6 +29,7 @@ public class CriarPedidoRequest {
     @Valid
     private List<MeioPagamentoRequest> meiosPagamento;
     
-    private String usuarioId; // Opcional para futuro login
+    @NotBlank(message = "ID do usuário é obrigatório")
+    private String usuarioId;
 }
 

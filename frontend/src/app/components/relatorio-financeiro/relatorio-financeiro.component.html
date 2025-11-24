@@ -112,6 +112,7 @@
               <tr>
                 <th>Nº Pedido</th>
                 <th>Cliente</th>
+                <th>Usuário</th>
                 <th>Data/Hora</th>
                 <th>Status</th>
                 <th>Itens</th>
@@ -124,6 +125,7 @@
                 <tr>
                   <td class="numero-pedido">{{ pedido.numeroPedido }}</td>
                   <td>{{ pedido.clienteNome }}</td>
+                  <td>{{ obterNomeUsuario(pedido.usuarioId) }}</td>
                   <td>{{ formatarData(pedido.dataPedido) }}</td>
                   <td>
                     <span [class]="'badge-status ' + obterClasseStatus(pedido.status)">
@@ -155,7 +157,7 @@
             </tbody>
             <tfoot>
               <tr class="tabela-total">
-                <td colspan="6"><strong>Total Geral</strong></td>
+                <td colspan="7"><strong>Total Geral</strong></td>
                 <td class="text-right"><strong>{{ formatarMoeda(resumoFinanceiro().totalVendas) }}</strong></td>
               </tr>
             </tfoot>

@@ -44,6 +44,9 @@
     <!-- Migration: Adiciona coluna data_finalizacao na tabela pedidos -->
     <include file="changes/013-add-data-finalizacao-pedidos.sql" relativeToChangelogFile="true"/>
 
+    <!-- Migration: Torna usuario_id obrigatório na tabela pedidos -->
+    <include file="changes/014-make-usuario-id-required-pedidos.sql" relativeToChangelogFile="true"/>
+
     <!-- 
     NOTA: O usuário administrador inicial é criado automaticamente via CommandLineRunner
     (UsuarioInicialConfig) na primeira execução da aplicação.

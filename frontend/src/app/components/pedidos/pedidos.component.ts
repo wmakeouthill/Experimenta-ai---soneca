@@ -168,11 +168,21 @@ export class PedidosComponent implements OnInit {
     meiosPagamento: any[];
     observacoes?: string;
   }): void {
-    // Adicionar usuarioId do usuário logado
+    // Validar se usuário está logado
     const usuario = this.authService.usuarioAtual();
+    if (!usuario?.id) {
+      const mensagem = 'É necessário estar logado para criar um pedido. Por favor, faça login novamente.';
+      if (this.isBrowser) {
+        alert(mensagem);
+      }
+      console.error('Erro: Usuário não está logado');
+      return;
+    }
+
+    // Adicionar usuarioId do usuário logado (obrigatório)
     const requestComUsuario = {
       ...request,
-      usuarioId: usuario?.id
+      usuarioId: usuario.id
     };
 
     this.pedidoService.criar(requestComUsuario)
@@ -286,6 +296,11 @@ export class PedidosComponent implements OnInit {
   onStatusAlteradoViaMenu(event: { pedidoId: string; novoStatus: StatusPedido }): void {
     this.fecharMenuContexto();
     this.atualizarStatus(event.pedidoId, event.novoStatus);
+  }
+
+  onCancelarViaMenu(pedidoId: string): void {
+    this.fecharMenuContexto();
+    this.cancelarPedido(pedidoId);
   }
 
   obterPedidoDoMenu(): Pedido | null {

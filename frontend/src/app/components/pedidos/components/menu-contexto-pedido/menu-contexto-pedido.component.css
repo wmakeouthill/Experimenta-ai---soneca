@@ -58,3 +58,16 @@
   border-top: none;
 }
 
+.context-menu-item-cancelar {
+  border-top: 1px solid #e0e0e0;
+  margin-top: 0.25rem;
+  padding-top: 0.875rem;
+  color: #d32f2f;
+  font-weight: 500;
+}
+
+.context-menu-item-cancelar:hover {
+  background: #ffebee;
+  color: #c62828;
+}
+

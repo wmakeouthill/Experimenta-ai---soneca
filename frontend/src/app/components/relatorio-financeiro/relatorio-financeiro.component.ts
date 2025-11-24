@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, ViewChild, ElementRef, PLATFORM_ID, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, ViewChild, ElementRef, PLATFORM_ID, inject, OnInit } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { useRelatorioFinanceiro } from './composables/use-relatorio-financeiro';
+import { useUsuarios } from '../sessoes/composables/use-usuarios';
 import { FormatoUtil } from '../../utils/formato.util';
 import { MeioPagamento, StatusPedido } from '../../services/pedido.service';
 import { TooltipItensComponent } from './components/tooltip-itens/tooltip-itens.component';
@@ -15,8 +16,9 @@ import { TooltipMeiosPagamentoComponent } from './components/tooltip-meios-pagam
   styleUrl: './relatorio-financeiro.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class RelatorioFinanceiroComponent {
+export class RelatorioFinanceiroComponent implements OnInit {
   private readonly store = useRelatorioFinanceiro();
+  private readonly usuariosStore = useUsuarios();
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
 
@@ -35,6 +37,17 @@ export class RelatorioFinanceiroComponent {
 
   readonly StatusPedido = StatusPedido;
   readonly MeioPagamento = MeioPagamento;
+
+  ngOnInit(): void {
+    if (this.isBrowser) {
+      this.usuariosStore.carregarUsuarios();
+    }
+  }
+
+  obterNomeUsuario(usuarioId: string | undefined): string {
+    if (!usuarioId) return '-';
+    return this.usuariosStore.obterNomeUsuario(usuarioId);
+  }
 
   alterarData(event: Event): void {
     const input = event.target as HTMLInputElement;

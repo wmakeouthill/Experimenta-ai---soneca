@@ -35,7 +35,7 @@ public class Pedido extends BaseEntity {
     }
     
     public static Pedido criar(NumeroPedido numeroPedido, String clienteId, String clienteNome, String usuarioId) {
-        validarDados(numeroPedido, clienteId, clienteNome);
+        validarDados(numeroPedido, clienteId, clienteNome, usuarioId);
         
         Pedido pedido = new Pedido();
         pedido.numeroPedido = numeroPedido;
@@ -126,9 +126,7 @@ public class Pedido extends BaseEntity {
     }
     
     public void cancelar() {
-        if (status == StatusPedido.FINALIZADO) {
-            throw new ValidationException("Não é possível cancelar um pedido finalizado");
-        }
+        // Permite cancelar pedidos finalizados para casos especiais
         this.status = StatusPedido.CANCELADO;
         touch();
     }
@@ -207,7 +205,7 @@ public class Pedido extends BaseEntity {
         this.dataFinalizacao = dataFinalizacao;
     }
     
-    private static void validarDados(NumeroPedido numeroPedido, String clienteId, String clienteNome) {
+    private static void validarDados(NumeroPedido numeroPedido, String clienteId, String clienteNome, String usuarioId) {
         if (numeroPedido == null) {
             throw new ValidationException("Número do pedido não pode ser nulo");
         }
@@ -216,6 +214,9 @@ public class Pedido extends BaseEntity {
         }
         if (clienteNome == null || clienteNome.trim().isEmpty()) {
             throw new ValidationException("Nome do cliente não pode ser nulo ou vazio");
+        }
+        if (usuarioId == null || usuarioId.trim().isEmpty()) {
+            throw new ValidationException("ID do usuário é obrigatório");
         }
     }
 }
