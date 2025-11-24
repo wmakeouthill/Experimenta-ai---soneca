@@ -33,15 +33,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String email = jwtService.extrairEmail(token);
             String role = extrairRole(token);
             
-            var authorities = Collections.singletonList(
-                new SimpleGrantedAuthority(role)
-            );
-            
-            var authentication = new UsernamePasswordAuthenticationToken(
-                email, null, authorities
-            );
-            
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            if (role != null && !role.isBlank()) {
+                var authorities = Collections.singletonList(
+                    new SimpleGrantedAuthority(role)
+                );
+                
+                var authentication = new UsernamePasswordAuthenticationToken(
+                    email, null, authorities
+                );
+                
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
         }
         
         filterChain.doFilter(request, response);
@@ -58,9 +60,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private String extrairRole(String token) {
         try {
             String role = jwtService.extrairRole(token);
-            return role != null ? role : "ROLE_OPERADOR";
+            if (role == null || role.isBlank()) {
+                return null;
+            }
+            return role;
         } catch (Exception e) {
-            return "ROLE_OPERADOR";
+            return null;
         }
     }
 }

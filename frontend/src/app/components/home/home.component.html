@@ -12,7 +12,7 @@
         @if (estaAutenticado()) {
           <div class="home-user-info">
             <div class="user-info-content">
-              <span class="user-name">{{ usuarioAtual()?.nome }}</span>
+              <span class="user-name">{{ nomeFormatado() }}</span>
               <span class="user-role">{{ usuarioAtual()?.descricaoRole }}</span>
             </div>
             <button class="btn-logout" (click)="logout()">

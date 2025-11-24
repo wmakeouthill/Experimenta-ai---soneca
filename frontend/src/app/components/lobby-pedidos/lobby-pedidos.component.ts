@@ -9,6 +9,7 @@ import { OrderListComponent } from './components/order-list/order-list.component
 import { LobbyHeaderComponent } from './components/header/header.component';
 import { ConfigAnimacaoModalComponent, ConfigAnimacao } from './components/config-animacao-modal/config-animacao-modal.component';
 import { ConfigAnimacaoService } from '../../services/config-animacao.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-lobby-pedidos',
@@ -29,6 +30,7 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
   private readonly configAnimacaoService = inject(ConfigAnimacaoService);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly injector = inject(Injector);
+  private readonly authService = inject(AuthService);
 
   readonly pedidosAnteriores = signal<Pedido[]>([]);
 
@@ -37,6 +39,7 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
 
   readonly isAnimating = computed(() => this.animations.isAnimating());
   readonly mostrarConfigModal = signal<boolean>(false);
+  readonly isAdministrador = this.authService.isAdministrador;
 
   // Expor StatusPedido para o template
   readonly StatusPedido = StatusPedido;
@@ -165,6 +168,9 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
   }
 
   handleAbrirConfig() {
+    if (!this.isAdministrador()) {
+      return;
+    }
     this.mostrarConfigModal.set(true);
   }
 

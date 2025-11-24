@@ -69,5 +69,39 @@ export class FormatoUtil {
       minute: '2-digit'
     });
   }
+
+  /**
+   * Formata nome com primeira letra maiúscula em cada palavra.
+   * Palavras com 2 letras ou menos (como "de", "da", "do") permanecem minúsculas.
+   * A primeira palavra sempre começa com maiúscula.
+   * Exemplo: "JOAO DA SILVA" → "Joao da Silva", "maria de souza" → "Maria de Souza"
+   */
+  static capitalizarNome(nome: string | null | undefined): string {
+    if (!nome) return '';
+    
+    const nomeTrimmed = nome.trim();
+    if (!nomeTrimmed) return '';
+    
+    const palavras = nomeTrimmed.split(/\s+/);
+    
+    return palavras.map((palavra, index) => {
+      if (!palavra) return palavra;
+      
+      const palavraLower = palavra.toLowerCase();
+      
+      // Primeira palavra sempre começa com maiúscula
+      if (index === 0) {
+        return palavraLower.charAt(0).toUpperCase() + palavraLower.slice(1);
+      }
+      
+      // Palavras com mais de 2 letras: primeira maiúscula
+      if (palavraLower.length > 2) {
+        return palavraLower.charAt(0).toUpperCase() + palavraLower.slice(1);
+      }
+      
+      // Palavras com 2 letras ou menos: mantém minúscula
+      return palavraLower;
+    }).join(' ');
+  }
 }
 

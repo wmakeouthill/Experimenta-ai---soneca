@@ -4,6 +4,7 @@ import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { AuthorizationService } from '../../services/authorization.service';
 import { Modulo } from '../../models/modulo.model';
+import { FormatoUtil } from '../../utils/formato.util';
 
 @Component({
   selector: 'app-home',
@@ -20,6 +21,11 @@ export class HomeComponent {
   readonly usuarioAtual = this.authService.usuarioAtual;
   readonly estaAutenticado = this.authService.estaAutenticado;
   readonly isAdministrador = this.authService.isAdministrador;
+  
+  readonly nomeFormatado = computed(() => {
+    const nome = this.usuarioAtual()?.nome;
+    return FormatoUtil.capitalizarNome(nome);
+  });
 
   readonly modulosDisponiveis = computed(() => {
     const modulosBase: Omit<Modulo, 'rolesPermitidos' | 'bloqueado'>[] = [

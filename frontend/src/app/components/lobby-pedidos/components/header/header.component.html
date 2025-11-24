@@ -20,14 +20,16 @@
   >
     ✨ Animar
   </button>
-  <button
-    type="button"
-    [class]="'btn-config-animacao ' + (isAnimating() ? 'escondido' : '')"
-    (click)="handleAbrirConfig()"
-    title="Configurar animação"
-  >
-    ⚙️ Configurar Animação
-  </button>
+  @if (podeConfigurarAnimacao()) {
+    <button
+      type="button"
+      [class]="'btn-config-animacao ' + (isAnimating() ? 'escondido' : '')"
+      (click)="handleAbrirConfig()"
+      title="Configurar animação"
+    >
+      ⚙️ Configurar Animação
+    </button>
+  }
   @if (isModoGestor()) {
     <button
       type="button"

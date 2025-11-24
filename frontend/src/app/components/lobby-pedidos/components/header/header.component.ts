@@ -11,6 +11,7 @@ import { CommonModule } from '@angular/common';
 export class LobbyHeaderComponent {
   readonly isAnimating = input<boolean>(false);
   readonly isModoGestor = input<boolean>(false);
+  readonly podeConfigurarAnimacao = input<boolean>(true);
   readonly onTrocarModo = output<void>();
   readonly onAnimacaoManual = output<void>();
   readonly onAbrirConfig = output<void>();
