@@ -707,7 +707,7 @@
 }
 
 .pedido-itens {
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.3rem;
   padding: 0.15rem 0.5rem;
   background: #f9f9f9;
   border-radius: 8px;
@@ -746,27 +746,32 @@
 }
 
 .pedido-observacoes {
-  margin: 0.5rem 0;
-  padding: 0.5rem;
+  margin: 0 0 0.3rem 0;
+  padding: 0.4rem 0.5rem;
   background: #fff9e6;
   border-left: 3px solid #ff9800;
   border-radius: 4px;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  line-height: 1.3;
 }
 
 .observacoes-titulo {
-  display: block;
   font-size: 0.75rem;
   font-weight: 600;
   color: #e65100;
-  margin: 0 0 0.25rem 0;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .observacoes-texto {
   font-size: 0.8rem;
   color: #666;
-  margin: 0;
-  line-height: 1.3;
   word-wrap: break-word;
+  overflow-wrap: break-word;
+  flex: 1;
+  min-width: 0;
 }
 
 .item-nome {
