@@ -28,7 +28,7 @@ public class Pedido extends BaseEntity {
         super();
         this.itens = new ArrayList<>();
         this.meiosPagamento = new ArrayList<>();
-        this.status = StatusPedido.PREPARANDO;
+        this.status = StatusPedido.PENDENTE;
         this.dataPedido = LocalDateTime.now();
     }
     

@@ -265,26 +265,48 @@
   overflow-x: hidden;
 }
 
-/* Cards de Status Horizontais - Design Moderno */
+/* Cards de Status Horizontais - Design Moderno e Compacto */
 .status-cards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #c0c0c0 transparent;
+  padding-bottom: 0.5rem;
+}
+
+.status-cards::-webkit-scrollbar {
+  height: 6px;
+}
+
+.status-cards::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.status-cards::-webkit-scrollbar-thumb {
+  background: #c0c0c0;
+  border-radius: 3px;
+}
+
+.status-cards::-webkit-scrollbar-thumb:hover {
+  background: #a0a0a0;
 }
 
 .status-card {
   background: white;
-  border-radius: 16px;
-  padding: 2rem 1.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  border: 3px solid transparent;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 12px;
+  padding: 0.875rem 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 2px solid transparent;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   text-align: left;
-  width: 100%;
+  min-width: 140px;
+  flex: 1 1 0;
   position: relative;
   overflow: hidden;
+  white-space: nowrap;
 }
 
 .status-card::before {
@@ -293,8 +315,16 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 5px;
-  transition: all 0.3s ease;
+  height: 3px;
+  transition: all 0.2s ease;
+}
+
+.status-card.aguardando {
+  border-color: #FFF9C4;
+}
+
+.status-card.aguardando::before {
+  background: linear-gradient(90deg, #FFC107 0%, #FFD54F 100%);
 }
 
 .status-card.preparando {
@@ -322,14 +352,14 @@
 }
 
 .status-card:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .status-card.selected {
-  border-width: 3px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  transform: translateY(-4px) scale(1.02);
+  border-width: 2px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
 }
 
 .status-card.selected.preparando {
@@ -338,7 +368,7 @@
 }
 
 .status-card.selected.preparando::before {
-  height: 6px;
+  height: 3px;
   background: linear-gradient(90deg, #FF6F00 0%, #FF9800 50%, #FFB74D 100%);
 }
 
@@ -348,8 +378,18 @@
 }
 
 .status-card.selected.pronto::before {
-  height: 6px;
+  height: 3px;
   background: linear-gradient(90deg, #2e7d32 0%, #4CAF50 50%, #66BB6A 100%);
+}
+
+.status-card.selected.aguardando {
+  border-color: #FFC107;
+  background: linear-gradient(135deg, #fffde7 0%, #fff9c4 50%, #fff59d 100%);
+}
+
+.status-card.selected.aguardando::before {
+  height: 3px;
+  background: linear-gradient(90deg, #f57f17 0%, #FFC107 50%, #FFD54F 100%);
 }
 
 .status-card.selected.finalizado {
@@ -358,8 +398,26 @@
 }
 
 .status-card.selected.finalizado::before {
-  height: 6px;
+  height: 3px;
   background: linear-gradient(90deg, #1565c0 0%, #2196F3 50%, #42A5F5 100%);
+}
+
+.status-card.cancelado {
+  border-color: #FFCDD2;
+}
+
+.status-card.cancelado::before {
+  background: linear-gradient(90deg, #F44336 0%, #E57373 100%);
+}
+
+.status-card.selected.cancelado {
+  border-color: #F44336;
+  background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 50%, #ef9a9a 100%);
+}
+
+.status-card.selected.cancelado::before {
+  height: 3px;
+  background: linear-gradient(90deg, #c62828 0%, #F44336 50%, #E57373 100%);
 }
 
 .status-card-header {
@@ -368,37 +426,45 @@
   align-items: center;
   position: relative;
   z-index: 1;
+  gap: 0.5rem;
 }
 
 .status-card-header h3 {
   margin: 0;
-  font-size: 1.4rem;
-  font-weight: 800;
+  font-size: 0.875rem;
+  font-weight: 700;
   color: #333;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.2px;
+  line-height: 1.2;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .status-card.selected .status-card-header h3 {
   color: #1a1a1a;
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+  font-weight: 800;
 }
 
 .status-count {
-  background: rgba(255, 255, 255, 0.9);
-  padding: 0.6rem 1.2rem;
-  border-radius: 24px;
-  font-size: 1.8rem;
-  font-weight: 900;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 0.35rem 0.65rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 800;
   color: #1a1a1a;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  min-width: 50px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  min-width: 36px;
   text-align: center;
+  flex-shrink: 0;
+  line-height: 1;
 }
 
 .status-card.selected .status-count {
   background: rgba(255, 255, 255, 1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transform: scale(1.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  transform: scale(1.05);
 }
 
 .resultado-info {
@@ -546,6 +612,11 @@
   background: #4CAF50;
 }
 
+.pedido-card.status-pendente::before,
+.pedido-card.status-aguardando::before {
+  background: #FFC107;
+}
+
 .pedido-card.status-preparando::before {
   background: #FF9800;
 }
@@ -556,6 +627,10 @@
 
 .pedido-card.status-finalizado::before {
   background: #2196F3;
+}
+
+.pedido-card.status-cancelado::before {
+  background: #F44336;
 }
 
 .pedido-header {
@@ -811,7 +886,22 @@
   }
 
   .status-cards {
-    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .status-card {
+    min-width: 120px;
+    padding: 0.75rem 0.875rem;
+  }
+
+  .status-card-header h3 {
+    font-size: 0.8rem;
+  }
+
+  .status-count {
+    font-size: 1rem;
+    padding: 0.3rem 0.55rem;
+    min-width: 32px;
   }
 
   .pedidos-lista {
@@ -860,6 +950,25 @@
   .pedidos-conteudo {
     order: 1;
     padding: 1rem;
+  }
+
+  .status-cards {
+    gap: 0.5rem;
+  }
+
+  .status-card {
+    min-width: 100px;
+    padding: 0.65rem 0.75rem;
+  }
+
+  .status-card-header h3 {
+    font-size: 0.75rem;
+  }
+
+  .status-count {
+    font-size: 0.9rem;
+    padding: 0.25rem 0.5rem;
+    min-width: 28px;
   }
 
   .pedidos-lista {

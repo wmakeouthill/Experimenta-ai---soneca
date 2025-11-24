@@ -21,19 +21,25 @@ export class MenuContextoPedidoComponent {
 
   obterStatusDisponiveis(statusAtual: StatusPedido): StatusPedido[] {
     const todosStatus = [
+      StatusPedido.PENDENTE,
       StatusPedido.PREPARANDO,
       StatusPedido.PRONTO,
       StatusPedido.FINALIZADO
     ];
+    // CANCELADO não pode ser alterado (regra de negócio)
+    // FINALIZADO e CANCELADO não podem ser alterados para outros status
+    if (statusAtual === StatusPedido.CANCELADO || statusAtual === StatusPedido.FINALIZADO) {
+      return [];
+    }
     return todosStatus.filter(s => s !== statusAtual);
   }
 
   obterNomeStatus(status: StatusPedido): string {
     const nomes: Record<StatusPedido, string> = {
+      [StatusPedido.PENDENTE]: 'Aguardando',
       [StatusPedido.PREPARANDO]: 'Preparando',
       [StatusPedido.PRONTO]: 'Pronto',
       [StatusPedido.FINALIZADO]: 'Finalizado',
-      [StatusPedido.PENDENTE]: 'Pendente',
       [StatusPedido.CANCELADO]: 'Cancelado'
     };
     return nomes[status] || status;

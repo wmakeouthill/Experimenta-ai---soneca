@@ -144,9 +144,7 @@ export class PedidosComponent implements OnInit {
   }
 
   recarregar(): void {
-    const sessaoId = this.sessaoAtiva()?.id;
-    this.pedidosComposable.carregarPedidos(sessaoId ? { sessaoId } : undefined);
-    this.pedidosComposable.carregarProdutos();
+    this.carregarDados();
   }
 
   abrirFormulario(): void {
@@ -176,7 +174,7 @@ export class PedidosComponent implements OnInit {
       ...request,
       usuarioId: usuario?.id
     };
-    
+
     this.pedidoService.criar(requestComUsuario)
       .subscribe({
         next: (pedidoCriado) => {
@@ -302,6 +300,17 @@ export class PedidosComponent implements OnInit {
 
   formatarPreco(preco: number): string {
     return `R$ ${preco.toFixed(2).replace('.', ',')}`;
+  }
+
+  formatarStatus(status: StatusPedido): string {
+    const nomes: Record<StatusPedido, string> = {
+      [StatusPedido.PENDENTE]: 'Aguardando',
+      [StatusPedido.PREPARANDO]: 'Preparando',
+      [StatusPedido.PRONTO]: 'Pronto',
+      [StatusPedido.FINALIZADO]: 'Finalizado',
+      [StatusPedido.CANCELADO]: 'Cancelado'
+    };
+    return nomes[status] || status;
   }
 }
 

@@ -57,6 +57,13 @@
           <div class="filtro-opcoes">
             <button
               class="filtro-opcao"
+              [class.active]="pedidosComposable.statusSelecionado() === StatusPedido.PENDENTE"
+              (click)="filtrarPorStatus(StatusPedido.PENDENTE)"
+            >
+              Aguardando
+            </button>
+            <button
+              class="filtro-opcao"
               [class.active]="pedidosComposable.statusSelecionado() === StatusPedido.PREPARANDO"
               (click)="filtrarPorStatus(StatusPedido.PREPARANDO)"
             >
@@ -75,6 +82,13 @@
               (click)="filtrarPorStatus(StatusPedido.FINALIZADO)"
             >
               Finalizado
+            </button>
+            <button
+              class="filtro-opcao"
+              [class.active]="pedidosComposable.statusSelecionado() === StatusPedido.CANCELADO"
+              (click)="filtrarPorStatus(StatusPedido.CANCELADO)"
+            >
+              Cancelados
             </button>
           </div>
         </div>
@@ -107,6 +121,16 @@
         <!-- Cards de Status Horizontais -->
         <div class="status-cards">
           <button
+            class="status-card aguardando"
+            [class.selected]="pedidosComposable.statusSelecionado() === StatusPedido.PENDENTE"
+            (click)="filtrarPorStatus(StatusPedido.PENDENTE)"
+          >
+            <div class="status-card-header">
+              <h3>⏳ Aguardando</h3>
+              <span class="status-count">{{ pedidosPorStatus().aguardando.length }}</span>
+            </div>
+          </button>
+          <button
             class="status-card preparando"
             [class.selected]="pedidosComposable.statusSelecionado() === StatusPedido.PREPARANDO"
             (click)="filtrarPorStatus(StatusPedido.PREPARANDO)"
@@ -132,8 +156,18 @@
             (click)="filtrarPorStatus(StatusPedido.FINALIZADO)"
           >
             <div class="status-card-header">
-              <h3>✔️ Finalizado (Hoje)</h3>
+              <h3>✔️ Finalizado</h3>
               <span class="status-count">{{ pedidosPorStatus().finalizado.length }}</span>
+            </div>
+          </button>
+          <button
+            class="status-card cancelado"
+            [class.selected]="pedidosComposable.statusSelecionado() === StatusPedido.CANCELADO"
+            (click)="filtrarPorStatus(StatusPedido.CANCELADO)"
+          >
+            <div class="status-card-header">
+              <h3>❌ Cancelados</h3>
+              <span class="status-count">{{ pedidosPorStatus().cancelado.length }}</span>
             </div>
           </button>
         </div>
@@ -168,7 +202,7 @@
                     <p class="pedido-data">{{ formatarData(pedido.dataPedido) }}</p>
                   </div>
                   <div class="pedido-status-badge" [class]="'badge-' + pedido.status.toLowerCase()">
-                    {{ pedido.status }}
+                    {{ formatarStatus(pedido.status) }}
                   </div>
                 </div>
 
@@ -197,6 +231,11 @@
                     <strong>Total: {{ formatarPreco(pedido.valorTotal) }}</strong>
                   </div>
                   <div class="pedido-acoes">
+                    @if (pedido.status === StatusPedido.PENDENTE) {
+                      <button class="btn-acao btn-preparando" (click)="atualizarStatus(pedido.id, StatusPedido.PREPARANDO)">
+                        Iniciar Preparo
+                      </button>
+                    }
                     @if (pedido.status === StatusPedido.PREPARANDO) {
                       <button class="btn-acao btn-pronto" (click)="atualizarStatus(pedido.id, StatusPedido.PRONTO)">
                         Pronto

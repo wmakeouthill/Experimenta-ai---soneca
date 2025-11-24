@@ -16,8 +16,8 @@ export function usePedidos() {
   const estado = signal<EstadoCarregamento>('idle');
   const erro = signal<string | null>(null);
 
-  // Filtros - sempre inicia com PREPARANDO selecionado
-  const statusSelecionado = signal<StatusPedido>(StatusPedido.PREPARANDO);
+  // Filtros - sempre inicia com PENDENTE (aguardando) selecionado
+  const statusSelecionado = signal<StatusPedido>(StatusPedido.PENDENTE);
   const pesquisaTexto = signal<string>('');
 
   // Computed
@@ -42,9 +42,11 @@ export function usePedidos() {
   const pedidosPorStatus = computed(() => {
     const todos = pedidos();
     return {
+      aguardando: todos.filter(p => p.status === StatusPedido.PENDENTE),
       preparando: todos.filter(p => p.status === StatusPedido.PREPARANDO),
       pronto: todos.filter(p => p.status === StatusPedido.PRONTO),
-      finalizado: todos.filter(p => p.status === StatusPedido.FINALIZADO)
+      finalizado: todos.filter(p => p.status === StatusPedido.FINALIZADO),
+      cancelado: todos.filter(p => p.status === StatusPedido.CANCELADO)
     };
   });
 
