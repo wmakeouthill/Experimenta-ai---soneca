@@ -72,6 +72,7 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
   }
 
   private carregarConfigAnimacao() {
+    // O serviço já trata erros e retorna valores padrão
     this.configAnimacaoService.carregar().subscribe({
       next: (config) => {
         this.animations.animacaoConfig.set({
@@ -79,10 +80,6 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
           intervaloAnimacao: config.intervaloAnimacao,
           duracaoAnimacao: config.duracaoAnimacao
         });
-      },
-      error: () => {
-        // Usar valores padrão se não conseguir carregar
-        console.warn('Não foi possível carregar configuração de animação, usando valores padrão');
       }
     });
   }
@@ -100,10 +97,14 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
   }
 
   private verificarMudancas(anteriores: Pedido[], atuais: Pedido[]) {
+    // Verificar se animação periódica está ativada
+    const config = this.animations.animacaoConfig();
+    if (!config.animacaoAtivada) return; // Não animar automaticamente se desabilitada
+    
     for (const atual of atuais) {
       const anterior = anteriores.find(p => p.id === atual.id);
       if (anterior && anterior.status === StatusPedido.PREPARANDO && atual.status === StatusPedido.PRONTO) {
-        this.animations.animarTransicaoStatus(atual, anterior.status, this.animations.animacaoConfig().duracaoAnimacao);
+        this.animations.animarTransicaoStatus(atual, anterior.status, config.duracaoAnimacao);
         break;
       }
     }
@@ -124,6 +125,7 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
 
   handleAnimacaoManual() {
     // Disparar animação manualmente se houver pedidos
+    // O botão "Animar" sempre funciona, independente da configuração animacaoAtivada
     const pedidos = this.lobbyPedidos.pedidos();
     const pedidosPreparando = pedidos.filter(p => p.status === StatusPedido.PREPARANDO);
     const pedidosPronto = pedidos.filter(p => p.status === StatusPedido.PRONTO);
@@ -136,6 +138,19 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
         StatusPedido.PREPARANDO,
         this.animations.animacaoConfig().duracaoAnimacao
       );
+    } else if (pedidosPreparando.length > 0) {
+      // Se não há pedidos prontos, criar uma animação simulada do primeiro preparando
+      const pedidoPreparando = pedidosPreparando[0];
+      // Simular transição: criar um pedido "fantasma" que vai para pronto
+      const pedidoFantasma: Pedido = {
+        ...pedidoPreparando,
+        status: StatusPedido.PRONTO
+      };
+      this.animations.animarTransicaoStatus(
+        pedidoFantasma,
+        StatusPedido.PREPARANDO,
+        this.animations.animacaoConfig().duracaoAnimacao
+      );
     }
   }
 
@@ -144,22 +159,24 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
   }
 
   handleSalvarConfig(config: ConfigAnimacao) {
-    // Atualizar configuração local
+    // Atualizar configuração local imediatamente
     this.animations.animacaoConfig.set({
       animacaoAtivada: config.animacaoAtivada,
       intervaloAnimacao: config.intervaloAnimacao,
       duracaoAnimacao: config.duracaoAnimacao
     });
     
-    // Salvar no backend
+    // Fechar modal imediatamente (configuração já foi aplicada localmente)
+    this.mostrarConfigModal.set(false);
+    
+    // Tentar salvar no backend (silenciosamente, sem mostrar erros)
     this.configAnimacaoService.salvar(config).subscribe({
       next: () => {
-        console.log('Configuração de animação salva com sucesso');
-        this.mostrarConfigModal.set(false);
+        // Configuração salva com sucesso (quando backend estiver disponível)
       },
-      error: (error) => {
-        console.error('Erro ao salvar configuração:', error);
-        alert('Erro ao salvar configuração. Tente novamente.');
+      error: () => {
+        // Backend não disponível - configuração já foi aplicada localmente
+        // Não mostrar erro para o usuário
       }
     });
   }

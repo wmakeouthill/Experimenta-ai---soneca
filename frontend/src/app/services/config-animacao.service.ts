@@ -18,10 +18,12 @@ export class ConfigAnimacaoService {
   private readonly apiUrl = '/api/config-animacao';
 
   carregar(): Observable<ConfigAnimacao> {
+    // O interceptor silent500ConfigInterceptor já trata erros 500
     return this.http.get<ConfigAnimacao>(this.apiUrl);
   }
 
   salvar(config: ConfigAnimacao): Observable<ConfigAnimacao> {
+    // O interceptor silent500ConfigInterceptor já trata erros 500
     return this.http.post<ConfigAnimacao>(this.apiUrl, config);
   }
 }

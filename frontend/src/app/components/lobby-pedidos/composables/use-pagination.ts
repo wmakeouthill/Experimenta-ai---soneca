@@ -1,4 +1,4 @@
-import { signal, computed, effect, ElementRef } from '@angular/core';
+import { signal, ElementRef } from '@angular/core';
 
 interface PaginationInfo {
   totalPaginas: number;
@@ -9,6 +9,7 @@ interface PaginationInfo {
 export function usePagination(isModoGestor: () => boolean) {
   const pagina = signal(0);
   const itensPorPagina = signal<number | null>(null);
+  let autoPaginaInterval: any = null;
 
   const calcularItensPorPagina = (containerRef: ElementRef<HTMLElement> | null) => {
     if (!containerRef?.nativeElement) return;
@@ -57,6 +58,7 @@ export function usePagination(isModoGestor: () => boolean) {
   const ajustarPagina = (items: any[]) => {
     if (isModoGestor()) {
       pagina.set(0);
+      pararAutoPagina();
       return;
     }
 
@@ -65,6 +67,43 @@ export function usePagination(isModoGestor: () => boolean) {
       pagina.update(p => totalPaginas <= 1 ? 0 : Math.min(p, totalPaginas - 1));
     } else {
       pagina.set(0);
+      pararAutoPagina();
+    }
+  };
+
+  const avancarPagina = (items: any[]) => {
+    if (isModoGestor()) return;
+
+    const info = getInfoPagina(items);
+    if (info.temPagina) {
+      const proximaPagina = (info.paginaAtual + 1) % info.totalPaginas;
+      pagina.set(proximaPagina);
+    }
+  };
+
+  const iniciarAutoPagina = (items: () => any[]) => {
+    pararAutoPagina();
+
+    if (isModoGestor()) return;
+
+    // Verificar se está no browser
+    if (typeof window === 'undefined') return;
+
+    autoPaginaInterval = setInterval(() => {
+      const lista = items();
+      const info = getInfoPagina(lista);
+      if (info.temPagina) {
+        avancarPagina(lista);
+      } else {
+        pararAutoPagina();
+      }
+    }, 5000); // 5 segundos
+  };
+
+  const pararAutoPagina = () => {
+    if (autoPaginaInterval) {
+      clearInterval(autoPaginaInterval);
+      autoPaginaInterval = null;
     }
   };
 
@@ -74,7 +113,9 @@ export function usePagination(isModoGestor: () => boolean) {
     calcularItensPorPagina,
     getItensPaginados,
     getInfoPagina,
-    ajustarPagina
+    ajustarPagina,
+    iniciarAutoPagina,
+    pararAutoPagina
   };
 }
 

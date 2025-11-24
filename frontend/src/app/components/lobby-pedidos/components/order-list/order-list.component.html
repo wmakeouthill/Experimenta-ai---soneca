@@ -27,7 +27,7 @@
     @if (pedidosComAnimacao().length === 0) {
       <div class="pedido-vazio">{{ emptyText() }}</div>
     } @else {
-      @for (pedido of itensPaginados(); track pedido.id) {
+      @for (pedido of itensPaginados(); track pedido.id; let i = $index) {
         <app-order-card
           [pedido]="pedido"
           [isModoGestor]="isModoGestor()"
@@ -35,6 +35,7 @@
           [pedidoAnimando]="pedidoAnimando()"
           (onMarcarComoPronto)="handleMarcarComoPronto($event)"
           (onRemover)="handleRemover($event)"
+          [style.animation-delay]="(i * 0.05) + 's'"
         />
       }
     }

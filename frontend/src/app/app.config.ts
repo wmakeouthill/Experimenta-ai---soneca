@@ -6,6 +6,7 @@ import { routes } from './app.routes';
 import { provideClientHydration } from '@angular/platform-browser';
 import { authInterceptor } from './interceptors/auth.interceptor';
 import { silent404Interceptor } from './interceptors/silent-404.interceptor';
+import { silent500ConfigInterceptor } from './interceptors/silent-500-config.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -13,7 +14,7 @@ export const appConfig: ApplicationConfig = {
     provideClientHydration(),
     provideHttpClient(
       withFetch(),
-      withInterceptors([authInterceptor, silent404Interceptor])
+      withInterceptors([authInterceptor, silent404Interceptor, silent500ConfigInterceptor])
     )
   ]
 };

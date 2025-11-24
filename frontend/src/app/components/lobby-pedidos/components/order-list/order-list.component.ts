@@ -13,7 +13,7 @@ import { usePagination } from '../../composables/use-pagination';
 })
 export class OrderListComponent implements OnDestroy {
   private readonly platformId = inject(PLATFORM_ID);
-  private resizeHandler?: () => void;
+  private readonly resizeHandler?: () => void;
 
   readonly title = input.required<string>();
   readonly status = input.required<StatusPedido>();
@@ -42,7 +42,7 @@ export class OrderListComponent implements OnDestroy {
     const lista = [...this.pedidosFiltrados()];
     const animandoDados = this.pedidoAnimandoDados();
     const animandoStatus = this.pedidoAnimandoStatus();
-    
+
     if (animandoDados && animandoStatus === this.status() && animandoDados.status === this.status()) {
       const jaExiste = lista.some(p => p.id === animandoDados.id);
       if (!jaExiste) {
@@ -53,6 +53,8 @@ export class OrderListComponent implements OnDestroy {
   });
 
   readonly itensPaginados = computed(() => {
+    // Incluir pagina atual no computed para forçar re-render quando mudar
+    const _ = this.pagination.pagina();
     return this.pagination.getItensPaginados(this.pedidosComAnimacao());
   });
 
@@ -76,11 +78,29 @@ export class OrderListComponent implements OnDestroy {
       // Effect para recalcular quando pedidos ou referência mudarem
       effect(() => {
         const pedidos = this.pedidosComAnimacao();
+
         if (this.listRef?.nativeElement && !this.isModoGestor()) {
           setTimeout(() => {
             this.pagination.calcularItensPorPagina(this.listRef);
             this.pagination.ajustarPagina(pedidos);
           }, 100);
+        } else {
+          this.pagination.pararAutoPagina();
+        }
+      });
+
+      // Effect separado para iniciar/parar auto-paginação quando houver múltiplas páginas
+      effect(() => {
+        const pedidos = this.pedidosComAnimacao();
+        const info = this.pagination.getInfoPagina(pedidos);
+
+        if (!this.isModoGestor() && info.temPagina && this.listRef?.nativeElement) {
+          // Aguardar um pouco para garantir que o cálculo de itens por página foi feito
+          setTimeout(() => {
+            this.pagination.iniciarAutoPagina(() => this.pedidosComAnimacao());
+          }, 200);
+        } else {
+          this.pagination.pararAutoPagina();
         }
       });
 
@@ -93,14 +113,17 @@ export class OrderListComponent implements OnDestroy {
           }, 100);
         }
       };
-      
+
       window.addEventListener('resize', this.resizeHandler);
     }
   }
 
   ngOnDestroy() {
-    if (this.resizeHandler && isPlatformBrowser(this.platformId)) {
-      window.removeEventListener('resize', this.resizeHandler);
+    if (isPlatformBrowser(this.platformId)) {
+      if (this.resizeHandler) {
+        window.removeEventListener('resize', this.resizeHandler);
+      }
+      this.pagination.pararAutoPagina();
     }
   }
 
