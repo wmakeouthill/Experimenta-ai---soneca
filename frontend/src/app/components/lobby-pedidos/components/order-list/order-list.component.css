@@ -1,7 +1,7 @@
 .coluna-fila {
   background: white;
   border-radius: 15px;
-  padding: 18px;
+  padding: 12px 18px 18px 18px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
@@ -28,20 +28,32 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 18px 20px;
+  padding: 12px 20px;
   border-radius: 16px;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
+  margin-top: 0;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
   position: relative;
   overflow: visible;
   min-height: 70px;
+  gap: 15px;
 }
 
 .cabecalho-direita {
   display: flex;
   align-items: center;
   gap: 15px;
+  margin-left: auto;
+}
+
+.indicador-pagina-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  margin: 0 10px;
 }
 
 .cabecalho-coluna::before {
@@ -91,16 +103,19 @@
 
 .lista-pedidos {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: hidden;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: 15px;
-  padding: 5px;
+  padding: 0 5px 5px 5px;
   position: relative;
+  min-height: 0;
 }
 
 .lista-pedidos.lista-paginada {
   overflow-y: hidden;
+  overflow-x: hidden;
 }
 
 .lista-pedidos::-webkit-scrollbar {
@@ -131,14 +146,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  min-height: 0;
 }
 
-.indicador-pagina-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
 
 .pagina-info-header {
   font-size: 0.85rem;

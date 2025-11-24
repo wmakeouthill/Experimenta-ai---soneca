@@ -17,11 +17,20 @@ export function usePagination(isModoGestor: () => boolean) {
     const alturaContainer = container.clientHeight;
     const primeiroItem = container.querySelector('.card-pedido') as HTMLElement;
 
-    if (!primeiroItem || alturaContainer === 0) return;
+    if (!primeiroItem || alturaContainer === 0) {
+      // Se não tem item ainda, tenta calcular baseado na altura do container
+      const alturaBase = 100; // altura aproximada de um card
+      const gap = 15;
+      const itens = Math.floor((alturaContainer + gap) / (alturaBase + gap));
+      itensPorPagina.set(Math.max(1, itens));
+      return;
+    }
 
-    const alturaBase = 75;
+    const alturaCard = primeiroItem.offsetHeight || 100;
     const gap = 15;
-    const itens = Math.floor((alturaContainer - 20 + gap) / (alturaBase + gap));
+    const padding = 10; // padding da lista
+    const alturaDisponivel = alturaContainer - padding;
+    const itens = Math.floor((alturaDisponivel + gap) / (alturaCard + gap));
     itensPorPagina.set(Math.max(1, itens));
   };
 

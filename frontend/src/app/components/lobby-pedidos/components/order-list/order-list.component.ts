@@ -1,5 +1,5 @@
-import { Component, input, output, computed, ElementRef, ViewChild, effect } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, input, output, computed, ElementRef, ViewChild, effect, OnDestroy, PLATFORM_ID, inject } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Pedido, StatusPedido } from '../../../../services/pedido.service';
 import { OrderCardComponent } from '../order-card/order-card.component';
 import { usePagination } from '../../composables/use-pagination';
@@ -11,7 +11,10 @@ import { usePagination } from '../../composables/use-pagination';
   templateUrl: './order-list.component.html',
   styleUrl: './order-list.component.css'
 })
-export class OrderListComponent {
+export class OrderListComponent implements OnDestroy {
+  private readonly platformId = inject(PLATFORM_ID);
+  private resizeHandler?: () => void;
+
   readonly title = input.required<string>();
   readonly status = input.required<StatusPedido>();
   readonly pedidos = input.required<Pedido[]>();
@@ -69,14 +72,36 @@ export class OrderListComponent {
   readonly emptyText = computed(() => this.isPreparando() ? 'Nenhum pedido em preparação' : 'Nenhum pedido pronto');
 
   constructor() {
-    effect(() => {
-      if (this.listRef?.nativeElement && !this.isModoGestor()) {
-        setTimeout(() => {
-          this.pagination.calcularItensPorPagina(this.listRef);
-          this.pagination.ajustarPagina(this.pedidosComAnimacao());
-        }, 100);
-      }
-    });
+    if (isPlatformBrowser(this.platformId)) {
+      // Effect para recalcular quando pedidos ou referência mudarem
+      effect(() => {
+        const pedidos = this.pedidosComAnimacao();
+        if (this.listRef?.nativeElement && !this.isModoGestor()) {
+          setTimeout(() => {
+            this.pagination.calcularItensPorPagina(this.listRef);
+            this.pagination.ajustarPagina(pedidos);
+          }, 100);
+        }
+      });
+
+      // Recalcular quando a janela redimensionar
+      this.resizeHandler = () => {
+        if (this.listRef?.nativeElement && !this.isModoGestor()) {
+          setTimeout(() => {
+            this.pagination.calcularItensPorPagina(this.listRef);
+            this.pagination.ajustarPagina(this.pedidosComAnimacao());
+          }, 100);
+        }
+      };
+      
+      window.addEventListener('resize', this.resizeHandler);
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.resizeHandler && isPlatformBrowser(this.platformId)) {
+      window.removeEventListener('resize', this.resizeHandler);
+    }
   }
 
   handleMarcarComoPronto(id: string) {

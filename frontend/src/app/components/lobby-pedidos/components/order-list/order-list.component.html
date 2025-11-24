@@ -1,21 +1,21 @@
 <div [class]="'coluna-fila ' + columnClass() + (isAnimating() ? ' saindo' : '')">
   <div [class]="'cabecalho-coluna ' + headerClass()">
     <h2>{{ titleText() }}</h2>
-    <div class="cabecalho-direita">
-      @if (!isModoGestor() && infoPagina().temPagina) {
-        <div class="indicador-pagina-header">
-          <span class="pagina-info-header">
-            Página {{ infoPagina().paginaAtual + 1 }} de {{ infoPagina().totalPaginas }}
-          </span>
-          <div class="pontos-pagina-header">
-            @for (ponto of paginasArray(); track $index) {
-              <span
-                [class]="'ponto-pagina-header ' + ($index === infoPagina().paginaAtual ? 'ativo' : '')"
-              ></span>
-            }
-          </div>
+    @if (!isModoGestor() && infoPagina().temPagina) {
+      <div class="indicador-pagina-header">
+        <span class="pagina-info-header">
+          Página {{ infoPagina().paginaAtual + 1 }} de {{ infoPagina().totalPaginas }}
+        </span>
+        <div class="pontos-pagina-header">
+          @for (ponto of paginasArray(); track $index) {
+            <span
+              [class]="'ponto-pagina-header ' + ($index === infoPagina().paginaAtual ? 'ativo' : '')"
+            ></span>
+          }
         </div>
-      }
+      </div>
+    }
+    <div class="cabecalho-direita">
       <span class="contador">{{ pedidosComAnimacao().length }}</span>
     </div>
   </div>
