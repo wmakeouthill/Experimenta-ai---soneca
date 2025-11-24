@@ -23,6 +23,7 @@ public interface PedidoJpaRepository extends JpaRepository<PedidoEntity, String>
     @Query("SELECT p FROM PedidoEntity p WHERE p.status = :status AND DATE(p.dataPedido) = DATE(:data)")
     List<PedidoEntity> findByStatusAndDataPedido(@Param("status") StatusPedido status, @Param("data") LocalDateTime data);
     
-    List<PedidoEntity> findBySessaoId(String sessaoId);
+    @Query("SELECT p FROM PedidoEntity p WHERE p.sessaoId = :sessaoId ORDER BY p.numeroPedido ASC, p.dataPedido ASC")
+    List<PedidoEntity> findBySessaoId(@Param("sessaoId") String sessaoId);
 }
 

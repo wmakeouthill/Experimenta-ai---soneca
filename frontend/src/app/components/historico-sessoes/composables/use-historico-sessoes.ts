@@ -71,6 +71,20 @@ export function useHistoricoSessoes() {
       });
     }
 
+    // Ordenar por número do pedido e depois por data/horário
+    resultado.sort((a, b) => {
+      // Primeiro ordena por número do pedido (numérico)
+      const numeroA = parseInt(a.numeroPedido, 10) || 0;
+      const numeroB = parseInt(b.numeroPedido, 10) || 0;
+      if (numeroA !== numeroB) {
+        return numeroA - numeroB;
+      }
+      // Se o número for igual, ordena por data/horário
+      const dataA = new Date(a.dataPedido).getTime();
+      const dataB = new Date(b.dataPedido).getTime();
+      return dataA - dataB;
+    });
+
     return resultado;
   });
 

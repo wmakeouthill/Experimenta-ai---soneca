@@ -108,6 +108,9 @@ public class PedidoMapper {
         pedido.atualizarObservacoes(entity.getObservacoes());
         pedido.definirSessaoId(entity.getSessaoId());
         
+        // Restaurar data do pedido do banco (preserva a data original de criação)
+        pedido.restaurarDataPedidoDoBanco(entity.getDataPedido());
+        
         return pedido;
     }
 }

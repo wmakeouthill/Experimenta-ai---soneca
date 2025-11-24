@@ -179,6 +179,16 @@ public class Pedido extends BaseEntity {
         }
     }
     
+    /**
+     * Restaura a data do pedido do banco de dados (usado pelos mappers).
+     * Este método preserva a data original de criação do pedido.
+     */
+    public void restaurarDataPedidoDoBanco(LocalDateTime dataPedido) {
+        if (dataPedido != null) {
+            this.dataPedido = dataPedido;
+        }
+    }
+    
     private static void validarDados(NumeroPedido numeroPedido, String clienteId, String clienteNome) {
         if (numeroPedido == null) {
             throw new ValidationException("Número do pedido não pode ser nulo");
