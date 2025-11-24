@@ -14,7 +14,7 @@
 .relatorio-financeiro-header {
   background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%);
   color: white;
-  padding: 1rem 2rem;
+  padding: 0.75rem 2rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -23,30 +23,30 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
   flex-wrap: wrap;
 }
 
 .relatorio-financeiro-titulo {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 900;
   margin: 0;
   letter-spacing: 1px;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .relatorio-financeiro-logo {
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
   object-fit: contain;
   flex-shrink: 0;
 }
 
 .header-actions {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.5rem;
   flex-wrap: wrap;
 }
 
@@ -55,7 +55,7 @@
   color: white;
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 8px;
-  padding: 0.75rem 1.5rem;
+  padding: 0.5rem 1.25rem;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
@@ -71,17 +71,17 @@
 }
 
 .relatorio-financeiro-content {
-  padding: 1.5rem 2rem;
+  padding: 0.75rem 2rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 0.75rem;
 }
 
 /* Filtros */
 .filtros-section {
   background: white;
   border-radius: 12px;
-  padding: 1rem;
+  padding: 0.75rem;
   border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
@@ -110,10 +110,10 @@
 
 /* Estados */
 .estado {
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 1rem;
   border-radius: 8px;
   font-weight: 600;
-  margin: 0.5rem 0;
+  margin: 0.25rem 0;
 }
 
 .estado--loading {
@@ -135,13 +135,13 @@
 .cards-metricas {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 .card-metrica {
   background: white;
   border-radius: 12px;
-  padding: 1.25rem;
+  padding: 0.75rem;
   border: 1px solid rgba(0, 0, 0, 0.1);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -163,7 +163,7 @@
 }
 
 .card-metrica-label {
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.25rem 0;
   font-size: 0.85rem;
   color: #666;
   font-weight: 500;
@@ -172,7 +172,7 @@
 }
 
 .card-metrica-valor {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   color: #333;
   font-weight: 700;
   display: block;
@@ -192,7 +192,7 @@
 .tabela-pedidos {
   background: white;
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 0.5rem;
   border: 1px solid rgba(0, 0, 0, 0.1);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
@@ -204,13 +204,13 @@
 }
 
 .tabela-compacta th {
-  padding: 0.75rem 0.5rem;
+  padding: 0.5rem 0.5rem;
   font-size: 0.85rem;
   white-space: nowrap;
 }
 
 .tabela-compacta td {
-  padding: 0.75rem 0.5rem;
+  padding: 0.5rem 0.5rem;
   border-bottom: 1px solid #e5e7eb;
 }
 
@@ -251,11 +251,11 @@
 }
 
 .tabela-titulo {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: #333;
-  margin: 0 0 1rem 0;
-  padding-bottom: 0.75rem;
+  margin: 0 0 0.5rem 0;
+  padding-bottom: 0.5rem;
   border-bottom: 2px solid #e5e7eb;
 }
 
@@ -276,7 +276,7 @@
 }
 
 .tabela th {
-  padding: 0.75rem;
+  padding: 0.5rem;
   text-align: left;
   font-weight: 600;
   color: #555;
@@ -290,7 +290,7 @@
 }
 
 .tabela td {
-  padding: 0.75rem;
+  padding: 0.5rem;
   border-bottom: 1px solid #e5e7eb;
   color: #333;
 }
@@ -309,7 +309,7 @@
 }
 
 .tabela-total td {
-  padding: 1rem 0.75rem;
+  padding: 0.75rem 0.5rem;
   border-top: 2px solid #dee2e6;
   border-bottom: none;
 }
@@ -331,7 +331,7 @@
 .meios-pagamento-lista {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.25rem;
   max-width: 250px;
 }
 
@@ -341,7 +341,7 @@
   align-items: center;
   gap: 0.5rem;
   font-size: 0.85rem;
-  padding: 0.25rem 0.5rem;
+  padding: 0.15rem 0.5rem;
   background: #f8f9fa;
   border-radius: 4px;
 }
@@ -368,7 +368,7 @@
 /* Badges de Status */
 .badge-status {
   display: inline-block;
-  padding: 0.25rem 0.75rem;
+  padding: 0.2rem 0.75rem;
   border-radius: 12px;
   font-size: 0.75rem;
   font-weight: 600;
@@ -410,11 +410,11 @@
 
 @media (max-width: 768px) {
   .relatorio-financeiro-header {
-    padding: 0.75rem 1rem;
+    padding: 0.5rem 1rem;
   }
 
   .relatorio-financeiro-content {
-    padding: 1rem;
+    padding: 0.75rem;
   }
 
   .relatorio-financeiro-titulo {
@@ -450,7 +450,7 @@
 
   .tabela-compacta th,
   .tabela-compacta td {
-    padding: 0.5rem 0.4rem;
+    padding: 0.4rem 0.4rem;
     font-size: 0.8rem;
   }
 
@@ -460,6 +460,74 @@
   }
 }
 
+/* Paginação */
+.paginacao {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 0;
+  margin-top: 0.5rem;
+}
+
+.btn-paginacao {
+  padding: 0.5rem 1rem;
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-paginacao:hover:not(:disabled) {
+  background: #7C3AED;
+  color: white;
+  border-color: #7C3AED;
+}
+
+.btn-paginacao:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.paginacao-numeros {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-pagina {
+  min-width: 40px;
+  padding: 0.5rem 0.75rem;
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-pagina:hover:not(.disabled):not(.active) {
+  background: #f5f5f5;
+  border-color: #7C3AED;
+}
+
+.btn-pagina.active {
+  background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%);
+  color: white;
+  border-color: #7C3AED;
+}
+
+.btn-pagina.disabled {
+  cursor: default;
+  border: none;
+  background: transparent;
+}
+
 @media (max-width: 480px) {
   .cards-metricas {
     grid-template-columns: 1fr;
@@ -467,6 +535,21 @@
 
   .card-metrica-valor {
     font-size: 1.5rem;
+  }
+
+  .paginacao {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  .paginacao-numeros {
+    gap: 0.25rem;
+  }
+
+  .btn-paginacao,
+  .btn-pagina {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.85rem;
   }
 }
 

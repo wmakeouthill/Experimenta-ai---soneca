@@ -21,7 +21,7 @@ export class RelatorioFinanceiroComponent {
   readonly dataFiltro = this.store.dataFiltro;
   readonly estado = this.store.estado;
   readonly erro = this.store.erro;
-  readonly pedidos = this.store.pedidosOrdenados;
+  readonly pedidos = this.store.pedidosPaginados;
   readonly estaCarregando = this.store.estaCarregando;
   readonly possuiDados = this.store.possuiDados;
   readonly resumoFinanceiro = this.store.resumoFinanceiro;
@@ -111,5 +111,44 @@ export class RelatorioFinanceiroComponent {
     MeioPagamento.CARTAO_DEBITO,
     MeioPagamento.VALE_REFEICAO
   ];
+
+  gerarNumerosPagina(): (number | string)[] {
+    const total = this.pedidos().totalPaginas;
+    const atual = this.pedidos().paginaAtual;
+    const numeros: (number | string)[] = [];
+
+    if (total <= 7) {
+      for (let i = 1; i <= total; i++) {
+        numeros.push(i);
+      }
+    } else {
+      numeros.push(1);
+
+      if (atual > 3) {
+        numeros.push('...');
+      }
+
+      const inicio = Math.max(2, atual - 1);
+      const fim = Math.min(total - 1, atual + 1);
+
+      for (let i = inicio; i <= fim; i++) {
+        numeros.push(i);
+      }
+
+      if (atual < total - 2) {
+        numeros.push('...');
+      }
+
+      if (total > 1) {
+        numeros.push(total);
+      }
+    }
+
+    return numeros;
+  }
+
+  irParaPagina(pagina: number): void {
+    this.store.irParaPagina(pagina);
+  }
 }
 

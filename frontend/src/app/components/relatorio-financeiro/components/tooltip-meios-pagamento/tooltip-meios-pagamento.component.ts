@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, input, signal, HostListener, ElementRef, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, signal, HostListener, ElementRef, ViewChild, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormatoUtil } from '../../../../utils/formato.util';
 import { MeioPagamentoDTO, MeioPagamento } from '../../../../services/pedido.service';
+import { TooltipManagerService } from '../../services/tooltip-manager.service';
 
 @Component({
   selector: 'app-tooltip-meios-pagamento',
@@ -12,6 +13,9 @@ import { MeioPagamentoDTO, MeioPagamento } from '../../../../services/pedido.ser
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TooltipMeiosPagamentoComponent {
+  private readonly tooltipManager = inject(TooltipManagerService);
+  private readonly tooltipId = `tooltip-meios-pagamento-${Math.random().toString(36).substring(2, 11)}`;
+
   readonly meiosPagamento = input.required<MeioPagamentoDTO[]>();
   readonly aberto = signal<boolean>(false);
 
@@ -19,6 +23,13 @@ export class TooltipMeiosPagamentoComponent {
   @ViewChild('link', { static: false }) linkRef?: ElementRef<HTMLElement>;
 
   readonly MeioPagamento = MeioPagamento;
+
+  constructor() {
+    effect(() => {
+      const tooltipAbertoId = this.tooltipManager.getTooltipAbertoId()();
+      this.aberto.set(tooltipAbertoId === this.tooltipId);
+    }, { allowSignalWrites: true });
+  }
 
   formatarMoeda(valor: number): string {
     return FormatoUtil.moeda(valor);
@@ -38,9 +49,11 @@ export class TooltipMeiosPagamentoComponent {
   toggleTooltip(event: Event): void {
     event.stopPropagation();
     const estavaAberto = this.aberto();
-    this.aberto.update(aberto => !aberto);
 
-    if (!estavaAberto) {
+    if (estavaAberto) {
+      this.tooltipManager.fecharTodos();
+    } else {
+      this.tooltipManager.abrirTooltip(this.tooltipId);
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           this.posicionarTooltip();
@@ -77,8 +90,24 @@ export class TooltipMeiosPagamentoComponent {
     const container = target.closest('.tooltip-meios-pagamento-container');
 
     if (!container && this.aberto()) {
-      this.aberto.set(false);
+      this.tooltipManager.fecharTodos();
     }
+  }
+
+  private reposicionarSeAberto(): void {
+    if (this.aberto()) {
+      this.posicionarTooltip();
+    }
+  }
+
+  @HostListener('window:scroll', ['$event'])
+  aoFazerScroll(): void {
+    this.reposicionarSeAberto();
+  }
+
+  @HostListener('window:resize', ['$event'])
+  aoRedimensionar(): void {
+    this.reposicionarSeAberto();
   }
 }
 

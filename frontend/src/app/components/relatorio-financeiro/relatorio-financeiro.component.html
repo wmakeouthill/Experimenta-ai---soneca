@@ -120,7 +120,7 @@
               </tr>
             </thead>
             <tbody>
-              @for (pedido of pedidos(); track pedido.id) {
+              @for (pedido of pedidos().itens; track pedido.id) {
                 <tr>
                   <td class="numero-pedido">{{ pedido.numeroPedido }}</td>
                   <td>{{ pedido.clienteNome }}</td>
@@ -161,6 +161,40 @@
             </tfoot>
           </table>
         </div>
+
+        <!-- Paginação -->
+        @if (pedidos().totalPaginas > 1) {
+          <div class="paginacao">
+            <button
+              class="btn-paginacao"
+              [disabled]="pedidos().paginaAtual === 1"
+              (click)="irParaPagina(pedidos().paginaAtual - 1)"
+            >
+              ← Anterior
+            </button>
+
+            <div class="paginacao-numeros">
+              @for (pagina of gerarNumerosPagina(); track pagina) {
+                <button
+                  class="btn-pagina"
+                  [class.active]="pagina === pedidos().paginaAtual"
+                  [class.disabled]="pagina === '...'"
+                  (click)="pagina !== '...' && irParaPagina(+pagina)"
+                >
+                  {{ pagina }}
+                </button>
+              }
+            </div>
+
+            <button
+              class="btn-paginacao"
+              [disabled]="pedidos().paginaAtual === pedidos().totalPaginas"
+              (click)="irParaPagina(pedidos().paginaAtual + 1)"
+            >
+              Próxima →
+            </button>
+          </div>
+        }
       </section>
     }
   </div>

@@ -2,6 +2,7 @@ import { computed, signal, inject } from '@angular/core';
 import { catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { PedidoService, Pedido, MeioPagamento } from '../../../services/pedido.service';
+import { paginar, PaginacaoResult } from '../../../utils/paginacao.util';
 
 interface ResumoFinanceiro {
   totalVendas: number;
@@ -29,6 +30,8 @@ export function useRelatorioFinanceiro() {
   const estado = signal<EstadoCarregamento>('idle');
   const erro = signal<string | null>(null);
   const pedidos = signal<Pedido[]>([]);
+  const paginaAtual = signal<number>(1);
+  const itensPorPagina = signal<number>(10);
 
   const estaCarregando = computed(() => estado() === 'carregando');
   const possuiDados = computed(() => pedidos().length > 0);
@@ -47,6 +50,14 @@ export function useRelatorioFinanceiro() {
       const dataB = new Date(b.dataPedido).getTime();
       return dataA - dataB;
     });
+  });
+
+  const pedidosPaginados = computed<PaginacaoResult<Pedido>>(() => {
+    return paginar(
+      pedidosOrdenados(),
+      itensPorPagina(),
+      paginaAtual()
+    );
   });
 
   const resumoFinanceiro = computed<ResumoFinanceiro>(() => {
@@ -177,7 +188,15 @@ export function useRelatorioFinanceiro() {
       return;
     }
     dataFiltro.set(data);
+    paginaAtual.set(1);
     carregarPedidos();
+  };
+
+  const irParaPagina = (pagina: number) => {
+    const total = pedidosPaginados().totalPaginas;
+    if (pagina >= 1 && pagina <= total) {
+      paginaAtual.set(pagina);
+    }
   };
 
   carregarPedidos();
@@ -188,12 +207,15 @@ export function useRelatorioFinanceiro() {
     erro,
     pedidos,
     pedidosOrdenados,
+    pedidosPaginados,
+    paginaAtual,
     estaCarregando,
     possuiDados,
     resumoFinanceiro,
     resumoPorMeioPagamento,
     carregarPedidos,
-    alterarData
+    alterarData,
+    irParaPagina
   };
 }
 
