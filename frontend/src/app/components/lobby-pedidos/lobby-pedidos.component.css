@@ -15,6 +15,10 @@
   grid-template-columns: 1fr;
   gap: 0;
   padding: 0;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  overflow: hidden !important;
 }
 
 .coluna-lateral {
@@ -37,25 +41,13 @@
 }
 
 .fila-pedidos-container.animando .coluna-lateral {
-  width: 100%;
-  min-width: 100%;
-  max-width: 100%;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  transform: none;
-  z-index: 10000;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  opacity: 1;
-  pointer-events: none;
-  height: 100vh;
-  overflow: visible;
-  padding: 20px;
-  box-sizing: border-box;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  position: absolute !important;
 }
 
 .fila-pedidos-container.animando .coluna-fila {
@@ -63,12 +55,8 @@
   width: 0;
   height: 0;
   overflow: hidden;
-}
-
-.fila-pedidos-container.animando {
-  grid-template-columns: 1fr;
-  gap: 0;
-  padding: 0;
+  opacity: 0 !important;
+  visibility: hidden !important;
 }
 
 @media (max-width: 1024px) {

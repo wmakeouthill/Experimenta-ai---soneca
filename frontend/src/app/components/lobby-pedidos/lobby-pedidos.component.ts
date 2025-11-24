@@ -1,9 +1,10 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed, effect, ChangeDetectionStrategy, PLATFORM_ID, afterNextRender, runInInjectionContext, Injector } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed, effect, ChangeDetectionStrategy, PLATFORM_ID, afterNextRender, Injector } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { StatusPedido, Pedido } from '../../services/pedido.service';
 import { useLobbyPedidos } from './composables/use-lobby-pedidos';
 import { useAnimations } from './composables/use-animations';
 import { SurferAnimationComponent } from './components/surfer-animation/surfer-animation.component';
+import { FullscreenAnimationComponent } from './components/fullscreen-animation/fullscreen-animation.component';
 import { OrderListComponent } from './components/order-list/order-list.component';
 import { LobbyHeaderComponent } from './components/header/header.component';
 import { ConfigAnimacaoModalComponent, ConfigAnimacao } from './components/config-animacao-modal/config-animacao-modal.component';
@@ -16,6 +17,7 @@ import { ConfigAnimacaoService } from '../../services/config-animacao.service';
     CommonModule,
     LobbyHeaderComponent,
     SurferAnimationComponent,
+    FullscreenAnimationComponent,
     OrderListComponent,
     ConfigAnimacaoModalComponent
   ],
@@ -27,18 +29,18 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
   private readonly configAnimacaoService = inject(ConfigAnimacaoService);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly injector = inject(Injector);
-  
+
   readonly pedidosAnteriores = signal<Pedido[]>([]);
-  
+
   readonly lobbyPedidos = useLobbyPedidos();
   readonly animations = useAnimations();
 
   readonly isAnimating = computed(() => this.animations.isAnimating());
   readonly mostrarConfigModal = signal<boolean>(false);
-  
+
   // Expor StatusPedido para o template
   readonly StatusPedido = StatusPedido;
-  
+
   private pollingInterval: any = null;
   private readonly intervaloPolling = 3000; // 3 segundos
 
@@ -50,12 +52,12 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
     // Effect para detectar mudanças nos pedidos (no contexto de injeção)
     effect(() => {
       if (!isPlatformBrowser(this.platformId)) return;
-      
+
       const pedidosAtuais = this.lobbyPedidos.pedidos();
       const pedidosAnt = this.pedidosAnteriores();
-      
-      if (pedidosAtuais.length !== pedidosAnt.length || 
-          pedidosAtuais.some((p, i) => p.id !== pedidosAnt[i]?.id || p.status !== pedidosAnt[i]?.status)) {
+
+      if (pedidosAtuais.length !== pedidosAnt.length ||
+        pedidosAtuais.some((p, i) => p.id !== pedidosAnt[i]?.id || p.status !== pedidosAnt[i]?.status)) {
         this.verificarMudancas(pedidosAnt, pedidosAtuais);
         this.pedidosAnteriores.set([...pedidosAtuais]);
       }
@@ -84,7 +86,9 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
         this.animations.animacaoConfig.set({
           animacaoAtivada: config.animacaoAtivada,
           intervaloAnimacao: config.intervaloAnimacao,
-          duracaoAnimacao: config.duracaoAnimacao
+          duracaoAnimacao: config.duracaoAnimacao,
+          video1Url: config.video1Url || null,
+          video2Url: config.video2Url || null
         });
       }
     });
@@ -106,7 +110,7 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
     // Verificar se animação periódica está ativada
     const config = this.animations.animacaoConfig();
     if (!config.animacaoAtivada) return; // Não animar automaticamente se desabilitada
-    
+
     for (const atual of atuais) {
       const anterior = anteriores.find(p => p.id === atual.id);
       if (anterior && anterior.status === StatusPedido.PREPARANDO && atual.status === StatusPedido.PRONTO) {
@@ -135,7 +139,7 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
     const pedidos = this.lobbyPedidos.pedidos();
     const pedidosPreparando = pedidos.filter(p => p.status === StatusPedido.PREPARANDO);
     const pedidosPronto = pedidos.filter(p => p.status === StatusPedido.PRONTO);
-    
+
     if (pedidosPreparando.length > 0 && pedidosPronto.length > 0) {
       // Animar o primeiro pedido pronto
       const pedidoPronto = pedidosPronto[0];
@@ -169,12 +173,14 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
     this.animations.animacaoConfig.set({
       animacaoAtivada: config.animacaoAtivada,
       intervaloAnimacao: config.intervaloAnimacao,
-      duracaoAnimacao: config.duracaoAnimacao
+      duracaoAnimacao: config.duracaoAnimacao,
+      video1Url: config.video1Url || null,
+      video2Url: config.video2Url || null
     });
-    
+
     // Fechar modal imediatamente (configuração já foi aplicada localmente)
     this.mostrarConfigModal.set(false);
-    
+
     // Tentar salvar no backend (silenciosamente, sem mostrar erros)
     this.configAnimacaoService.salvar(config).subscribe({
       next: () => {
@@ -195,8 +201,8 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
     animacaoAtivada: this.animations.animacaoConfig().animacaoAtivada,
     intervaloAnimacao: this.animations.animacaoConfig().intervaloAnimacao,
     duracaoAnimacao: this.animations.animacaoConfig().duracaoAnimacao,
-    video1Url: null,
-    video2Url: null
+    video1Url: this.animations.animacaoConfig().video1Url || null,
+    video2Url: this.animations.animacaoConfig().video2Url || null
   }));
 }
 

@@ -1,3 +1,10 @@
+<!-- Componente de animação fullscreen (fora do grid para não quebrar layout) -->
+<app-fullscreen-animation
+  [isAnimating]="isAnimating()"
+  [video1Url]="configAtual().video1Url"
+  [video2Url]="configAtual().video2Url"
+/>
+
 <div [class]="'fila-pedidos-container ' + (isAnimating() ? 'animando' : '')">
   <div [class]="'coluna-lateral ' + (isAnimating() ? 'escondido' : '')">
     <app-lobby-header

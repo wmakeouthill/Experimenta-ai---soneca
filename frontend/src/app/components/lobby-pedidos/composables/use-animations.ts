@@ -1,10 +1,12 @@
-import { signal, computed } from '@angular/core';
+import { signal } from '@angular/core';
 import { Pedido, StatusPedido } from '../../../services/pedido.service';
 
 interface AnimationConfig {
   animacaoAtivada: boolean;
   intervaloAnimacao: number;
   duracaoAnimacao: number;
+  video1Url?: string | null;
+  video2Url?: string | null;
 }
 
 export function useAnimations() {
@@ -16,7 +18,9 @@ export function useAnimations() {
   const animacaoConfig = signal<AnimationConfig>({
     animacaoAtivada: true,
     intervaloAnimacao: 30,
-    duracaoAnimacao: 6
+    duracaoAnimacao: 6,
+    video1Url: null,
+    video2Url: null
   });
 
   const detectarMudancaStatus = (
@@ -25,7 +29,7 @@ export function useAnimations() {
   ): { pedido: Pedido; statusAnterior: StatusPedido } | null => {
     for (const pedidoAtual of pedidosAtuais) {
       const pedidoAnterior = pedidosAnteriores.find(p => p.id === pedidoAtual.id);
-      
+
       if (pedidoAnterior && pedidoAnterior.status !== pedidoAtual.status) {
         return {
           pedido: pedidoAtual,

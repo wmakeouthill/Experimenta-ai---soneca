@@ -1,23 +1,11 @@
 <header [class]="'header ' + (isAnimating() ? 'animating' : '')">
   <div class="logo-container">
-    <img
-      src="assets/experimenta_ai_banner_circular.png"
-      alt="Experimenta aí"
-      [class]="'logo-imagem ' + (isAnimating() ? 'expandido' : '')"
-    />
-    @if (isAnimating()) {
-      <div class="mensagem-animacao">
-        Fica a vontade, aqui é o
-        <span class="soneca-fogo">
-          <img
-            src="assets/fogo.gif"
-            alt=""
-            class="fogo-gif"
-            aria-hidden="true"
-          />
-          soneca
-        </span>
-      </div>
+    @if (!isAnimating()) {
+      <img
+        src="assets/experimenta_ai_banner_circular.png"
+        alt="Experimenta aí"
+        class="logo-imagem"
+      />
     }
   </div>
   <h2 [class]="'titulo-fila ' + (isAnimating() ? 'escondido' : '')">

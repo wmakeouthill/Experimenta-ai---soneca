@@ -1,0 +1,61 @@
+@if (isAnimating()) {
+  <div class="fullscreen-animation-container">
+    <div class="animation-content">
+      <!-- Imagem PNG no topo -->
+      <div class="imagem-container">
+        <img
+          src="assets/experimenta_ai_banner_circular.png"
+          alt="Experimenta aí"
+          class="imagem-topo"
+        />
+      </div>
+
+      <!-- Frase com fogo atrás de "soneca" -->
+      <div class="frase-container">
+        <span class="frase-texto">
+          Fica a vontade, aqui é o
+          <span class="soneca-com-fogo">
+            <img
+              src="assets/fogo.gif"
+              alt=""
+              class="fogo-gif"
+              aria-hidden="true"
+            />
+            <span class="soneca-texto">soneca</span>
+          </span>
+        </span>
+      </div>
+
+      <!-- Vídeos lado a lado -->
+      @if (video1Url() || video2Url()) {
+        <div class="videos-container">
+          <div class="video-wrapper video-esquerda">
+            @if (video1Url()) {
+              <video
+                [src]="video1Url()!"
+                autoplay
+                loop
+                muted
+                playsinline
+                class="video-animacao"
+              ></video>
+            }
+          </div>
+          <div class="video-wrapper video-direita">
+            @if (video2Url()) {
+              <video
+                [src]="video2Url()!"
+                autoplay
+                loop
+                muted
+                playsinline
+                class="video-animacao"
+              ></video>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+}
+

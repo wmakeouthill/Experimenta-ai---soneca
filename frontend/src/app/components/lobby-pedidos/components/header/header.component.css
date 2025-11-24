@@ -17,15 +17,14 @@
 }
 
 .fila-pedidos-container.animando .header {
-  width: auto;
-  max-width: 100%;
-  margin: 0 auto;
-  overflow: visible;
-  height: auto;
-  background: transparent;
-  backdrop-filter: none;
-  border-radius: 0;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  width: 0;
+  height: 0;
+  overflow: hidden;
   padding: 0;
+  margin: 0;
 }
 
 .logo-container {
