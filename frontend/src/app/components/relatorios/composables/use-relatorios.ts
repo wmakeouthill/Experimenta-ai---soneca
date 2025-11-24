@@ -11,7 +11,8 @@ import {
   GranularidadeTempo,
   IndicadoresResumo,
   PedidosPorHorario,
-  ProdutoMaisVendido
+  ProdutoMaisVendido,
+  QuantidadePorCategoria
 } from '../../../models/relatorios.model';
 import { RelatoriosService } from '../../../services/relatorios.service';
 
@@ -20,6 +21,7 @@ type EstadoCarregamento = 'idle' | 'carregando' | 'sucesso' | 'erro';
 interface RelatoriosPayload {
   evolucao: EvolucaoVendasPonto[];
   categorias: CategoriaVendasResumo[];
+  quantidadePorCategoria: QuantidadePorCategoria[];
   produtos: ProdutoMaisVendido[];
   horarios: DistribuicaoHoraria[];
   pedidosPorHorario: PedidosPorHorario[];
@@ -52,6 +54,7 @@ export function useRelatorios() {
 
   const evolucaoVendas = signal<EvolucaoVendasPonto[]>([]);
   const categorias = signal<CategoriaVendasResumo[]>([]);
+  const quantidadePorCategoria = signal<QuantidadePorCategoria[]>([]);
   const produtos = signal<ProdutoMaisVendido[]>([]);
   const horarios = signal<DistribuicaoHoraria[]>([]);
   const pedidosPorHorario = signal<PedidosPorHorario[]>([]);
@@ -79,6 +82,7 @@ export function useRelatorios() {
 
     evolucaoVendas.set(payload.evolucao);
     categorias.set(payload.categorias);
+    quantidadePorCategoria.set(payload.quantidadePorCategoria);
     produtos.set(payload.produtos);
     horarios.set(payload.horarios);
     pedidosPorHorario.set(payload.pedidosPorHorario);
@@ -91,6 +95,7 @@ export function useRelatorios() {
   const construirRequests = (filtroAtual: FiltroRelatorioTemporal) => forkJoin({
     evolucao: relatoriosService.obterEvolucaoVendas(filtroAtual),
     categorias: relatoriosService.obterResumoCategorias(filtroAtual),
+    quantidadePorCategoria: relatoriosService.obterQuantidadePorCategoria(filtroAtual),
     produtos: relatoriosService.obterTopProdutos(filtroAtual),
     horarios: relatoriosService.obterDistribuicaoHoraria(filtroAtual),
     pedidosPorHorario: relatoriosService.obterPedidosPorHorario(filtroAtual),
@@ -140,6 +145,7 @@ export function useRelatorios() {
     erro,
     evolucaoVendas,
     categorias,
+    quantidadePorCategoria,
     produtos,
     horarios,
     pedidosPorHorario,

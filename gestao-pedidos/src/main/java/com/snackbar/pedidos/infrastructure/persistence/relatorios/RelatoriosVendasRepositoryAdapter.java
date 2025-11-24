@@ -9,6 +9,7 @@ import com.snackbar.pedidos.application.dtos.relatorios.FiltroRelatorioTemporalD
 import com.snackbar.pedidos.application.dtos.relatorios.IndicadoresResumoDTO;
 import com.snackbar.pedidos.application.dtos.relatorios.PedidosPorHorarioDTO;
 import com.snackbar.pedidos.application.dtos.relatorios.ProdutoMaisVendidoDTO;
+import com.snackbar.pedidos.application.dtos.relatorios.QuantidadePorCategoriaDTO;
 import com.snackbar.pedidos.application.ports.RelatoriosVendasPort;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -105,6 +106,26 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
         Query query = entityManager.createNativeQuery(sql);
         configurarIntervalo(query, filtro);
         return RelatorioResultMapper.categorias(query.getResultList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<QuantidadePorCategoriaDTO> obterQuantidadePorCategoria(FiltroRelatorioTemporalDTO filtro) {
+        String sql = "SELECT COALESCE(prod.categoria, 'Sem categoria') AS categoria_id, " +
+                "COALESCE(prod.categoria, 'Sem categoria') AS categoria_nome, " +
+                "SUM(item.quantidade) AS quantidade_vendida " +
+                "FROM pedidos p " +
+                "JOIN itens_pedido item ON item.pedido_id = p.id " +
+                "LEFT JOIN produtos prod ON prod.id = item.produto_id " +
+                "LEFT JOIN sessoes_trabalho st ON st.id = p.sessao_id " +
+                "WHERE " + DATA_BASE_EXPR + " >= :inicio " +
+                "AND " + DATA_BASE_EXPR + " < :fim " +
+                "AND p.status <> 'CANCELADO' " +
+                "GROUP BY categoria_id, categoria_nome " +
+                "ORDER BY quantidade_vendida DESC";
+        Query query = entityManager.createNativeQuery(sql);
+        configurarIntervalo(query, filtro);
+        return RelatorioResultMapper.quantidadePorCategoria(query.getResultList());
     }
 
     @Override

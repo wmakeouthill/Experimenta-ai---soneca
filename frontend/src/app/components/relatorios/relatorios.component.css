@@ -204,12 +204,16 @@
 
 .graficos-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
 }
 
 /* Gráficos maiores ocupam mais espaço */
 app-vendas-evolucao-chart {
+  grid-column: 1 / -1;
+}
+
+app-top-produtos-chart {
   grid-column: span 2;
 }
 
@@ -217,12 +221,12 @@ app-categorias-vendas-chart {
   grid-column: span 1;
 }
 
-app-top-produtos-chart {
+app-vendas-por-cliente-chart {
   grid-column: span 2;
 }
 
-app-vendas-por-cliente-chart {
-  grid-column: span 2;
+app-quantidade-por-categoria-chart {
+  grid-column: span 1;
 }
 
 app-vendas-por-horario-chart {
@@ -238,20 +242,20 @@ app-meios-pagamento-chart {
 }
 
 @media (max-width: 1200px) {
+  .graficos-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   app-vendas-evolucao-chart {
-    grid-column: span 1;
+    grid-column: span 2;
   }
 
   app-top-produtos-chart {
-    grid-column: span 1;
+    grid-column: span 2;
   }
 
   app-vendas-por-cliente-chart {
-    grid-column: span 1;
-  }
-
-  .graficos-grid {
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    grid-column: span 2;
   }
 }
 
@@ -293,6 +297,7 @@ app-meios-pagamento-chart {
   app-vendas-evolucao-chart,
   app-categorias-vendas-chart,
   app-top-produtos-chart,
+  app-quantidade-por-categoria-chart,
   app-pedidos-por-horario-chart,
   app-vendas-por-horario-chart,
   app-vendas-por-cliente-chart,

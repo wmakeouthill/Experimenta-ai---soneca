@@ -6,6 +6,7 @@ import com.snackbar.pedidos.application.dtos.relatorios.DistribuicaoHorariaDTO;
 import com.snackbar.pedidos.application.dtos.relatorios.DistribuicaoMeioPagamentoDTO;
 import com.snackbar.pedidos.application.dtos.relatorios.PedidosPorHorarioDTO;
 import com.snackbar.pedidos.application.dtos.relatorios.ProdutoMaisVendidoDTO;
+import com.snackbar.pedidos.application.dtos.relatorios.QuantidadePorCategoriaDTO;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -23,8 +24,17 @@ final class RelatorioResultMapper {
                         Objects.toString(registro[0], "sem_categoria"),
                         Objects.toString(registro[0], "Sem categoria"),
                         toDecimal(registro[1]).doubleValue(),
-                        toLong(registro[2])
-                ))
+                        toLong(registro[2])))
+                .toList();
+    }
+
+    static List<QuantidadePorCategoriaDTO> quantidadePorCategoria(List<?> registros) {
+        return registros.stream()
+                .map(Object[].class::cast)
+                .map(registro -> new QuantidadePorCategoriaDTO(
+                        Objects.toString(registro[0], ""),
+                        Objects.toString(registro[1], "Sem categoria"),
+                        toLong(registro[2])))
                 .toList();
     }
 
@@ -35,8 +45,7 @@ final class RelatorioResultMapper {
                         Objects.toString(registro[0], ""),
                         Objects.toString(registro[1], "Produto"),
                         toLong(registro[2]),
-                        toDecimal(registro[3]).doubleValue()
-                ))
+                        toDecimal(registro[3]).doubleValue()))
                 .toList();
     }
 
@@ -46,8 +55,7 @@ final class RelatorioResultMapper {
                 .map(registro -> new DistribuicaoHorariaDTO(
                         Objects.toString(registro[0], "00"),
                         toDecimal(registro[1]).doubleValue(),
-                        toLong(registro[2])
-                ))
+                        toLong(registro[2])))
                 .toList();
     }
 
@@ -56,8 +64,7 @@ final class RelatorioResultMapper {
                 .map(Object[].class::cast)
                 .map(registro -> new PedidosPorHorarioDTO(
                         Objects.toString(registro[0], "00"),
-                        toLong(registro[1])
-                ))
+                        toLong(registro[1])))
                 .toList();
     }
 
@@ -68,8 +75,7 @@ final class RelatorioResultMapper {
                         Objects.toString(registro[0], ""),
                         Objects.toString(registro[1], "Cliente"),
                         toDecimal(registro[2]).doubleValue(),
-                        toLong(registro[3])
-                ))
+                        toLong(registro[3])))
                 .toList();
     }
 
@@ -79,8 +85,7 @@ final class RelatorioResultMapper {
                 .map(registro -> new DistribuicaoMeioPagamentoDTO(
                         Objects.toString(registro[0], "NÃO INFORMADO"),
                         toDecimal(registro[1]).doubleValue(),
-                        toLong(registro[2])
-                ))
+                        toLong(registro[2])))
                 .toList();
     }
 
@@ -101,4 +106,3 @@ final class RelatorioResultMapper {
         return ((Number) valor).longValue();
     }
 }
-

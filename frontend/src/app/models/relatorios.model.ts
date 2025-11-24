@@ -21,6 +21,12 @@ export interface CategoriaVendasResumo {
   quantidadePedidos: number;
 }
 
+export interface QuantidadePorCategoria {
+  categoriaId: string;
+  categoriaNome: string;
+  quantidadeVendida: number;
+}
+
 export interface ProdutoMaisVendido {
   produtoId: string;
   produtoNome: string;

@@ -9,6 +9,7 @@ import com.snackbar.pedidos.application.dtos.relatorios.FiltroRelatorioTemporalD
 import com.snackbar.pedidos.application.dtos.relatorios.IndicadoresResumoDTO;
 import com.snackbar.pedidos.application.dtos.relatorios.PedidosPorHorarioDTO;
 import com.snackbar.pedidos.application.dtos.relatorios.ProdutoMaisVendidoDTO;
+import com.snackbar.pedidos.application.dtos.relatorios.QuantidadePorCategoriaDTO;
 import com.snackbar.pedidos.application.ports.RelatoriosVendasPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,10 @@ public class RelatoriosVendasUseCase {
 
     public List<CategoriaVendasResumoDTO> obterCategorias(FiltroRelatorioTemporalDTO filtro) {
         return relatoriosVendasPort.obterCategorias(filtro);
+    }
+
+    public List<QuantidadePorCategoriaDTO> obterQuantidadePorCategoria(FiltroRelatorioTemporalDTO filtro) {
+        return relatoriosVendasPort.obterQuantidadePorCategoria(filtro);
     }
 
     public List<ProdutoMaisVendidoDTO> obterTopProdutos(FiltroRelatorioTemporalDTO filtro, int limite) {

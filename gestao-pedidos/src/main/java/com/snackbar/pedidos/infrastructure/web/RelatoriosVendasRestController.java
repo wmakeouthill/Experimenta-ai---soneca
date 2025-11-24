@@ -10,6 +10,7 @@ import com.snackbar.pedidos.application.dtos.relatorios.GranularidadeTempo;
 import com.snackbar.pedidos.application.dtos.relatorios.IndicadoresResumoDTO;
 import com.snackbar.pedidos.application.dtos.relatorios.PedidosPorHorarioDTO;
 import com.snackbar.pedidos.application.dtos.relatorios.ProdutoMaisVendidoDTO;
+import com.snackbar.pedidos.application.dtos.relatorios.QuantidadePorCategoriaDTO;
 import com.snackbar.pedidos.application.usecases.relatorios.FiltroRelatorioTemporalFactory;
 import com.snackbar.pedidos.application.usecases.relatorios.RelatoriosVendasUseCase;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +44,14 @@ public class RelatoriosVendasRestController {
             @RequestParam(value = "dataFim", required = false) String dataFim) {
         FiltroRelatorioTemporalDTO filtro = filtroFactory.criar(granularidade, dataReferencia, dataFim);
         return useCase.obterCategorias(filtro);
+    }
+
+    @GetMapping("/quantidade-categoria")
+    public List<QuantidadePorCategoriaDTO> quantidadeCategoria(@RequestParam GranularidadeTempo granularidade,
+            @RequestParam("dataReferencia") String dataReferencia,
+            @RequestParam(value = "dataFim", required = false) String dataFim) {
+        FiltroRelatorioTemporalDTO filtro = filtroFactory.criar(granularidade, dataReferencia, dataFim);
+        return useCase.obterQuantidadePorCategoria(filtro);
     }
 
     @GetMapping("/top-produtos")

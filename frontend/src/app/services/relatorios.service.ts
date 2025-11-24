@@ -10,7 +10,8 @@ import {
   FiltroRelatorioTemporal,
   IndicadoresResumo,
   PedidosPorHorario,
-  ProdutoMaisVendido
+  ProdutoMaisVendido,
+  QuantidadePorCategoria
 } from '../models/relatorios.model';
 
 @Injectable({
@@ -28,6 +29,12 @@ export class RelatoriosService {
 
   obterResumoCategorias(filtro: FiltroRelatorioTemporal): Observable<CategoriaVendasResumo[]> {
     return this.http.get<CategoriaVendasResumo[]>(`${this.apiUrl}/vendas/categorias`, {
+      params: this.criarParamsDeTempo(filtro)
+    });
+  }
+
+  obterQuantidadePorCategoria(filtro: FiltroRelatorioTemporal): Observable<QuantidadePorCategoria[]> {
+    return this.http.get<QuantidadePorCategoria[]>(`${this.apiUrl}/vendas/quantidade-categoria`, {
       params: this.criarParamsDeTempo(filtro)
     });
   }

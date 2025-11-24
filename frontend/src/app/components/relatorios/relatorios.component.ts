@@ -8,6 +8,7 @@ import { CategoriasVendasChartComponent } from './charts/categorias-vendas-chart
 import { TopProdutosChartComponent } from './charts/top-produtos-chart/top-produtos-chart.component';
 import { VendasPorHorarioChartComponent } from './charts/vendas-por-horario-chart/vendas-por-horario-chart.component';
 import { PedidosPorHorarioChartComponent } from './charts/pedidos-por-horario-chart/pedidos-por-horario-chart.component';
+import { QuantidadePorCategoriaChartComponent } from './charts/quantidade-por-categoria-chart/quantidade-por-categoria-chart.component';
 import { VendasPorClienteChartComponent } from './charts/vendas-por-cliente-chart/vendas-por-cliente-chart.component';
 import { MeiosPagamentoChartComponent } from './charts/meios-pagamento-chart/meios-pagamento-chart.component';
 
@@ -26,6 +27,7 @@ interface GranularidadeOption {
     VendasEvolucaoChartComponent,
     CategoriasVendasChartComponent,
     TopProdutosChartComponent,
+    QuantidadePorCategoriaChartComponent,
     VendasPorHorarioChartComponent,
     PedidosPorHorarioChartComponent,
     VendasPorClienteChartComponent,
@@ -43,6 +45,7 @@ export class RelatoriosComponent {
   readonly erro = this.store.erro;
   readonly evolucaoVendas = this.store.evolucaoVendas;
   readonly categorias = this.store.categorias;
+  readonly quantidadePorCategoria = this.store.quantidadePorCategoria;
   readonly produtos = this.store.produtos;
   readonly horarios = this.store.horarios;
   readonly pedidosPorHorario = this.store.pedidosPorHorario;

@@ -79,9 +79,10 @@
 
       <section class="graficos-grid">
         <app-vendas-evolucao-chart [dados]="evolucaoVendas()"></app-vendas-evolucao-chart>
-        <app-categorias-vendas-chart [dados]="categorias()"></app-categorias-vendas-chart>
         <app-top-produtos-chart [dados]="produtos()"></app-top-produtos-chart>
+        <app-categorias-vendas-chart [dados]="categorias()"></app-categorias-vendas-chart>
         <app-vendas-por-cliente-chart [dados]="clientes()"></app-vendas-por-cliente-chart>
+        <app-quantidade-por-categoria-chart [dados]="quantidadePorCategoria()"></app-quantidade-por-categoria-chart>
         <app-vendas-por-horario-chart [dados]="horarios()"></app-vendas-por-horario-chart>
         <app-pedidos-por-horario-chart [dados]="pedidosPorHorario()"></app-pedidos-por-horario-chart>
         <app-meios-pagamento-chart [dados]="meiosPagamento()"></app-meios-pagamento-chart>
