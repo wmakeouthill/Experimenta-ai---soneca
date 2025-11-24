@@ -1,4 +1,15 @@
 @if (isAnimating()) {
+  <!-- SVG Filter para efeito de fogo -->
+  <svg width="0" height="0" style="position: absolute;">
+    <defs>
+      <filter id="fire-effect" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+        <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9" result="fire"/>
+        <feComposite in="SourceGraphic" in2="fire" operator="atop"/>
+      </filter>
+    </defs>
+  </svg>
+
   <div class="fullscreen-animation-container">
     <div class="animation-content">
       <!-- Imagem PNG no topo -->
