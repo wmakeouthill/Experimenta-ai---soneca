@@ -4,7 +4,7 @@ export interface Modulo {
   descricao: string;
   icone: string;
   rota: string;
-  cor: 'primary' | 'success' | 'warning' | 'info' | 'secondary';
+  cor: 'primary' | 'success' | 'warning' | 'info' | 'secondary' | 'purple';
   disponivel: boolean;
 }
 

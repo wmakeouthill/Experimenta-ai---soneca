@@ -14,11 +14,11 @@ import { Modulo } from '../../models/modulo.model';
 export class HomeComponent {
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
-  
+
   readonly usuarioAtual = this.authService.usuarioAtual;
   readonly estaAutenticado = this.authService.estaAutenticado;
   readonly isAdministrador = this.authService.isAdministrador;
-  
+
   readonly modulosDisponiveis = computed(() => {
     const modulos: Modulo[] = [
       {
@@ -65,9 +65,18 @@ export class HomeComponent {
         rota: '/historico-sessoes',
         cor: 'warning',
         disponivel: true
+      },
+      {
+        id: 'relatorios',
+        nome: 'Relatórios e Insights',
+        descricao: 'Dashboards de vendas por período, categoria, cliente e horário',
+        icone: '📈',
+        rota: '/relatorios',
+        cor: 'purple',
+        disponivel: true
       }
     ];
-    
+
     if (this.isAdministrador()) {
       modulos.push({
         id: 'administracao',
@@ -79,7 +88,7 @@ export class HomeComponent {
         disponivel: true
       });
     }
-    
+
     return modulos;
   });
 

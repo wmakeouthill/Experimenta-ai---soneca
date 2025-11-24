@@ -125,7 +125,7 @@
   .user-info-content {
     align-items: flex-start;
   }
-  
+
   .home-header-top {
     flex-direction: column;
   }
@@ -250,6 +250,11 @@
   box-shadow: 0 15px 40px rgba(156, 39, 176, 0.3);
 }
 
+.modulo-card.modulo-purple:hover {
+  border-color: #7C3AED;
+  box-shadow: 0 15px 40px rgba(124, 58, 237, 0.35);
+}
+
 .modulo-icone {
   font-size: clamp(2.5rem, 4vw, 4.5rem);
   margin-bottom: clamp(4px, 1vh, 8px);
@@ -294,6 +299,10 @@
 
 .modulo-card.modulo-secondary .modulo-titulo {
   color: #9C27B0;
+}
+
+.modulo-card.modulo-purple .modulo-titulo {
+  color: #7C3AED;
 }
 
 .modulo-descricao {
