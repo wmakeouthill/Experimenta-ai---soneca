@@ -1,4 +1,4 @@
-import { Component, inject, PLATFORM_ID, OnInit, signal } from '@angular/core';
+import { Component, inject, PLATFORM_ID, OnInit, signal, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { useProdutos } from './composables/use-produtos';
@@ -41,6 +41,8 @@ export class CardapioComponent implements OnInit {
   readonly mostrarModalCategoria = signal(false);
   readonly produtoEditando = signal<any>(null);
 
+  @ViewChild('produtosSection', { static: false }) produtosSectionRef?: ElementRef<HTMLElement>;
+
   ngOnInit(): void {
     if (this.isBrowser && this.estado() === 'idle') {
       this.carregarDados();
@@ -62,6 +64,19 @@ export class CardapioComponent implements OnInit {
 
   irParaPagina(pagina: number): void {
     this.produtosComposable.irParaPagina(pagina);
+
+    if (this.isBrowser) {
+      requestAnimationFrame(() => {
+        if (this.produtosSectionRef?.nativeElement) {
+          this.produtosSectionRef.nativeElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+    }
   }
 
   limparFiltros(): void {
@@ -123,7 +138,7 @@ export class CardapioComponent implements OnInit {
     }
 
     const novaDisponibilidade = !produto.disponivel;
-    
+
     this.produtoService.alternarDisponibilidade(produto.id, novaDisponibilidade)
       .subscribe({
         next: () => {

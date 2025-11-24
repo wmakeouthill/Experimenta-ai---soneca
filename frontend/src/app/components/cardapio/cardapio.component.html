@@ -24,11 +24,12 @@
     <aside class="sidebar-filtros">
       <div class="filtros-container">
         <h2 class="filtros-titulo">🔍 Filtros</h2>
-        
+
         <!-- Busca -->
         <div class="filtro-grupo">
-          <label class="filtro-label">Buscar</label>
+          <label for="busca-produto" class="filtro-label">Buscar</label>
           <input
+            id="busca-produto"
             type="text"
             class="filtro-input"
             placeholder="Nome, descrição..."
@@ -39,7 +40,7 @@
 
         <!-- Filtro por Categoria -->
         <div class="filtro-grupo">
-          <label class="filtro-label">Categoria</label>
+          <h3 class="filtro-label">Categoria</h3>
           <div class="filtro-opcoes">
             <button
               class="filtro-opcao"
@@ -62,7 +63,7 @@
 
         <!-- Filtro por Disponibilidade -->
         <div class="filtro-grupo">
-          <label class="filtro-label">Status</label>
+          <h3 class="filtro-label">Status</h3>
           <div class="filtro-opcoes">
             <button
               class="filtro-opcao"
@@ -114,7 +115,7 @@
 
       @if (estado() === 'sucesso') {
         <!-- Informações de Resultado -->
-        <div class="resultado-info">
+        <div #produtosSection class="resultado-info">
           <p class="resultado-texto">
             Mostrando {{ produtosPaginados().itens.length }} de {{ produtosPaginados().totalItens }} produtos
           </p>
@@ -124,7 +125,7 @@
           <div class="estado-vazio">
             <p class="vazio-mensagem">Nenhum produto encontrado.</p>
             <button class="btn-primary" (click)="abrirModalProduto()">
-              ➕ Criar Primeiro Produto
+              ➕ Criar Produto
             </button>
           </div>
         } @else {
@@ -137,7 +138,7 @@
                     <span class="produto-badge indisponivel">Indisponível</span>
                   </div>
                 }
-                
+
                 @if (produto.foto) {
                   <div class="produto-imagem-container">
                     <img [src]="produto.foto" [alt]="produto.nome" class="produto-imagem" />
@@ -147,7 +148,7 @@
                     <span class="placeholder-icon">📷</span>
                   </div>
                 }
-                
+
                 <h3 class="produto-nome">{{ produto.nome }}</h3>
                 <p class="produto-categoria">{{ produto.categoria }}</p>
                 @if (produto.descricao) {
@@ -155,7 +156,7 @@
                 }
                 <div class="produto-preco-wrapper">
                   <p class="produto-preco">R$ {{ produto.preco.toFixed(2).replace('.', ',') }}</p>
-                  <button 
+                  <button
                     class="btn-toggle-disponibilidade"
                     [class.ativo]="produto.disponivel"
                     [class.inativo]="!produto.disponivel"
@@ -187,7 +188,7 @@
               >
                 ← Anterior
               </button>
-              
+
               <div class="paginacao-numeros">
                 @for (pagina of gerarNumerosPagina(); track pagina) {
                   <button
@@ -200,7 +201,7 @@
                   </button>
                 }
               </div>
-              
+
               <button
                 class="btn-paginacao"
                 [disabled]="produtosPaginados().paginaAtual === produtosPaginados().totalPaginas"

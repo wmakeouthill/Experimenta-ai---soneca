@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, ViewChild, ElementRef, PLATFORM_ID, inject } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { useRelatorioFinanceiro } from './composables/use-relatorio-financeiro';
 import { FormatoUtil } from '../../utils/formato.util';
@@ -17,6 +17,10 @@ import { TooltipMeiosPagamentoComponent } from './components/tooltip-meios-pagam
 })
 export class RelatorioFinanceiroComponent {
   private readonly store = useRelatorioFinanceiro();
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly isBrowser = isPlatformBrowser(this.platformId);
+
+  @ViewChild('tabelaPedidos', { static: false }) tabelaPedidosRef?: ElementRef<HTMLElement>;
 
   readonly dataFiltro = this.store.dataFiltro;
   readonly estado = this.store.estado;
@@ -149,6 +153,19 @@ export class RelatorioFinanceiroComponent {
 
   irParaPagina(pagina: number): void {
     this.store.irParaPagina(pagina);
+
+    if (this.isBrowser) {
+      requestAnimationFrame(() => {
+        if (this.tabelaPedidosRef?.nativeElement) {
+          this.tabelaPedidosRef.nativeElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+    }
   }
 }
 

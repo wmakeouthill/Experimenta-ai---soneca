@@ -1,4 +1,4 @@
-import { Component, inject, PLATFORM_ID, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, PLATFORM_ID, OnInit, ChangeDetectionStrategy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { useHistoricoSessoes } from './composables/use-historico-sessoes';
@@ -25,6 +25,8 @@ export class HistoricoSessoesComponent implements OnInit {
   readonly historicoComposable = useHistoricoSessoes();
   readonly StatusSessao = StatusSessao;
   readonly MeioPagamento = MeioPagamento;
+
+  @ViewChild('pedidosSecao', { static: false }) pedidosSecaoRef?: ElementRef<HTMLElement>;
 
   // Expor propriedades do composable
   readonly sessoes = this.historicoComposable.sessoes;
@@ -88,6 +90,19 @@ export class HistoricoSessoesComponent implements OnInit {
 
   irParaPaginaPedidos(pagina: number): void {
     this.historicoComposable.irParaPaginaPedidos(pagina);
+    
+    if (this.isBrowser) {
+      requestAnimationFrame(() => {
+        if (this.pedidosSecaoRef?.nativeElement) {
+          this.pedidosSecaoRef.nativeElement.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          });
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+    }
   }
 
   gerarNumerosPaginaSessoes(): (number | string)[] {
