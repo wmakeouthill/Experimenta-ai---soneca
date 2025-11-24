@@ -26,6 +26,16 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
 
+    /**
+     * Expressão SQL que define a data base para agrupamento de relatórios.
+     * 
+     * REGRA IMPORTANTE: Quando um pedido está associado a uma sessão, usa-se a data de INÍCIO da sessão
+     * (st.data_inicio), não a data do pedido. Isso garante que:
+     * - Se uma sessão iniciou no dia 23 e fechou no dia 24, TODOS os pedidos dessa sessão
+     *   aparecerão apenas no dia 23 (data de início), mesmo que alguns pedidos tenham sido
+     *   criados após a meia-noite do dia 24.
+     * - Apenas pedidos sem sessão associada usam a data do próprio pedido como fallback.
+     */
     private static final String DATA_BASE_EXPR = "COALESCE(st.data_inicio, DATE(p.data_pedido))";
 
     @PersistenceContext

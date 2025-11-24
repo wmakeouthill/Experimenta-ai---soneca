@@ -76,6 +76,24 @@ public class SessaoTrabalho extends BaseEntity {
         this.dataFim = dataFim;
     }
     
+    /**
+     * Restaura as datas de início do banco de dados (usado pelos mappers).
+     * IMPORTANTE: Essas datas devem ser imutáveis após a criação da sessão.
+     * 
+     * @param dataInicio Data de início da sessão (apenas data, sem hora)
+     * @param dataInicioCompleta Data e hora completa de início da sessão
+     */
+    public void restaurarDatasInicioDoBanco(LocalDate dataInicio, LocalDateTime dataInicioCompleta) {
+        if (dataInicio == null) {
+            throw new ValidationException("Data de início não pode ser nula");
+        }
+        if (dataInicioCompleta == null) {
+            throw new ValidationException("Data de início completa não pode ser nula");
+        }
+        this.dataInicio = dataInicio;
+        this.dataInicioCompleta = dataInicioCompleta;
+    }
+    
     private static void validarDados(Integer numeroSessao, String usuarioId) {
         if (numeroSessao == null || numeroSessao <= 0) {
             throw new ValidationException("Número da sessão deve ser maior que zero");
