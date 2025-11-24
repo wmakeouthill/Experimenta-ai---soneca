@@ -97,6 +97,7 @@ DROP PROCEDURE IF EXISTS criar_sessoes_e_pedidos_2025$$
 
 CREATE PROCEDURE criar_sessoes_e_pedidos_2025()
 BEGIN
+    -- Definir collation padrão para o procedimento
     DECLARE data_atual DATE DEFAULT '2025-01-01';
     DECLARE data_fim DATE DEFAULT '2025-11-22';
     DECLARE sessao_id_var VARCHAR(36);
@@ -119,9 +120,9 @@ BEGIN
     DECLARE valor_item DECIMAL(10, 2);
     DECLARE quantidade_item INT;
     DECLARE valor_meio_pagamento DECIMAL(10, 2);
-    DECLARE meio_pagamento_var VARCHAR(20);
-    DECLARE status_pedido_var VARCHAR(20);
-    DECLARE status_sessao_var VARCHAR(20);
+    DECLARE meio_pagamento_var VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    DECLARE status_pedido_var VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    DECLARE status_sessao_var VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
     DECLARE hora_inicio TIME;
     DECLARE hora_fim TIME;
     DECLARE data_inicio_completa TIMESTAMP;
@@ -134,6 +135,7 @@ BEGIN
     DECLARE produto_observacoes_var TEXT;
     DECLARE cliente_nome_var VARCHAR(200);
     DECLARE num_meios_pagamento INT;
+    DECLARE status_finalizado VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'FINALIZADO';
     
     -- Loop pelos dias
     WHILE data_atual <= data_fim DO
@@ -159,7 +161,7 @@ BEGIN
                 SET data_fim_completa = TIMESTAMP(data_atual, hora_fim);
                 
                 -- Status da sessão (todas finalizadas, pois são do passado)
-                SET status_sessao_var = 'FINALIZADA';
+                SET status_sessao_var = CONVERT('FINALIZADA' USING utf8mb4) COLLATE utf8mb4_unicode_ci;
                 
                 -- Gerar ID da sessão
                 SET sessao_id_var = UUID();
@@ -219,15 +221,20 @@ BEGIN
                         );
                         
                         -- Status do pedido (distribuição realista)
-                        SET status_pedido_var = CASE 
-                            WHEN RAND() < 0.70 THEN 'FINALIZADO'  -- 70% finalizados
-                            WHEN RAND() < 0.85 THEN 'PRONTO'      -- 15% prontos
-                            WHEN RAND() < 0.95 THEN 'PREPARANDO'  -- 10% preparando
-                            ELSE 'PENDENTE'                        -- 5% pendentes
-                        END;
+                        -- Usar variáveis auxiliares para evitar problemas de collation
+                        SET @rand_val = RAND();
+                        IF @rand_val < 0.70 THEN
+                            SET status_pedido_var = status_finalizado;  -- 70% finalizados
+                        ELSEIF @rand_val < 0.85 THEN
+                            SET status_pedido_var = CONVERT('PRONTO' USING utf8mb4) COLLATE utf8mb4_unicode_ci;  -- 15% prontos
+                        ELSEIF @rand_val < 0.95 THEN
+                            SET status_pedido_var = CONVERT('PREPARANDO' USING utf8mb4) COLLATE utf8mb4_unicode_ci;  -- 10% preparando
+                        ELSE
+                            SET status_pedido_var = CONVERT('PENDENTE' USING utf8mb4) COLLATE utf8mb4_unicode_ci;  -- 5% pendentes
+                        END IF;
                         
                         -- Se finalizado, definir data de finalização
-                        IF status_pedido_var = 'FINALIZADO' THEN
+                        IF status_pedido_var = status_finalizado THEN
                             SET data_finalizacao_var = TIMESTAMPADD(MINUTE, FLOOR(10 + RAND() * 60), data_pedido_var);
                         ELSE
                             SET data_finalizacao_var = NULL;
@@ -317,8 +324,8 @@ BEGIN
                             END IF;
                         END WHILE;
                         
-                        -- Verificar se o pedido tem pelo menos um item
-                        IF valor_total_pedido > 0 THEN
+                        -- Verificar se o pedido tem pelo menos um item (garantir que pelo menos um item foi criado)
+                        IF indice_item > 0 AND valor_total_pedido > 0 THEN
                             -- Atualizar valor total do pedido
                             UPDATE pedidos 
                             SET valor_total = valor_total_pedido 
@@ -327,18 +334,18 @@ BEGIN
                             -- Criar meios de pagamento (soma deve ser igual ao valor total)
                             SET total_meios_pagamento = 0.00;
                             SET resto_pagamento = valor_total_pedido;
-                        
-                        -- Número de meios de pagamento (1 ou 2)
-                        SET num_meios_pagamento = IF(RAND() < 0.85, 1, 2);
-                        
-                        WHILE total_meios_pagamento < valor_total_pedido AND num_meios_pagamento > 0 DO
+                            
+                            -- Número de meios de pagamento (1 ou 2)
+                            SET num_meios_pagamento = IF(RAND() < 0.85, 1, 2);
+                            
+                            WHILE total_meios_pagamento < valor_total_pedido AND num_meios_pagamento > 0 DO
                             -- Selecionar meio de pagamento aleatório
                             SET meio_pagamento_var = CASE FLOOR(RAND() * 5)
-                                WHEN 0 THEN 'PIX'
-                                WHEN 1 THEN 'CARTAO_CREDITO'
-                                WHEN 2 THEN 'CARTAO_DEBITO'
-                                WHEN 3 THEN 'VALE_REFEICAO'
-                                ELSE 'DINHEIRO'
+                                WHEN 0 THEN CONVERT('PIX' USING utf8mb4) COLLATE utf8mb4_unicode_ci
+                                WHEN 1 THEN CONVERT('CARTAO_CREDITO' USING utf8mb4) COLLATE utf8mb4_unicode_ci
+                                WHEN 2 THEN CONVERT('CARTAO_DEBITO' USING utf8mb4) COLLATE utf8mb4_unicode_ci
+                                WHEN 3 THEN CONVERT('VALE_REFEICAO' USING utf8mb4) COLLATE utf8mb4_unicode_ci
+                                ELSE CONVERT('DINHEIRO' USING utf8mb4) COLLATE utf8mb4_unicode_ci
                             END;
                             
                             -- Calcular valor do meio de pagamento
@@ -372,11 +379,11 @@ BEGIN
                                 valor_meio_pagamento
                             );
                             
-                            SET total_meios_pagamento = total_meios_pagamento + valor_meio_pagamento;
-                            SET resto_pagamento = resto_pagamento - valor_meio_pagamento;
-                            SET num_meios_pagamento = num_meios_pagamento - 1;
-                        END WHILE;
-                        
+                                SET total_meios_pagamento = total_meios_pagamento + valor_meio_pagamento;
+                                SET resto_pagamento = resto_pagamento - valor_meio_pagamento;
+                                SET num_meios_pagamento = num_meios_pagamento - 1;
+                            END WHILE;
+                            
                             -- Ajustar último meio de pagamento se houver diferença (arredondamento)
                             IF ABS(total_meios_pagamento - valor_total_pedido) > 0.01 THEN
                                 UPDATE meios_pagamento_pedido

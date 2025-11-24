@@ -17,7 +17,7 @@ export function useSessoes() {
   const dataFiltro = signal<string | null>(null);
   const pesquisaTexto = signal<string>('');
   const paginaAtual = signal<number>(1);
-  const itensPorPagina = signal<number>(10);
+  const itensPorPagina = signal<number>(7);
 
   // Computed
   const sessoesFiltradas = computed(() => {

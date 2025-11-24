@@ -43,30 +43,46 @@ SELECT
 -- 
 -- O script usa uma transação, então se algo der errado,
 -- você pode fazer ROLLBACK antes do COMMIT.
+-- 
+-- ORDEM DE EXCLUSÃO (importante devido às foreign keys):
+-- 1. meios_pagamento_pedido (FK para pedidos com ON DELETE CASCADE)
+-- 2. itens_pedido (FK para pedidos com ON DELETE CASCADE)
+-- 3. pedidos (FK para sessoes_trabalho com ON DELETE RESTRICT)
+-- 4. sessoes_trabalho (deve ser deletada após pedidos)
 -- ============================================================
 
 START TRANSACTION;
 
 -- Desabilitar verificação de chaves estrangeiras temporariamente
 -- (garante que a exclusão seja realizada mesmo com dependências)
+-- NOTA: Mesmo com FOREIGN_KEY_CHECKS = 0, mantemos a ordem correta
+--       para garantir consistência e facilitar manutenção futura
 SET FOREIGN_KEY_CHECKS = 0;
 
--- Deletar dados da tabela de meios de pagamento dos pedidos
--- (Esta tabela tem FK com ON DELETE CASCADE, mas deletamos explicitamente por segurança)
+-- 1. Deletar dados da tabela de meios de pagamento dos pedidos
+-- Tabela: meios_pagamento_pedido
+-- FK: pedido_id -> pedidos(id) com ON DELETE CASCADE
+-- (Deletamos explicitamente por segurança e clareza)
 DELETE FROM meios_pagamento_pedido;
 
--- Deletar dados da tabela de itens de pedidos
--- (Esta tabela tem FK com ON DELETE CASCADE, mas deletamos explicitamente por segurança)
+-- 2. Deletar dados da tabela de itens de pedidos
+-- Tabela: itens_pedido
+-- FK: pedido_id -> pedidos(id) com ON DELETE CASCADE
+-- (Deletamos explicitamente por segurança e clareza)
 DELETE FROM itens_pedido;
 
--- Deletar todos os pedidos
--- (Como as FKs têm ON DELETE CASCADE, os itens e meios de pagamento 
---  seriam deletados automaticamente, mas já deletamos explicitamente acima)
+-- 3. Deletar todos os pedidos
+-- Tabela: pedidos
+-- FK: sessao_id -> sessoes_trabalho(id) com ON DELETE RESTRICT
+-- (Como a FK tem ON DELETE RESTRICT, precisamos deletar pedidos antes das sessões)
+-- NOTA: As FKs de itens_pedido e meios_pagamento_pedido têm ON DELETE CASCADE,
+--       então seriam deletados automaticamente, mas já deletamos explicitamente acima
 DELETE FROM pedidos;
 
--- Deletar todas as sessões de trabalho
+-- 4. Deletar todas as sessões de trabalho
+-- Tabela: sessoes_trabalho
 -- (A FK de pedidos para sessoes_trabalho tem ON DELETE RESTRICT,
---  por isso precisamos deletar os pedidos primeiro antes de deletar as sessões)
+--  por isso deletamos os pedidos primeiro antes de deletar as sessões)
 DELETE FROM sessoes_trabalho;
 
 -- Reabilitar verificação de chaves estrangeiras

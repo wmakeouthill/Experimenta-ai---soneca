@@ -112,7 +112,7 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
                     "WHERE " + DATA_BASE_EXPR + " >= :inicio " +
                     "AND " + DATA_BASE_EXPR + " < :fim " +
                     "AND p.status <> 'CANCELADO' " +
-                    "GROUP BY YEAR(" + DATA_BASE_EXPR + "), WEEK(" + DATA_BASE_EXPR + ", 1) " +
+                    "GROUP BY DATE(" + DATA_BASE_EXPR + ") " +
                     "ORDER BY data_base";
             case MES -> SELECT_DATE_CONCAT_YEAR + DATA_BASE_EXPR + "), '-', MONTH(" + DATA_BASE_EXPR
                     + "), '-01')) AS data_base, " +
@@ -123,7 +123,7 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
                     "WHERE " + DATA_BASE_EXPR + " >= :inicio " +
                     "AND " + DATA_BASE_EXPR + " < :fim " +
                     "AND p.status <> 'CANCELADO' " +
-                    "GROUP BY YEAR(" + DATA_BASE_EXPR + "), MONTH(" + DATA_BASE_EXPR + ") " +
+                    "GROUP BY DATE(CONCAT(YEAR(" + DATA_BASE_EXPR + "), '-', MONTH(" + DATA_BASE_EXPR + "), '-01')) " +
                     "ORDER BY data_base";
             case TRIMESTRE -> SELECT_DATE_CONCAT_YEAR + DATA_BASE_EXPR + "), '-', ((QUARTER(" + DATA_BASE_EXPR
                     + ") - 1) * 3 + 1), '-01')) AS data_base, " +
@@ -134,7 +134,7 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
                     "WHERE " + DATA_BASE_EXPR + " >= :inicio " +
                     "AND " + DATA_BASE_EXPR + " < :fim " +
                     "AND p.status <> 'CANCELADO' " +
-                    "GROUP BY YEAR(" + DATA_BASE_EXPR + "), QUARTER(" + DATA_BASE_EXPR + ") " +
+                    "GROUP BY DATE(CONCAT(YEAR(" + DATA_BASE_EXPR + "), '-', ((QUARTER(" + DATA_BASE_EXPR + ") - 1) * 3 + 1), '-01')) " +
                     "ORDER BY data_base";
             case SEMESTRE -> SELECT_DATE_CONCAT_YEAR + DATA_BASE_EXPR + "), '-', IF(MONTH(" + DATA_BASE_EXPR
                     + ") <= 6, 1, 7), '-01')) AS data_base, " +
@@ -145,7 +145,7 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
                     "WHERE " + DATA_BASE_EXPR + " >= :inicio " +
                     "AND " + DATA_BASE_EXPR + " < :fim " +
                     "AND p.status <> 'CANCELADO' " +
-                    "GROUP BY YEAR(" + DATA_BASE_EXPR + "), IF(MONTH(" + DATA_BASE_EXPR + ") <= 6, 1, 2) " +
+                    "GROUP BY DATE(CONCAT(YEAR(" + DATA_BASE_EXPR + "), '-', IF(MONTH(" + DATA_BASE_EXPR + ") <= 6, 1, 7), '-01')) " +
                     "ORDER BY data_base";
             case ANO -> SELECT_DATE_CONCAT_YEAR + DATA_BASE_EXPR + "), '-01-01')) AS data_base, " +
                     "SUM(p.valor_total) AS total_vendas, " +
@@ -153,7 +153,7 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
                     "FROM pedidos p " +
                     "LEFT JOIN sessoes_trabalho st ON st.id = p.sessao_id " +
                     "WHERE p.status <> 'CANCELADO' " +
-                    "GROUP BY YEAR(" + DATA_BASE_EXPR + ") " +
+                    "GROUP BY DATE(CONCAT(YEAR(" + DATA_BASE_EXPR + "), '-01-01')) " +
                     "ORDER BY data_base";
         };
     }

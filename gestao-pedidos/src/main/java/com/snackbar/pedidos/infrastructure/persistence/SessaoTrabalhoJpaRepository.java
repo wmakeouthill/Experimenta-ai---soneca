@@ -17,5 +17,7 @@ public interface SessaoTrabalhoJpaRepository extends JpaRepository<SessaoTrabalh
     List<SessaoTrabalhoEntity> findByDataInicioOrderByNumeroSessaoDesc(LocalDate dataInicio);
     
     Optional<SessaoTrabalhoEntity> findFirstByDataInicioOrderByNumeroSessaoDesc(LocalDate dataInicio);
+    
+    List<SessaoTrabalhoEntity> findAllByOrderByDataInicioCompletaDesc();
 }
 

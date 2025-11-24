@@ -1,4 +1,4 @@
-import { Component, inject, PLATFORM_ID, OnInit, ChangeDetectionStrategy, computed } from '@angular/core';
+import { Component, inject, PLATFORM_ID, OnInit, ChangeDetectionStrategy, computed, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -29,6 +29,8 @@ export class SessoesComponent implements OnInit {
   readonly usuariosComposable = useUsuarios();
 
   readonly StatusSessao = StatusSessao;
+
+  @ViewChild('sessoesSection', { static: false }) sessoesSectionRef?: ElementRef<HTMLElement>;
 
   readonly sessoesPaginadas = this.sessoesComposable.sessoesPaginadas;
   readonly estado = this.sessoesComposable.estado;
@@ -86,6 +88,19 @@ export class SessoesComponent implements OnInit {
 
   irParaPagina(pagina: number): void {
     this.sessoesComposable.irParaPagina(pagina);
+
+    if (this.isBrowser) {
+      requestAnimationFrame(() => {
+        if (this.sessoesSectionRef?.nativeElement) {
+          this.sessoesSectionRef.nativeElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+    }
   }
 
   iniciarSessao(): void {

@@ -89,12 +89,12 @@
           </div>
         } @else {
           <!-- Lista de Sessões -->
-          <div class="sessoes-lista">
+          <div #sessoesSection class="sessoes-lista">
             @for (sessao of sessoesPaginadas().itens; track sessao.id) {
               <article class="sessao-card" [class.sessao-aberta]="sessao.status === StatusSessao.ABERTA"
                        [class.sessao-pausada]="sessao.status === StatusSessao.PAUSADA"
                        [class.sessao-finalizada]="sessao.status === StatusSessao.FINALIZADA">
-                <div class="sessao-card-header">
+                <div class="sessao-card-content">
                   <div class="sessao-info-principal">
                     <h3 class="sessao-nome">{{ sessao.nome }}</h3>
                     <span class="sessao-status-badge" [class.status-aberta]="sessao.status === StatusSessao.ABERTA"
@@ -103,42 +103,42 @@
                       {{ sessao.status }}
                     </span>
                   </div>
-                </div>
 
-                <div class="sessao-card-body">
-                  <div class="sessao-info-item">
-                    <span class="info-label">Iniciada em:</span>
-                    <span class="info-value">{{ formatarDataHora(sessao.dataInicioCompleta) }}</span>
+                  <div class="sessao-info-linha">
+                    <span class="info-item">
+                      <span class="info-label">Iniciada:</span>
+                      <span class="info-value">{{ formatarDataHora(sessao.dataInicioCompleta) }}</span>
+                    </span>
+                    @if (sessao.dataFim) {
+                      <span class="info-item">
+                        <span class="info-label">Finalizada:</span>
+                        <span class="info-value">{{ formatarDataHora(sessao.dataFim) }}</span>
+                      </span>
+                    }
+                    <span class="info-item">
+                      <span class="info-label">Usuário:</span>
+                      <span class="info-value">{{ obterNomeUsuario(sessao.usuarioId) }}</span>
+                    </span>
                   </div>
-                  @if (sessao.dataFim) {
-                    <div class="sessao-info-item">
-                      <span class="info-label">Finalizada em:</span>
-                      <span class="info-value">{{ formatarDataHora(sessao.dataFim) }}</span>
-                    </div>
-                  }
-                  <div class="sessao-info-item">
-                    <span class="info-label">Usuário:</span>
-                    <span class="info-value">{{ obterNomeUsuario(sessao.usuarioId) }}</span>
-                  </div>
-                </div>
 
-                <div class="sessao-card-acoes">
-                  @if (sessao.status === StatusSessao.ABERTA) {
-                    <button class="btn-acao btn-pausar" (click)="pausarSessao(sessao)">
-                      ⏸️ Pausar
-                    </button>
-                    <button class="btn-acao btn-finalizar" (click)="finalizarSessao(sessao)">
-                      ✅ Finalizar
-                    </button>
-                  }
-                  @if (sessao.status === StatusSessao.PAUSADA) {
-                    <button class="btn-acao btn-retomar" (click)="retomarSessao(sessao)">
-                      ▶️ Retomar
-                    </button>
-                    <button class="btn-acao btn-finalizar" (click)="finalizarSessao(sessao)">
-                      ✅ Finalizar
-                    </button>
-                  }
+                  <div class="sessao-card-acoes">
+                    @if (sessao.status === StatusSessao.ABERTA) {
+                      <button class="btn-acao btn-pausar" (click)="pausarSessao(sessao)">
+                        ⏸️ Pausar
+                      </button>
+                      <button class="btn-acao btn-finalizar" (click)="finalizarSessao(sessao)">
+                        ✅ Finalizar
+                      </button>
+                    }
+                    @if (sessao.status === StatusSessao.PAUSADA) {
+                      <button class="btn-acao btn-retomar" (click)="retomarSessao(sessao)">
+                        ▶️ Retomar
+                      </button>
+                      <button class="btn-acao btn-finalizar" (click)="finalizarSessao(sessao)">
+                        ✅ Finalizar
+                      </button>
+                    }
+                  </div>
                 </div>
               </article>
             }

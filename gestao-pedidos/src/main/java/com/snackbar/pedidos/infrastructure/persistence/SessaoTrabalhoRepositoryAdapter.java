@@ -55,7 +55,7 @@ public class SessaoTrabalhoRepositoryAdapter implements SessaoTrabalhoRepository
 
     @Override
     public List<SessaoTrabalho> buscarTodas() {
-        return jpaRepository.findAll().stream()
+        return jpaRepository.findAllByOrderByDataInicioCompletaDesc().stream()
                 .map(mapper::paraDomain)
                 .toList();
     }
