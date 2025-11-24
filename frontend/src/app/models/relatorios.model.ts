@@ -43,6 +43,7 @@ export interface DistribuicaoHoraria {
 export interface PedidosPorHorario {
   horaReferencia: string;
   quantidadePedidos: number;
+  valorTotal: number;
 }
 
 export interface DistribuicaoClientes {

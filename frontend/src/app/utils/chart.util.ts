@@ -32,7 +32,15 @@ export const defaultChartOptions = {
       callbacks: {
         label: (context: TooltipItem<'line' | 'bar' | 'doughnut'>) => {
           const label = context.dataset.label ?? '';
-          const value = context.parsed;
+          const parsed = context.parsed;
+          let value: number;
+
+          if (typeof parsed === 'object' && parsed !== null) {
+            value = (parsed as any).y ?? (parsed as any).x ?? (parsed as any) ?? 0;
+          } else {
+            value = Number(parsed) || 0;
+          }
+
           return `${label}: ${formatarValor(value)}`;
         }
       }
@@ -54,11 +62,12 @@ export function formatarValor(valor: number): string {
 
 export function renderizarChart(
   canvas: HTMLCanvasElement,
-  configuracao: ChartConfiguration,
+  configuracao: ChartConfiguration<any, any, any>,
   chartAtual: Chart | null
 ): Chart {
   chartAtual?.destroy();
-  return new Chart(canvas, configuracao);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return new Chart(canvas, configuracao as any);
 }
 
 export function destruirChart(chart: Chart | null): void {

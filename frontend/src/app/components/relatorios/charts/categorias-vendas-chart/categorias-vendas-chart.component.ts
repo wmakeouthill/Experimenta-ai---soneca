@@ -73,6 +73,20 @@ export class CategoriasVendasChartComponent {
     const options: ChartOptions<'bar'> = {
       ...defaultChartOptions,
       indexAxis: 'y',
+      plugins: {
+        ...defaultChartOptions.plugins,
+        tooltip: {
+          ...defaultChartOptions.plugins?.tooltip,
+          callbacks: {
+            label: (context) => {
+              const valor = typeof context.parsed === 'object' && context.parsed !== null
+                ? (context.parsed as any).x ?? (context.parsed as any)
+                : context.parsed;
+              return `Faturamento: ${formatarValor(Number(valor))}`;
+            }
+          }
+        }
+      },
       scales: {
         x: {
           type: 'linear',

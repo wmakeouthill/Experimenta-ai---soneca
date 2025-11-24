@@ -64,7 +64,8 @@ final class RelatorioResultMapper {
                 .map(Object[].class::cast)
                 .map(registro -> new PedidosPorHorarioDTO(
                         Objects.toString(registro[0], "00"),
-                        toLong(registro[1])))
+                        toLong(registro[1]),
+                        toDecimal(registro[2]).doubleValue()))
                 .toList();
     }
 

@@ -74,7 +74,18 @@ export class VendasPorHorarioChartComponent {
       ...defaultChartOptions,
       plugins: {
         ...defaultChartOptions.plugins,
-        legend: { display: false }
+        legend: { display: false },
+        tooltip: {
+          ...defaultChartOptions.plugins?.tooltip,
+          callbacks: {
+            label: (context) => {
+              const valor = typeof context.parsed === 'object' && context.parsed !== null
+                ? (context.parsed as any).y ?? (context.parsed as any)
+                : context.parsed;
+              return `Faturamento: ${formatarValor(Number(valor))}`;
+            }
+          }
+        }
       },
       scales: {
         x: {

@@ -15,6 +15,7 @@ import {
   corPorIndice,
   defaultChartOptions,
   destruirChart,
+  formatarValor,
   renderizarChart
 } from '../../../../utils/chart.util';
 
@@ -78,8 +79,16 @@ export class PedidosPorHorarioChartComponent {
           ...defaultChartOptions.plugins?.tooltip,
           callbacks: {
             label: (context) => {
-              const valor = context.parsed.y ?? context.parsed;
-              return `Pedidos: ${Number(valor).toLocaleString('pt-BR')}`;
+              const parsed = context.parsed;
+              const quantidade = typeof parsed === 'object' && parsed !== null
+                ? (parsed as any).y ?? (parsed as any)
+                : parsed;
+              const indice = context.dataIndex;
+              const valorTotal = dados[indice]?.valorTotal ?? 0;
+              return [
+                `Pedidos: ${Number(quantidade).toLocaleString('pt-BR')}`,
+                `Faturamento: ${formatarValor(valorTotal)}`
+              ];
             }
           }
         }

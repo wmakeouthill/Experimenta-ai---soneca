@@ -74,6 +74,31 @@ export class VendasEvolucaoChartComponent {
     const options: ChartOptions<'line'> = {
       ...defaultChartOptions,
       interaction: { mode: 'index', intersect: false },
+      plugins: {
+        ...defaultChartOptions.plugins,
+        tooltip: {
+          ...defaultChartOptions.plugins?.tooltip,
+          callbacks: {
+            label: (context) => {
+              const parsed = context.parsed;
+              let value: number;
+
+              if (typeof parsed === 'object' && parsed !== null) {
+                value = (parsed as any).y ?? (parsed as any) ?? 0;
+              } else {
+                value = Number(parsed) || 0;
+              }
+
+              const label = context.dataset.label ?? '';
+              if (context.datasetIndex === 0) {
+                return `${label}: ${formatarValor(value)}`;
+              } else {
+                return `${label}: ${Number(value).toLocaleString('pt-BR')} pedidos`;
+              }
+            }
+          }
+        }
+      },
       scales: {
         y: {
           type: 'linear',

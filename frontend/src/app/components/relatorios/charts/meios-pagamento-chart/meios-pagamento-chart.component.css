@@ -19,6 +19,7 @@ header {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  flex-wrap: nowrap;
 }
 
 h3 {
@@ -40,6 +41,8 @@ p {
   color: #f1f5f9;
   background: rgba(36, 123, 160, 0.2);
   border: 1px solid rgba(36, 123, 160, 0.3);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .chart-wrapper {

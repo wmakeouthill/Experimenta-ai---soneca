@@ -15,6 +15,7 @@ import {
   corPorIndice,
   defaultChartOptions,
   destruirChart,
+  formatarValor,
   renderizarChart
 } from '../../../../utils/chart.util';
 
@@ -65,8 +66,19 @@ export class MeiosPagamentoChartComponent {
     this.chart = renderizarChart(this.canvas.nativeElement, configuracao, this.chart);
   }
 
+  private formatarMeioPagamento(meioPagamento: string): string {
+    const mapeamento: Record<string, string> = {
+      'CARTAO_CREDITO': 'Crédito',
+      'PIX': 'Pix',
+      'DINHEIRO': 'Dinheiro',
+      'CARTAO_DEBITO': 'Débito',
+      'VALE_REFEICAO': 'Voucher'
+    };
+    return mapeamento[meioPagamento] || meioPagamento;
+  }
+
   private montarConfiguracao(dados: DistribuicaoMeioPagamento[]): ChartConfiguration<'doughnut'> {
-    const labels = dados.map(item => item.meioPagamento);
+    const labels = dados.map(item => this.formatarMeioPagamento(item.meioPagamento));
     const valores = dados.map(item => item.valorTotal);
 
     const options: ChartOptions<'doughnut'> = {
@@ -76,6 +88,17 @@ export class MeiosPagamentoChartComponent {
         legend: {
           ...defaultChartOptions.plugins?.legend,
           position: 'right'
+        },
+        tooltip: {
+          ...defaultChartOptions.plugins?.tooltip,
+          callbacks: {
+            label: (context) => {
+              const valor = typeof context.parsed === 'object' && context.parsed !== null
+                ? (context.parsed as any).y ?? (context.parsed as any)
+                : context.parsed;
+              return `Faturamento: ${formatarValor(Number(valor))}`;
+            }
+          }
         }
       }
     };

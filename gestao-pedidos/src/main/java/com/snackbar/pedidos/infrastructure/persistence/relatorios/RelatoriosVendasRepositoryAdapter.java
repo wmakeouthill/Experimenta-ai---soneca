@@ -171,7 +171,8 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
     @Transactional(readOnly = true)
     public List<PedidosPorHorarioDTO> obterPedidosPorHorario(FiltroRelatorioTemporalDTO filtro) {
         String sql = "SELECT LPAD(HOUR(p.data_pedido), 2, '0') AS hora, " +
-                "COUNT(*) AS quantidade_pedidos " +
+                "COUNT(*) AS quantidade_pedidos, " +
+                "SUM(p.valor_total) AS valor_total " +
                 "FROM pedidos p " +
                 "LEFT JOIN sessoes_trabalho st ON st.id = p.sessao_id " +
                 "WHERE " + DATA_BASE_EXPR + " >= :inicio " +
