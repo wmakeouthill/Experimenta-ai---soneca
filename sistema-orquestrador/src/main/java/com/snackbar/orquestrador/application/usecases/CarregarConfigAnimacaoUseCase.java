@@ -9,19 +9,21 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class CarregarConfigAnimacaoUseCase {
-    
+
     private final ConfigAnimacaoRepositoryPort repository;
-    
+
     public ConfigAnimacaoDTO executar() {
         return repository.buscar()
-            .map(ConfigAnimacaoDTO::de)
-            .orElseGet(this::criarConfigPadrao);
+                .map(ConfigAnimacaoDTO::de)
+                .orElseGet(this::criarConfigPadrao);
     }
-    
+
     private ConfigAnimacaoDTO criarConfigPadrao() {
         ConfigAnimacao configPadrao = ConfigAnimacao.criar(true, 30, 6);
+        if (configPadrao == null) {
+            throw new IllegalStateException("Configuração padrão não pôde ser criada");
+        }
         ConfigAnimacao salva = repository.salvar(configPadrao);
         return ConfigAnimacaoDTO.de(salva);
     }
 }
-

@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
 import java.util.Optional;
 
 @Component
@@ -17,11 +18,17 @@ public class ConfigAnimacaoRepositoryAdapter implements ConfigAnimacaoRepository
     private final ConfigAnimacaoMapper mapper;
 
     @Override
-    @SuppressWarnings("null")
+    @NonNull
     public ConfigAnimacao salvar(@NonNull ConfigAnimacao config) {
-        ConfigAnimacaoEntity entity = mapper.paraEntity(config);
-        ConfigAnimacaoEntity salva = jpaRepository.save(entity);
-        return mapper.paraDomain(salva);
+        ConfigAnimacaoEntity entity = Objects.requireNonNull(
+                mapper.paraEntity(config),
+                "Configuração de animação não pôde ser convertida para entidade");
+        ConfigAnimacaoEntity salva = Objects.requireNonNull(
+                jpaRepository.save(entity),
+                "Configuração de animação não pôde ser persistida");
+        return Objects.requireNonNull(
+                mapper.paraDomain(salva),
+                "Configuração de animação persistida não pôde ser convertida para domínio");
     }
 
     @Override
@@ -30,4 +37,3 @@ public class ConfigAnimacaoRepositoryAdapter implements ConfigAnimacaoRepository
                 .map(mapper::paraDomain);
     }
 }
-
