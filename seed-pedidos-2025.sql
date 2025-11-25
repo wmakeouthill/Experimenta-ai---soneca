@@ -75,6 +75,9 @@ SET @numero_sessao_atual = IFNULL((SELECT MAX(numero_sessao) FROM sessoes_trabal
 -- INÍCIO DA TRANSAÇÃO
 -- ============================================================
 
+-- Definir collation da sessão para evitar problemas de collation
+SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 START TRANSACTION;
 
 -- ============================================================
@@ -97,6 +100,7 @@ DROP PROCEDURE IF EXISTS criar_sessoes_e_pedidos_2025$$
 
 CREATE PROCEDURE criar_sessoes_e_pedidos_2025()
 BEGIN
+    -- Definir collation padrão para strings no procedimento
     -- Todas as declarações DECLARE devem vir primeiro
     DECLARE data_atual DATE DEFAULT '2025-01-01';
     DECLARE data_fim DATE DEFAULT '2025-11-22';
@@ -182,7 +186,7 @@ BEGIN
                     data_atual,
                     data_inicio_completa,
                     data_fim_completa,
-                    status_sessao_var COLLATE utf8mb4_unicode_ci,
+                    CONVERT(status_sessao_var USING utf8mb4) COLLATE utf8mb4_unicode_ci,
                     usuario_id_var,
                     NOW(),
                     NOW()
@@ -261,7 +265,7 @@ BEGIN
                             LPAD(numero_pedido_var, 4, '0'),
                             cliente_id_var,
                             cliente_nome_var,
-                            status_pedido_var COLLATE utf8mb4_unicode_ci,
+                            CONVERT(status_pedido_var USING utf8mb4) COLLATE utf8mb4_unicode_ci,
                             0.00, -- Será atualizado após criar itens
                             CASE WHEN RAND() < 0.15 THEN CONCAT('Observação aleatória ', FLOOR(RAND() * 1000)) ELSE NULL END,
                             usuario_id_var,
@@ -374,7 +378,7 @@ BEGIN
                             ) VALUES (
                                 meio_pagamento_id_var,
                                 pedido_id_var,
-                                meio_pagamento_var COLLATE utf8mb4_unicode_ci,
+                                CONVERT(meio_pagamento_var USING utf8mb4) COLLATE utf8mb4_unicode_ci,
                                 valor_meio_pagamento
                             );
                             

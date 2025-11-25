@@ -3,12 +3,14 @@ spring:
     name: experimenta-ai-do-soneca-backend
 
   config:
+    # application-secrets.yml só é importado se NÃO estiver em produção
+    # Em produção (profile prod), o application-prod.yml desabilita este import
     import: optional:classpath:application-secrets.yml
 
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: ${DB_URL:}
+    username: ${DB_USERNAME:}
+    password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 10

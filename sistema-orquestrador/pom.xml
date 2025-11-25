@@ -88,6 +88,14 @@
             <artifactId>mysql-connector-j</artifactId>
             <scope>runtime</scope>
         </dependency>
+        
+        <!-- Cloud SQL Socket Factory (para conectar ao Cloud SQL via Cloud Run) -->
+        <dependency>
+            <groupId>com.google.cloud.sql</groupId>
+            <artifactId>mysql-socket-factory-connector-j-8</artifactId>
+            <version>1.13.1</version>
+            <scope>runtime</scope>
+        </dependency>
 
         <!-- Migrations -->
         <dependency>
@@ -108,6 +116,16 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.snackbar.orquestrador.SnackBarApplication</mainClass>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             
             <!-- Plugin para buildar frontend Angular (quando existir) -->
@@ -181,7 +199,12 @@
                                     <filtering>false</filtering>
                                 </resource>
                             </resources>
-                            <skip>${skip.frontend.build}</skip>
+                            <!-- IMPORTANTE: NUNCA pular a cópia do frontend!
+                                 Este plugin apenas COPIA os arquivos já buildados.
+                                 O skip.frontend.build só deve pular o BUILD, não a cópia.
+                                 No Docker, o frontend já foi buildado no Stage 1 e precisa ser copiado aqui.
+                            -->
+                            <skip>false</skip>
                         </configuration>
                     </execution>
                 </executions>
