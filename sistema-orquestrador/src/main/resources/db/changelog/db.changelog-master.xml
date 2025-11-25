@@ -47,6 +47,9 @@
     <!-- Migration: Torna usuario_id obrigatório na tabela pedidos -->
     <include file="changes/014-make-usuario-id-required-pedidos.sql" relativeToChangelogFile="true"/>
 
+    <!-- Migration: Criação da tabela de configuração de impressora -->
+    <include file="changes/015-create-config-impressora-table.sql" relativeToChangelogFile="true"/>
+
     <!-- 
     NOTA: O usuário administrador inicial é criado automaticamente via CommandLineRunner
     (UsuarioInicialConfig) na primeira execução da aplicação.

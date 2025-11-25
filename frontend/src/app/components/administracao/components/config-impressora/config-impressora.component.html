@@ -1,0 +1,119 @@
+<div class="config-impressora-container">
+  <div class="config-impressora-header" (click)="alternarExpansao()">
+    <h2 class="config-impressora-titulo">
+      🖨️ Configuração de Impressora
+    </h2>
+    <span class="config-impressora-toggle">
+      {{ estaExpandido() ? '▼' : '▶' }}
+    </span>
+  </div>
+
+  @if (estaExpandido()) {
+    <div class="config-impressora-content">
+      <form [formGroup]="formImpressora" class="config-impressora-form">
+        <div class="form-row">
+          <label for="tipoImpressora">Tipo de Impressora:</label>
+          <select 
+            id="tipoImpressora" 
+            formControlName="tipoImpressora" 
+            class="form-input-compact"
+            [disabled]="!isAdministrador()"
+          >
+            @for (tipo of tiposImpressora; track tipo.value) {
+              <option [value]="tipo.value">{{ tipo.label }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label for="nomeEstabelecimento">Nome do Estabelecimento *:</label>
+          <input
+            id="nomeEstabelecimento"
+            type="text"
+            formControlName="nomeEstabelecimento"
+            class="form-input-compact"
+            [class.invalid]="nomeEstabelecimento?.invalid && nomeEstabelecimento?.touched"
+            [disabled]="!isAdministrador()"
+            placeholder="Ex: experimenta-ai-do-soneca"
+          />
+          @if (nomeEstabelecimento?.invalid && nomeEstabelecimento?.touched) {
+            <span class="error-text">Obrigatório</span>
+          }
+        </div>
+
+        <div class="form-row">
+          <label for="enderecoEstabelecimento">Endereço:</label>
+          <input
+            id="enderecoEstabelecimento"
+            type="text"
+            formControlName="enderecoEstabelecimento"
+            class="form-input-compact"
+            [disabled]="!isAdministrador()"
+            placeholder="Ex: Rua Exemplo, 123 - Centro"
+          />
+        </div>
+
+        <div class="form-row">
+          <label for="telefoneEstabelecimento">Telefone:</label>
+          <input
+            id="telefoneEstabelecimento"
+            type="text"
+            formControlName="telefoneEstabelecimento"
+            class="form-input-compact"
+            [disabled]="!isAdministrador()"
+            placeholder="Ex: (21) 97439-7966"
+          />
+        </div>
+
+        <div class="form-row">
+          <label for="cnpjEstabelecimento">CNPJ:</label>
+          <input
+            id="cnpjEstabelecimento"
+            type="text"
+            formControlName="cnpjEstabelecimento"
+            class="form-input-compact"
+            [disabled]="!isAdministrador()"
+            placeholder="Ex: 12345678000190"
+            maxlength="14"
+          />
+        </div>
+
+        @if (mensagemImpressao()) {
+          <div class="mensagem-impressao" [class.sucesso]="mensagemImpressao()?.startsWith('✅')">
+            {{ mensagemImpressao() }}
+          </div>
+        }
+
+        <div class="config-impressora-actions">
+          @if (isAdministrador()) {
+            <button
+              type="button"
+              class="btn-compact btn-salvar"
+              (click)="salvarConfiguracao()"
+              [disabled]="formImpressora.invalid || estaSalvando()"
+            >
+              @if (estaSalvando()) {
+                💾 Salvando...
+              } @else {
+                💾 Salvar
+              }
+            </button>
+          }
+          <button
+            type="button"
+            class="btn-compact btn-test-impressao"
+            (click)="testarImpressao()"
+            [disabled]="formImpressora.invalid || estaImprimindo()"
+          >
+            @if (estaImprimindo()) {
+              ⏳ Testando...
+            } @else {
+              🧪 Testar
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+</div>
+

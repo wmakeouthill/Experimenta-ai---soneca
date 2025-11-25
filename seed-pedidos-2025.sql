@@ -97,7 +97,7 @@ DROP PROCEDURE IF EXISTS criar_sessoes_e_pedidos_2025$$
 
 CREATE PROCEDURE criar_sessoes_e_pedidos_2025()
 BEGIN
-    -- Definir collation padrão para o procedimento
+    -- Todas as declarações DECLARE devem vir primeiro
     DECLARE data_atual DATE DEFAULT '2025-01-01';
     DECLARE data_fim DATE DEFAULT '2025-11-22';
     DECLARE sessao_id_var VARCHAR(36);
@@ -135,7 +135,6 @@ BEGIN
     DECLARE produto_observacoes_var TEXT;
     DECLARE cliente_nome_var VARCHAR(200);
     DECLARE num_meios_pagamento INT;
-    DECLARE status_finalizado VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'FINALIZADO';
     
     -- Loop pelos dias
     WHILE data_atual <= data_fim DO
@@ -161,7 +160,7 @@ BEGIN
                 SET data_fim_completa = TIMESTAMP(data_atual, hora_fim);
                 
                 -- Status da sessão (todas finalizadas, pois são do passado)
-                SET status_sessao_var = CONVERT('FINALIZADA' USING utf8mb4) COLLATE utf8mb4_unicode_ci;
+                SET status_sessao_var = 'FINALIZADA' COLLATE utf8mb4_unicode_ci;
                 
                 -- Gerar ID da sessão
                 SET sessao_id_var = UUID();
@@ -183,7 +182,7 @@ BEGIN
                     data_atual,
                     data_inicio_completa,
                     data_fim_completa,
-                    status_sessao_var,
+                    status_sessao_var COLLATE utf8mb4_unicode_ci,
                     usuario_id_var,
                     NOW(),
                     NOW()
@@ -223,21 +222,16 @@ BEGIN
                         -- Status do pedido (distribuição realista)
                         -- Usar variáveis auxiliares para evitar problemas de collation
                         SET @rand_val = RAND();
+                        SET data_finalizacao_var = NULL;  -- Inicializar como NULL
                         IF @rand_val < 0.70 THEN
-                            SET status_pedido_var = status_finalizado;  -- 70% finalizados
-                        ELSEIF @rand_val < 0.85 THEN
-                            SET status_pedido_var = CONVERT('PRONTO' USING utf8mb4) COLLATE utf8mb4_unicode_ci;  -- 15% prontos
-                        ELSEIF @rand_val < 0.95 THEN
-                            SET status_pedido_var = CONVERT('PREPARANDO' USING utf8mb4) COLLATE utf8mb4_unicode_ci;  -- 10% preparando
-                        ELSE
-                            SET status_pedido_var = CONVERT('PENDENTE' USING utf8mb4) COLLATE utf8mb4_unicode_ci;  -- 5% pendentes
-                        END IF;
-                        
-                        -- Se finalizado, definir data de finalização
-                        IF status_pedido_var = status_finalizado THEN
+                            SET status_pedido_var = 'FINALIZADO' COLLATE utf8mb4_unicode_ci;  -- 70% finalizados
                             SET data_finalizacao_var = TIMESTAMPADD(MINUTE, FLOOR(10 + RAND() * 60), data_pedido_var);
+                        ELSEIF @rand_val < 0.85 THEN
+                            SET status_pedido_var = 'PRONTO' COLLATE utf8mb4_unicode_ci;  -- 15% prontos
+                        ELSEIF @rand_val < 0.95 THEN
+                            SET status_pedido_var = 'PREPARANDO' COLLATE utf8mb4_unicode_ci;  -- 10% preparando
                         ELSE
-                            SET data_finalizacao_var = NULL;
+                            SET status_pedido_var = 'PENDENTE' COLLATE utf8mb4_unicode_ci;  -- 5% pendentes
                         END IF;
                         
                         -- Inicializar valor total
@@ -267,7 +261,7 @@ BEGIN
                             LPAD(numero_pedido_var, 4, '0'),
                             cliente_id_var,
                             cliente_nome_var,
-                            status_pedido_var,
+                            status_pedido_var COLLATE utf8mb4_unicode_ci,
                             0.00, -- Será atualizado após criar itens
                             CASE WHEN RAND() < 0.15 THEN CONCAT('Observação aleatória ', FLOOR(RAND() * 1000)) ELSE NULL END,
                             usuario_id_var,
@@ -340,13 +334,18 @@ BEGIN
                             
                             WHILE total_meios_pagamento < valor_total_pedido AND num_meios_pagamento > 0 DO
                             -- Selecionar meio de pagamento aleatório
-                            SET meio_pagamento_var = CASE FLOOR(RAND() * 5)
-                                WHEN 0 THEN CONVERT('PIX' USING utf8mb4) COLLATE utf8mb4_unicode_ci
-                                WHEN 1 THEN CONVERT('CARTAO_CREDITO' USING utf8mb4) COLLATE utf8mb4_unicode_ci
-                                WHEN 2 THEN CONVERT('CARTAO_DEBITO' USING utf8mb4) COLLATE utf8mb4_unicode_ci
-                                WHEN 3 THEN CONVERT('VALE_REFEICAO' USING utf8mb4) COLLATE utf8mb4_unicode_ci
-                                ELSE CONVERT('DINHEIRO' USING utf8mb4) COLLATE utf8mb4_unicode_ci
-                            END;
+                            SET @meio_rand = FLOOR(RAND() * 5);
+                            IF @meio_rand = 0 THEN
+                                SET meio_pagamento_var = 'PIX' COLLATE utf8mb4_unicode_ci;
+                            ELSEIF @meio_rand = 1 THEN
+                                SET meio_pagamento_var = 'CARTAO_CREDITO' COLLATE utf8mb4_unicode_ci;
+                            ELSEIF @meio_rand = 2 THEN
+                                SET meio_pagamento_var = 'CARTAO_DEBITO' COLLATE utf8mb4_unicode_ci;
+                            ELSEIF @meio_rand = 3 THEN
+                                SET meio_pagamento_var = 'VALE_REFEICAO' COLLATE utf8mb4_unicode_ci;
+                            ELSE
+                                SET meio_pagamento_var = 'DINHEIRO' COLLATE utf8mb4_unicode_ci;
+                            END IF;
                             
                             -- Calcular valor do meio de pagamento
                             IF num_meios_pagamento = 1 THEN
@@ -375,7 +374,7 @@ BEGIN
                             ) VALUES (
                                 meio_pagamento_id_var,
                                 pedido_id_var,
-                                meio_pagamento_var,
+                                meio_pagamento_var COLLATE utf8mb4_unicode_ci,
                                 valor_meio_pagamento
                             );
                             

@@ -1,6 +1,6 @@
 spring:
   application:
-    name: snackbar-backend
+    name: experimenta-ai-do-soneca-backend
 
   config:
     import: optional:classpath:application-secrets.yml
@@ -51,3 +51,29 @@ logging:
     "[org.hibernate.SQL]": ${SHOW_SQL:false}
     "[org.hibernate.type.descriptor.sql.BasicBinder]": ${SHOW_SQL:false}
     "[org.springframework.web.servlet.DispatcherServlet]": DEBUG
+
+# Configuração de Impressão de Cupom Fiscal
+impressao:
+  # Configuração para EPSON TM-T20
+  epson:
+    tm-t20:
+      device: ${IMPRESSAO_EPSON_DEVICE:/dev/usb/lp0} # Linux padrão, ou COM3 no Windows
+      modo-teste: ${IMPRESSAO_EPSON_MODO_TESTE:true} # true = salva em arquivo .prn
+
+  # Configuração para DARUMA DR-800
+  daruma:
+    "800":
+      device: ${IMPRESSAO_DARUMA_DEVICE:/dev/usb/lp1} # Linux padrão, ou COM4 no Windows
+      modo-teste: ${IMPRESSAO_DARUMA_MODO_TESTE:true} # true = salva em arquivo .prn
+
+  # Configuração para impressoras genéricas ESC/POS
+  generica:
+    device: ${IMPRESSAO_GENERICA_DEVICE:/dev/usb/lp2} # Linux padrão, ou COM5 no Windows
+    modo-teste: ${IMPRESSAO_GENERICA_MODO_TESTE:true} # true = salva em arquivo .prn
+
+# Configurações do estabelecimento (usadas no cupom fiscal)
+estabelecimento:
+  nome: ${ESTABELECIMENTO_NOME:experimenta-ai-do-soneca}
+  endereco: ${ESTABELECIMENTO_ENDERECO:Av. Leandro da Mota, 58 - Dr. Laureano, Duque de Caxias.}
+  telefone: ${ESTABELECIMENTO_TELEFONE:(21) 97439-7966}
+  cnpj: ${ESTABELECIMENTO_CNPJ:12345678000190}

@@ -29,6 +29,7 @@
         <module>gestao-pedidos</module>
         <module>autenticacao</module>
         <module>sistema-orquestrador</module>
+        <module>impressao-cupom-fiscal</module>
         <!-- Módulos a serem implementados:
         <module>gestao-financeira</module>
         <module>relatorios</module>

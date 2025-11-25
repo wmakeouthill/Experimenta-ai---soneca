@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService, UsuarioDTO, CriarUsuarioRequest, AtualizarUsuarioRequest } from '../../services/auth.service';
+import { ConfigImpressoraComponent } from './components/config-impressora/config-impressora.component';
 
 @Component({
   selector: 'app-administracao',
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, ConfigImpressoraComponent],
   templateUrl: './administracao.component.html',
   styleUrl: './administracao.component.css'
 })

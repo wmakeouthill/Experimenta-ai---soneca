@@ -47,7 +47,8 @@ public class SecurityConfig {
                         // Endpoints administrativos (exigem role ADMINISTRADOR)
                         .requestMatchers("/api/admin/**").hasRole(ROLE_ADMINISTRADOR)
 
-                        // Endpoints de cardápio - Leitura para ADMINISTRADOR e OPERADOR, escrita apenas ADMINISTRADOR
+                        // Endpoints de cardápio - Leitura para ADMINISTRADOR e OPERADOR, escrita apenas
+                        // ADMINISTRADOR
                         .requestMatchers("GET", PRODUTOS_PATH_PATTERN)
                         .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
                         .requestMatchers("POST", PRODUTOS_PATH_PATTERN)
@@ -72,7 +73,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/lobby-pedidos", "/api/lobby-pedidos/**")
                         .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
 
-                        // Endpoints de sessões de trabalho - Leitura para ADMINISTRADOR e OPERADOR, escrita apenas ADMINISTRADOR
+                        // Endpoints de sessões de trabalho - Leitura para ADMINISTRADOR e OPERADOR,
+                        // escrita apenas ADMINISTRADOR
                         .requestMatchers("GET", "/api/sessoes-trabalho", "/api/sessoes-trabalho/**")
                         .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
                         .requestMatchers("POST", "/api/sessoes-trabalho", "/api/sessoes-trabalho/**")
@@ -91,11 +93,13 @@ public class SecurityConfig {
                         .requestMatchers("/api/relatorio-financeiro", "/api/relatorio-financeiro/**")
                         .hasRole(ROLE_ADMINISTRADOR)
 
-                        // Endpoints de clientes - ADMINISTRADOR e OPERADOR (necessário para criar pedidos)
+                        // Endpoints de clientes - ADMINISTRADOR e OPERADOR (necessário para criar
+                        // pedidos)
                         .requestMatchers("/api/clientes", "/api/clientes/**")
                         .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
 
-                        // Endpoints de configuração de animação - Leitura para ADMINISTRADOR e OPERADOR, escrita apenas ADMINISTRADOR
+                        // Endpoints de configuração de animação - Leitura para ADMINISTRADOR e
+                        // OPERADOR, escrita apenas ADMINISTRADOR
                         .requestMatchers("GET", "/api/config-animacao", "/api/config-animacao/**")
                         .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
                         .requestMatchers("POST", "/api/config-animacao", "/api/config-animacao/**")
@@ -104,6 +108,15 @@ public class SecurityConfig {
                         .hasRole(ROLE_ADMINISTRADOR)
                         .requestMatchers("DELETE", "/api/config-animacao", "/api/config-animacao/**")
                         .hasRole(ROLE_ADMINISTRADOR)
+
+                        // Endpoints de impressão - Configuração apenas ADMINISTRADOR, impressão
+                        // ADMINISTRADOR e OPERADOR
+                        .requestMatchers("GET", "/api/impressao/configuracao")
+                        .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
+                        .requestMatchers("POST", "/api/impressao/configuracao")
+                        .hasRole(ROLE_ADMINISTRADOR)
+                        .requestMatchers("POST", "/api/impressao/cupom-fiscal")
+                        .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
 
                         // Qualquer outro endpoint exige autenticação por padrão
                         .anyRequest().authenticated())
