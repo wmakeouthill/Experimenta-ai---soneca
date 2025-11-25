@@ -37,9 +37,14 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Recursos estáticos e frontend Angular (PÚBLICO - sem autenticação)
+                        .requestMatchers("/", "/index.html", "/favicon.ico", "/*.js", "/*.css", "/*.ico", "/*.png", "/*.jpg", "/*.svg", "/*.woff", "/*.woff2", "/*.ttf", "/*.eot").permitAll()
+                        .requestMatchers("/assets/**", "/styles/**").permitAll()
+                        
                         // Endpoints públicos (sem autenticação)
                         .requestMatchers("/api/auth/login").permitAll()
-                        .requestMatchers("GET", "/api/status").permitAll()
+                        .requestMatchers("/api/status").permitAll()
+                        .requestMatchers("/api/health").permitAll()
 
                         // Endpoints de autenticação (exigem autenticação)
                         .requestMatchers("/api/auth/**").authenticated()
