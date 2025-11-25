@@ -11,26 +11,38 @@
       (click)="$event.stopPropagation()"
     >
       <div class="context-menu-header">
-        <span>Alterar Status</span>
+        <span>Opções do Pedido</span>
       </div>
       <div class="context-menu-items">
         @if (pedido(); as pedidoAtual) {
-          @for (status of obterStatusDisponiveis(pedidoAtual.status); track status) {
+          <div class="context-menu-section">
+            <div class="context-menu-section-title">Alterar Status</div>
+            @for (status of obterStatusDisponiveis(pedidoAtual.status); track status) {
+              <button 
+                class="context-menu-item"
+                (click)="alterarStatus(status)"
+              >
+                {{ obterNomeStatus(status) }}
+              </button>
+            }
+          </div>
+          <div class="context-menu-divider"></div>
+          <div class="context-menu-section">
             <button 
-              class="context-menu-item"
-              (click)="alterarStatus(status)"
+              class="context-menu-item context-menu-item-impressao"
+              (click)="imprimirSegundaVia()"
             >
-              {{ obterNomeStatus(status) }}
+              🖨️ Imprimir Segunda Via
             </button>
-          }
-          @if (podeCancelar(pedidoAtual.status)) {
-            <button 
-              class="context-menu-item context-menu-item-cancelar"
-              (click)="cancelarPedido()"
-            >
-              ❌ Cancelar Pedido
-            </button>
-          }
+            @if (podeCancelar(pedidoAtual.status)) {
+              <button 
+                class="context-menu-item context-menu-item-cancelar"
+                (click)="cancelarPedido()"
+              >
+                ❌ Cancelar Pedido
+              </button>
+            }
+          </div>
         }
       </div>
     </div>

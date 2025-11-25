@@ -32,6 +32,7 @@ export interface ConfiguracaoImpressoraDTO {
   enderecoEstabelecimento?: string;
   telefoneEstabelecimento?: string;
   cnpjEstabelecimento?: string;
+  logoBase64?: string;
   ativa?: boolean;
 }
 
@@ -41,6 +42,7 @@ export interface SalvarConfiguracaoImpressoraRequest {
   enderecoEstabelecimento?: string;
   telefoneEstabelecimento?: string;
   cnpjEstabelecimento?: string;
+  logoBase64?: string;
 }
 
 @Injectable({

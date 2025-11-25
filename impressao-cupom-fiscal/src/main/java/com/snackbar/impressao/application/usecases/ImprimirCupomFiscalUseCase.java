@@ -2,6 +2,7 @@ package com.snackbar.impressao.application.usecases;
 
 import com.snackbar.impressao.application.dtos.ImprimirCupomRequest;
 import com.snackbar.impressao.application.dtos.ImprimirCupomResponse;
+import com.snackbar.impressao.application.ports.ConfiguracaoImpressoraRepositoryPort;
 import com.snackbar.impressao.application.ports.PedidoServicePort;
 import com.snackbar.impressao.domain.entities.CupomFiscal;
 import com.snackbar.impressao.domain.entities.TipoImpressora;
@@ -28,6 +29,7 @@ public class ImprimirCupomFiscalUseCase {
     
     private final PedidoServicePort pedidoService;
     private final ImpressoraFactory impressoraFactory;
+    private final ConfiguracaoImpressoraRepositoryPort configuracaoRepository;
     
     public ImprimirCupomResponse executar(ImprimirCupomRequest request) {
         PedidoDTO pedido = buscarPedido(request.getPedidoId());
@@ -142,13 +144,25 @@ public class ImprimirCupomFiscalUseCase {
                 ? request.getNomeEstabelecimento() 
                 : "experimenta-ai-do-soneca";
         
+        String logoBase64 = null;
+        byte[] logoEscPos = null;
+        
+        var configSalva = configuracaoRepository.buscarAtiva();
+        if (configSalva.isPresent()) {
+            var config = configSalva.get();
+            logoBase64 = config.getLogoBase64();
+            logoEscPos = config.getLogoEscPos();
+        }
+        
         return CupomFiscal.criar(
                 pedido,
                 configuracao,
                 nomeEstabelecimento,
                 request.getEnderecoEstabelecimento(),
                 request.getTelefoneEstabelecimento(),
-                request.getCnpjEstabelecimento()
+                request.getCnpjEstabelecimento(),
+                logoBase64,
+                logoEscPos
         );
     }
 }

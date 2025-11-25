@@ -22,5 +22,7 @@ public class SalvarConfiguracaoImpressoraRequest {
     private String telefoneEstabelecimento;
     
     private String cnpjEstabelecimento;
+    
+    private String logoBase64;
 }
 

@@ -50,6 +50,9 @@
     <!-- Migration: Criação da tabela de configuração de impressora -->
     <include file="changes/015-create-config-impressora-table.sql" relativeToChangelogFile="true"/>
 
+    <!-- Migration: Adiciona coluna logo_base64 na tabela config_impressora -->
+    <include file="changes/016-add-logo-base64-config-impressora.sql" relativeToChangelogFile="true"/>
+
     <!-- 
     NOTA: O usuário administrador inicial é criado automaticamente via CommandLineRunner
     (UsuarioInicialConfig) na primeira execução da aplicação.

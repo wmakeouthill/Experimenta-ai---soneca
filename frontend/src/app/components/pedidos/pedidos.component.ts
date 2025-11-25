@@ -6,8 +6,10 @@ import { usePedidos } from './composables/use-pedidos';
 import { PedidoService, StatusPedido, Pedido } from '../../services/pedido.service';
 import { SessaoTrabalhoService, SessaoTrabalho } from '../../services/sessao-trabalho.service';
 import { AuthService } from '../../services/auth.service';
+import { ImpressaoService, TipoImpressora } from '../../services/impressao.service';
 import { NovoPedidoModalComponent } from './components/novo-pedido-modal/novo-pedido-modal.component';
 import { MenuContextoPedidoComponent } from './components/menu-contexto-pedido/menu-contexto-pedido.component';
+import { catchError, of } from 'rxjs';
 
 @Component({
   selector: 'app-pedidos',
@@ -29,6 +31,7 @@ export class PedidosComponent implements OnInit {
   private readonly pedidoService = inject(PedidoService);
   private readonly sessaoService = inject(SessaoTrabalhoService);
   private readonly authService = inject(AuthService);
+  private readonly impressaoService = inject(ImpressaoService);
 
   // Composable com toda a lógica de pedidos - inicializado no construtor para contexto de injeção válido
   readonly pedidosComposable!: ReturnType<typeof usePedidos>;
@@ -73,6 +76,7 @@ export class PedidosComponent implements OnInit {
 
   // Menu de contexto
   readonly menuContexto = signal<{ pedidoId: string; x: number; y: number } | null>(null);
+  readonly notificacoes = signal<Array<{ id: string; mensagem: string; tipo: 'sucesso' | 'erro' }>>([]);
 
   // Sessão ativa
   readonly temSessaoAtiva = signal<boolean>(false);
@@ -194,6 +198,7 @@ export class PedidosComponent implements OnInit {
             this.pedidosComposable.carregarPedidos(sessaoId ? { sessaoId } : undefined);
           }, 0);
           this.fecharFormulario();
+          this.imprimirCupomAutomatico(pedidoCriado.id);
         },
         error: (error) => {
           console.error('Erro ao criar pedido:', error);
@@ -303,6 +308,11 @@ export class PedidosComponent implements OnInit {
     this.cancelarPedido(pedidoId);
   }
 
+  onImprimirSegundaViaViaMenu(pedidoId: string): void {
+    this.fecharMenuContexto();
+    this.imprimirSegundaVia(pedidoId);
+  }
+
   obterPedidoDoMenu(): Pedido | null {
     const menu = this.menuContexto();
     if (!menu) return null;
@@ -334,6 +344,93 @@ export class PedidosComponent implements OnInit {
       return nomeCompleto;
     }
     return palavras.slice(0, 3).join(' ') + '...';
+  }
+
+  imprimirCupomAutomatico(pedidoId: string): void {
+    this.impressaoService.buscarConfiguracao().pipe(
+      catchError(() => {
+        console.warn('Configuração de impressora não encontrada. Impressão automática cancelada.');
+        return of(null);
+      })
+    ).subscribe((config) => {
+      if (!config || !config.ativa) {
+        console.warn('Impressora não configurada ou inativa. Impressão automática cancelada.');
+        return;
+      }
+
+      this.impressaoService.imprimirCupom({
+        pedidoId,
+        tipoImpressora: config.tipoImpressora,
+        nomeEstabelecimento: config.nomeEstabelecimento,
+        enderecoEstabelecimento: config.enderecoEstabelecimento,
+        telefoneEstabelecimento: config.telefoneEstabelecimento,
+        cnpjEstabelecimento: config.cnpjEstabelecimento
+      }).pipe(
+        catchError((error) => {
+          console.error('Erro ao imprimir cupom automaticamente:', error);
+          return of(null);
+        })
+      ).subscribe((response) => {
+        if (response?.sucesso) {
+          this.mostrarNotificacao('✅ Cupom impresso com sucesso!', 'sucesso');
+        }
+      });
+    });
+  }
+
+  imprimirSegundaVia(pedidoId: string): void {
+    this.impressaoService.buscarConfiguracao().pipe(
+      catchError(() => {
+        if (this.isBrowser) {
+          alert('Erro ao buscar configuração de impressora. Verifique se a impressora está configurada.');
+        }
+        return of(null);
+      })
+    ).subscribe((config) => {
+      if (!config || !config.ativa) {
+        if (this.isBrowser) {
+          alert('Impressora não configurada ou inativa. Configure a impressora em Administração.');
+        }
+        return;
+      }
+
+      this.impressaoService.imprimirCupom({
+        pedidoId,
+        tipoImpressora: config.tipoImpressora,
+        nomeEstabelecimento: config.nomeEstabelecimento,
+        enderecoEstabelecimento: config.enderecoEstabelecimento,
+        telefoneEstabelecimento: config.telefoneEstabelecimento,
+        cnpjEstabelecimento: config.cnpjEstabelecimento
+      }).pipe(
+        catchError((error) => {
+          console.error('Erro ao imprimir segunda via:', error);
+          if (this.isBrowser) {
+            alert('Erro ao imprimir cupom: ' + (error.error?.message || error.message || 'Erro desconhecido'));
+          }
+          return of(null);
+        })
+      ).subscribe((response) => {
+        if (response?.sucesso) {
+          this.mostrarNotificacao('✅ Segunda via impressa com sucesso!', 'sucesso');
+        } else if (response && !response.sucesso) {
+          this.mostrarNotificacao('❌ Erro ao imprimir: ' + response.mensagem, 'erro');
+        }
+      });
+    });
+  }
+
+  mostrarNotificacao(mensagem: string, tipo: 'sucesso' | 'erro' = 'sucesso'): void {
+    const notificacao = {
+      id: Date.now().toString(),
+      mensagem,
+      tipo
+    };
+    
+    this.notificacoes.update(n => [...n, notificacao]);
+    
+    setTimeout(() => {
+      this.notificacoes.update(n => n.filter(not => not.id !== notificacao.id));
+    }, 2000);
   }
 }
 

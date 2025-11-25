@@ -1,8 +1,9 @@
-import { Component, inject, signal, ChangeDetectionStrategy, OnInit, computed } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, OnInit, computed, effect, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ImpressaoService, TipoImpressora } from '../../../../services/impressao.service';
 import { AuthService } from '../../../../services/auth.service';
+import { UploadUtil } from '../../../../utils/upload.util';
 
 @Component({
   selector: 'app-config-impressora',
@@ -18,12 +19,14 @@ export class ConfigImpressoraComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   
   readonly isAdministrador = computed(() => this.authService.isAdministrador());
-
+  @ViewChild('logoInput') logoInput?: ElementRef<HTMLInputElement>;
+  
   readonly estaExpandido = signal(false);
   readonly estaImprimindo = signal(false);
   readonly estaSalvando = signal(false);
   readonly estaCarregando = signal(false);
   readonly mensagemImpressao = signal<string | null>(null);
+  readonly logoPreview = signal<string | null>(null);
   
   readonly formImpressora: FormGroup;
   
@@ -40,6 +43,15 @@ export class ConfigImpressoraComponent implements OnInit {
       enderecoEstabelecimento: [''],
       telefoneEstabelecimento: [''],
       cnpjEstabelecimento: ['']
+    });
+    
+    effect(() => {
+      const isAdmin = this.isAdministrador();
+      if (isAdmin) {
+        this.formImpressora.enable();
+      } else {
+        this.formImpressora.disable();
+      }
     });
   }
 
@@ -59,6 +71,10 @@ export class ConfigImpressoraComponent implements OnInit {
             telefoneEstabelecimento: config.telefoneEstabelecimento || '',
             cnpjEstabelecimento: config.cnpjEstabelecimento || ''
           });
+          
+          if (config.logoBase64) {
+            this.logoPreview.set(config.logoBase64);
+          }
         }
         this.estaCarregando.set(false);
       },
@@ -66,6 +82,35 @@ export class ConfigImpressoraComponent implements OnInit {
         this.estaCarregando.set(false);
       }
     });
+  }
+  
+  async onLogoSelecionado(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    
+    if (!file) {
+      return;
+    }
+    
+    if (!UploadUtil.eImagem(file)) {
+      this.mensagemImpressao.set('❌ Por favor, selecione um arquivo de imagem válido');
+      return;
+    }
+    
+    try {
+      const base64 = await UploadUtil.fileParaBase64(file);
+      this.logoPreview.set(base64);
+      this.mensagemImpressao.set(null);
+    } catch (error) {
+      this.mensagemImpressao.set('❌ Erro ao carregar imagem: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
+    }
+  }
+  
+  removerLogo(): void {
+    this.logoPreview.set(null);
+    if (this.logoInput) {
+      this.logoInput.nativeElement.value = '';
+    }
   }
 
   alternarExpansao(): void {
@@ -89,7 +134,8 @@ export class ConfigImpressoraComponent implements OnInit {
       nomeEstabelecimento: config.nomeEstabelecimento,
       enderecoEstabelecimento: config.enderecoEstabelecimento,
       telefoneEstabelecimento: config.telefoneEstabelecimento,
-      cnpjEstabelecimento: config.cnpjEstabelecimento
+      cnpjEstabelecimento: config.cnpjEstabelecimento,
+      logoBase64: this.logoPreview() || undefined
     }).subscribe({
       next: () => {
         this.estaSalvando.set(false);

@@ -12,6 +12,8 @@ public class ConfiguracaoImpressoraEntity extends BaseEntity {
     private String enderecoEstabelecimento;
     private String telefoneEstabelecimento;
     private String cnpjEstabelecimento;
+    private String logoBase64;
+    private byte[] logoEscPos;
     private boolean ativa;
     
     private ConfiguracaoImpressoraEntity() {
@@ -24,7 +26,8 @@ public class ConfiguracaoImpressoraEntity extends BaseEntity {
             String nomeEstabelecimento,
             String enderecoEstabelecimento,
             String telefoneEstabelecimento,
-            String cnpjEstabelecimento) {
+            String cnpjEstabelecimento,
+            String logoBase64) {
         validarDados(tipoImpressora, nomeEstabelecimento);
         
         ConfiguracaoImpressoraEntity config = new ConfiguracaoImpressoraEntity();
@@ -33,6 +36,8 @@ public class ConfiguracaoImpressoraEntity extends BaseEntity {
         config.enderecoEstabelecimento = enderecoEstabelecimento;
         config.telefoneEstabelecimento = telefoneEstabelecimento;
         config.cnpjEstabelecimento = cnpjEstabelecimento;
+        config.logoBase64 = logoBase64;
+        config.logoEscPos = converterLogoParaEscPos(logoBase64);
         config.touch();
         return config;
     }
@@ -42,7 +47,8 @@ public class ConfiguracaoImpressoraEntity extends BaseEntity {
             String nomeEstabelecimento,
             String enderecoEstabelecimento,
             String telefoneEstabelecimento,
-            String cnpjEstabelecimento) {
+            String cnpjEstabelecimento,
+            String logoBase64) {
         validarDados(tipoImpressora, nomeEstabelecimento);
         
         this.tipoImpressora = tipoImpressora;
@@ -50,7 +56,16 @@ public class ConfiguracaoImpressoraEntity extends BaseEntity {
         this.enderecoEstabelecimento = enderecoEstabelecimento;
         this.telefoneEstabelecimento = telefoneEstabelecimento;
         this.cnpjEstabelecimento = cnpjEstabelecimento;
+        this.logoBase64 = logoBase64;
+        this.logoEscPos = converterLogoParaEscPos(logoBase64);
         touch();
+    }
+    
+    private static byte[] converterLogoParaEscPos(String logoBase64) {
+        if (logoBase64 == null || logoBase64.trim().isEmpty()) {
+            return null;
+        }
+        return com.snackbar.impressao.infrastructure.impressora.ImagemEscPosUtil.converterBase64ParaEscPos(logoBase64);
     }
     
     public void ativar() {
@@ -65,6 +80,10 @@ public class ConfiguracaoImpressoraEntity extends BaseEntity {
     
     public void restaurarEstadoAtivo(boolean ativa) {
         this.ativa = ativa;
+    }
+    
+    public void restaurarLogoEscPos(byte[] logoEscPos) {
+        this.logoEscPos = logoEscPos;
     }
     
     public void restaurarDoBanco(String id, LocalDateTime createdAt, LocalDateTime updatedAt) {

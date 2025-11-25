@@ -36,6 +36,13 @@ public class ConfiguracaoImpressoraJpaEntity {
     @Column(length = 18)
     private String cnpjEstabelecimento;
     
+    @Column(columnDefinition = "LONGTEXT")
+    private String logoBase64;
+    
+    @Lob
+    @Column(columnDefinition = "LONGBLOB")
+    private byte[] logoEscPos;
+    
     @Column(nullable = false)
     private boolean ativa;
     

@@ -17,12 +17,31 @@
             id="tipoImpressora" 
             formControlName="tipoImpressora" 
             class="form-input-compact"
-            [disabled]="!isAdministrador()"
           >
             @for (tipo of tiposImpressora; track tipo.value) {
               <option [value]="tipo.value">{{ tipo.label }}</option>
             }
           </select>
+        </div>
+
+        <div class="form-row form-row-logo">
+          <label>Logo (PNG):</label>
+          <div class="logo-upload-container">
+            @if (logoPreview()) {
+              <div class="logo-preview">
+                <img [src]="logoPreview()" alt="Logo preview" />
+                <button type="button" class="btn-remover-logo" (click)="removerLogo()">✕</button>
+              </div>
+            } @else {
+              <input
+                #logoInput
+                type="file"
+                accept="image/png,image/jpeg"
+                (change)="onLogoSelecionado($event)"
+                class="logo-input"
+              />
+            }
+          </div>
         </div>
 
         <div class="form-row">
@@ -33,7 +52,6 @@
             formControlName="nomeEstabelecimento"
             class="form-input-compact"
             [class.invalid]="nomeEstabelecimento?.invalid && nomeEstabelecimento?.touched"
-            [disabled]="!isAdministrador()"
             placeholder="Ex: experimenta-ai-do-soneca"
           />
           @if (nomeEstabelecimento?.invalid && nomeEstabelecimento?.touched) {
@@ -48,7 +66,6 @@
             type="text"
             formControlName="enderecoEstabelecimento"
             class="form-input-compact"
-            [disabled]="!isAdministrador()"
             placeholder="Ex: Rua Exemplo, 123 - Centro"
           />
         </div>
@@ -60,7 +77,6 @@
             type="text"
             formControlName="telefoneEstabelecimento"
             class="form-input-compact"
-            [disabled]="!isAdministrador()"
             placeholder="Ex: (21) 97439-7966"
           />
         </div>
@@ -72,7 +88,6 @@
             type="text"
             formControlName="cnpjEstabelecimento"
             class="form-input-compact"
-            [disabled]="!isAdministrador()"
             placeholder="Ex: 12345678000190"
             maxlength="14"
           />

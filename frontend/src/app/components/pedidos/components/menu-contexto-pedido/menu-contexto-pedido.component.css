@@ -71,3 +71,32 @@
   color: #c62828;
 }
 
+.context-menu-section {
+  padding: 0.25rem 0;
+}
+
+.context-menu-section-title {
+  padding: 0.5rem 1rem 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.context-menu-divider {
+  height: 1px;
+  background: #e0e0e0;
+  margin: 0.25rem 0;
+}
+
+.context-menu-item-impressao {
+  color: #1976d2;
+  font-weight: 500;
+}
+
+.context-menu-item-impressao:hover {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+

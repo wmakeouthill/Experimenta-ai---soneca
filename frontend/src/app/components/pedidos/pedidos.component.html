@@ -272,6 +272,7 @@
     (onFechar)="fecharMenuContexto()"
     (onStatusAlterado)="onStatusAlteradoViaMenu($event)"
     (onCancelar)="onCancelarViaMenu($event)"
+    (onImprimirSegundaVia)="onImprimirSegundaViaViaMenu($event)"
   />
 
   <app-novo-pedido-modal
@@ -280,5 +281,14 @@
     (onFechar)="fecharFormulario()"
     (onCriarPedido)="onPedidoCriado($event)"
   />
+
+  <!-- Notificações -->
+  <div class="notificacoes-container">
+    @for (notificacao of notificacoes(); track notificacao.id) {
+      <div class="notificacao" [class.notificacao-sucesso]="notificacao.tipo === 'sucesso'" [class.notificacao-erro]="notificacao.tipo === 'erro'">
+        <span class="notificacao-mensagem">{{ notificacao.mensagem }}</span>
+      </div>
+    }
+  </div>
 </div>
 

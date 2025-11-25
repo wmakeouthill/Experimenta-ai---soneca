@@ -22,7 +22,8 @@ public class SalvarConfiguracaoImpressoraUseCase {
                     request.getNomeEstabelecimento(),
                     request.getEnderecoEstabelecimento(),
                     request.getTelefoneEstabelecimento(),
-                    request.getCnpjEstabelecimento()
+                    request.getCnpjEstabelecimento(),
+                    request.getLogoBase64()
             );
             ConfiguracaoImpressoraEntity salva = repository.salvar(configAtiva);
             return ConfiguracaoImpressoraDTO.de(salva);
@@ -32,7 +33,8 @@ public class SalvarConfiguracaoImpressoraUseCase {
                     request.getNomeEstabelecimento(),
                     request.getEnderecoEstabelecimento(),
                     request.getTelefoneEstabelecimento(),
-                    request.getCnpjEstabelecimento()
+                    request.getCnpjEstabelecimento(),
+                    request.getLogoBase64()
             );
             ConfiguracaoImpressoraEntity salva = repository.salvar(novaConfig);
             return ConfiguracaoImpressoraDTO.de(salva);

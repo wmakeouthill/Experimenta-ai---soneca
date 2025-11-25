@@ -19,24 +19,30 @@ public class CupomFiscal {
     private final String enderecoEstabelecimento;
     private final String telefoneEstabelecimento;
     private final String cnpjEstabelecimento;
+    private final String logoBase64;
+    private final byte[] logoEscPos;
     
     private CupomFiscal(PedidoDTO pedido, ConfiguracaoImpressora configuracaoImpressora,
                        String nomeEstabelecimento, String enderecoEstabelecimento,
-                       String telefoneEstabelecimento, String cnpjEstabelecimento) {
+                       String telefoneEstabelecimento, String cnpjEstabelecimento, 
+                       String logoBase64, byte[] logoEscPos) {
         this.pedido = pedido;
         this.configuracaoImpressora = configuracaoImpressora;
         this.nomeEstabelecimento = nomeEstabelecimento;
         this.enderecoEstabelecimento = enderecoEstabelecimento;
         this.telefoneEstabelecimento = telefoneEstabelecimento;
         this.cnpjEstabelecimento = cnpjEstabelecimento;
+        this.logoBase64 = logoBase64;
+        this.logoEscPos = logoEscPos;
     }
     
     public static CupomFiscal criar(PedidoDTO pedido, ConfiguracaoImpressora configuracaoImpressora,
                                     String nomeEstabelecimento, String enderecoEstabelecimento,
-                                    String telefoneEstabelecimento, String cnpjEstabelecimento) {
+                                    String telefoneEstabelecimento, String cnpjEstabelecimento, 
+                                    String logoBase64, byte[] logoEscPos) {
         validarDados(pedido, configuracaoImpressora, nomeEstabelecimento);
         return new CupomFiscal(pedido, configuracaoImpressora, nomeEstabelecimento,
-                enderecoEstabelecimento, telefoneEstabelecimento, cnpjEstabelecimento);
+                enderecoEstabelecimento, telefoneEstabelecimento, cnpjEstabelecimento, logoBase64, logoEscPos);
     }
     
     public List<ItemPedidoDTO> getItens() {

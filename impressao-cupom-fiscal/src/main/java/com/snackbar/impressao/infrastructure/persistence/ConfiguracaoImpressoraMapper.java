@@ -21,6 +21,8 @@ public class ConfiguracaoImpressoraMapper {
                 .enderecoEstabelecimento(domain.getEnderecoEstabelecimento())
                 .telefoneEstabelecimento(domain.getTelefoneEstabelecimento())
                 .cnpjEstabelecimento(domain.getCnpjEstabelecimento())
+                .logoBase64(domain.getLogoBase64())
+                .logoEscPos(domain.getLogoEscPos())
                 .ativa(domain.isAtiva())
                 .createdAt(domain.getCreatedAt())
                 .updatedAt(domain.getUpdatedAt())
@@ -39,7 +41,8 @@ public class ConfiguracaoImpressoraMapper {
                 entity.getNomeEstabelecimento(),
                 entity.getEnderecoEstabelecimento(),
                 entity.getTelefoneEstabelecimento(),
-                entity.getCnpjEstabelecimento()
+                entity.getCnpjEstabelecimento(),
+                entity.getLogoBase64()
         );
         
         domain.restaurarDoBanco(
@@ -48,6 +51,7 @@ public class ConfiguracaoImpressoraMapper {
                 entity.getUpdatedAt()
         );
         
+        domain.restaurarLogoEscPos(entity.getLogoEscPos());
         domain.restaurarEstadoAtivo(entity.isAtiva());
         
         return domain;

@@ -57,8 +57,9 @@ impressao:
   # Configuração para EPSON TM-T20
   epson:
     tm-t20:
-      device: ${IMPRESSAO_EPSON_DEVICE:/dev/usb/lp0} # Linux padrão, ou COM3 no Windows
-      modo-teste: ${IMPRESSAO_EPSON_MODO_TESTE:true} # true = salva em arquivo .prn
+      # Formato: IP:PORTA para rede (ex: 127.0.0.1:9100) ou caminho local (ex: /dev/usb/lp0, COM3)
+      device: ${IMPRESSAO_EPSON_DEVICE:127.0.0.1:9100} # Padrão: impressora virtual, ou /dev/usb/lp0 (Linux), COM3 (Windows)
+      modo-teste: ${IMPRESSAO_EPSON_MODO_TESTE:false} # false = usa device configurado, true = salva em arquivo .prn
 
   # Configuração para DARUMA DR-800
   daruma:

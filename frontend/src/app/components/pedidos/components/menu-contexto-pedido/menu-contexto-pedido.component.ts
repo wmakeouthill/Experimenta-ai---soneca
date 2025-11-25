@@ -17,6 +17,7 @@ export class MenuContextoPedidoComponent {
   readonly onFechar = output<void>();
   readonly onStatusAlterado = output<{ pedidoId: string; novoStatus: StatusPedido }>();
   readonly onCancelar = output<string>();
+  readonly onImprimirSegundaVia = output<string>();
 
   readonly StatusPedido = StatusPedido;
 
@@ -73,6 +74,14 @@ export class MenuContextoPedidoComponent {
 
   fechar(): void {
     this.onFechar.emit();
+  }
+
+  imprimirSegundaVia(): void {
+    const pedido = this.pedido();
+    if (pedido) {
+      this.onImprimirSegundaVia.emit(pedido.id);
+    }
+    this.fechar();
   }
 }
 

@@ -6,6 +6,7 @@ import com.snackbar.impressao.domain.ports.ImpressoraPort;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -22,9 +23,30 @@ public abstract class BaseImpressoraAdapter implements ImpressoraPort {
             outputStream.write(dadosImpressao);
             outputStream.flush();
             fecharOutputStream(outputStream);
+            
+            String nomeArquivoTeste = obterNomeArquivoTeste(cupomFiscal);
+            if (nomeArquivoTeste != null && nomeArquivoTeste.endsWith(".prn")) {
+                salvarVersaoTexto(nomeArquivoTeste, cupomFiscal);
+            }
         } catch (IOException e) {
             throw new ImpressaoException("Erro ao imprimir cupom fiscal: " + e.getMessage(), e);
         }
+    }
+    
+    private void salvarVersaoTexto(String nomeArquivoPrn, CupomFiscal cupomFiscal) {
+        try {
+            String nomeArquivoTxt = nomeArquivoPrn.replace(".prn", ".txt");
+            String conteudoLegivel = FormatoCupomFiscal.formatarCupomLegivel(cupomFiscal);
+            Path caminhoTxt = Paths.get(nomeArquivoTxt);
+            Files.write(caminhoTxt, conteudoLegivel.getBytes(StandardCharsets.UTF_8), 
+                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        } catch (Exception e) {
+            System.err.println("Aviso: Não foi possível salvar versão texto do cupom: " + e.getMessage());
+        }
+    }
+    
+    protected String obterNomeArquivoTeste(CupomFiscal cupomFiscal) {
+        return null;
     }
     
     @Override

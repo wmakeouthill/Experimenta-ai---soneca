@@ -18,6 +18,7 @@ public class ConfiguracaoImpressoraDTO {
     private String enderecoEstabelecimento;
     private String telefoneEstabelecimento;
     private String cnpjEstabelecimento;
+    private String logoBase64;
     private boolean ativa;
     
     public static ConfiguracaoImpressoraDTO de(ConfiguracaoImpressoraEntity config) {
@@ -28,6 +29,7 @@ public class ConfiguracaoImpressoraDTO {
                 .enderecoEstabelecimento(config.getEnderecoEstabelecimento())
                 .telefoneEstabelecimento(config.getTelefoneEstabelecimento())
                 .cnpjEstabelecimento(config.getCnpjEstabelecimento())
+                .logoBase64(config.getLogoBase64())
                 .ativa(config.isAtiva())
                 .build();
     }

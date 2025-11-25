@@ -20,18 +20,29 @@ public class EpsonTmT20ImpressoraAdapter extends BaseImpressoraAdapter {
     @Value("${impressao.epson.tm-t20.modo-teste:true}")
     private boolean modoTeste;
     
+    private String nomeArquivoTeste;
+    
     @Override
     protected OutputStream obterOutputStream(CupomFiscal cupomFiscal) throws ImpressaoException {
         if (modoTeste) {
-            String nomeArquivo = "cupom_epson_" + cupomFiscal.getPedido().getNumeroPedido() + ".prn";
-            return criarOutputStreamArquivo(nomeArquivo);
+            nomeArquivoTeste = "cupom_epson_" + cupomFiscal.getPedido().getNumeroPedido() + ".prn";
+            return criarOutputStreamArquivo(nomeArquivoTeste);
         }
         
         try {
-            return new java.io.FileOutputStream(devicePath);
+            if (ConexaoImpressoraUtil.eConexaoRede(devicePath)) {
+                return ConexaoImpressoraUtil.criarConexaoRede(devicePath);
+            } else {
+                return ConexaoImpressoraUtil.criarConexaoLocal(devicePath);
+            }
         } catch (IOException e) {
             throw new ImpressaoException("Erro ao conectar com impressora EPSON TM-T20: " + e.getMessage(), e);
         }
+    }
+    
+    @Override
+    protected String obterNomeArquivoTeste(CupomFiscal cupomFiscal) {
+        return nomeArquivoTeste;
     }
     
     @Override
@@ -45,7 +56,11 @@ public class EpsonTmT20ImpressoraAdapter extends BaseImpressoraAdapter {
             return true;
         }
         
-        return Paths.get(devicePath).toFile().exists();
+        if (ConexaoImpressoraUtil.eConexaoRede(devicePath)) {
+            return ConexaoImpressoraUtil.verificarConexaoRede(devicePath);
+        } else {
+            return ConexaoImpressoraUtil.verificarConexaoLocal(devicePath);
+        }
     }
 }
 

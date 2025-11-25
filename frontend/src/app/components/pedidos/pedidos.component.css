@@ -6,6 +6,81 @@
   position: relative;
 }
 
+/* Notificações */
+.notificacoes-container {
+  position: fixed;
+  top: 100px;
+  right: 20px;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  pointer-events: none;
+}
+
+.notificacao {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 300px;
+  max-width: 400px;
+  animation: slideInRight 0.3s ease-out, fadeOut 0.3s ease-in 1.7s;
+  pointer-events: auto;
+  border-left: 4px solid;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.notificacao-sucesso {
+  border-left-color: #4CAF50;
+  background: linear-gradient(135deg, #ffffff 0%, #f1f8f4 100%);
+}
+
+.notificacao-erro {
+  border-left-color: #F44336;
+  background: linear-gradient(135deg, #ffffff 0%, #fff5f5 100%);
+}
+
+.notificacao-mensagem {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #333;
+  line-height: 1.4;
+  flex: 1;
+}
+
+.notificacao-sucesso .notificacao-mensagem {
+  color: #2e7d32;
+}
+
+.notificacao-erro .notificacao-mensagem {
+  color: #c62828;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
 /* Header */
 .pedidos-header {
   background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);

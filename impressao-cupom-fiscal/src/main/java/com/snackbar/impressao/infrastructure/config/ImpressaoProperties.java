@@ -26,8 +26,8 @@ public class ImpressaoProperties {
         @Getter
         @Setter
         public static class TmT20Config {
-            private String device = "/dev/usb/lp0";
-            private boolean modoTeste = true;
+            private String device = "127.0.0.1:9100";
+            private boolean modoTeste = false;
         }
     }
     
