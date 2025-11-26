@@ -15,7 +15,10 @@ public class FormatoCupomFiscal {
     public static byte[] formatarCupom(CupomFiscal cupomFiscal) {
         byte[] cupom = new byte[0];
         
-        cupom = concatenar(cupom, EscPosComandos.inicializar());
+        // 1. Reset inicial - garante estado limpo (especialmente importante para autenticadoras)
+        cupom = concatenar(cupom, EscPosComandos.resetar());
+        
+        // 2. Pequeno delay implícito (inicialização)
         cupom = concatenar(cupom, EscPosComandos.alinharCentro());
         
         byte[] logoEscPos = obterLogoEscPos(cupomFiscal);
@@ -39,8 +42,20 @@ public class FormatoCupomFiscal {
         cupom = concatenar(cupom, formatarMeiosPagamento(cupomFiscal.getMeiosPagamento()));
         cupom = concatenar(cupom, EscPosComandos.linhaSeparadora(LARGURA_PADRAO));
         cupom = concatenar(cupom, formatarRodape(cupomFiscal));
-        cupom = concatenar(cupom, EscPosComandos.linhaEmBranco(2));
+        
+        // IMPORTANTE: Para autenticadoras, sempre adicionar linhas em branco suficientes
+        // antes do corte para garantir que todo conteúdo foi impresso
+        // e evitar travamento/status amarelo
+        cupom = concatenar(cupom, EscPosComandos.linhaEmBranco(3));
+        
+        // Limpa buffer antes do corte (força processamento de todos os comandos)
+        cupom = concatenar(cupom, EscPosComandos.limparBuffer());
+        
+        // Corte completo do papel
         cupom = concatenar(cupom, EscPosComandos.cortarPapel());
+        
+        // Feed adicional após corte (ajuda autenticadoras a liberar papel)
+        cupom = concatenar(cupom, EscPosComandos.avancoLinha(1));
         
         return cupom;
     }

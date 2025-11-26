@@ -80,6 +80,9 @@ public class RawPrinter {
       EndPagePrinter(hPrinter);
       EndDocPrinter(hPrinter);
       ClosePrinter(hPrinter);
+
+      // IMPORTANTE: Para impressoras autenticadoras, todos os bytes foram escritos
+      // O Windows spooler gerencia a fila e processamento
       return "SUCESSO: Dados enviados para spooler do Windows.";
     } catch (Exception ex) {
       if (hPrinter != IntPtr.Zero) {

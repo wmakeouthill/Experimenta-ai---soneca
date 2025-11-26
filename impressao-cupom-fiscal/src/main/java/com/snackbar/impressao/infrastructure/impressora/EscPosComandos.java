@@ -11,12 +11,49 @@ public class EscPosComandos {
         return new byte[]{ESC, '@'};
     }
     
+    /**
+     * Corta o papel completamente (corte total)
+     * IMPORTANTE: Sempre adicionar linhas em branco antes do corte
+     * para garantir que todo o conteúdo foi impresso
+     */
     public static byte[] cortarPapel() {
         return new byte[]{GS, 'V', 66, 0};
     }
     
+    /**
+     * Corta o papel parcialmente (perfuração sem corte completo)
+     * Útil para cupons que precisam ser destacados manualmente
+     */
     public static byte[] cortarPapelParcial() {
         return new byte[]{GS, 'V', 65, 0};
+    }
+    
+    /**
+     * Reseta a impressora - limpa buffer e configurações
+     * IMPORTANTE: Usar no início para garantir estado limpo
+     */
+    public static byte[] resetar() {
+        return new byte[]{ESC, '@'};
+    }
+    
+    /**
+     * Limpa o buffer da impressora
+     * Força a impressora a processar todos os comandos pendentes
+     */
+    public static byte[] limparBuffer() {
+        return new byte[]{ESC, 'i'};
+    }
+    
+    /**
+     * Força avanço de papel (feed)
+     * Útil antes do corte para garantir que todo conteúdo foi impresso
+     */
+    public static byte[] avancoLinha(int linhas) {
+        byte[] cmd = new byte[linhas];
+        for (int i = 0; i < linhas; i++) {
+            cmd[i] = LF;
+        }
+        return cmd;
     }
     
     public static byte[] alinharEsquerda() {
