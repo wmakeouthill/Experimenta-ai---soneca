@@ -6,6 +6,8 @@ import com.snackbar.pedidos.application.usecases.BuscarPedidoPorIdUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
+
 @Component
 @RequiredArgsConstructor
 public class PedidoServiceAdapter implements PedidoServicePort {
@@ -14,7 +16,7 @@ public class PedidoServiceAdapter implements PedidoServicePort {
     
     @Override
     public PedidoDTO buscarPedidoPorId(String pedidoId) {
-        return buscarPedidoPorIdUseCase.executar(pedidoId);
+        return buscarPedidoPorIdUseCase.executar(Objects.requireNonNull(pedidoId));
     }
 }
 

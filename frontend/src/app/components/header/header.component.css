@@ -101,9 +101,28 @@
 }
 
 @media (max-width: 768px) {
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+
   .header-content {
     flex-wrap: wrap;
     padding: 12px 16px;
+    gap: 12px;
+  }
+
+  .header-left {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .logo h1 {
+    font-size: clamp(1.1rem, 5vw, 1.5rem);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   
   .header-nav {
@@ -112,10 +131,74 @@
     justify-content: flex-start;
     overflow-x: auto;
     padding: 8px 0;
+    gap: 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .header-nav::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .header-nav::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .header-nav::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+  }
+  
+  .header-nav a {
+    padding: 8px 14px;
+    font-size: 14px;
+    white-space: nowrap;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+  }
+
+  .header-right {
+    gap: 12px;
   }
   
   .user-info {
     display: none;
+  }
+
+  .btn-logout {
+    padding: 8px 14px;
+    font-size: 13px;
+    min-height: 40px;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-content {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .logo h1 {
+    font-size: clamp(1rem, 6vw, 1.3rem);
+  }
+
+  .header-nav {
+    padding: 6px 0;
+    gap: 3px;
+  }
+
+  .header-nav a {
+    padding: 6px 12px;
+    font-size: 13px;
+    min-height: 36px;
+  }
+
+  .btn-logout {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-height: 36px;
   }
 }
 

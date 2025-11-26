@@ -27,6 +27,11 @@ public class SecurityConfig {
     private static final String PRODUTOS_PATH_PATTERN = "/api/produtos/**";
     private static final String CATEGORIAS_PATH_PATTERN = "/api/categorias/**";
     private static final String PEDIDOS_PATH_PATTERN = "/api/pedidos/**";
+    private static final String SESSOES_TRABALHO_PATH = "/api/sessoes-trabalho";
+    private static final String SESSOES_TRABALHO_PATTERN = "/api/sessoes-trabalho/**";
+    private static final String CONFIG_ANIMACAO_PATH = "/api/config-animacao";
+    private static final String CONFIG_ANIMACAO_PATTERN = "/api/config-animacao/**";
+    private static final String HTTP_METHOD_DELETE = "DELETE";
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
@@ -38,9 +43,11 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // Recursos estáticos e frontend Angular (PÚBLICO - sem autenticação)
-                        .requestMatchers("/", "/index.html", "/favicon.ico", "/*.js", "/*.css", "/*.ico", "/*.png", "/*.jpg", "/*.svg", "/*.woff", "/*.woff2", "/*.ttf", "/*.eot").permitAll()
+                        .requestMatchers("/", "/index.html", "/favicon.ico", "/*.js", "/*.css", "/*.ico", "/*.png",
+                                "/*.jpg", "/*.svg", "/*.woff", "/*.woff2", "/*.ttf", "/*.eot")
+                        .permitAll()
                         .requestMatchers("/assets/**", "/styles/**").permitAll()
-                        
+
                         // Endpoints públicos (sem autenticação)
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/api/status").permitAll()
@@ -60,7 +67,7 @@ public class SecurityConfig {
                         .hasRole(ROLE_ADMINISTRADOR)
                         .requestMatchers("PUT", PRODUTOS_PATH_PATTERN)
                         .hasRole(ROLE_ADMINISTRADOR)
-                        .requestMatchers("DELETE", PRODUTOS_PATH_PATTERN)
+                        .requestMatchers(HTTP_METHOD_DELETE, PRODUTOS_PATH_PATTERN)
                         .hasRole(ROLE_ADMINISTRADOR)
                         .requestMatchers("GET", CATEGORIAS_PATH_PATTERN)
                         .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
@@ -68,7 +75,7 @@ public class SecurityConfig {
                         .hasRole(ROLE_ADMINISTRADOR)
                         .requestMatchers("PUT", CATEGORIAS_PATH_PATTERN)
                         .hasRole(ROLE_ADMINISTRADOR)
-                        .requestMatchers("DELETE", CATEGORIAS_PATH_PATTERN)
+                        .requestMatchers(HTTP_METHOD_DELETE, CATEGORIAS_PATH_PATTERN)
                         .hasRole(ROLE_ADMINISTRADOR)
 
                         // Endpoints de pedidos - ADMINISTRADOR e OPERADOR
@@ -80,13 +87,13 @@ public class SecurityConfig {
 
                         // Endpoints de sessões de trabalho - Leitura para ADMINISTRADOR e OPERADOR,
                         // escrita apenas ADMINISTRADOR
-                        .requestMatchers("GET", "/api/sessoes-trabalho", "/api/sessoes-trabalho/**")
+                        .requestMatchers("GET", SESSOES_TRABALHO_PATH, SESSOES_TRABALHO_PATTERN)
                         .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
-                        .requestMatchers("POST", "/api/sessoes-trabalho", "/api/sessoes-trabalho/**")
+                        .requestMatchers("POST", SESSOES_TRABALHO_PATH, SESSOES_TRABALHO_PATTERN)
                         .hasRole(ROLE_ADMINISTRADOR)
-                        .requestMatchers("PUT", "/api/sessoes-trabalho", "/api/sessoes-trabalho/**")
+                        .requestMatchers("PUT", SESSOES_TRABALHO_PATH, SESSOES_TRABALHO_PATTERN)
                         .hasRole(ROLE_ADMINISTRADOR)
-                        .requestMatchers("DELETE", "/api/sessoes-trabalho", "/api/sessoes-trabalho/**")
+                        .requestMatchers(HTTP_METHOD_DELETE, SESSOES_TRABALHO_PATH, SESSOES_TRABALHO_PATTERN)
                         .hasRole(ROLE_ADMINISTRADOR)
 
                         // Endpoints de histórico de sessões - APENAS ADMINISTRADOR
@@ -105,13 +112,13 @@ public class SecurityConfig {
 
                         // Endpoints de configuração de animação - Leitura para ADMINISTRADOR e
                         // OPERADOR, escrita apenas ADMINISTRADOR
-                        .requestMatchers("GET", "/api/config-animacao", "/api/config-animacao/**")
+                        .requestMatchers("GET", CONFIG_ANIMACAO_PATH, CONFIG_ANIMACAO_PATTERN)
                         .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
-                        .requestMatchers("POST", "/api/config-animacao", "/api/config-animacao/**")
+                        .requestMatchers("POST", CONFIG_ANIMACAO_PATH, CONFIG_ANIMACAO_PATTERN)
                         .hasRole(ROLE_ADMINISTRADOR)
-                        .requestMatchers("PUT", "/api/config-animacao", "/api/config-animacao/**")
+                        .requestMatchers("PUT", CONFIG_ANIMACAO_PATH, CONFIG_ANIMACAO_PATTERN)
                         .hasRole(ROLE_ADMINISTRADOR)
-                        .requestMatchers("DELETE", "/api/config-animacao", "/api/config-animacao/**")
+                        .requestMatchers(HTTP_METHOD_DELETE, CONFIG_ANIMACAO_PATH, CONFIG_ANIMACAO_PATTERN)
                         .hasRole(ROLE_ADMINISTRADOR)
 
                         // Endpoints de impressão - Configuração apenas ADMINISTRADOR, impressão
@@ -121,6 +128,8 @@ public class SecurityConfig {
                         .requestMatchers("POST", "/api/impressao/configuracao")
                         .hasRole(ROLE_ADMINISTRADOR)
                         .requestMatchers("POST", "/api/impressao/cupom-fiscal")
+                        .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
+                        .requestMatchers("POST", "/api/impressao/cupom-fiscal/formatar")
                         .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
 
                         // Qualquer outro endpoint exige autenticação por padrão
@@ -139,7 +148,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of("*"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", HTTP_METHOD_DELETE, "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of("Authorization"));
 

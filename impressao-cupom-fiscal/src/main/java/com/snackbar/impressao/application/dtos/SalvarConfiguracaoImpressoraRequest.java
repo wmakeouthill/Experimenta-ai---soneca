@@ -1,6 +1,7 @@
 package com.snackbar.impressao.application.dtos;
 
 import com.snackbar.impressao.domain.entities.TipoImpressora;
+import com.snackbar.impressao.domain.valueobjects.TamanhoFonteCupom;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -13,16 +14,21 @@ import lombok.NoArgsConstructor;
 public class SalvarConfiguracaoImpressoraRequest {
     @NotNull(message = "Tipo de impressora é obrigatório")
     private TipoImpressora tipoImpressora;
-    
+
+    private String devicePath;
+
+    private Integer larguraPapel;
+
+    private TamanhoFonteCupom tamanhoFonte;
+
     @NotBlank(message = "Nome do estabelecimento é obrigatório")
     private String nomeEstabelecimento;
-    
+
     private String enderecoEstabelecimento;
-    
+
     private String telefoneEstabelecimento;
-    
+
     private String cnpjEstabelecimento;
-    
+
     private String logoBase64;
 }
-

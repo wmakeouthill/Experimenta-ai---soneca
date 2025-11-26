@@ -96,17 +96,28 @@ public class ImagemEscPosUtil {
         int alturaH = (altura >> 8) & 0xFF;
         
         ByteArrayOutputStream comando = new ByteArrayOutputStream();
+        
+        // Inicializa impressora antes de enviar bitmap
+        comando.write(EscPosComandos.ESC);
+        comando.write('@');
+        
+        // Comando GS (v 0) para imprimir bitmap rasterizado
+        // Formato: GS v 0 nL nH vL vH [dados]
         comando.write(EscPosComandos.GS);
         comando.write('v');
-        comando.write(0);
-        comando.write(nL);
-        comando.write(nH);
-        comando.write(alturaL);
-        comando.write(alturaH);
+        comando.write(0); // m = 0 (modo normal)
+        comando.write(nL); // nL = largura em bytes (LSB)
+        comando.write(nH); // nH = largura em bytes (MSB)
+        comando.write(alturaL); // vL = altura em pixels (LSB)
+        comando.write(alturaH); // vH = altura em pixels (MSB)
         
+        // Dados da imagem (bitmap)
         for (byte b : dadosImagem) {
             comando.write(b);
         }
+        
+        // Adiciona quebra de linha após a imagem
+        comando.write(EscPosComandos.LF);
         
         return comando.toByteArray();
     }

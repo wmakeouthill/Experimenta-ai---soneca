@@ -4,6 +4,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ImpressaoService, TipoImpressora } from '../../../../services/impressao.service';
 import { AuthService } from '../../../../services/auth.service';
 import { UploadUtil } from '../../../../utils/upload.util';
+import { ImpressoraUtil } from '../../../../utils/impressora.util';
+import { ElectronImpressoraService, ImpressoraSistema } from '../../../../services/electron-impressora.service';
 
 @Component({
   selector: 'app-config-impressora',
@@ -17,6 +19,7 @@ export class ConfigImpressoraComponent implements OnInit {
   private readonly impressaoService = inject(ImpressaoService);
   private readonly authService = inject(AuthService);
   private readonly fb = inject(FormBuilder);
+  private readonly electronImpressoraService = inject(ElectronImpressoraService);
   
   readonly isAdministrador = computed(() => this.authService.isAdministrador());
   @ViewChild('logoInput') logoInput?: ElementRef<HTMLInputElement>;
@@ -27,6 +30,21 @@ export class ConfigImpressoraComponent implements OnInit {
   readonly estaCarregando = signal(false);
   readonly mensagemImpressao = signal<string | null>(null);
   readonly logoPreview = signal<string | null>(null);
+  readonly mostrarAjudaDevicePath = signal(false);
+  readonly erroDevicePath = signal<string | null>(null);
+  readonly abaAjudaAtiva = signal<'windows' | 'linux' | 'rede'>('windows');
+  readonly impressorasDisponiveis = signal<ImpressoraSistema[]>([]);
+  readonly estaCarregandoImpressoras = signal(false);
+  readonly estaNoElectron = computed(() => this.electronImpressoraService.estaRodandoNoElectron());
+  readonly tamanhosPapel = [
+    { value: 58, label: '58 mm (bobina estreita)' },
+    { value: 80, label: '80 mm (bobina larga)' }
+  ];
+  readonly tamanhosFonte = [
+    { value: 'PEQUENA', label: 'Pequena (mais itens por página)' },
+    { value: 'NORMAL', label: 'Normal (equilíbrio)' },
+    { value: 'GRANDE', label: 'Grande (mais legível)' }
+  ];
   
   readonly formImpressora: FormGroup;
   
@@ -37,8 +55,15 @@ export class ConfigImpressoraComponent implements OnInit {
   ];
 
   constructor() {
+    // No Electron, usa GENÉRICA_ESCPOS como padrão (funciona com a maioria das impressoras)
+    // No Web, mantém EPSON_TM_T20 como padrão para compatibilidade
+    const tipoPadrao = TipoImpressora.GENERICA_ESCPOS;
+    
     this.formImpressora = this.fb.group({
-      tipoImpressora: [TipoImpressora.EPSON_TM_T20, [Validators.required]],
+      tipoImpressora: [tipoPadrao, [Validators.required]],
+      devicePath: [''], // Ex: 127.0.0.1:9100 (rede), COM3 (Windows), /dev/usb/lp0 (Linux)
+      larguraPapel: [80],
+      tamanhoFonte: ['NORMAL'],
       nomeEstabelecimento: ['experimenta-ai-do-soneca', [Validators.required]],
       enderecoEstabelecimento: [''],
       telefoneEstabelecimento: [''],
@@ -53,19 +78,46 @@ export class ConfigImpressoraComponent implements OnInit {
         this.formImpressora.disable();
       }
     });
+
+    // Validação em tempo real do devicePath
+    this.formImpressora.get('devicePath')?.valueChanges.subscribe(value => {
+      if (value && value.trim().length > 0) {
+        const validacao = ImpressoraUtil.validarDevicePath(value);
+        if (!validacao.valido) {
+          this.erroDevicePath.set(validacao.erro || 'Formato inválido');
+        } else {
+          this.erroDevicePath.set(null);
+        }
+      } else {
+        this.erroDevicePath.set(null);
+      }
+    });
+
+    // No Electron, carrega impressoras automaticamente ao inicializar
+    // Não precisa mais mudar baseado no tipo, pois todas usam ESC/POS genérico
   }
 
-  ngOnInit(): void {
-    this.carregarConfiguracao();
-  }
+  readonly instrucoes = ImpressoraUtil.obterInstrucoesDevicePath();
+  readonly soDetectado = computed(() => ImpressoraUtil.detectarSO());
+  readonly placeholderSugerido = ImpressoraUtil.obterPlaceholderSugerido();
+
 
   carregarConfiguracao(): void {
     this.estaCarregando.set(true);
     this.impressaoService.buscarConfiguracao().subscribe({
-      next: (config) => {
+      next: async (config) => {
         if (config) {
+          // No Electron, sempre usa GENERICA_ESCPOS (padrão)
+          // No Web, mantém o tipo configurado ou usa padrão
+          const tipoParaUsar = this.estaNoElectron() 
+            ? TipoImpressora.GENERICA_ESCPOS 
+            : (config.tipoImpressora || TipoImpressora.GENERICA_ESCPOS);
+          
           this.formImpressora.patchValue({
-            tipoImpressora: config.tipoImpressora,
+            tipoImpressora: tipoParaUsar,
+            devicePath: config.devicePath || '',
+            larguraPapel: config.larguraPapel || 80,
+            tamanhoFonte: config.tamanhoFonte || 'NORMAL',
             nomeEstabelecimento: config.nomeEstabelecimento,
             enderecoEstabelecimento: config.enderecoEstabelecimento || '',
             telefoneEstabelecimento: config.telefoneEstabelecimento || '',
@@ -75,11 +127,25 @@ export class ConfigImpressoraComponent implements OnInit {
           if (config.logoBase64) {
             this.logoPreview.set(config.logoBase64);
           }
+        } else {
+          // Se não há configuração salva e está no Electron, seleciona impressora padrão
+          if (this.estaNoElectron()) {
+            // Aguarda um pouco para garantir que as impressoras foram carregadas
+            setTimeout(async () => {
+              await this.selecionarImpressoraPadraoSeNecessario();
+            }, 1000);
+          }
         }
         this.estaCarregando.set(false);
       },
       error: () => {
         this.estaCarregando.set(false);
+        // Em caso de erro, também tenta selecionar impressora padrão
+        if (this.estaNoElectron()) {
+          setTimeout(async () => {
+            await this.selecionarImpressoraPadraoSeNecessario();
+          }, 1000);
+        }
       }
     });
   }
@@ -129,8 +195,24 @@ export class ConfigImpressoraComponent implements OnInit {
 
     const config = this.formImpressora.value;
     
+    // No Electron, sempre salva como GENERICA_ESCPOS
+    // No Web, mantém o tipo selecionado
+    const tipoParaSalvar = this.estaNoElectron() 
+      ? TipoImpressora.GENERICA_ESCPOS 
+      : config.tipoImpressora;
+    
+    // Valida se devicePath foi preenchido (obrigatório)
+    if (!config.devicePath || config.devicePath.trim().length === 0) {
+      this.mensagemImpressao.set('❌ Selecione uma impressora ou informe o caminho do dispositivo');
+      this.estaSalvando.set(false);
+      return;
+    }
+    
     this.impressaoService.salvarConfiguracao({
-      tipoImpressora: config.tipoImpressora,
+      tipoImpressora: tipoParaSalvar,
+      devicePath: config.devicePath?.trim() || undefined,
+      larguraPapel: config.larguraPapel || 80,
+      tamanhoFonte: config.tamanhoFonte || 'NORMAL',
       nomeEstabelecimento: config.nomeEstabelecimento,
       enderecoEstabelecimento: config.enderecoEstabelecimento,
       telefoneEstabelecimento: config.telefoneEstabelecimento,
@@ -156,13 +238,25 @@ export class ConfigImpressoraComponent implements OnInit {
       return;
     }
 
+    const config = this.formImpressora.value;
+    
+    // Valida se devicePath foi preenchido
+    if (!config.devicePath || config.devicePath.trim().length === 0) {
+      this.mensagemImpressao.set('❌ Selecione uma impressora antes de testar');
+      return;
+    }
+
     this.estaImprimindo.set(true);
     this.mensagemImpressao.set(null);
 
-    const config = this.formImpressora.value;
+    // No Electron, sempre usa GENERICA_ESCPOS
+    const tipoParaTeste = this.estaNoElectron() 
+      ? TipoImpressora.GENERICA_ESCPOS 
+      : config.tipoImpressora;
     
     this.impressaoService.imprimirCupomTeste({
-      tipoImpressora: config.tipoImpressora,
+      tipoImpressora: tipoParaTeste,
+      devicePath: config.devicePath, // Passa o devicePath configurado
       nomeEstabelecimento: config.nomeEstabelecimento,
       enderecoEstabelecimento: config.enderecoEstabelecimento,
       telefoneEstabelecimento: config.telefoneEstabelecimento,
@@ -178,8 +272,38 @@ export class ConfigImpressoraComponent implements OnInit {
       },
       error: (error) => {
         this.estaImprimindo.set(false);
-        this.mensagemImpressao.set('❌ Erro ao imprimir: ' + (error.error?.message || error.message || 'Erro desconhecido'));
+        
+        // Tratamento específico de erros de autenticação
+        if (error.status === 401 || error.status === 403) {
+          this.mensagemImpressao.set('❌ Erro de autenticação. Faça login novamente.');
+          console.error('Erro de autenticação:', error);
+          // O authErrorInterceptor já vai redirecionar para login
+          return;
+        }
+        
+        // Tratamento de erro 400 (validação ou outro erro)
+        let mensagemErro = 'Erro desconhecido';
+        if (error.error) {
+          if (error.error.mensagem) {
+            mensagemErro = error.error.mensagem;
+          } else if (error.error.message) {
+            mensagemErro = error.error.message;
+          } else if (error.error.errors) {
+            const erros = Object.values(error.error.errors).join(', ');
+            mensagemErro = `Erro de validação: ${erros}`;
+          }
+        } else if (error.message) {
+          mensagemErro = error.message;
+        }
+        
+        this.mensagemImpressao.set('❌ Erro ao imprimir: ' + mensagemErro);
         console.error('Erro ao imprimir:', error);
+        console.error('Detalhes do erro:', {
+          status: error.status,
+          statusText: error.statusText,
+          error: error.error,
+          headers: error.headers
+        });
       }
     });
   }
@@ -190,6 +314,152 @@ export class ConfigImpressoraComponent implements OnInit {
 
   get nomeEstabelecimento() {
     return this.formImpressora.get('nomeEstabelecimento');
+  }
+
+  alternarAjudaDevicePath(): void {
+    this.mostrarAjudaDevicePath.update(v => !v);
+  }
+
+  obterInstrucoesParaSO(): string[] {
+    const aba = this.abaAjudaAtiva();
+    if (aba === 'windows') {
+      return this.instrucoes.windows;
+    } else if (aba === 'linux') {
+      return this.instrucoes.linux;
+    } else {
+      return this.instrucoes.rede;
+    }
+  }
+  
+  ngOnInit(): void {
+    // Define a aba inicial baseada no SO detectado
+    const so = ImpressoraUtil.detectarSO();
+    if (so === 'windows') {
+      this.abaAjudaAtiva.set('windows');
+    } else if (so === 'linux') {
+      this.abaAjudaAtiva.set('linux');
+    } else {
+      this.abaAjudaAtiva.set('windows'); // Padrão
+    }
+    
+    this.carregarConfiguracao();
+    
+    // Se estiver rodando no Electron, carrega impressoras automaticamente
+    if (this.estaNoElectron()) {
+      // Aguarda um pouco para garantir que a configuração foi carregada
+      setTimeout(() => {
+        this.carregarImpressorasDisponiveis();
+      }, 500);
+    }
+  }
+
+  /**
+   * Seleciona automaticamente a impressora padrão se não houver configuração salva
+   */
+  async selecionarImpressoraPadraoSeNecessario(): Promise<void> {
+    // Só funciona no Electron
+    if (!this.estaNoElectron()) {
+      return;
+    }
+
+    // Verifica se já tem devicePath configurado
+    const devicePathAtual = this.formImpressora.get('devicePath')?.value;
+    if (devicePathAtual && devicePathAtual.trim().length > 0) {
+      return; // Já tem impressora configurada
+    }
+
+    try {
+      // Obtém impressora padrão
+      const padrao = await this.electronImpressoraService.obterImpressoraPadrao();
+      if (padrao) {
+        // Seleciona automaticamente a impressora padrão
+        this.selecionarImpressora(padrao);
+        console.log('✅ Impressora padrão selecionada automaticamente:', padrao.name);
+      }
+    } catch (error) {
+      console.warn('⚠️ Não foi possível selecionar impressora padrão:', error);
+    }
+  }
+
+  async carregarImpressorasDisponiveis(): Promise<void> {
+    if (!this.estaNoElectron()) {
+      return;
+    }
+
+    this.estaCarregandoImpressoras.set(true);
+    this.impressorasDisponiveis.set([]); // Limpa lista anterior
+    this.mensagemImpressao.set(null);
+    
+    try {
+      const impressoras = await this.electronImpressoraService.listarImpressoras();
+      
+      if (impressoras.length === 0) {
+        this.mensagemImpressao.set('⚠️ Nenhuma impressora detectada. Verifique se há impressoras instaladas no sistema.');
+        this.impressorasDisponiveis.set([]);
+      } else {
+        this.impressorasDisponiveis.set(impressoras);
+        
+        // Verifica se precisa selecionar impressora padrão automaticamente
+        const devicePathAtual = this.formImpressora.get('devicePath')?.value;
+        if (!devicePathAtual || devicePathAtual.trim().length === 0) {
+          // Seleciona automaticamente a impressora padrão
+          await this.selecionarImpressoraPadraoSeNecessario();
+        } else {
+          // Já tem impressora configurada, apenas mostra mensagem
+          this.mensagemImpressao.set(`✅ ${impressoras.length} impressora(s) detectada(s).`);
+        }
+      }
+      
+      // Remove mensagem após 5 segundos
+      setTimeout(() => {
+        if (this.mensagemImpressao()?.includes('✅') || this.mensagemImpressao()?.includes('💡')) {
+          this.mensagemImpressao.set(null);
+        }
+      }, 5000);
+    } catch (error) {
+      console.error('Erro ao carregar impressoras:', error);
+      this.mensagemImpressao.set('❌ Erro ao detectar impressoras: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
+      this.impressorasDisponiveis.set([]);
+    } finally {
+      this.estaCarregandoImpressoras.set(false);
+    }
+  }
+
+  onImpressoraSelecionada(event: Event): void {
+    const select = event.target as HTMLSelectElement;
+    const devicePath = select.value;
+    if (devicePath) {
+      const impressora = this.impressorasDisponiveis().find(p => p.devicePath === devicePath);
+      if (impressora) {
+        this.selecionarImpressora(impressora);
+      }
+    }
+  }
+
+  selecionarImpressora(impressora: ImpressoraSistema): void {
+    // Salva o devicePath e também armazena o nome da impressora em um campo hidden
+    // O nome será usado na impressão (Windows precisa do nome, não do devicePath)
+    this.formImpressora.patchValue({ 
+      devicePath: impressora.devicePath,
+      // Armazena o nome da impressora no próprio devicePath se for Windows e não for COM/IP
+      // Ou usa um formato que inclui o nome: "NOME_IMPRESSORA|devicePath"
+      // Mas melhor: salvar o nome separadamente ou usar o devicePath para buscar o nome na impressão
+    });
+    
+    // Para Windows, se não for COM nem IP:PORTA, precisamos do nome da impressora
+    // Vamos salvar no formato: "nomeImpressora|devicePath" ou apenas usar o devicePath e buscar o nome na impressão
+    // Por enquanto, vamos salvar apenas o devicePath e buscar o nome na hora de imprimir (já está implementado)
+    
+    const mensagem = impressora.padrao 
+      ? `✅ Impressora padrão "${impressora.name}" selecionada! (${impressora.devicePath})`
+      : `✅ Impressora "${impressora.name}" selecionada! (${impressora.devicePath})`;
+    this.mensagemImpressao.set(mensagem);
+    this.erroDevicePath.set(null); // Limpa erros se houver
+    setTimeout(() => {
+      if (this.mensagemImpressao() === mensagem) {
+        this.mensagemImpressao.set(null);
+      }
+    }, 4000);
   }
 }
 

@@ -7,7 +7,9 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:frontend": "node dist/frontend/server/server.mjs"
+    "serve:ssr:frontend": "node dist/frontend/server/server.mjs",
+    "png-to-ico": "node scripts/png-to-ico.js",
+    "icon:generate": "npm run png-to-ico src/assets/experimenta_ai_banner_circular.png electron/icon.ico"
   },
   "private": true,
   "dependencies": {
@@ -40,6 +42,9 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
+    "png-to-ico": "^3.0.1",
+    "sharp": "^0.34.5",
+    "to-ico": "^1.1.5",
     "typescript": "~5.4.2"
   }
 }

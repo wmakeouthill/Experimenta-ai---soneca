@@ -2,6 +2,7 @@ package com.snackbar.impressao.application.dtos;
 
 import com.snackbar.impressao.domain.entities.ConfiguracaoImpressoraEntity;
 import com.snackbar.impressao.domain.entities.TipoImpressora;
+import com.snackbar.impressao.domain.valueobjects.TamanhoFonteCupom;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,17 +15,23 @@ import lombok.NoArgsConstructor;
 public class ConfiguracaoImpressoraDTO {
     private String id;
     private TipoImpressora tipoImpressora;
+    private String devicePath;
+    private Integer larguraPapel;
+    private TamanhoFonteCupom tamanhoFonte;
     private String nomeEstabelecimento;
     private String enderecoEstabelecimento;
     private String telefoneEstabelecimento;
     private String cnpjEstabelecimento;
     private String logoBase64;
     private boolean ativa;
-    
+
     public static ConfiguracaoImpressoraDTO de(ConfiguracaoImpressoraEntity config) {
         return ConfiguracaoImpressoraDTO.builder()
                 .id(config.getId())
                 .tipoImpressora(config.getTipoImpressora())
+                .devicePath(config.getDevicePath())
+                .larguraPapel(config.getLarguraPapel())
+                .tamanhoFonte(config.getTamanhoFonte())
                 .nomeEstabelecimento(config.getNomeEstabelecimento())
                 .enderecoEstabelecimento(config.getEnderecoEstabelecimento())
                 .telefoneEstabelecimento(config.getTelefoneEstabelecimento())
@@ -34,4 +41,3 @@ public class ConfiguracaoImpressoraDTO {
                 .build();
     }
 }
-

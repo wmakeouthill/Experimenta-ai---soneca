@@ -19,6 +19,8 @@ public class ImprimirCupomRequest {
     
     private String nomeImpressora;
     
+    private String devicePath; // Device path da impressora (opcional, busca do banco se não fornecido)
+    
     private String nomeEstabelecimento;
     
     private String enderecoEstabelecimento;

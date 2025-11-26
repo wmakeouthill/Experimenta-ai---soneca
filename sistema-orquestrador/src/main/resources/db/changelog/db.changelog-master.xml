@@ -53,6 +53,12 @@
     <!-- Migration: Adiciona coluna logo_base64 na tabela config_impressora -->
     <include file="changes/016-add-logo-base64-config-impressora.sql" relativeToChangelogFile="true"/>
 
+    <!-- Migration: Adiciona coluna device_path na tabela config_impressora -->
+    <include file="changes/017-add-device-path-config-impressora.sql" relativeToChangelogFile="true"/>
+
+    <!-- Migration: Adiciona largura_papel e tamanho_fonte na tabela config_impressora -->
+    <include file="changes/018-add-largura-papel-e-tamanho-fonte-config-impressora.sql" relativeToChangelogFile="true"/>
+
     <!-- 
     NOTA: O usuário administrador inicial é criado automaticamente via CommandLineRunner
     (UsuarioInicialConfig) na primeira execução da aplicação.

@@ -244,3 +244,178 @@
   }
 }
 
+/* Ajuda Device Path */
+.btn-ajuda-inline {
+  background: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  margin-left: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-ajuda-inline:hover {
+  background: #e0e0e0;
+  border-color: #4a90e2;
+}
+
+.ajuda-device-path {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.ajuda-device-path h4 {
+  margin: 0 0 0.75rem 0;
+  color: #333;
+  font-size: 14px;
+}
+
+.ajuda-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.ajuda-tab {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-size: 13px;
+  color: #666;
+  transition: all 0.2s;
+  margin-bottom: -2px;
+}
+
+.ajuda-tab:hover {
+  color: #4a90e2;
+}
+
+.ajuda-tab.active {
+  color: #4a90e2;
+  border-bottom-color: #4a90e2;
+  font-weight: 600;
+}
+
+.ajuda-conteudo {
+  margin-top: 0.75rem;
+}
+
+.ajuda-conteudo ol {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.ajuda-conteudo li {
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+  color: #555;
+}
+
+.ajuda-nota {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #856404;
+}
+
+.form-help-text {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 11px;
+  color: #666;
+  line-height: 1.4;
+}
+
+/* Impressoras detectadas (Electron) */
+.impressoras-lista {
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.impressora-select {
+  width: 100%;
+  margin-bottom: 0.25rem;
+}
+
+.btn-atualizar {
+  background: #28a745;
+  color: white;
+  border-color: #28a745;
+  margin-left: 0;
+  margin-right: 8px;
+}
+
+.btn-atualizar:hover:not(:disabled) {
+  background: #218838;
+  border-color: #1e7e34;
+}
+
+.btn-atualizar:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Badge Electron */
+.badge-electron {
+  display: inline-block;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-left: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Lista de impressoras */
+.impressoras-lista {
+  width: 100%;
+  margin-bottom: 0.75rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #f0f8ff 0%, #e8f4f8 100%);
+  border: 2px solid #4a90e2;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(74, 144, 226, 0.1);
+}
+
+.impressora-select-label {
+  display: block;
+  font-weight: 600;
+  font-size: 13px;
+  color: #2c5aa0;
+  margin-bottom: 0.5rem;
+}
+
+.impressora-select {
+  width: 100%;
+  margin-bottom: 0.25rem;
+  font-size: 13px;
+  padding: 8px 10px;
+}
+
+.impressoras-carregando,
+.impressoras-vazia {
+  width: 100%;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+}
+
+.form-help-text.sucesso {
+  color: #155724;
+  font-weight: 500;
+}
+
