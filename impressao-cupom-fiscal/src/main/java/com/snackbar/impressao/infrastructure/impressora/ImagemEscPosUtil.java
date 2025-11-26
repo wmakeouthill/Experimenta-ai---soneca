@@ -97,9 +97,9 @@ public class ImagemEscPosUtil {
         
         ByteArrayOutputStream comando = new ByteArrayOutputStream();
         
-        // Inicializa impressora antes de enviar bitmap
-        comando.write(EscPosComandos.ESC);
-        comando.write('@');
+        // NOTA: Reset (ESC @) não deve ser adicionado aqui.
+        // O Electron adiciona reset no início de todo o cupom.
+        // Aqui enviamos apenas o comando de bitmap.
         
         // Comando GS (v 0) para imprimir bitmap rasterizado
         // Formato: GS v 0 nL nH vL vH [dados]

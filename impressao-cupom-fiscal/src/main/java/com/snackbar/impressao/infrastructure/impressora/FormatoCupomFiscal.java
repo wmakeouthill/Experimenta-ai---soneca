@@ -12,24 +12,31 @@ public class FormatoCupomFiscal {
     
     private static final int LARGURA_PADRAO = 48;
     
+    /**
+     * Formata apenas o CONTEÚDO do cupom (sem comandos de impressora)
+     * 
+     * O Electron será responsável por adicionar comandos de inicialização,
+     * finalização e corte específicos da impressora.
+     * 
+     * @param cupomFiscal - Dados do cupom fiscal
+     * @return bytes ESC/POS contendo apenas o conteúdo formatado
+     */
     public static byte[] formatarCupom(CupomFiscal cupomFiscal) {
         byte[] cupom = new byte[0];
         
-        // 1. Reset inicial - garante estado limpo (especialmente importante para autenticadoras)
-        cupom = concatenar(cupom, EscPosComandos.resetar());
-        
-        // 2. Pequeno delay implícito (inicialização)
+        // 1. Cabeçalho/Logo (bitmap centralizado no topo)
         cupom = concatenar(cupom, EscPosComandos.alinharCentro());
         
         byte[] logoEscPos = obterLogoEscPos(cupomFiscal);
         if (logoEscPos != null && logoEscPos.length > 0) {
             cupom = concatenar(cupom, logoEscPos);
-            cupom = concatenar(cupom, EscPosComandos.linhaEmBranco(1));
+            cupom = concatenar(cupom, EscPosComandos.linhaEmBranco(2));
         } else {
             cupom = concatenar(cupom, EscPosComandos.textoDuplo());
             cupom = concatenar(cupom, formatarCabecalho(cupomFiscal));
         }
         
+        // 2. Conteúdo do cupom (dados do pedido)
         cupom = concatenar(cupom, EscPosComandos.textoNormal());
         cupom = concatenar(cupom, EscPosComandos.alinharEsquerda());
         cupom = concatenar(cupom, EscPosComandos.linhaSeparadora(LARGURA_PADRAO));
@@ -43,19 +50,8 @@ public class FormatoCupomFiscal {
         cupom = concatenar(cupom, EscPosComandos.linhaSeparadora(LARGURA_PADRAO));
         cupom = concatenar(cupom, formatarRodape(cupomFiscal));
         
-        // IMPORTANTE: Para autenticadoras, sempre adicionar linhas em branco suficientes
-        // antes do corte para garantir que todo conteúdo foi impresso
-        // e evitar travamento/status amarelo
-        cupom = concatenar(cupom, EscPosComandos.linhaEmBranco(3));
-        
-        // Limpa buffer antes do corte (força processamento de todos os comandos)
-        cupom = concatenar(cupom, EscPosComandos.limparBuffer());
-        
-        // Corte completo do papel
-        cupom = concatenar(cupom, EscPosComandos.cortarPapel());
-        
-        // Feed adicional após corte (ajuda autenticadoras a liberar papel)
-        cupom = concatenar(cupom, EscPosComandos.avancoLinha(1));
+        // NOTA: Comandos de inicialização (reset) e finalização (corte, feeds)
+        // são adicionados pelo Electron conforme a impressora específica
         
         return cupom;
     }

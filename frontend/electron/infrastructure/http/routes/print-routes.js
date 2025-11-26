@@ -148,5 +148,80 @@ router.get('/health', (req, res) => {
   });
 });
 
+/**
+ * POST /teste/imprimir-simples
+ * Endpoint para testar impressão com dados ESC/POS básicos
+ */
+router.post('/teste/imprimir-simples', async (req, res) => {
+  try {
+    const { devicePath, nomeImpressora } = req.body;
+    
+    // Se nomeImpressora foi fornecido, usa diretamente (mais rápido e confiável)
+    // Caso contrário, usa devicePath
+    const nomeParaUsar = nomeImpressora || devicePath;
+    
+    if (!nomeParaUsar) {
+      return res.status(400).json({
+        sucesso: false,
+        mensagem: 'devicePath ou nomeImpressora é obrigatório'
+      });
+    }
+
+    const devicePathParaUsar = devicePath || 'USB001';
+    
+    console.log(`🧪 TESTE: Enviando para impressora "${nomeParaUsar}" (devicePath: ${devicePathParaUsar})`);
+
+    const path = require('path');
+    const { testarImpressaoSimples } = require(path.join(__dirname, '../../os/teste-impressao-simples'));
+    const resultado = await testarImpressaoSimples(nomeParaUsar, devicePathParaUsar);
+
+    res.json({
+      sucesso: resultado.sucesso,
+      mensagem: resultado.sucesso ? 'Teste enviado com sucesso' : resultado.erro,
+      nomeImpressoraUsado: nomeParaUsar,
+      devicePathUsado: devicePathParaUsar
+    });
+  } catch (error) {
+    console.error('❌ Erro no teste:', error);
+    res.status(500).json({
+      sucesso: false,
+      mensagem: error.message || 'Erro ao testar impressão'
+    });
+  }
+});
+
+/**
+ * POST /teste/cupom-completo
+ * Endpoint para testar impressão com cupom completo simulado
+ */
+router.post('/teste/cupom-completo', async (req, res) => {
+  try {
+    const { devicePath, nomeImpressora } = req.body;
+    
+    const nomeParaUsar = nomeImpressora || devicePath || 'DIABO';
+    const devicePathParaUsar = devicePath || 'USB001';
+    
+    console.log(`🧪 TESTE CUPOM COMPLETO: Enviando para impressora "${nomeParaUsar}" (devicePath: ${devicePathParaUsar})`);
+
+    const path = require('path');
+    const { testarCupomCompleto } = require(path.join(__dirname, '../../os/teste-cupom-completo'));
+    const resultado = await testarCupomCompleto(nomeParaUsar, devicePathParaUsar);
+
+    res.json({
+      sucesso: resultado.sucesso,
+      mensagem: resultado.sucesso ? 'Cupom completo simulado enviado com sucesso' : resultado.erro,
+      nomeImpressoraUsado: nomeParaUsar,
+      devicePathUsado: devicePathParaUsar,
+      tamanho: resultado.tamanho
+    });
+  } catch (error) {
+    console.error('❌ Erro no teste cupom completo:', error);
+    res.status(500).json({
+      sucesso: false,
+      mensagem: error.message || 'Erro ao testar impressão'
+    });
+  }
+});
+
 module.exports = router;
 

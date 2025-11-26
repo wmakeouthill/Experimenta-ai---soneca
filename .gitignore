@@ -204,8 +204,11 @@ replay_pid*
 # ============================================
 # Documentação Markdown
 # ============================================
+# Ignora todos os arquivos .md exceto README.md
 *.md
 **/*.md
+!README.md
+!**/README.md
 
 # ============================================
 # Arquivos Temporários

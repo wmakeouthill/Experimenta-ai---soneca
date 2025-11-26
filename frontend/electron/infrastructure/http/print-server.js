@@ -32,7 +32,7 @@ async function iniciarServidor(porta = 3001) {
   app.use(rateLimitMiddleware);
 
   // Rotas
-  app.use(printRoutes);
+  app.use('/', printRoutes);
 
   return new Promise((resolve, reject) => {
     const tentarIniciar = (portaTentativa) => {
