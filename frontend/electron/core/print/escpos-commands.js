@@ -15,6 +15,14 @@ function inicializar() {
 }
 
 /**
+ * Define Code Page 850 (Multilingual)
+ * Necessário para acentos corretos no Brasil
+ */
+function setCodePage850() {
+  return Buffer.from([ESC, 0x74, 0x02]); // ESC t 2
+}
+
+/**
  * Comandos de finalização
  */
 function cortarPapel() {
@@ -75,7 +83,8 @@ module.exports = {
   inicializar,
   cortarPapel,
   linhaEmBranco,
-  limparBuffer,  // NOVO: Exportando para uso direto se necessário
+  limparBuffer,
+  setCodePage850, // NOVO
   adicionarInicializacao,
   adicionarFinalizacao
 };
