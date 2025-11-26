@@ -113,6 +113,7 @@ export class ConfigImpressoraComponent implements OnInit {
             ? TipoImpressora.GENERICA_ESCPOS 
             : (config.tipoImpressora || TipoImpressora.GENERICA_ESCPOS);
           
+          // Aplica valores no formulário
           this.formImpressora.patchValue({
             tipoImpressora: tipoParaUsar,
             devicePath: config.devicePath || '',
@@ -124,27 +125,41 @@ export class ConfigImpressoraComponent implements OnInit {
             cnpjEstabelecimento: config.cnpjEstabelecimento || ''
           });
           
+          // Se está no Electron e tem devicePath configurado
+          if (this.estaNoElectron() && config.devicePath) {
+            // Se as impressoras ainda não foram carregadas, carrega agora
+            if (this.impressorasDisponiveis().length === 0) {
+              await this.carregarImpressorasDisponiveis();
+            }
+            
+            // Verifica se a impressora configurada está na lista
+            const impressoraConfigurada = this.impressorasDisponiveis().find(
+              p => p.devicePath === config.devicePath
+            );
+            
+            if (impressoraConfigurada) {
+              // Mostra mensagem informando que a impressora foi carregada
+              this.mensagemImpressao.set(`✅ Impressora "${impressoraConfigurada.name}" carregada da configuração salva.`);
+              setTimeout(() => this.mensagemImpressao.set(null), 3000);
+            }
+          }
+          
           if (config.logoBase64) {
             this.logoPreview.set(config.logoBase64);
           }
         } else {
           // Se não há configuração salva e está no Electron, seleciona impressora padrão
           if (this.estaNoElectron()) {
-            // Aguarda um pouco para garantir que as impressoras foram carregadas
-            setTimeout(async () => {
-              await this.selecionarImpressoraPadraoSeNecessario();
-            }, 1000);
+            await this.selecionarImpressoraPadraoSeNecessario();
           }
         }
         this.estaCarregando.set(false);
       },
-      error: () => {
+      error: async () => {
         this.estaCarregando.set(false);
         // Em caso de erro, também tenta selecionar impressora padrão
         if (this.estaNoElectron()) {
-          setTimeout(async () => {
-            await this.selecionarImpressoraPadraoSeNecessario();
-          }, 1000);
+          await this.selecionarImpressoraPadraoSeNecessario();
         }
       }
     });
@@ -342,14 +357,17 @@ export class ConfigImpressoraComponent implements OnInit {
       this.abaAjudaAtiva.set('windows'); // Padrão
     }
     
-    this.carregarConfiguracao();
-    
-    // Se estiver rodando no Electron, carrega impressoras automaticamente
+    // Se estiver rodando no Electron, carrega impressoras PRIMEIRO
+    // Depois carrega configuração para que o select já esteja populado
     if (this.estaNoElectron()) {
-      // Aguarda um pouco para garantir que a configuração foi carregada
-      setTimeout(() => {
-        this.carregarImpressorasDisponiveis();
-      }, 500);
+      this.carregarImpressorasDisponiveis().then(() => {
+        // Após carregar impressoras, carrega configuração
+        // Assim o select já está populado quando o devicePath é aplicado
+        this.carregarConfiguracao();
+      });
+    } else {
+      // No Web, apenas carrega configuração
+      this.carregarConfiguracao();
     }
   }
 

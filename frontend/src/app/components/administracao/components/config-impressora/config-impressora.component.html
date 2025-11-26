@@ -71,8 +71,8 @@
               <div class="impressoras-lista">
                 <select 
                   class="form-input-compact impressora-select"
+                  formControlName="devicePath"
                   (change)="onImpressoraSelecionada($event)"
-                  [value]="formImpressora.get('devicePath')?.value || ''"
                   required
                 >
                   <option value="">-- Selecione uma impressora --</option>
