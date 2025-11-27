@@ -1,34 +1,47 @@
-import { signal, computed, inject, effect, DestroyRef } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { catchError, finalize, switchMap, tap, retry, filter, takeWhile } from 'rxjs/operators';
-import { of, timer, Subject, Subscription } from 'rxjs';
+import { signal, computed, inject, effect } from '@angular/core';
+import { catchError, finalize } from 'rxjs/operators';
+import { of } from 'rxjs';
 import { PedidoService, Pedido, StatusPedido } from '../../../services/pedido.service';
 import { ProdutoService, Produto } from '../../../services/produto.service';
+import { PedidoPollingService } from '../../../services/pedido-polling.service';
 
 type EstadoCarregamento = 'idle' | 'carregando' | 'sucesso' | 'erro';
 
 export function usePedidos() {
   const pedidoService = inject(PedidoService);
   const produtoService = inject(ProdutoService);
-  const destroyRef = inject(DestroyRef);
+  const pollingService = inject(PedidoPollingService);
 
-  // Estados
-  const pedidos = signal<Pedido[]>([]);
+  // Estados Locais
+  // Inicializa com os pedidos já carregados no serviço global
+  const pedidos = signal<Pedido[]>(pollingService.pedidos());
   const produtos = signal<Produto[]>([]);
   const estado = signal<EstadoCarregamento>('idle');
   const erro = signal<string | null>(null);
-  const pollingAtivo = signal<boolean>(false);
+
+  // Sincroniza pedidos locais com o serviço global
+  effect(() => {
+    // Força nova referência de array para garantir detecção de mudança
+    pedidos.set([...pollingService.pedidos()]);
+
+    // Se recebeu dados (mesmo vazio), atualiza estado para sucesso se não houver erro
+    if (estado() !== 'erro') {
+      estado.set('sucesso');
+    }
+  }, { allowSignalWrites: true });
+
+  // Sincroniza erro global
+  effect(() => {
+    const erroGlobal = pollingService.erro();
+    if (erroGlobal) {
+      erro.set(erroGlobal);
+      estado.set('erro');
+    }
+  }, { allowSignalWrites: true });
 
   // Filtros - sempre inicia com PENDENTE (aguardando) selecionado
   const statusSelecionado = signal<StatusPedido>(StatusPedido.PENDENTE);
   const pesquisaTexto = signal<string>('');
-
-  // Controle de pedidos já processados (para evitar duplicidade de notificação)
-  // Armazena IDs dos pedidos já vistos nesta sessão
-  const pedidosConhecidos = new Set<string>();
-
-  // Evento para notificar novos pedidos
-  const onNovoPedido = new Subject<Pedido>();
 
   // Computed
   const pedidosFiltrados = computed(() => {
@@ -70,61 +83,40 @@ export function usePedidos() {
     dataFim?: string;
     sessaoId?: string;
   }) => {
-    // Se for polling, não muda estado para 'carregando' para não piscar a tela
-    if (!pollingAtivo()) {
-      estado.set('carregando');
-    }
+    estado.set('carregando');
     erro.set(null);
 
-    // Carrega pedidos com filtros (incluindo sessão se fornecida)
-    // O filtro por status é aplicado pelo computed pedidosFiltrados
-    pedidoService.listar(filters)
-      .pipe(
-        catchError((error) => {
-          const mensagem = error.error?.message || error.message || 'Erro ao carregar pedidos';
-          erro.set(mensagem);
-          if (!pollingAtivo()) {
+    // Se for apenas carga inicial ou filtro específico, usa o serviço direto
+    // Mas se for para iniciar monitoramento, usa o polling service
+    if (filters?.sessaoId) {
+      pollingService.iniciarPolling(filters.sessaoId);
+
+      // Força uma recarga imediata para garantir que a tela não fique vazia
+      // enquanto aguarda o próximo tick do polling (que pode demorar 5s)
+      pollingService.recarregar(filters.sessaoId);
+
+      estado.set('sucesso');
+    } else {
+      // Fallback para carga única se não tiver sessão (ex: filtros de data)
+      pedidoService.listar(filters)
+        .pipe(
+          catchError((error) => {
+            const mensagem = error.error?.message || error.message || 'Erro ao carregar pedidos';
+            erro.set(mensagem);
             estado.set('erro');
-          }
-          console.error('Erro ao carregar pedidos:', error);
-          return of([]);
-        }),
-        finalize(() => {
-          if (estado() === 'carregando') {
-            estado.set('sucesso');
-          }
-        })
-      )
-      .subscribe((resultado) => {
-        processarNovosPedidos(resultado);
-        pedidos.set(resultado);
-      });
-  };
-
-  const processarNovosPedidos = (novosPedidos: Pedido[]) => {
-    // Se é a primeira carga (pedidosConhecidos vazio), apenas popula o Set
-    // para não notificar tudo como "novo" ao abrir a tela
-    if (pedidosConhecidos.size === 0) {
-      novosPedidos.forEach(p => pedidosConhecidos.add(p.id));
-      return;
+            console.error('Erro ao carregar pedidos:', error);
+            return of([]);
+          }),
+          finalize(() => {
+            if (estado() === 'carregando') {
+              estado.set('sucesso');
+            }
+          })
+        )
+        .subscribe((resultado) => {
+          pedidos.set(resultado);
+        });
     }
-
-    // Verifica se há pedidos novos
-    novosPedidos.forEach(pedido => {
-      if (!pedidosConhecidos.has(pedido.id)) {
-        pedidosConhecidos.add(pedido.id);
-
-        // Só notifica se for um pedido RECENTE (criado nos últimos 5 minutos)
-        // Isso evita notificar pedidos antigos que por algum motivo apareceram agora
-        const dataPedido = new Date(pedido.createdAt || pedido.dataPedido);
-        const cincoMinutosAtras = new Date(Date.now() - 5 * 60 * 1000);
-
-        if (dataPedido > cincoMinutosAtras) {
-          console.log('Novo pedido detectado:', pedido.numeroPedido);
-          onNovoPedido.next(pedido);
-        }
-      }
-    });
   };
 
   const carregarProdutos = () => {
@@ -142,7 +134,6 @@ export function usePedidos() {
 
   const filtrarPorStatus = (status: StatusPedido) => {
     statusSelecionado.set(status);
-    // Não precisa recarregar, o computed pedidosFiltrados já filtra automaticamente
   };
 
   const pesquisar = (texto: string) => {
@@ -150,96 +141,36 @@ export function usePedidos() {
   };
 
   const limparFiltros = () => {
-    // Não limpa o status, apenas a pesquisa (sempre mantém um status selecionado)
     pesquisaTexto.set('');
   };
 
   const atualizarPedidoNoSignal = (pedidoAtualizado: Pedido) => {
-    // Sempre cria uma nova referência para garantir detecção de mudança
+    // Atualiza localmente para feedback imediato
     pedidos.update(lista => {
       const index = lista.findIndex(p => p.id === pedidoAtualizado.id);
       if (index >= 0) {
-        // Atualiza o pedido existente - cria nova array e novo objeto
         const novaLista = [...lista];
-        novaLista[index] = { ...pedidoAtualizado }; // Garante novo objeto
+        novaLista[index] = { ...pedidoAtualizado };
         return novaLista;
       } else {
-        // Se não encontrou, adiciona (novo pedido ou mudou de status)
-        // Adiciona aos conhecidos para não disparar notificação duplicada
-        pedidosConhecidos.add(pedidoAtualizado.id);
-        return [...lista, { ...pedidoAtualizado }]; // Garante novo objeto
+        return [...lista, { ...pedidoAtualizado }];
       }
     });
+
+    // Força atualização no serviço global também
+    pollingService.recarregar();
   };
 
-  const carregarTodosPedidos = (sessaoId?: string) => {
-    estado.set('carregando');
-    erro.set(null);
-
-    const filters = sessaoId ? { sessaoId } : undefined;
-    pedidoService.listar(filters)
-      .pipe(
-        catchError((error) => {
-          const mensagem = error.error?.message || error.message || 'Erro ao carregar pedidos';
-          erro.set(mensagem);
-          estado.set('erro');
-          console.error('Erro ao carregar pedidos:', error);
-          return of([]);
-        }),
-        finalize(() => {
-          if (estado() === 'carregando') {
-            estado.set('sucesso');
-          }
-        })
-      )
-      .subscribe((resultado) => {
-        processarNovosPedidos(resultado);
-        pedidos.set(resultado);
-      });
-  };
-
-  // Lógica de Polling
-  let pollingSubscription: Subscription | null = null;
-
+  // Mantém compatibilidade com o componente
   const iniciarPolling = (sessaoId?: string) => {
-    if (pollingAtivo()) return;
-
-    pollingAtivo.set(true);
-    console.log('Iniciando polling de pedidos...');
-
-    // Polling a cada 5 segundos
-    pollingSubscription = timer(0, 5000).pipe(
-      takeWhile(() => pollingAtivo()),
-      switchMap(() => {
-        const filters = sessaoId ? { sessaoId } : undefined;
-        return pedidoService.listar(filters).pipe(
-          catchError(err => {
-            console.error('Erro no polling:', err);
-            return of([]); // Continua o polling mesmo com erro
-          })
-        );
-      }),
-      takeUntilDestroyed(destroyRef) // Garante limpeza ao destruir componente
-    ).subscribe(resultado => {
-      if (resultado.length > 0) {
-        processarNovosPedidos(resultado);
-        pedidos.set(resultado);
-
-        // Se estava com erro ou carregando, atualiza para sucesso
-        if (estado() !== 'sucesso') {
-          estado.set('sucesso');
-        }
-      }
-    });
+    pollingService.iniciarPolling(sessaoId);
+    // Garante que os dados sejam carregados ao entrar na tela,
+    // mesmo que o polling já esteja ativo globalmente
+    pollingService.recarregar(sessaoId);
   };
 
   const pararPolling = () => {
-    pollingAtivo.set(false);
-    if (pollingSubscription) {
-      pollingSubscription.unsubscribe();
-      pollingSubscription = null;
-    }
-    console.log('Polling de pedidos parado.');
+    pollingService.pararPolling();
   };
 
   return {
@@ -250,10 +181,10 @@ export function usePedidos() {
     erro,
     statusSelecionado,
     pesquisaTexto,
-    pollingAtivo,
+    pollingAtivo: pollingService.pollingAtivo,
 
     // Observables
-    onNovoPedido: onNovoPedido.asObservable(),
+    onNovoPedido: pollingService.onNovoPedido,
 
     // Computed
     pedidosFiltrados,
@@ -263,7 +194,7 @@ export function usePedidos() {
 
     // Métodos
     carregarPedidos,
-    carregarTodosPedidos,
+    carregarTodosPedidos: carregarPedidos, // Alias
     carregarProdutos,
     filtrarPorStatus,
     pesquisar,
@@ -273,4 +204,3 @@ export function usePedidos() {
     pararPolling
   };
 }
-

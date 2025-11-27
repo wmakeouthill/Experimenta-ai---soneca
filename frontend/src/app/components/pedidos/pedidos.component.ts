@@ -11,6 +11,7 @@ import { ImpressaoService, TipoImpressora } from '../../services/impressao.servi
 import { NovoPedidoModalComponent } from './components/novo-pedido-modal/novo-pedido-modal.component';
 import { MenuContextoPedidoComponent } from './components/menu-contexto-pedido/menu-contexto-pedido.component';
 import { catchError, of } from 'rxjs';
+import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-pedidos',
@@ -33,6 +34,7 @@ export class PedidosComponent implements OnInit {
   private readonly sessaoService = inject(SessaoTrabalhoService);
   private readonly authService = inject(AuthService);
   private readonly impressaoService = inject(ImpressaoService);
+  private readonly notificationService = inject(NotificationService);
   private readonly destroyRef = inject(DestroyRef);
 
   // Composable com toda a lógica de pedidos - inicializado no construtor para contexto de injeção válido
@@ -78,7 +80,6 @@ export class PedidosComponent implements OnInit {
 
   // Menu de contexto
   readonly menuContexto = signal<{ pedidoId: string; x: number; y: number } | null>(null);
-  readonly notificacoes = signal<Array<{ id: string; mensagem: string; tipo: 'sucesso' | 'erro' }>>([]);
 
   // Sessão ativa
   readonly temSessaoAtiva = signal<boolean>(false);
@@ -94,13 +95,12 @@ export class PedidosComponent implements OnInit {
       this.verificarSessaoAtiva();
       this.pedidosComposable.carregarProdutos();
 
-      // Inscreve-se para novos pedidos para impressão automática
+      // Notificação visual apenas (impressão é global no AppComponent)
       this.pedidosComposable.onNovoPedido
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe(pedido => {
-          console.log('Novo pedido recebido para impressão:', pedido.numeroPedido);
-          this.imprimirCupomAutomatico(pedido.id);
-          this.mostrarNotificacao(`🔔 Novo pedido recebido: ${pedido.numeroPedido}`, 'sucesso');
+          // A notificação global já é disparada pelo AppComponent
+          // Não precisamos duplicar aqui
         });
 
       document.addEventListener('click', () => this.fecharMenuContexto());
@@ -211,7 +211,6 @@ export class PedidosComponent implements OnInit {
             this.pedidosComposable.carregarPedidos(sessaoId ? { sessaoId } : undefined);
           }, 0);
           this.fecharFormulario();
-          this.imprimirCupomAutomatico(pedidoCriado.id);
         },
         error: (error) => {
           console.error('Erro ao criar pedido:', error);
@@ -359,37 +358,7 @@ export class PedidosComponent implements OnInit {
     return palavras.slice(0, 3).join(' ') + '...';
   }
 
-  imprimirCupomAutomatico(pedidoId: string): void {
-    this.impressaoService.buscarConfiguracao().pipe(
-      catchError(() => {
-        console.warn('Configuração de impressora não encontrada. Impressão automática cancelada.');
-        return of(null);
-      })
-    ).subscribe((config) => {
-      if (!config || !config.ativa) {
-        console.warn('Impressora não configurada ou inativa. Impressão automática cancelada.');
-        return;
-      }
 
-      this.impressaoService.imprimirCupom({
-        pedidoId,
-        tipoImpressora: config.tipoImpressora,
-        nomeEstabelecimento: config.nomeEstabelecimento,
-        enderecoEstabelecimento: config.enderecoEstabelecimento,
-        telefoneEstabelecimento: config.telefoneEstabelecimento,
-        cnpjEstabelecimento: config.cnpjEstabelecimento
-      }).pipe(
-        catchError((error) => {
-          console.error('Erro ao imprimir cupom automaticamente:', error);
-          return of(null);
-        })
-      ).subscribe((response) => {
-        if (response?.sucesso) {
-          this.mostrarNotificacao('✅ Cupom impresso com sucesso!', 'sucesso');
-        }
-      });
-    });
-  }
 
   imprimirSegundaVia(pedidoId: string): void {
     this.impressaoService.buscarConfiguracao().pipe(
@@ -420,30 +389,18 @@ export class PedidosComponent implements OnInit {
           if (this.isBrowser) {
             alert('Erro ao imprimir cupom: ' + (error.error?.message || error.message || 'Erro desconhecido'));
           }
+          this.notificationService.erro('Erro ao imprimir cupom: ' + (error.error?.message || error.message || 'Erro desconhecido'));
           return of(null);
         })
       ).subscribe((response) => {
         if (response?.sucesso) {
-          this.mostrarNotificacao('✅ Segunda via impressa com sucesso!', 'sucesso');
+          this.notificationService.sucesso('✅ Cupom impresso com sucesso!');
         } else if (response && !response.sucesso) {
-          this.mostrarNotificacao('❌ Erro ao imprimir: ' + response.mensagem, 'erro');
+          this.notificationService.erro('❌ Erro ao imprimir: ' + response.mensagem);
         }
       });
     });
   }
 
-  mostrarNotificacao(mensagem: string, tipo: 'sucesso' | 'erro' = 'sucesso'): void {
-    const notificacao = {
-      id: Date.now().toString(),
-      mensagem,
-      tipo
-    };
 
-    this.notificacoes.update(n => [...n, notificacao]);
-
-    setTimeout(() => {
-      this.notificacoes.update(n => n.filter(not => not.id !== notificacao.id));
-    }, 2000);
-  }
 }
-

@@ -5,11 +5,12 @@ import { AuthService } from '../../services/auth.service';
 import { AuthorizationService } from '../../services/authorization.service';
 import { Modulo } from '../../models/modulo.model';
 import { FormatoUtil } from '../../utils/formato.util';
+import { TituloHomeComponent } from './components/titulo-home/titulo-home.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, TituloHomeComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })
