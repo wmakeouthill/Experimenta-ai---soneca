@@ -29,33 +29,34 @@ function sanitizarComandosProblematicos(buffer) {
 
     // 2. Detecta GS v 0 (0x1D 0x76 0x30) - Bitmap Raster
     // Causa impressão de lixo se não suportado
-    if (i + 2 < buffer.length &&
+    // O backend Java envia m=0 (0x00), não '0' (0x30). Precisamos checar ambos.
+    // Header tem 7 bytes: GS(1) v(1) m(1) xL(1) xH(1) yL(1) yH(1)
+    if (i + 6 < buffer.length &&
       buffer[i] === 0x1D &&
-      buffer[i + 1] === 0x76 &&
-      buffer[i + 2] === 0x30) {
+      buffer[i + 1] === 0x76) {
 
-      console.log(`⚠️ Removendo comando de BITMAP (GS v 0) na posição ${i} - Causa lixo na impressão`);
+      const m = buffer[i + 2];
+      // Modos válidos: 0, 1, 2, 3, 48('0'), 49('1'), 50('2'), 51('3')
+      const isValidMode = (m >= 0 && m <= 3) || (m >= 48 && m <= 51);
 
-      // O comando GS v 0 tem formato: GS v 0 m xL xH yL yH d1...dk
-      // Precisamos pular todo o bloco de dados do bitmap
-      // m = buffer[i+3]
-      // xL = buffer[i+4], xH = buffer[i+5]
-      // yL = buffer[i+6], yH = buffer[i+7]
+      if (isValidMode) {
 
-      if (i + 7 < buffer.length) {
-        const xL = buffer[i + 4];
-        const xH = buffer[i + 5];
-        const yL = buffer[i + 6];
-        const yH = buffer[i + 7];
+        const xL = buffer[i + 3];
+        const xH = buffer[i + 4];
+        const yL = buffer[i + 5];
+        const yH = buffer[i + 6];
 
         // Calcula tamanho dos dados do bitmap
-        const widthBytes = Math.floor((xL + xH * 256 + 7) / 8);
+        // xL e xH já representam a largura em BYTES (não pixels)
+        const widthBytes = xL + xH * 256;
         const height = yL + yH * 256;
         const dataSize = widthBytes * height;
 
-        console.log(`   Dimensões bitmap: ${xL + xH * 256}x${height} (${dataSize} bytes de dados)`);
+        console.log(`⚠️ Removendo comando de BITMAP (GS v 0 m=${m}) na posição ${i}`);
+        console.log(`   Dimensões: Largura=${widthBytes} bytes, Altura=${height} linhas`);
+        console.log(`   Tamanho total a pular: 7 (header) + ${dataSize} (dados) = ${7 + dataSize} bytes`);
 
-        i += 8 + dataSize; // Pula cabeçalho (8 bytes) + dados
+        i += 7 + dataSize; // Pula cabeçalho (7 bytes) + dados
         continue;
       }
     }
@@ -121,7 +122,6 @@ function converterParaEscPos(dadosCupom, tipoImpressora) {
       }
 
       if (cp850 !== null) {
-        // console.log(`🔤 Substituindo UTF-8 ${b1.toString(16)} ${b2.toString(16)} por CP850 ${cp850.toString(16)}`);
         listaBytes.push(cp850);
         i++; // Pula o segundo byte
         substituicoes++;

@@ -1,10 +1,11 @@
 /**
- * Código C# SIMPLIFICADO para impressão RAW
- * Remove complexidades desnecessárias que estavam travando a impressora
+ * Código C# para impressão RAW via Spooler
+ * Versão com Chunking para evitar estouro de buffer em impressoras antigas (Diebold)
  */
 
 const CODIGO_CSHARP_RAW_PRINTER = `using System;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 public class RawPrinter {
   [DllImport("winspool.drv", CharSet = CharSet.Auto, SetLastError = true)]
@@ -54,7 +55,7 @@ public class RawPrinter {
         return "ERRO:OpenPrinter falhou (" + error + ")";
       }
       
-      // 2. Documento RAW simples
+      // 2. Documento RAW
       DOCINFOA di = new DOCINFOA("ESC/POS Document", "RAW");
       
       if (!StartDocPrinter(hPrinter, 1, di)) {
@@ -71,21 +72,34 @@ public class RawPrinter {
         return "ERRO:StartPage falhou (" + error + ")";
       }
       
-      // 4. Escrever TUDO de uma vez (sem chunks, sem delays)
-      int dwWritten = 0;
-      if (!WritePrinter(hPrinter, Marshal.UnsafeAddrOfPinnedArrayElement(pBytes, 0), pBytes.Length, out dwWritten)) {
-        int error = Marshal.GetLastWin32Error();
-        EndPagePrinter(hPrinter);
-        EndDocPrinter(hPrinter);
-        ClosePrinter(hPrinter);
-        return "ERRO:Write falhou (" + error + ")";
-      }
+      // 4. Escrever em CHUNKS (para evitar estouro de buffer)
+      // Diebold IM693H tem buffer pequeno (4KB ou 8KB)
+      // Enviar 1KB por vez com delay de 50ms
+      const int CHUNK_SIZE = 1024; // 1KB
+      int offset = 0;
+      int totalEscrito = 0;
       
-      if (dwWritten != pBytes.Length) {
-        EndPagePrinter(hPrinter);
-        EndDocPrinter(hPrinter);
-        ClosePrinter(hPrinter);
-        return "ERRO:Escrito " + dwWritten + "/" + pBytes.Length + " bytes";
+      while (offset < pBytes.Length) {
+        int tamanhoAtual = Math.Min(CHUNK_SIZE, pBytes.Length - offset);
+        int dwWritten = 0;
+        
+        IntPtr ptr = Marshal.UnsafeAddrOfPinnedArrayElement(pBytes, offset);
+        
+        if (!WritePrinter(hPrinter, ptr, tamanhoAtual, out dwWritten)) {
+          int error = Marshal.GetLastWin32Error();
+          EndPagePrinter(hPrinter);
+          EndDocPrinter(hPrinter);
+          ClosePrinter(hPrinter);
+          return "ERRO:Write falhou no offset " + offset + " (" + error + ")";
+        }
+        
+        totalEscrito += dwWritten;
+        offset += tamanhoAtual;
+        
+        // Delay para dar tempo à impressora processar
+        if (offset < pBytes.Length) {
+          Thread.Sleep(50); // 50ms
+        }
       }
       
       // 5. Fechar página
@@ -106,8 +120,7 @@ public class RawPrinter {
       // 7. Fechar impressora
       ClosePrinter(hPrinter);
       
-      // SEM DELAYS! Retorna imediatamente
-      return "SUCESSO: " + pBytes.Length + " bytes enviados";
+      return "SUCESSO: " + totalEscrito + " bytes enviados em chunks";
       
     } catch (Exception ex) {
       if (hPrinter != IntPtr.Zero) {
