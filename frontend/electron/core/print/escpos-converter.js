@@ -9,15 +9,24 @@ const { inicializar, cortarPapel, linhaEmBranco, setCodePage850 } = require('./e
 /**
  * Remove comandos que sabidamente causam problemas em algumas impressoras
  * @param {Buffer} buffer - Buffer original
+ * @param {string} tipoImpressora - Tipo da impressora
  * @returns {Buffer} - Buffer sanitizado
  */
-function sanitizarComandosProblematicos(buffer) {
+function sanitizarComandosProblematicos(buffer, tipoImpressora) {
   const listaBytes = [];
   let i = 0;
+
+  // Normaliza o tipo para comparação
+  const tipo = (tipoImpressora || '').toUpperCase();
+
+  // Define se deve aplicar filtros agressivos (para Diebold/Genéricas)
+  // Se for EPSON ou DARUMA explicitamente, evitamos filtrar imagens
+  const aplicarFiltroImagem = tipo.includes('DIEBOLD') || tipo.includes('GENERICA') || !tipo;
 
   while (i < buffer.length) {
     // 1. Detecta ESC a (0x1B 0x61 n) - Alinhamento
     // A impressora Diebold rejeita este comando e trava
+    // Este filtro mantemos para todos por segurança, pois não costuma fazer falta crítica
     if (i + 2 < buffer.length &&
       buffer[i] === 0x1B &&
       buffer[i + 1] === 0x61) {
@@ -28,10 +37,8 @@ function sanitizarComandosProblematicos(buffer) {
     }
 
     // 2. Detecta GS v 0 (0x1D 0x76 0x30) - Bitmap Raster
-    // Causa impressão de lixo se não suportado
-    // O backend Java envia m=0 (0x00), não '0' (0x30). Precisamos checar ambos.
-    // Header tem 7 bytes: GS(1) v(1) m(1) xL(1) xH(1) yL(1) yH(1)
-    if (i + 6 < buffer.length &&
+    // SÓ APLICAMOS SE FOR IMPRESSORA PROBLEMÁTICA
+    if (aplicarFiltroImagem && i + 6 < buffer.length &&
       buffer[i] === 0x1D &&
       buffer[i + 1] === 0x76) {
 
@@ -83,9 +90,10 @@ function converterParaEscPos(dadosCupom, tipoImpressora) {
   let conteudo = Buffer.from(dadosCupom, 'base64');
 
   console.log(`📦 Conteúdo recebido do backend: ${conteudo.length} bytes`);
+  console.log(`🖨️ Tipo de Impressora: ${tipoImpressora}`);
 
   // 1.1 Sanitiza comandos problemáticos (CRÍTICO para Diebold)
-  conteudo = sanitizarComandosProblematicos(conteudo);
+  conteudo = sanitizarComandosProblematicos(conteudo, tipoImpressora);
   console.log(`🧹 Conteúdo sanitizado: ${conteudo.length} bytes`);
 
   // 1.2 Correção cirúrgica de UTF-8 para CP850 no buffer
