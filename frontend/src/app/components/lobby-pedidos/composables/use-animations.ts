@@ -82,6 +82,15 @@ export function useAnimations() {
     }
   };
 
+  const animarGlobal = (duracao: number) => {
+    // Anima apenas a tela fullscreen, sem precisar de pedido
+    isAnimating.set(true);
+    
+    setTimeout(() => {
+      isAnimating.set(false);
+    }, duracao * 1000);
+  };
+
   return {
     isAnimating,
     pedidoAnimando,
@@ -90,7 +99,8 @@ export function useAnimations() {
     animacaoConfig,
     detectarMudancaStatus,
     animarTransicaoStatus,
-    iniciarAnimacaoPeriodica
+    iniciarAnimacaoPeriodica,
+    animarGlobal
   };
 }
 

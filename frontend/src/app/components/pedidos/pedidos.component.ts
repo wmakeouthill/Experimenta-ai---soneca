@@ -1,7 +1,8 @@
-import { Component, inject, PLATFORM_ID, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, PLATFORM_ID, OnInit, signal, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { usePedidos } from './composables/use-pedidos';
 import { PedidoService, StatusPedido, Pedido } from '../../services/pedido.service';
 import { SessaoTrabalhoService, SessaoTrabalho } from '../../services/sessao-trabalho.service';
@@ -32,6 +33,7 @@ export class PedidosComponent implements OnInit {
   private readonly sessaoService = inject(SessaoTrabalhoService);
   private readonly authService = inject(AuthService);
   private readonly impressaoService = inject(ImpressaoService);
+  private readonly destroyRef = inject(DestroyRef);
 
   // Composable com toda a lógica de pedidos - inicializado no construtor para contexto de injeção válido
   readonly pedidosComposable!: ReturnType<typeof usePedidos>;
@@ -91,6 +93,16 @@ export class PedidosComponent implements OnInit {
       // verificarSessaoAtiva já chama carregarDados internamente
       this.verificarSessaoAtiva();
       this.pedidosComposable.carregarProdutos();
+
+      // Inscreve-se para novos pedidos para impressão automática
+      this.pedidosComposable.onNovoPedido
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(pedido => {
+          console.log('Novo pedido recebido para impressão:', pedido.numeroPedido);
+          this.imprimirCupomAutomatico(pedido.id);
+          this.mostrarNotificacao(`🔔 Novo pedido recebido: ${pedido.numeroPedido}`, 'sucesso');
+        });
+
       document.addEventListener('click', () => this.fecharMenuContexto());
       document.addEventListener('contextmenu', (e) => {
         const target = e.target as HTMLElement;
@@ -131,7 +143,8 @@ export class PedidosComponent implements OnInit {
 
   private carregarDados(): void {
     const sessaoId = this.sessaoAtiva()?.id;
-    this.pedidosComposable.carregarPedidos(sessaoId ? { sessaoId } : undefined);
+    // Inicia o polling ao invés de apenas carregar uma vez
+    this.pedidosComposable.iniciarPolling(sessaoId);
     this.pedidosComposable.carregarProdutos();
   }
 
@@ -425,9 +438,9 @@ export class PedidosComponent implements OnInit {
       mensagem,
       tipo
     };
-    
+
     this.notificacoes.update(n => [...n, notificacao]);
-    
+
     setTimeout(() => {
       this.notificacoes.update(n => n.filter(not => not.id !== notificacao.id));
     }, 2000);

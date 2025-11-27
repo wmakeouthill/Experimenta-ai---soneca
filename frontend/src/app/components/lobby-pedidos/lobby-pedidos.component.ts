@@ -46,6 +46,7 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
 
   private pollingInterval: any = null;
   private readonly intervaloPolling = 3000; // 3 segundos
+  private animacaoPeriodicaInterval: any = null;
 
   private get isBrowser(): boolean {
     return isPlatformBrowser(this.platformId);
@@ -75,6 +76,7 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
       this.lobbyPedidos.carregarPedidos();
       this.iniciarPolling();
       this.carregarConfigAnimacao();
+      this.iniciarAnimacaoPeriodica();
     });
   }
 
@@ -93,6 +95,8 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
           video1Url: config.video1Url || null,
           video2Url: config.video2Url || null
         });
+        // Reiniciar animação periódica quando config mudar
+        this.iniciarAnimacaoPeriodica();
       }
     });
   }
@@ -100,6 +104,9 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     if (this.pollingInterval) {
       clearInterval(this.pollingInterval);
+    }
+    if (this.animacaoPeriodicaInterval) {
+      clearInterval(this.animacaoPeriodicaInterval);
     }
   }
 
@@ -137,7 +144,7 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
   }
 
   handleAnimacaoManual() {
-    // Disparar animação manualmente se houver pedidos
+    // Disparar animação manualmente - funciona sempre, mesmo sem pedidos
     // O botão "Animar" sempre funciona, independente da configuração animacaoAtivada
     const pedidos = this.lobbyPedidos.pedidos();
     const pedidosPreparando = pedidos.filter(p => p.status === StatusPedido.PREPARANDO);
@@ -164,6 +171,9 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
         StatusPedido.PREPARANDO,
         this.animations.animacaoConfig().duracaoAnimacao
       );
+    } else {
+      // Sem pedidos: animar apenas a tela fullscreen global
+      this.animations.animarGlobal(this.animations.animacaoConfig().duracaoAnimacao);
     }
   }
 
@@ -184,6 +194,9 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
       video2Url: config.video2Url || null
     });
 
+    // Reiniciar animação periódica com nova configuração
+    this.iniciarAnimacaoPeriodica();
+
     // Fechar modal imediatamente (configuração já foi aplicada localmente)
     this.mostrarConfigModal.set(false);
 
@@ -197,6 +210,46 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
         // Não mostrar erro para o usuário
       }
     });
+  }
+
+  private iniciarAnimacaoPeriodica() {
+    // Limpar intervalo anterior se existir
+    if (this.animacaoPeriodicaInterval) {
+      clearInterval(this.animacaoPeriodicaInterval);
+      this.animacaoPeriodicaInterval = null;
+    }
+
+    const config = this.animations.animacaoConfig();
+    
+    // Só iniciar se animação automática estiver ativada
+    if (!config.animacaoAtivada) {
+      return;
+    }
+
+    // Converter intervaloAnimacao de segundos para milissegundos
+    const intervaloMs = config.intervaloAnimacao * 1000;
+
+    // Iniciar intervalo periódico
+    this.animacaoPeriodicaInterval = setInterval(() => {
+      // Verificar se ainda está ativada (pode ter mudado)
+      const configAtual = this.animations.animacaoConfig();
+      if (!configAtual.animacaoAtivada) {
+        // Se foi desativada, parar o intervalo
+        if (this.animacaoPeriodicaInterval) {
+          clearInterval(this.animacaoPeriodicaInterval);
+          this.animacaoPeriodicaInterval = null;
+        }
+        return;
+      }
+
+      // Não animar se já estiver animando
+      if (this.animations.isAnimating()) {
+        return;
+      }
+
+      // Disparar animação global
+      this.animations.animarGlobal(configAtual.duracaoAnimacao);
+    }, intervaloMs);
   }
 
   handleFecharConfig() {

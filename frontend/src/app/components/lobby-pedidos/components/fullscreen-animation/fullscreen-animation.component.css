@@ -13,7 +13,7 @@
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  padding: 20px;
+  padding: 20px 20px 0 20px;
   pointer-events: none;
   animation: fadeInScale 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
@@ -41,7 +41,7 @@
   gap: 0;
   box-sizing: border-box;
   overflow: hidden;
-  padding: 2vh 20px;
+  padding: 2vh 20px 0 20px;
   animation: slideInUp 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
   animation-delay: 0.1s;
   opacity: 0;
@@ -63,13 +63,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 2.5rem;
   max-width: 100%;
   max-height: min(35vh, calc(100vh - 50vh));
   box-sizing: border-box;
-  margin-bottom: 1vh;
+  margin-bottom: auto;
+  margin-top: 0;
   animation: fadeInBounce 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
   animation-delay: 0.2s;
   opacity: 0;
+  flex-wrap: wrap;
 }
 
 @keyframes fadeInBounce {
@@ -87,15 +90,16 @@
 }
 
 .imagem-topo {
-  width: auto;
-  height: auto;
-  max-width: min(80vw, 600px);
-  max-height: min(35vh, calc(100vh - 50vh));
+  width: min(40vw, 350px);
+  height: min(40vw, 350px);
+  max-width: min(40vw, 350px);
+  max-height: min(40vw, 350px);
   object-fit: contain;
   display: block;
   animation: bounceImagem 2s ease-in-out infinite;
   animation-delay: 1.7s;
   filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.3)) drop-shadow(0 0 30px rgba(255, 107, 53, 0.4));
+  flex-shrink: 0;
 }
 
 @keyframes bounceImagem {
@@ -115,7 +119,7 @@
   max-width: 100%;
   box-sizing: border-box;
   padding: 0 20px;
-  margin: 0 0 2vh 0;
+  margin: auto 0 0.5vh 0;
   animation: fadeInSlide 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
   animation-delay: 0.3s;
   opacity: 0;
@@ -218,7 +222,8 @@
   box-sizing: border-box;
   padding: 0 20px;
   overflow: hidden;
-  margin-top: auto;
+  margin-top: 0;
+  margin-bottom: 2vh;
   animation: fadeInUp 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
   animation-delay: 0.4s;
   opacity: 0;
@@ -271,11 +276,14 @@
 
   .imagem-container {
     max-height: min(25vh, calc(100vh - 55vh));
+    gap: 1.5rem;
   }
 
   .imagem-topo {
-    max-width: min(90vw, 400px);
+    max-width: min(45vw, 250px);
     max-height: min(25vh, calc(100vh - 55vh));
+    width: min(45vw, 250px);
+    height: min(45vw, 250px);
   }
 
   .frase-texto {
@@ -302,11 +310,14 @@
 
   .imagem-container {
     max-height: min(20vh, calc(100vh - 50vh));
+    gap: 1rem;
   }
 
   .imagem-topo {
-    max-width: min(70vw, 300px);
+    max-width: min(40vw, 180px);
     max-height: min(20vh, calc(100vh - 50vh));
+    width: min(40vw, 180px);
+    height: min(40vw, 180px);
   }
 
   .frase-texto {
