@@ -16,13 +16,16 @@ public class SessaoTrabalhoMapper {
                 .dataFim(sessao.getDataFim())
                 .status(sessao.getStatus())
                 .usuarioId(sessao.getUsuarioId())
+                .valorAbertura(sessao.getValorAbertura())
+                .valorFechamento(sessao.getValorFechamento())
                 .createdAt(sessao.getCreatedAt())
                 .updatedAt(sessao.getUpdatedAt())
                 .build();
     }
 
     public SessaoTrabalho paraDomain(SessaoTrabalhoEntity entity) {
-        SessaoTrabalho sessao = SessaoTrabalho.criar(
+        // Usa factory de restauração para compatibilidade com sessões antigas
+        SessaoTrabalho sessao = SessaoTrabalho.restaurarDoBancoFactory(
                 entity.getNumeroSessao(),
                 entity.getUsuarioId());
 
@@ -37,6 +40,11 @@ public class SessaoTrabalhoMapper {
                 entity.getDataInicioCompleta());
 
         sessao.restaurarStatusDoBanco(entity.getStatus(), entity.getDataFim());
+        
+        // Restaurar valores de caixa (pode ser null em sessões antigas)
+        sessao.restaurarValoresCaixaDoBanco(
+                entity.getValorAbertura(),
+                entity.getValorFechamento());
 
         return sessao;
     }

@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,5 +20,10 @@ public interface SessaoTrabalhoJpaRepository extends JpaRepository<SessaoTrabalh
     Optional<SessaoTrabalhoEntity> findFirstByDataInicioOrderByNumeroSessaoDesc(LocalDate dataInicio);
     
     List<SessaoTrabalhoEntity> findAllByOrderByDataInicioCompletaDesc();
+    
+    List<SessaoTrabalhoEntity> findByStatusOrderByDataInicioCompletaDesc(StatusSessao status);
+    
+    Optional<SessaoTrabalhoEntity> findFirstByDataInicioCompletaBeforeAndStatusOrderByDataInicioCompletaDesc(
+            LocalDateTime dataInicioCompleta, StatusSessao status);
 }
 

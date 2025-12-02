@@ -9,6 +9,9 @@
         <button class="btn-header btn-primary" (click)="iniciarSessao()">
           🚀 Iniciar Nova Sessão
         </button>
+        <button class="btn-header btn-historico" routerLink="/historico-sessoes">
+          📊 Histórico de Sessões
+        </button>
         <button class="btn-voltar" routerLink="/" aria-label="Voltar para home">
           ← Voltar
         </button>
@@ -182,4 +185,102 @@
     </main>
   </div>
 </div>
+
+<!-- Modal de Abertura de Caixa -->
+@if (mostrarModalAbertura()) {
+  <div class="modal-overlay" (click)="fecharModalAbertura()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-titulo">
+          💵 Abertura de Caixa
+        </h2>
+        <button class="modal-fechar" (click)="fecharModalAbertura()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <p class="modal-descricao">
+          Informe o valor em dinheiro disponível no caixa para iniciar a sessão.
+        </p>
+        <div class="form-grupo">
+          <label class="form-label">Valor de Abertura *</label>
+          <input
+            type="number"
+            class="form-input"
+            placeholder="0,00"
+            step="0.01"
+            min="0"
+            [value]="valorAbertura()"
+            (input)="valorAbertura.set(+$any($event.target).value)"
+            autofocus
+          />
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancelar" (click)="fecharModalAbertura()">
+          Cancelar
+        </button>
+        <button
+          class="btn-confirmar btn-primary"
+          [disabled]="valorAbertura() === null || valorAbertura()! < 0"
+          (click)="confirmarAbertura()"
+        >
+          🚀 Iniciar Sessão
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal de Fechamento de Caixa -->
+@if (mostrarModalFechamento()) {
+  <div class="modal-overlay" (click)="fecharModalFechamento()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-titulo">
+          🔒 Fechamento de Caixa
+        </h2>
+        <button class="modal-fechar" (click)="fecharModalFechamento()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <p class="modal-descricao">
+          Informe o valor em dinheiro contado no caixa para finalizar a sessão.
+        </p>
+        @if (sessaoParaFinalizar()?.valorAbertura !== undefined) {
+          <div class="info-caixa">
+            <span class="info-label">Valor de Abertura:</span>
+            <span class="info-valor">R$ {{ sessaoParaFinalizar()?.valorAbertura?.toFixed(2) || '0,00' }}</span>
+          </div>
+        }
+        <div class="form-grupo">
+          <label class="form-label">Valor de Fechamento *</label>
+          <input
+            type="number"
+            class="form-input"
+            placeholder="0,00"
+            step="0.01"
+            min="0"
+            [value]="valorFechamento()"
+            (input)="valorFechamento.set(+$any($event.target).value)"
+            autofocus
+          />
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancelar" (click)="fecharModalFechamento()">
+          Cancelar
+        </button>
+        <button
+          class="btn-confirmar btn-finalizar"
+          [disabled]="valorFechamento() === null || valorFechamento()! < 0"
+          (click)="confirmarFechamento()"
+        >
+          ✅ Finalizar Sessão
+        </button>
+      </div>
+    </div>
+  </div>
+}
 

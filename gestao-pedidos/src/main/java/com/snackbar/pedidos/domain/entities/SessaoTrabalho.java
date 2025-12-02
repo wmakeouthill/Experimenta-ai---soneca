@@ -4,6 +4,7 @@ import com.snackbar.kernel.domain.entities.BaseEntity;
 import com.snackbar.kernel.domain.exceptions.ValidationException;
 import lombok.Getter;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -15,6 +16,8 @@ public class SessaoTrabalho extends BaseEntity {
     private LocalDateTime dataFim;
     private StatusSessao status;
     private String usuarioId;
+    private BigDecimal valorAbertura;
+    private BigDecimal valorFechamento;
     
     private SessaoTrabalho() {
         super();
@@ -23,13 +26,29 @@ public class SessaoTrabalho extends BaseEntity {
         this.dataInicio = LocalDate.now();
     }
     
-    public static SessaoTrabalho criar(Integer numeroSessao, String usuarioId) {
+    public static SessaoTrabalho criar(Integer numeroSessao, String usuarioId, BigDecimal valorAbertura) {
+        validarDados(numeroSessao, usuarioId);
+        validarValorAbertura(valorAbertura);
+        
+        SessaoTrabalho sessao = new SessaoTrabalho();
+        sessao.numeroSessao = numeroSessao;
+        sessao.usuarioId = usuarioId;
+        sessao.valorAbertura = valorAbertura;
+        sessao.touch();
+        return sessao;
+    }
+    
+    /**
+     * Método usado APENAS para restaurar sessões do banco de dados.
+     * Não valida obrigatoriedade do valorAbertura para compatibilidade
+     * com sessões antigas que não tinham esse campo.
+     */
+    public static SessaoTrabalho restaurarDoBancoFactory(Integer numeroSessao, String usuarioId) {
         validarDados(numeroSessao, usuarioId);
         
         SessaoTrabalho sessao = new SessaoTrabalho();
         sessao.numeroSessao = numeroSessao;
         sessao.usuarioId = usuarioId;
-        sessao.touch();
         return sessao;
     }
     
@@ -49,12 +68,15 @@ public class SessaoTrabalho extends BaseEntity {
         touch();
     }
     
-    public void finalizar() {
+    public void finalizar(BigDecimal valorFechamento) {
         if (!status.podeSerFinalizada()) {
             throw new ValidationException("Não é possível finalizar uma sessão com status " + status.getDescricao());
         }
+        validarValorFechamento(valorFechamento);
+        
         this.status = StatusSessao.FINALIZADA;
         this.dataFim = LocalDateTime.now();
+        this.valorFechamento = valorFechamento;
         touch();
     }
     
@@ -74,6 +96,14 @@ public class SessaoTrabalho extends BaseEntity {
     public void restaurarStatusDoBanco(StatusSessao status, LocalDateTime dataFim) {
         this.status = status;
         this.dataFim = dataFim;
+    }
+    
+    /**
+     * Restaura os valores de caixa do banco de dados.
+     */
+    public void restaurarValoresCaixaDoBanco(BigDecimal valorAbertura, BigDecimal valorFechamento) {
+        this.valorAbertura = valorAbertura;
+        this.valorFechamento = valorFechamento;
     }
     
     /**
@@ -100,6 +130,24 @@ public class SessaoTrabalho extends BaseEntity {
         }
         if (usuarioId == null || usuarioId.trim().isEmpty()) {
             throw new ValidationException("ID do usuário não pode ser nulo ou vazio");
+        }
+    }
+    
+    private static void validarValorAbertura(BigDecimal valor) {
+        if (valor == null) {
+            throw new ValidationException("Valor de abertura do caixa é obrigatório");
+        }
+        if (valor.compareTo(BigDecimal.ZERO) < 0) {
+            throw new ValidationException("Valor de abertura do caixa não pode ser negativo");
+        }
+    }
+    
+    private static void validarValorFechamento(BigDecimal valor) {
+        if (valor == null) {
+            throw new ValidationException("Valor de fechamento do caixa é obrigatório");
+        }
+        if (valor.compareTo(BigDecimal.ZERO) < 0) {
+            throw new ValidationException("Valor de fechamento do caixa não pode ser negativo");
         }
     }
 }

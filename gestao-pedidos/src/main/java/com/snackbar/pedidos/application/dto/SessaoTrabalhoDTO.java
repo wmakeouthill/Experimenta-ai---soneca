@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -23,6 +24,8 @@ public class SessaoTrabalhoDTO {
     private StatusSessao status;
     private String usuarioId;
     private String nome;
+    private BigDecimal valorAbertura;
+    private BigDecimal valorFechamento;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
@@ -36,6 +39,8 @@ public class SessaoTrabalhoDTO {
             .status(sessao.getStatus())
             .usuarioId(sessao.getUsuarioId())
             .nome(sessao.obterNome())
+            .valorAbertura(sessao.getValorAbertura())
+            .valorFechamento(sessao.getValorFechamento())
             .createdAt(sessao.getCreatedAt())
             .updatedAt(sessao.getUpdatedAt())
             .build();

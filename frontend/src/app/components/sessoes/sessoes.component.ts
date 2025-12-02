@@ -1,4 +1,4 @@
-import { Component, inject, PLATFORM_ID, OnInit, ChangeDetectionStrategy, computed, ViewChild, ElementRef } from '@angular/core';
+import { Component, inject, PLATFORM_ID, OnInit, ChangeDetectionStrategy, computed, ViewChild, ElementRef, signal } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -31,6 +31,15 @@ export class SessoesComponent implements OnInit {
   readonly StatusSessao = StatusSessao;
 
   @ViewChild('sessoesSection', { static: false }) sessoesSectionRef?: ElementRef<HTMLElement>;
+
+  // Modal de abertura de caixa
+  readonly mostrarModalAbertura = signal(false);
+  readonly valorAbertura = signal<number | null>(null);
+
+  // Modal de fechamento de caixa
+  readonly mostrarModalFechamento = signal(false);
+  readonly valorFechamento = signal<number | null>(null);
+  readonly sessaoParaFinalizar = signal<SessaoTrabalho | null>(null);
 
   readonly sessoesPaginadas = this.sessoesComposable.sessoesPaginadas;
   readonly estado = this.sessoesComposable.estado;
@@ -112,8 +121,27 @@ export class SessoesComponent implements OnInit {
       return;
     }
 
-    this.sessaoService.iniciar(usuario.id).subscribe({
+    // Abre o modal para informar o valor de abertura
+    this.valorAbertura.set(0);
+    this.mostrarModalAbertura.set(true);
+  }
+
+  fecharModalAbertura(): void {
+    this.mostrarModalAbertura.set(false);
+    this.valorAbertura.set(null);
+  }
+
+  confirmarAbertura(): void {
+    const usuario = this.authService.usuarioAtual();
+    const valor = this.valorAbertura();
+
+    if (!usuario || valor === null || valor < 0) {
+      return;
+    }
+
+    this.sessaoService.iniciar(usuario.id, valor).subscribe({
       next: () => {
+        this.fecharModalAbertura();
         this.carregarDados();
       },
       error: (error) => {
@@ -151,12 +179,29 @@ export class SessoesComponent implements OnInit {
   }
 
   finalizarSessao(sessao: SessaoTrabalho): void {
-    if (!this.isBrowser || !confirm('Tem certeza que deseja finalizar esta sessão?')) {
+    // Abre o modal para informar o valor de fechamento
+    this.sessaoParaFinalizar.set(sessao);
+    this.valorFechamento.set(null);
+    this.mostrarModalFechamento.set(true);
+  }
+
+  fecharModalFechamento(): void {
+    this.mostrarModalFechamento.set(false);
+    this.valorFechamento.set(null);
+    this.sessaoParaFinalizar.set(null);
+  }
+
+  confirmarFechamento(): void {
+    const sessao = this.sessaoParaFinalizar();
+    const valor = this.valorFechamento();
+
+    if (!sessao || valor === null || valor < 0) {
       return;
     }
 
-    this.sessaoService.finalizar(sessao.id).subscribe({
+    this.sessaoService.finalizar(sessao.id, valor).subscribe({
       next: () => {
+        this.fecharModalFechamento();
         this.carregarDados();
       },
       error: (error) => {

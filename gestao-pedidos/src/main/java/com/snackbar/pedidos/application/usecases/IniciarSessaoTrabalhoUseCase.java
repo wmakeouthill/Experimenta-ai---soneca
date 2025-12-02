@@ -7,6 +7,7 @@ import com.snackbar.pedidos.domain.entities.SessaoTrabalho;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Optional;
 
@@ -16,11 +17,11 @@ public class IniciarSessaoTrabalhoUseCase {
     
     private final SessaoTrabalhoRepositoryPort repository;
     
-    public SessaoTrabalhoDTO executar(String usuarioId) {
+    public SessaoTrabalhoDTO executar(String usuarioId, BigDecimal valorAbertura) {
         validarNaoHaSessaoAtiva();
         
         Integer numeroSessao = calcularProximoNumeroSessao();
-        SessaoTrabalho sessao = SessaoTrabalho.criar(numeroSessao, usuarioId);
+        SessaoTrabalho sessao = SessaoTrabalho.criar(numeroSessao, usuarioId, valorAbertura);
         @SuppressWarnings("null") // repository.salvar() nunca retorna null
         SessaoTrabalho sessaoSalva = repository.salvar(sessao);
         return SessaoTrabalhoDTO.de(sessaoSalva);

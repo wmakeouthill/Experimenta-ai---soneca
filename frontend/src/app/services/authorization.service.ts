@@ -48,6 +48,12 @@ export class AuthorizationService {
       requerAutenticacao: true
     });
 
+    permissoes.set('gestao-caixa', {
+      id: 'gestao-caixa',
+      rolesPermitidos: ['ADMINISTRADOR'],
+      requerAutenticacao: true
+    });
+
     permissoes.set('relatorios', {
       id: 'relatorios',
       rolesPermitidos: ['ADMINISTRADOR'],

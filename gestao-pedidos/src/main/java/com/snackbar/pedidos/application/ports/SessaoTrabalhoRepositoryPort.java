@@ -1,9 +1,11 @@
 package com.snackbar.pedidos.application.ports;
 
 import com.snackbar.pedidos.domain.entities.SessaoTrabalho;
+import com.snackbar.pedidos.domain.entities.StatusSessao;
 import org.springframework.lang.NonNull;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,5 +21,9 @@ public interface SessaoTrabalhoRepositoryPort {
     Optional<SessaoTrabalho> buscarUltimaSessaoPorData(LocalDate dataInicio);
     
     List<SessaoTrabalho> buscarTodas();
+    
+    List<SessaoTrabalho> buscarPorStatus(StatusSessao status);
+    
+    Optional<SessaoTrabalho> buscarSessaoAnterior(LocalDateTime dataInicioCompleta);
 }
 

@@ -9,6 +9,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,5 +59,19 @@ public class SessaoTrabalhoRepositoryAdapter implements SessaoTrabalhoRepository
         return jpaRepository.findAllByOrderByDataInicioCompletaDesc().stream()
                 .map(mapper::paraDomain)
                 .toList();
+    }
+    
+    @Override
+    public List<SessaoTrabalho> buscarPorStatus(StatusSessao status) {
+        return jpaRepository.findByStatusOrderByDataInicioCompletaDesc(status).stream()
+                .map(mapper::paraDomain)
+                .toList();
+    }
+    
+    @Override
+    public Optional<SessaoTrabalho> buscarSessaoAnterior(LocalDateTime dataInicioCompleta) {
+        return jpaRepository.findFirstByDataInicioCompletaBeforeAndStatusOrderByDataInicioCompletaDesc(
+                dataInicioCompleta, StatusSessao.FINALIZADA)
+                .map(mapper::paraDomain);
     }
 }

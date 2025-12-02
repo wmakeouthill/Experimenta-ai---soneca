@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -39,6 +40,12 @@ public class SessaoTrabalhoEntity {
     
     @Column(nullable = false, length = 36)
     private String usuarioId;
+    
+    @Column(precision = 10, scale = 2)
+    private BigDecimal valorAbertura;
+    
+    @Column(precision = 10, scale = 2)
+    private BigDecimal valorFechamento;
     
     @Column(nullable = false)
     private LocalDateTime createdAt;

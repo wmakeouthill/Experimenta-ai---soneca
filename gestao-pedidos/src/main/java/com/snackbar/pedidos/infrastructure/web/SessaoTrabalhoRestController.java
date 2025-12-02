@@ -1,7 +1,10 @@
 package com.snackbar.pedidos.infrastructure.web;
 
+import com.snackbar.pedidos.application.dto.FinalizarSessaoRequest;
+import com.snackbar.pedidos.application.dto.IniciarSessaoRequest;
 import com.snackbar.pedidos.application.dto.SessaoTrabalhoDTO;
 import com.snackbar.pedidos.application.usecases.*;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -26,8 +29,10 @@ public class SessaoTrabalhoRestController {
     private final ListarSessoesTrabalhoUseCase listarSessoesUseCase;
 
     @PostMapping
-    public ResponseEntity<SessaoTrabalhoDTO> iniciar(@RequestParam String usuarioId) {
-        SessaoTrabalhoDTO sessao = iniciarSessaoUseCase.executar(usuarioId);
+    public ResponseEntity<SessaoTrabalhoDTO> iniciar(@Valid @RequestBody IniciarSessaoRequest request) {
+        SessaoTrabalhoDTO sessao = iniciarSessaoUseCase.executar(
+                request.getUsuarioId(),
+                request.getValorAbertura());
         return ResponseEntity.status(HttpStatus.CREATED).body(sessao);
     }
 
@@ -43,9 +48,12 @@ public class SessaoTrabalhoRestController {
         return ResponseEntity.ok(sessao);
     }
 
+    @SuppressWarnings("null") // @Valid garante que valorFechamento não é null
     @PutMapping("/{id}/finalizar")
-    public ResponseEntity<SessaoTrabalhoDTO> finalizar(@NonNull @PathVariable String id) {
-        SessaoTrabalhoDTO sessao = finalizarSessaoUseCase.executar(id);
+    public ResponseEntity<SessaoTrabalhoDTO> finalizar(
+            @NonNull @PathVariable String id,
+            @Valid @RequestBody FinalizarSessaoRequest request) {
+        SessaoTrabalhoDTO sessao = finalizarSessaoUseCase.executar(id, request.getValorFechamento());
         return ResponseEntity.ok(sessao);
     }
 

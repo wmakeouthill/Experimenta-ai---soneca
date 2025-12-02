@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,10 +23,10 @@ public class FinalizarSessaoTrabalhoUseCase {
     private final PedidoRepositoryPort pedidoRepository;
     
     @SuppressWarnings("null") // repository.salvar() nunca retorna null, .get() nunca retorna null porque validamos antes
-    public SessaoTrabalhoDTO executar(@NonNull String sessaoId) {
+    public SessaoTrabalhoDTO executar(@NonNull String sessaoId, @NonNull BigDecimal valorFechamento) {
         SessaoTrabalho sessao = buscarSessao(sessaoId);
         validarPedidosPendentes(sessaoId);
-        sessao.finalizar();
+        sessao.finalizar(valorFechamento);
         SessaoTrabalho sessaoSalva = repository.salvar(sessao);
         return SessaoTrabalhoDTO.de(sessaoSalva);
     }

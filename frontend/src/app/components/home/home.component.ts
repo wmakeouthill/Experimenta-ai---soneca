@@ -67,11 +67,11 @@ export class HomeComponent {
         disponivel: true
       },
       {
-        id: 'historico-sessoes',
-        nome: 'Histórico de Sessões',
-        descricao: 'Visualizar relatórios e histórico de pedidos por sessão',
-        icone: '📊',
-        rota: '/historico-sessoes',
+        id: 'gestao-caixa',
+        nome: 'Gestão de Caixa',
+        descricao: 'Controle financeiro de dinheiro por sessão de trabalho',
+        icone: '💵',
+        rota: '/gestao-caixa',
         cor: 'warning',
         disponivel: true
       },

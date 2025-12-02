@@ -105,6 +105,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/relatorio-financeiro", "/api/relatorio-financeiro/**")
                         .hasRole(ROLE_ADMINISTRADOR)
 
+                        // Endpoints de gestão de caixa - APENAS ADMINISTRADOR
+                        .requestMatchers("/api/caixa", "/api/caixa/**")
+                        .hasRole(ROLE_ADMINISTRADOR)
+
                         // Endpoints de clientes - ADMINISTRADOR e OPERADOR (necessário para criar
                         // pedidos)
                         .requestMatchers("/api/clientes", "/api/clientes/**")

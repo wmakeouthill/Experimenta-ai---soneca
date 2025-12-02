@@ -59,6 +59,12 @@
     <!-- Migration: Adiciona largura_papel e tamanho_fonte na tabela config_impressora -->
     <include file="changes/018-add-largura-papel-e-tamanho-fonte-config-impressora.sql" relativeToChangelogFile="true"/>
 
+    <!-- Migration: Gestão de Caixa - colunas de abertura/fechamento e tabela de movimentações -->
+    <include file="changes/019-gestao-caixa.sql" relativeToChangelogFile="true"/>
+
+    <!-- Migration: Adiciona coluna usuario_id na tabela movimentacoes_caixa -->
+    <include file="changes/020-adicionar-usuario-movimentacoes-caixa.sql" relativeToChangelogFile="true"/>
+
     <!-- 
     NOTA: O usuário administrador inicial é criado automaticamente via CommandLineRunner
     (UsuarioInicialConfig) na primeira execução da aplicação.
