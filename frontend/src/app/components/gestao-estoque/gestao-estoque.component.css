@@ -294,7 +294,9 @@
 .tabela-wrapper {
   overflow-x: auto;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .tabela-estoque {
@@ -312,12 +314,12 @@
 .tabela-estoque td {
   padding: 0.625rem 0.75rem;
   text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .tabela-estoque th {
-  background: rgba(99, 102, 241, 0.15);
-  color: #c7d2fe;
+  background: #1e293b;
+  color: #e2e8f0;
   font-weight: 600;
   text-transform: uppercase;
   font-size: 0.75rem;
@@ -325,16 +327,16 @@
 }
 
 .tabela-estoque tbody tr {
-  background: rgba(255, 255, 255, 0.02);
+  background: #e2e8f0;
   transition: background 0.2s;
 }
 
 .tabela-estoque tbody tr:hover {
-  background: rgba(255, 255, 255, 0.05);
+  filter: brightness(0.97);
 }
 
 .tabela-estoque td {
-  color: #e5e7eb;
+  color: #1f2937;
 }
 
 .col-nome {
@@ -344,14 +346,14 @@
 .nome-item {
   display: block;
   font-weight: 600;
-  color: #f8fafc;
+  color: #1f2937;
   font-size: 0.8125rem;
 }
 
 .descricao-item {
   display: block;
   font-size: 0.6875rem;
-  color: #9ca3af;
+  color: #6b7280;
   margin-top: 0.125rem;
 }
 
@@ -363,12 +365,13 @@
 
 .col-preco {
   font-family: 'JetBrains Mono', monospace;
-  color: #10b981;
+  color: #059669;
   text-align: right;
+  font-weight: 600;
 }
 
 .col-fornecedor {
-  color: #9ca3af;
+  color: #6b7280;
 }
 
 .col-status {
@@ -384,33 +387,33 @@
 }
 
 .badge-status.status-ok {
-  background: rgba(16, 185, 129, 0.2);
-  color: #6ee7b7;
+  background: rgba(16, 185, 129, 0.15);
+  color: #047857;
 }
 
 .badge-status.status-medio {
-  background: rgba(59, 130, 246, 0.2);
-  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.15);
+  color: #1d4ed8;
 }
 
 .badge-status.status-baixo {
-  background: rgba(245, 158, 11, 0.2);
-  color: #fcd34d;
+  background: rgba(245, 158, 11, 0.15);
+  color: #b45309;
 }
 
 .badge-status.status-critico {
-  background: rgba(239, 68, 68, 0.2);
-  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.15);
+  color: #b91c1c;
 }
 
 .badge-status.status-sem-estoque {
-  background: rgba(139, 92, 246, 0.2);
-  color: #c4b5fd;
+  background: rgba(139, 92, 246, 0.15);
+  color: #6d28d9;
 }
 
 .badge-status.status-inativo {
-  background: rgba(107, 114, 128, 0.2);
-  color: #9ca3af;
+  background: rgba(107, 114, 128, 0.15);
+  color: #4b5563;
 }
 
 .col-acoes {
@@ -430,36 +433,36 @@
 }
 
 .btn-editar:hover {
-  background: rgba(99, 102, 241, 0.2);
+  background: rgba(99, 102, 241, 0.15);
 }
 
 .btn-excluir:hover {
-  background: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.15);
 }
 
 /* Linha com estoque baixo */
 tr.row-status-ok {
-  background: rgba(16, 185, 129, 0.04) !important;
+  background: rgba(16, 185, 129, 0.08) !important;
 }
 
 tr.row-status-medio {
-  background: rgba(59, 130, 246, 0.04) !important;
+  background: rgba(59, 130, 246, 0.2) !important;
 }
 
 tr.row-status-baixo {
-  background: rgba(245, 158, 11, 0.06) !important;
+  background: rgba(245, 158, 11, 0.12) !important;
 }
 
 tr.row-status-critico {
-  background: rgba(239, 68, 68, 0.08) !important;
+  background: rgba(239, 68, 68, 0.12) !important;
 }
 
 tr.row-status-sem-estoque {
-  background: rgba(139, 92, 246, 0.08) !important;
+  background: rgba(139, 92, 246, 0.12) !important;
 }
 
 tr.row-status-inativo {
-  background: rgba(107, 114, 128, 0.05) !important;
+  background: rgba(107, 114, 128, 0.25) !important;
   opacity: 0.7;
 }
 
