@@ -3,6 +3,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { useGestaoCaixa } from './composables/use-gestao-caixa';
+import { useUsuarios } from '../sessoes/composables/use-usuarios';
 import { SessaoTrabalho, StatusSessao } from '../../services/sessao-trabalho.service';
 import { TipoItemCaixa } from '../../services/gestao-caixa.service';
 import { FormatoUtil } from '../../utils/formato.util';
@@ -20,6 +21,7 @@ export class GestaoCaixaComponent implements OnInit {
   private readonly isBrowser = isPlatformBrowser(this.platformId);
 
   readonly caixaComposable = useGestaoCaixa();
+  private readonly usuariosStore = useUsuarios();
   readonly StatusSessao = StatusSessao;
   readonly TipoItemCaixa = TipoItemCaixa;
 
@@ -44,7 +46,16 @@ export class GestaoCaixaComponent implements OnInit {
   ngOnInit(): void {
     if (this.isBrowser) {
       this.caixaComposable.carregarSessoes();
+      this.usuariosStore.carregarUsuarios();
     }
+  }
+
+  /**
+   * Obtém o nome do usuário pelo ID.
+   */
+  obterNomeUsuario(usuarioId: string | undefined): string {
+    if (!usuarioId) return 'Desconhecido';
+    return this.usuariosStore.obterNomeUsuario(usuarioId);
   }
 
   selecionarSessao(sessao: SessaoTrabalho): void {

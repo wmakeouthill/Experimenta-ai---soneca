@@ -14,7 +14,8 @@ import java.math.BigDecimal;
 import java.util.Optional;
 
 /**
- * Use case para registrar movimentações de caixa (sangria, suprimento, venda em dinheiro).
+ * Use case para registrar movimentações de caixa (sangria e suprimento).
+ * Vendas em dinheiro são registradas na tabela de pedidos, não no caixa.
  */
 @Service
 @RequiredArgsConstructor
@@ -22,21 +23,6 @@ public class RegistrarMovimentacaoCaixaUseCase {
     
     private final MovimentacaoCaixaRepositoryPort movimentacaoRepository;
     private final SessaoTrabalhoRepositoryPort sessaoRepository;
-    
-    /**
-     * Registra uma venda em dinheiro no caixa.
-     */
-    public MovimentacaoCaixaDTO registrarVendaDinheiro(
-            @NonNull String sessaoId,
-            @NonNull String pedidoId,
-            @NonNull BigDecimal valor
-    ) {
-        validarSessaoAberta(sessaoId);
-        
-        MovimentacaoCaixa movimentacao = MovimentacaoCaixa.criarVendaDinheiro(sessaoId, pedidoId, valor);
-        MovimentacaoCaixa salva = movimentacaoRepository.salvar(movimentacao);
-        return MovimentacaoCaixaDTO.de(salva);
-    }
     
     /**
      * Registra uma sangria (retirada de dinheiro) no caixa.

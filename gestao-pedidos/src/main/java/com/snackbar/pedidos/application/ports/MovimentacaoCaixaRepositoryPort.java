@@ -9,6 +9,8 @@ import java.util.Optional;
 
 /**
  * Port para o repositório de movimentações de caixa.
+ * Registra apenas sangrias e suprimentos.
+ * Vendas em dinheiro são buscadas da tabela de pedidos.
  */
 public interface MovimentacaoCaixaRepositoryPort {
     
@@ -18,11 +20,7 @@ public interface MovimentacaoCaixaRepositoryPort {
     
     List<MovimentacaoCaixa> buscarPorSessaoId(String sessaoId);
     
-    List<MovimentacaoCaixa> buscarPorPedidoId(String pedidoId);
-    
     BigDecimal calcularSaldoSessao(String sessaoId);
-    
-    BigDecimal calcularTotalVendasDinheiro(String sessaoId);
     
     boolean existeMovimentacaoTipo(String sessaoId, TipoMovimentacaoCaixa tipo);
 }

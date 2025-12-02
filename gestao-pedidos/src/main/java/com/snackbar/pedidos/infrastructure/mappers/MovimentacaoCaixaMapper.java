@@ -14,7 +14,6 @@ public class MovimentacaoCaixaMapper {
         return MovimentacaoCaixaEntity.builder()
                 .id(movimentacao.getId())
                 .sessaoId(movimentacao.getSessaoId())
-                .pedidoId(movimentacao.getPedidoId())
                 .usuarioId(movimentacao.getUsuarioId())
                 .tipo(movimentacao.getTipo())
                 .valor(movimentacao.getValor())
@@ -29,7 +28,6 @@ public class MovimentacaoCaixaMapper {
         return MovimentacaoCaixa.restaurarDoBancoFactory(
                 entity.getId(),
                 entity.getSessaoId(),
-                entity.getPedidoId(),
                 entity.getUsuarioId(),
                 entity.getTipo(),
                 entity.getValor(),

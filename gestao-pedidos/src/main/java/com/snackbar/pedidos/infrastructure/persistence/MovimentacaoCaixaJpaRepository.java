@@ -10,6 +10,7 @@ import java.util.List;
 
 /**
  * Repositório JPA para MovimentacaoCaixaEntity.
+ * Armazena apenas sangrias e suprimentos.
  */
 @Repository
 public interface MovimentacaoCaixaJpaRepository extends JpaRepository<MovimentacaoCaixaEntity, String> {
@@ -20,25 +21,13 @@ public interface MovimentacaoCaixaJpaRepository extends JpaRepository<Movimentac
     List<MovimentacaoCaixaEntity> findBySessaoIdOrderByDataMovimentacaoDesc(String sessaoId);
     
     /**
-     * Busca todas as movimentações de um pedido.
-     */
-    List<MovimentacaoCaixaEntity> findByPedidoId(String pedidoId);
-    
-    /**
-     * Calcula o saldo total de uma sessão (soma de todas as movimentações).
+     * Calcula o saldo total de uma sessão (soma de todas as movimentações - sangrias e suprimentos).
      */
     @Query("SELECT COALESCE(SUM(m.valor), 0) FROM MovimentacaoCaixaEntity m WHERE m.sessaoId = :sessaoId")
     BigDecimal calcularSaldoSessao(@Param("sessaoId") String sessaoId);
     
     /**
-     * Calcula o total de vendas em dinheiro de uma sessão.
-     */
-    @Query("SELECT COALESCE(SUM(m.valor), 0) FROM MovimentacaoCaixaEntity m " +
-           "WHERE m.sessaoId = :sessaoId AND m.tipo = 'VENDA_DINHEIRO'")
-    BigDecimal calcularTotalVendasDinheiro(@Param("sessaoId") String sessaoId);
-    
-    /**
-     * Verifica se já existe movimentação de abertura para a sessão.
+     * Verifica se já existe movimentação de determinado tipo para a sessão.
      */
     boolean existsBySessaoIdAndTipo(String sessaoId, com.snackbar.pedidos.domain.entities.TipoMovimentacaoCaixa tipo);
 }

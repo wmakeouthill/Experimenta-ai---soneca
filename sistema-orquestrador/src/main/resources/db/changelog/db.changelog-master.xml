@@ -65,6 +65,9 @@
     <!-- Migration: Adiciona coluna usuario_id na tabela movimentacoes_caixa -->
     <include file="changes/020-adicionar-usuario-movimentacoes-caixa.sql" relativeToChangelogFile="true"/>
 
+    <!-- Migration: Remove coluna pedido_id da tabela movimentacoes_caixa -->
+    <include file="changes/021-remover-pedido-id-movimentacoes-caixa.sql" relativeToChangelogFile="true"/>
+
     <!-- 
     NOTA: O usuário administrador inicial é criado automaticamente via CommandLineRunner
     (UsuarioInicialConfig) na primeira execução da aplicação.

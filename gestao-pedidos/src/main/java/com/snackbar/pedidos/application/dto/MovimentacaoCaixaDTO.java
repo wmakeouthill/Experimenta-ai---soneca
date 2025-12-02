@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * DTO para movimentação de caixa.
+ * DTO para movimentação de caixa (sangria e suprimento).
  */
 @Data
 @Builder
@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 public class MovimentacaoCaixaDTO {
     private String id;
     private String sessaoId;
-    private String pedidoId;
+    private String usuarioId;
     private TipoMovimentacaoCaixa tipo;
     private String tipoDescricao;
     private BigDecimal valor;
@@ -33,7 +33,7 @@ public class MovimentacaoCaixaDTO {
         return MovimentacaoCaixaDTO.builder()
             .id(movimentacao.getId())
             .sessaoId(movimentacao.getSessaoId())
-            .pedidoId(movimentacao.getPedidoId())
+            .usuarioId(movimentacao.getUsuarioId())
             .tipo(movimentacao.getTipo())
             .tipoDescricao(movimentacao.getTipo().getDescricao())
             .valor(movimentacao.getValor())

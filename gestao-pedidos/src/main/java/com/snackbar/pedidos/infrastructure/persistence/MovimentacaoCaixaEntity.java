@@ -25,9 +25,6 @@ public class MovimentacaoCaixaEntity {
     private String sessaoId;
     
     @Column(length = 36)
-    private String pedidoId;
-    
-    @Column(length = 36)
     private String usuarioId;
     
     @Enumerated(EnumType.STRING)

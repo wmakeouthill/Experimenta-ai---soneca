@@ -13,7 +13,6 @@ import com.snackbar.pedidos.domain.entities.Pedido;
 import com.snackbar.pedidos.domain.entities.SessaoTrabalho;
 import com.snackbar.pedidos.domain.entities.StatusSessao;
 import com.snackbar.pedidos.domain.entities.TipoMovimentacaoCaixa;
-import com.snackbar.pedidos.infrastructure.services.UsuarioClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
@@ -35,7 +34,6 @@ public class BuscarResumoCaixaUseCase {
     private final MovimentacaoCaixaRepositoryPort movimentacaoRepository;
     private final SessaoTrabalhoRepositoryPort sessaoRepository;
     private final PedidoRepositoryPort pedidoRepository;
-    private final UsuarioClient usuarioClient;
     
     public ResumoCaixaDTO executar(@NonNull String sessaoId) {
         SessaoTrabalho sessao = buscarSessao(sessaoId);
@@ -127,8 +125,6 @@ public class BuscarResumoCaixaUseCase {
                     
                     if (valorDinheiro.compareTo(BigDecimal.ZERO) > 0) {
                         Integer numeroPedido = Integer.parseInt(pedido.getNumeroPedido().getNumero());
-                        String usuarioId = pedido.getUsuarioId();
-                        String usuarioNome = usuarioClient.buscarNomePorId(usuarioId);
                         
                         vendasDinheiro.add(ItemCaixaDTO.criarVendaDinheiro(
                                 pedido.getId(),
@@ -136,8 +132,7 @@ public class BuscarResumoCaixaUseCase {
                                 pedido.getClienteNome(),
                                 pedido.getDataPedido(),
                                 valorDinheiro,
-                                usuarioId,
-                                usuarioNome
+                                pedido.getUsuarioId()
                         ));
                     }
                 }
@@ -154,17 +149,13 @@ public class BuscarResumoCaixaUseCase {
         List<ItemCaixaDTO> itens = new ArrayList<>();
         
         for (MovimentacaoCaixa mov : movimentacoes) {
-            String usuarioId = mov.getUsuarioId();
-            String usuarioNome = usuarioClient.buscarNomePorId(usuarioId);
-            
             if (mov.getTipo() == TipoMovimentacaoCaixa.SANGRIA) {
                 itens.add(ItemCaixaDTO.criarSangria(
                         mov.getId(),
                         mov.getDataMovimentacao(),
                         mov.getDescricao(),
                         mov.getValor(),
-                        usuarioId,
-                        usuarioNome
+                        mov.getUsuarioId()
                 ));
             } else if (mov.getTipo() == TipoMovimentacaoCaixa.SUPRIMENTO) {
                 itens.add(ItemCaixaDTO.criarSuprimento(
@@ -172,8 +163,7 @@ public class BuscarResumoCaixaUseCase {
                         mov.getDataMovimentacao(),
                         mov.getDescricao(),
                         mov.getValor(),
-                        usuarioId,
-                        usuarioNome
+                        mov.getUsuarioId()
                 ));
             }
         }

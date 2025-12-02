@@ -19,7 +19,6 @@ export interface ItemCaixa {
   clienteNome?: string;
   descricao?: string;
   usuarioId?: string;
-  usuarioNome?: string;
   valor: number;
 }
 

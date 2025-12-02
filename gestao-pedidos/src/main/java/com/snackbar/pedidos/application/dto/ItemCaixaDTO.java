@@ -48,9 +48,8 @@ public class ItemCaixaDTO {
     // Dados específicos de sangria/suprimento
     private String descricao;
     
-    // Usuário responsável
+    // Usuário responsável (ID para mapeamento no frontend)
     private String usuarioId;
-    private String usuarioNome;
     
     private BigDecimal valor;
     
@@ -63,8 +62,7 @@ public class ItemCaixaDTO {
             String clienteNome,
             LocalDateTime dataPedido,
             BigDecimal valorDinheiro,
-            String usuarioId,
-            String usuarioNome
+            String usuarioId
     ) {
         return ItemCaixaDTO.builder()
                 .id(pedidoId)
@@ -74,7 +72,6 @@ public class ItemCaixaDTO {
                 .numeroPedido(numeroPedido)
                 .clienteNome(clienteNome)
                 .usuarioId(usuarioId)
-                .usuarioNome(usuarioNome)
                 .valor(valorDinheiro)
                 .build();
     }
@@ -87,8 +84,7 @@ public class ItemCaixaDTO {
             LocalDateTime dataHora,
             String descricao,
             BigDecimal valor,
-            String usuarioId,
-            String usuarioNome
+            String usuarioId
     ) {
         return ItemCaixaDTO.builder()
                 .id(id)
@@ -97,7 +93,6 @@ public class ItemCaixaDTO {
                 .dataHora(dataHora)
                 .descricao(descricao)
                 .usuarioId(usuarioId)
-                .usuarioNome(usuarioNome)
                 .valor(valor.negate().abs().negate()) // Garantir que é negativo
                 .build();
     }
@@ -110,8 +105,7 @@ public class ItemCaixaDTO {
             LocalDateTime dataHora,
             String descricao,
             BigDecimal valor,
-            String usuarioId,
-            String usuarioNome
+            String usuarioId
     ) {
         return ItemCaixaDTO.builder()
                 .id(id)
@@ -120,7 +114,6 @@ public class ItemCaixaDTO {
                 .dataHora(dataHora)
                 .descricao(descricao)
                 .usuarioId(usuarioId)
-                .usuarioNome(usuarioNome)
                 .valor(valor.abs()) // Garantir que é positivo
                 .build();
     }

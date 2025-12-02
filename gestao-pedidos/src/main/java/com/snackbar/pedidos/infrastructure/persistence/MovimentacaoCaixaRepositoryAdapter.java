@@ -13,6 +13,7 @@ import java.util.Optional;
 
 /**
  * Adapter para o repositório de movimentações de caixa.
+ * Registra apenas sangrias e suprimentos.
  */
 @Component
 @RequiredArgsConstructor
@@ -43,21 +44,8 @@ public class MovimentacaoCaixaRepositoryAdapter implements MovimentacaoCaixaRepo
     }
     
     @Override
-    public List<MovimentacaoCaixa> buscarPorPedidoId(String pedidoId) {
-        return jpaRepository.findByPedidoId(pedidoId)
-                .stream()
-                .map(mapper::paraDomain)
-                .toList();
-    }
-    
-    @Override
     public BigDecimal calcularSaldoSessao(String sessaoId) {
         return jpaRepository.calcularSaldoSessao(sessaoId);
-    }
-    
-    @Override
-    public BigDecimal calcularTotalVendasDinheiro(String sessaoId) {
-        return jpaRepository.calcularTotalVendasDinheiro(sessaoId);
     }
     
     @Override

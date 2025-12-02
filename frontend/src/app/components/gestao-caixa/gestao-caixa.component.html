@@ -229,7 +229,7 @@
                         }
                       </td>
                       <td>
-                        <span class="item-usuario">{{ item.usuarioNome || 'Desconhecido' }}</span>
+                        <span class="item-usuario">{{ obterNomeUsuario(item.usuarioId) }}</span>
                       </td>
                       <td>{{ formatarDataHora(item.dataHora) }}</td>
                       <td class="text-right">

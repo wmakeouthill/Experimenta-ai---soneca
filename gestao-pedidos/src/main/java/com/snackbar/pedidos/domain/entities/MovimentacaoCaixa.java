@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 @Getter
 public class MovimentacaoCaixa extends BaseEntity {
     private String sessaoId;
-    private String pedidoId;
     private String usuarioId;
     private TipoMovimentacaoCaixa tipo;
     private BigDecimal valor;
@@ -24,56 +23,6 @@ public class MovimentacaoCaixa extends BaseEntity {
     private MovimentacaoCaixa() {
         super();
         this.dataMovimentacao = LocalDateTime.now();
-    }
-
-    /**
-     * Cria uma movimentação de abertura de caixa.
-     */
-    public static MovimentacaoCaixa criarAbertura(String sessaoId, BigDecimal valor) {
-        validarSessaoId(sessaoId);
-        validarValor(valor);
-
-        MovimentacaoCaixa movimentacao = new MovimentacaoCaixa();
-        movimentacao.sessaoId = sessaoId;
-        movimentacao.tipo = TipoMovimentacaoCaixa.ABERTURA;
-        movimentacao.valor = valor;
-        movimentacao.descricao = "Abertura de caixa";
-        movimentacao.touch();
-        return movimentacao;
-    }
-
-    /**
-     * Cria uma movimentação de venda em dinheiro.
-     */
-    public static MovimentacaoCaixa criarVendaDinheiro(String sessaoId, String pedidoId, BigDecimal valor) {
-        validarSessaoId(sessaoId);
-        validarPedidoId(pedidoId);
-        validarValorPositivo(valor);
-
-        MovimentacaoCaixa movimentacao = new MovimentacaoCaixa();
-        movimentacao.sessaoId = sessaoId;
-        movimentacao.pedidoId = pedidoId;
-        movimentacao.tipo = TipoMovimentacaoCaixa.VENDA_DINHEIRO;
-        movimentacao.valor = valor;
-        movimentacao.descricao = "Venda em dinheiro";
-        movimentacao.touch();
-        return movimentacao;
-    }
-
-    /**
-     * Cria uma movimentação de fechamento de caixa.
-     */
-    public static MovimentacaoCaixa criarFechamento(String sessaoId, BigDecimal valor) {
-        validarSessaoId(sessaoId);
-        validarValor(valor);
-
-        MovimentacaoCaixa movimentacao = new MovimentacaoCaixa();
-        movimentacao.sessaoId = sessaoId;
-        movimentacao.tipo = TipoMovimentacaoCaixa.FECHAMENTO;
-        movimentacao.valor = valor;
-        movimentacao.descricao = "Fechamento de caixa";
-        movimentacao.touch();
-        return movimentacao;
     }
 
     /**
@@ -116,7 +65,6 @@ public class MovimentacaoCaixa extends BaseEntity {
     public static MovimentacaoCaixa restaurarDoBancoFactory(
             String id,
             String sessaoId,
-            String pedidoId,
             String usuarioId,
             TipoMovimentacaoCaixa tipo,
             BigDecimal valor,
@@ -127,7 +75,6 @@ public class MovimentacaoCaixa extends BaseEntity {
     ) {
         MovimentacaoCaixa movimentacao = new MovimentacaoCaixa();
         movimentacao.sessaoId = sessaoId;
-        movimentacao.pedidoId = pedidoId;
         movimentacao.usuarioId = usuarioId;
         movimentacao.tipo = tipo;
         movimentacao.valor = valor;
@@ -141,21 +88,6 @@ public class MovimentacaoCaixa extends BaseEntity {
     private static void validarSessaoId(String sessaoId) {
         if (sessaoId == null || sessaoId.trim().isEmpty()) {
             throw new ValidationException("ID da sessão não pode ser nulo ou vazio");
-        }
-    }
-
-    private static void validarPedidoId(String pedidoId) {
-        if (pedidoId == null || pedidoId.trim().isEmpty()) {
-            throw new ValidationException("ID do pedido não pode ser nulo ou vazio");
-        }
-    }
-
-    private static void validarValor(BigDecimal valor) {
-        if (valor == null) {
-            throw new ValidationException("Valor não pode ser nulo");
-        }
-        if (valor.compareTo(BigDecimal.ZERO) < 0) {
-            throw new ValidationException("Valor não pode ser negativo");
         }
     }
 
