@@ -1,10 +1,9 @@
 import { inject, signal, computed } from '@angular/core';
-import { 
-  EstoqueService, 
-  ItemEstoque, 
-  CriarItemEstoqueRequest, 
-  AtualizarItemEstoqueRequest,
-  UnidadeMedida
+import {
+  EstoqueService,
+  ItemEstoque,
+  CriarItemEstoqueRequest,
+  AtualizarItemEstoqueRequest
 } from '../../../services/estoque.service';
 
 export type EstadoCarregamento = 'idle' | 'carregando' | 'sucesso' | 'erro';
@@ -16,17 +15,30 @@ export function useGestaoEstoque() {
   const itens = signal<ItemEstoque[]>([]);
   const estado = signal<EstadoCarregamento>('idle');
   const erro = signal<string | null>(null);
-  
+
   // Paginação
   const paginaAtual = signal(0);
-  const tamanhoPagina = signal(10);
+  const tamanhoPagina = signal(6);
   const totalElementos = signal(0);
   const totalPaginas = signal(0);
-  
+
+  // Estatísticas
+  const estatisticas = signal({
+    total: 0,
+    ativos: 0,
+    inativos: 0,
+    semEstoque: 0,
+    estoqueBaixo: 0,
+    estoqueMedio: 0,
+    estoqueAlto: 0,
+    estoqueCritico: 0
+  });
+
   // Filtro
   const filtroNome = signal('');
   const apenasAtivos = signal(false);
-  
+  const filtroStatus = signal<string | null>(null);
+
   // Item em edição
   const itemEmEdicao = signal<ItemEstoque | null>(null);
   const modoEdicao = signal(false);
@@ -54,6 +66,7 @@ export function useGestaoEstoque() {
         itens.set(response.content);
         totalElementos.set(response.totalElements);
         totalPaginas.set(response.totalPages);
+        calcularEstatisticas(response.content);
         estado.set('sucesso');
       },
       error: (err) => {
@@ -61,6 +74,72 @@ export function useGestaoEstoque() {
         estado.set('erro');
       }
     });
+
+    // Carregar todos os itens para estatísticas completas
+    estoqueService.listar({
+      page: 0,
+      size: 10000,
+      sort: 'nome',
+      direction: 'asc'
+    }).subscribe({
+      next: (response) => {
+        calcularEstatisticasCompletas(response.content);
+      }
+    });
+  }
+
+  /**
+   * Calcula estatísticas dos itens carregados.
+   */
+  function calcularEstatisticas(lista: ItemEstoque[]): void {
+    // Estatísticas básicas da página atual
+  }
+
+  /**
+   * Calcula estatísticas completas de todos os itens.
+   */
+  function calcularEstatisticasCompletas(lista: ItemEstoque[]): void {
+    const stats = {
+      total: lista.length,
+      ativos: 0,
+      inativos: 0,
+      semEstoque: 0,
+      estoqueBaixo: 0,
+      estoqueMedio: 0,
+      estoqueAlto: 0,
+      estoqueCritico: 0
+    };
+
+    for (const item of lista) {
+      if (item.ativo) {
+        stats.ativos++;
+
+        if (item.quantidade === 0) {
+          stats.semEstoque++;
+        } else if (item.quantidade <= item.quantidadeMinima * 0.5) {
+          stats.estoqueCritico++;
+        } else if (item.quantidade <= item.quantidadeMinima) {
+          stats.estoqueBaixo++;
+        } else if (item.quantidade <= item.quantidadeMinima * 2) {
+          stats.estoqueMedio++;
+        } else {
+          stats.estoqueAlto++;
+        }
+      } else {
+        stats.inativos++;
+      }
+    }
+
+    estatisticas.set(stats);
+  }
+
+  /**
+   * Filtra itens por status.
+   */
+  function filtrarPorStatus(status: string | null): void {
+    filtroStatus.set(status);
+    paginaAtual.set(0);
+    carregarItens();
   }
 
   /**
@@ -69,7 +148,7 @@ export function useGestaoEstoque() {
   function criarItem(request: CriarItemEstoqueRequest): Promise<ItemEstoque> {
     return new Promise((resolve, reject) => {
       estado.set('carregando');
-      
+
       estoqueService.criar(request).subscribe({
         next: (item) => {
           carregarItens();
@@ -91,7 +170,7 @@ export function useGestaoEstoque() {
   function atualizarItem(id: string, request: AtualizarItemEstoqueRequest): Promise<ItemEstoque> {
     return new Promise((resolve, reject) => {
       estado.set('carregando');
-      
+
       estoqueService.atualizar(id, request).subscribe({
         next: (item) => {
           carregarItens();
@@ -114,7 +193,7 @@ export function useGestaoEstoque() {
   function excluirItem(id: string): Promise<void> {
     return new Promise((resolve, reject) => {
       estado.set('carregando');
-      
+
       estoqueService.excluir(id).subscribe({
         next: () => {
           carregarItens();
@@ -188,21 +267,26 @@ export function useGestaoEstoque() {
     erro,
     estaCarregando,
     temItens,
-    
+
     // Paginação
     paginaAtual,
     tamanhoPagina,
     totalElementos,
     totalPaginas,
-    
+
+    // Estatísticas
+    estatisticas,
+
     // Filtro
     filtroNome,
     apenasAtivos,
-    
+    filtroStatus,
+    filtrarPorStatus,
+
     // Edição
     itemEmEdicao,
     modoEdicao,
-    
+
     // Ações
     carregarItens,
     criarItem,
