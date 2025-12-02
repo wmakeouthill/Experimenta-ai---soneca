@@ -85,11 +85,11 @@ export class HomeComponent {
         disponivel: true
       },
       {
-        id: 'relatorio-financeiro',
-        nome: 'Relatório Financeiro',
-        descricao: 'Relatório detalhado de pedidos e análise financeira do dia',
-        icone: '💰',
-        rota: '/relatorio-financeiro',
+        id: 'gestao-estoque',
+        nome: 'Gestão de Estoque',
+        descricao: 'Controle de estoque e inventário de produtos',
+        icone: '📦',
+        rota: '/gestao-estoque',
         cor: 'success',
         disponivel: true
       },

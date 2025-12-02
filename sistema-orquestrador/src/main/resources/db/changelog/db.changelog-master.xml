@@ -68,6 +68,9 @@
     <!-- Migration: Remove coluna pedido_id da tabela movimentacoes_caixa -->
     <include file="changes/021-remover-pedido-id-movimentacoes-caixa.sql" relativeToChangelogFile="true"/>
 
+    <!-- Migration: Gestão de Estoque - tabela de itens de estoque -->
+    <include file="changes/022-gestao-estoque.sql" relativeToChangelogFile="true"/>
+
     <!-- 
     NOTA: O usuário administrador inicial é criado automaticamente via CommandLineRunner
     (UsuarioInicialConfig) na primeira execução da aplicação.

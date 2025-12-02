@@ -66,6 +66,12 @@ export class AuthorizationService {
       requerAutenticacao: true
     });
 
+    permissoes.set('gestao-estoque', {
+      id: 'gestao-estoque',
+      rolesPermitidos: ['ADMINISTRADOR'],
+      requerAutenticacao: true
+    });
+
     permissoes.set('administracao', {
       id: 'administracao',
       rolesPermitidos: ['ADMINISTRADOR'],

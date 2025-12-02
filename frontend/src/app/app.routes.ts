@@ -47,6 +47,11 @@ export const routes: Routes = [
     canActivate: [adminGuard]
   },
   {
+    path: 'gestao-estoque',
+    loadComponent: () => import('./components/gestao-estoque/gestao-estoque.component').then(m => m.GestaoEstoqueComponent),
+    canActivate: [adminGuard]
+  },
+  {
     path: 'administracao',
     loadComponent: () => import('./components/administracao/administracao.component').then(m => m.AdministracaoComponent),
     canActivate: [adminGuard]

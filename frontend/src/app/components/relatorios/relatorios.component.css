@@ -50,7 +50,7 @@
   flex-wrap: wrap;
 }
 
-.btn-header, .btn-voltar {
+.btn-header, .btn-voltar, .btn-financeiro {
   background: rgba(255, 255, 255, 0.2);
   color: white;
   border: 2px solid rgba(255, 255, 255, 0.3);
@@ -64,10 +64,20 @@
   display: inline-block;
 }
 
-.btn-header:hover, .btn-voltar:hover {
+.btn-header:hover, .btn-voltar:hover, .btn-financeiro:hover {
   background: rgba(255, 255, 255, 0.35);
   border-color: rgba(255, 255, 255, 0.5);
   transform: translateY(-2px);
+}
+
+.btn-financeiro {
+  background: rgba(245, 158, 11, 0.3);
+  border-color: rgba(245, 158, 11, 0.5);
+}
+
+.btn-financeiro:hover {
+  background: rgba(245, 158, 11, 0.5);
+  border-color: rgba(245, 158, 11, 0.7);
 }
 
 .relatorios-content {
