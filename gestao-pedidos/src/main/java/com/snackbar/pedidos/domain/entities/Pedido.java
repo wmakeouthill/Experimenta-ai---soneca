@@ -49,6 +49,23 @@ public class Pedido extends BaseEntity {
         return pedido;
     }
 
+    /**
+     * Cria um pedido via mesa (QR code) sem usuário operador.
+     * Este tipo de pedido é feito diretamente pelo cliente.
+     */
+    public static Pedido criarPedidoMesa(NumeroPedido numeroPedido, String clienteId, String clienteNome) {
+        validarDadosPedidoMesa(numeroPedido, clienteId, clienteNome);
+
+        Pedido pedido = new Pedido();
+        pedido.numeroPedido = numeroPedido;
+        pedido.clienteId = clienteId;
+        pedido.clienteNome = clienteNome;
+        pedido.usuarioId = null; // Pedido de mesa não tem usuário operador
+        pedido.valorTotal = Preco.zero();
+        pedido.touch();
+        return pedido;
+    }
+
     public void adicionarItem(ItemPedido item) {
         if (item == null) {
             throw new ValidationException("Item não pode ser nulo");
@@ -253,6 +270,18 @@ public class Pedido extends BaseEntity {
         }
         if (usuarioId == null || usuarioId.trim().isEmpty()) {
             throw new ValidationException("ID do usuário é obrigatório");
+        }
+    }
+
+    private static void validarDadosPedidoMesa(NumeroPedido numeroPedido, String clienteId, String clienteNome) {
+        if (numeroPedido == null) {
+            throw new ValidationException("Número do pedido não pode ser nulo");
+        }
+        if (clienteId == null || clienteId.trim().isEmpty()) {
+            throw new ValidationException("ID do cliente não pode ser nulo ou vazio");
+        }
+        if (clienteNome == null || clienteNome.trim().isEmpty()) {
+            throw new ValidationException("Nome do cliente não pode ser nulo ou vazio");
         }
     }
 }

@@ -49,7 +49,7 @@ public class PedidoEntity {
     @Column(columnDefinition = "TEXT")
     private String observacoes;
 
-    @Column(nullable = false, length = 36)
+    @Column(nullable = true, length = 36)
     private String usuarioId;
 
     @Column(length = 36)

@@ -17,7 +17,7 @@ export class AuthorizationService {
 
   readonly permissoesModulos = computed<Map<string, PermissaoModulo>>(() => {
     const permissoes = new Map<string, PermissaoModulo>();
-    
+
     permissoes.set('cardapio', {
       id: 'cardapio',
       rolesPermitidos: ['ADMINISTRADOR'],
@@ -32,6 +32,12 @@ export class AuthorizationService {
 
     permissoes.set('pedidos', {
       id: 'pedidos',
+      rolesPermitidos: ['ADMINISTRADOR', 'OPERADOR'],
+      requerAutenticacao: true
+    });
+
+    permissoes.set('fila-pedidos-mesa', {
+      id: 'fila-pedidos-mesa',
       rolesPermitidos: ['ADMINISTRADOR', 'OPERADOR'],
       requerAutenticacao: true
     });
@@ -108,8 +114,8 @@ export class AuthorizationService {
     if (!permissao) {
       return false;
     }
-    return permissao.rolesPermitidos.length === 1 && 
-           permissao.rolesPermitidos[0] === 'ADMINISTRADOR';
+    return permissao.rolesPermitidos.length === 1 &&
+      permissao.rolesPermitidos[0] === 'ADMINISTRADOR';
   }
 }
 

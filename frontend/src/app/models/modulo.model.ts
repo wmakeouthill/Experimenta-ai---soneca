@@ -6,7 +6,7 @@ export interface Modulo {
   descricao: string;
   icone: string;
   rota: string;
-  cor: 'primary' | 'success' | 'warning' | 'info' | 'secondary' | 'purple';
+  cor: 'primary' | 'success' | 'warning' | 'info' | 'secondary' | 'purple' | 'orange';
   disponivel: boolean;
   rolesPermitidos: Role[];
   bloqueado: boolean;

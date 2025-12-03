@@ -22,7 +22,7 @@ export class HomeComponent {
   readonly usuarioAtual = this.authService.usuarioAtual;
   readonly estaAutenticado = this.authService.estaAutenticado;
   readonly isAdministrador = this.authService.isAdministrador;
-  
+
   readonly nomeFormatado = computed(() => {
     const nome = this.usuarioAtual()?.nome;
     return FormatoUtil.capitalizarNome(nome);
@@ -107,7 +107,7 @@ export class HomeComponent {
     return modulosBase.map(modulo => {
       const podeAcessar = this.authorizationService.podeAcessarModulo(modulo.id);
       const rolesPermitidos = this.authorizationService.getRolesPermitidos(modulo.id);
-      
+
       return {
         ...modulo,
         rolesPermitidos,

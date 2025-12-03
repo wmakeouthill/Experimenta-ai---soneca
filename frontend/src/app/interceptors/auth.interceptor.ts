@@ -1,9 +1,10 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 
 /**
- * Interceptor que adiciona o token JWT em todas as requisições HTTP
+ * Interceptor que adiciona o token JWT e o ID do usuário em todas as requisições HTTP
  * O token é obtido do localStorage e adicionado no header Authorization
- * 
+ * O ID do usuário é adicionado no header X-Usuario-Id
+ *
  * NOTA: Não adiciona token em requisições para localhost (servidor local do Electron)
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
@@ -14,23 +15,39 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   }
 
   const token = localStorage.getItem('token');
+  const usuarioStr = localStorage.getItem('usuario');
 
   if (token) {
     // Remove espaços e quebras de linha do token (caso tenha sido salvo incorretamente)
     const tokenLimpo = token.trim();
-    
+
     if (tokenLimpo) {
-      const cloned = req.clone({
-        setHeaders: {
-          Authorization: `Bearer ${tokenLimpo}`
+      // Prepara os headers
+      const headers: Record<string, string> = {
+        Authorization: `Bearer ${tokenLimpo}`
+      };
+
+      // Adiciona X-Usuario-Id se tiver usuário logado
+      if (usuarioStr) {
+        try {
+          const usuario = JSON.parse(usuarioStr);
+          if (usuario?.id) {
+            headers['X-Usuario-Id'] = usuario.id;
+          }
+        } catch {
+          // Ignora erro de parse
         }
+      }
+
+      const cloned = req.clone({
+        setHeaders: headers
       });
-      
+
       // Log apenas em desenvolvimento para debug
       if (process.env['NODE_ENV'] !== 'production') {
         console.debug('Token JWT adicionado à requisição:', req.url);
       }
-      
+
       return next(cloned);
     } else {
       console.warn('Token encontrado no localStorage mas está vazio');

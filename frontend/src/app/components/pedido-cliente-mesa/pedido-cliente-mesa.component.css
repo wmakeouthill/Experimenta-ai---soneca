@@ -84,8 +84,57 @@
     font-size: 1.1rem;
 }
 
+.success-main {
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem !important;
+}
+
+.success-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 1.5rem 0;
+    padding: 1.5rem;
+    background: rgba(255,255,255,0.15);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 300px;
+}
+
+.success-steps .step {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 1rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+}
+
+.success-steps .step-icon {
+    font-size: 1.3rem;
+}
+
+.success-steps .step.completed {
+    background: rgba(76, 175, 80, 0.3);
+}
+
+.success-steps .step.waiting {
+    background: rgba(255, 255, 255, 0.2);
+    animation: pulse-step 2s infinite;
+}
+
+.success-steps .step.pending {
+    opacity: 0.6;
+}
+
+@keyframes pulse-step {
+    0%, 100% { background: rgba(255, 255, 255, 0.2); }
+    50% { background: rgba(255, 255, 255, 0.35); }
+}
+
 .success-info {
     opacity: 0.9;
+    line-height: 1.6;
 }
 
 .btn-novo-pedido {

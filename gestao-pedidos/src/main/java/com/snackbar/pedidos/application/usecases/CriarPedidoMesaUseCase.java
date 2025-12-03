@@ -1,102 +1,62 @@
 package com.snackbar.pedidos.application.usecases;
 
-import com.snackbar.cardapio.domain.valueobjects.Preco;
 import com.snackbar.kernel.domain.exceptions.ValidationException;
 import com.snackbar.pedidos.application.dto.CriarPedidoMesaRequest;
-import com.snackbar.pedidos.application.dto.ItemPedidoRequest;
-import com.snackbar.pedidos.application.dto.PedidoDTO;
+import com.snackbar.pedidos.application.dto.PedidoPendenteDTO;
 import com.snackbar.pedidos.application.ports.CardapioServicePort;
 import com.snackbar.pedidos.application.ports.MesaRepositoryPort;
-import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
-import com.snackbar.pedidos.application.ports.SessaoTrabalhoRepositoryPort;
-import com.snackbar.pedidos.domain.entities.ItemPedido;
+import com.snackbar.pedidos.application.services.FilaPedidosMesaService;
 import com.snackbar.pedidos.domain.entities.Mesa;
-import com.snackbar.pedidos.domain.entities.Pedido;
 import com.snackbar.pedidos.domain.exceptions.MesaNaoEncontradaException;
-import com.snackbar.pedidos.domain.services.PedidoValidator;
-import com.snackbar.pedidos.domain.valueobjects.NumeroPedido;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Use case para criar pedido via mesa (cliente escaneando QR code).
- * Este pedido não tem meio de pagamento definido, pois será pago no caixa.
+ * 
+ * O pedido não é criado diretamente - ele vai para uma fila de pendentes
+ * e aguarda um funcionário aceitar para ser criado de verdade.
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CriarPedidoMesaUseCase {
 
-    private final PedidoRepositoryPort pedidoRepository;
     private final MesaRepositoryPort mesaRepository;
     private final CardapioServicePort cardapioService;
-    private final PedidoValidator pedidoValidator;
-    private final SessaoTrabalhoRepositoryPort sessaoTrabalhoRepository;
+    private final FilaPedidosMesaService filaPedidosMesa;
 
-    private static final String USUARIO_SISTEMA = "SISTEMA"; // ID para pedidos via QR code
+    /**
+     * Adiciona o pedido à fila de pendentes.
+     * O pedido só será criado quando um funcionário aceitar.
+     */
+    public PedidoPendenteDTO executar(@NonNull String qrCodeToken, CriarPedidoMesaRequest request) {
+        // Valida mesa
+        validarMesa(qrCodeToken);
 
-    @Transactional
-    public PedidoDTO executar(@NonNull String qrCodeToken, CriarPedidoMesaRequest request) {
-        Mesa mesa = validarEBuscarMesa(qrCodeToken);
+        // Valida produtos
+        request.getItens().forEach(item -> validarProdutoDisponivel(item.getProdutoId()));
 
-        int ultimoNumero = pedidoRepository.buscarUltimoNumeroPedido();
-        NumeroPedido numeroPedido = ultimoNumero == 0
-                ? NumeroPedido.gerarPrimeiro()
-                : NumeroPedido.gerarProximo(ultimoNumero);
+        // Adiciona à fila de pendentes
+        PedidoPendenteDTO pedidoPendente = filaPedidosMesa.adicionarPedido(request);
 
-        // Usa o clienteId do cliente identificado pelo telefone
-        Pedido pedido = Pedido.criar(
-                numeroPedido,
-                request.getClienteId(), // clienteId do cliente identificado
-                request.getNomeCliente(), // nome do cliente
-                USUARIO_SISTEMA);
+        log.info("Pedido adicionado à fila de espera - ID: {}, Mesa: {}, Cliente: {}",
+                pedidoPendente.getId(),
+                pedidoPendente.getNumeroMesa(),
+                pedidoPendente.getNomeCliente());
 
-        // Define a mesa e o nome do cliente
-        pedido.definirMesa(mesa.getId(), request.getNomeCliente());
-
-        // Adiciona os itens
-        for (ItemPedidoRequest itemRequest : request.getItens()) {
-            validarProdutoDisponivel(itemRequest.getProdutoId());
-
-            var produtoDTO = cardapioService.buscarProdutoPorId(itemRequest.getProdutoId());
-            Preco precoUnitario = Preco.of(produtoDTO.getPreco());
-
-            ItemPedido item = ItemPedido.criar(
-                    itemRequest.getProdutoId(),
-                    produtoDTO.getNome(),
-                    itemRequest.getQuantidade(),
-                    precoUnitario,
-                    itemRequest.getObservacoes());
-
-            pedido.adicionarItem(item);
-        }
-
-        pedido.atualizarObservacoes(request.getObservacoes());
-
-        pedidoValidator.validarCriacao(pedido);
-
-        vincularSessaoAtiva(pedido);
-
-        Pedido pedidoSalvo = pedidoRepository.salvar(pedido);
-
-        return PedidoDTO.de(pedidoSalvo);
+        return pedidoPendente;
     }
 
-    private Mesa validarEBuscarMesa(String qrCodeToken) {
+    private void validarMesa(String qrCodeToken) {
         Mesa mesa = mesaRepository.buscarPorQrCodeToken(qrCodeToken)
                 .orElseThrow(() -> MesaNaoEncontradaException.porToken(qrCodeToken));
 
         if (!mesa.isAtiva()) {
             throw new ValidationException("Esta mesa não está ativa para receber pedidos");
         }
-
-        return mesa;
-    }
-
-    private void vincularSessaoAtiva(Pedido pedido) {
-        sessaoTrabalhoRepository.buscarSessaoAtiva()
-                .ifPresent(sessao -> pedido.definirSessaoId(sessao.getId()));
     }
 
     private void validarProdutoDisponivel(String produtoId) {

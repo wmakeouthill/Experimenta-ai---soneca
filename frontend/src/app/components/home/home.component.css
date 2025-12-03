@@ -337,6 +337,11 @@
   box-shadow: 0 15px 40px rgba(124, 58, 237, 0.35);
 }
 
+.modulo-card.modulo-orange:hover {
+  border-color: #FF5722;
+  box-shadow: 0 15px 40px rgba(255, 87, 34, 0.35);
+}
+
 .modulo-icone {
   font-size: clamp(2.5rem, 4vw, 4.5rem);
   margin-bottom: clamp(4px, 1vh, 8px);
@@ -385,6 +390,10 @@
 
 .modulo-card.modulo-purple .modulo-titulo {
   color: #7C3AED;
+}
+
+.modulo-card.modulo-orange .modulo-titulo {
+  color: #FF5722;
 }
 
 .modulo-descricao {
@@ -439,12 +448,12 @@
     white-space: nowrap;
     justify-content: space-between;
   }
-  
+
   .home-logo {
     width: clamp(50px, 9vw, 90px);
     height: clamp(50px, 9vw, 90px);
   }
-  
+
   .home-header-top > div:first-child {
     justify-content: flex-start;
   }
@@ -545,12 +554,12 @@
     white-space: nowrap;
     justify-content: space-between;
   }
-  
+
   .home-logo {
     width: clamp(45px, 8vw, 80px);
     height: clamp(45px, 8vw, 80px);
   }
-  
+
   .home-header-top > div:first-child {
     justify-content: flex-start;
   }

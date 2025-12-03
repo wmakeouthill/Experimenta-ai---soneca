@@ -238,10 +238,27 @@
     <!-- ========== ETAPA 4: SUCESSO ========== -->
     @if (etapaAtual() === 'sucesso') {
         <div class="success-screen">
-            <div class="success-icon">✅</div>
-            <h2>Pedido Enviado!</h2>
-            <p>Seu pedido foi enviado com sucesso.</p>
-            <p class="success-info">Em breve seu pedido será preparado!</p>
+            <div class="success-icon">🍽️</div>
+            <h2>Pedido Recebido!</h2>
+            <p class="success-main">Seu pedido foi enviado para a cozinha.</p>
+            <div class="success-steps">
+                <div class="step completed">
+                    <span class="step-icon">✅</span>
+                    <span>Pedido enviado</span>
+                </div>
+                <div class="step waiting">
+                    <span class="step-icon">⏳</span>
+                    <span>Aguardando confirmação</span>
+                </div>
+                <div class="step pending">
+                    <span class="step-icon">👨‍🍳</span>
+                    <span>Em preparação</span>
+                </div>
+            </div>
+            <p class="success-info">
+                Um atendente irá confirmar seu pedido em breve.<br>
+                Fique à vontade na mesa {{ mesa()?.numero }}!
+            </p>
             <button class="btn-novo-pedido" (click)="novoPedido()">
                 Fazer Novo Pedido
             </button>

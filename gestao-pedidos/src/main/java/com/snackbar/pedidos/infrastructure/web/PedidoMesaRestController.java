@@ -2,7 +2,7 @@ package com.snackbar.pedidos.infrastructure.web;
 
 import com.snackbar.pedidos.application.dto.CriarPedidoMesaRequest;
 import com.snackbar.pedidos.application.dto.MesaDTO;
-import com.snackbar.pedidos.application.dto.PedidoDTO;
+import com.snackbar.pedidos.application.dto.PedidoPendenteDTO;
 import com.snackbar.pedidos.application.dto.CardapioPublicoDTO;
 import com.snackbar.pedidos.application.dto.ClientePublicoDTO;
 import com.snackbar.pedidos.application.dto.CadastrarClienteRequest;
@@ -21,6 +21,13 @@ import org.springframework.web.bind.annotation.*;
  * Controller REST público para pedidos via mesa (QR Code).
  * Este controller não requer autenticação, pois é acessado pelo cliente via QR
  * code.
+ * 
+ * FLUXO:
+ * 1. Cliente escaneia QR code → valida mesa
+ * 2. Cliente se identifica pelo telefone
+ * 3. Cliente faz pedido → vai para FILA DE PENDENTES
+ * 4. Funcionário aceita o pedido → cria pedido real (via
+ * FilaPedidosMesaController)
  */
 @RestController
 @RequestMapping("/api/public/mesa")
@@ -93,11 +100,15 @@ public class PedidoMesaRestController {
 
     /**
      * Cria um pedido via mesa (QR Code).
+     * O pedido vai para uma fila de pendentes e aguarda aceitação de um
+     * funcionário.
      * Endpoint público que não requer autenticação.
+     * 
+     * @return PedidoPendenteDTO com os dados do pedido na fila
      */
     @PostMapping("/pedido")
-    public ResponseEntity<PedidoDTO> criarPedido(@Valid @RequestBody CriarPedidoMesaRequest request) {
-        PedidoDTO pedido = criarPedidoMesaUseCase.executar(request.mesaToken(), request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(pedido);
+    public ResponseEntity<PedidoPendenteDTO> criarPedido(@Valid @RequestBody CriarPedidoMesaRequest request) {
+        PedidoPendenteDTO pedidoPendente = criarPedidoMesaUseCase.executar(request.mesaToken(), request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(pedidoPendente);
     }
 }
