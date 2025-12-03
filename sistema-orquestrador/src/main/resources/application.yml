@@ -48,11 +48,11 @@ server:
 
 logging:
   level:
-    "[com.snackbar]": ${LOG_LEVEL:DEBUG}
+    "[com.snackbar]": ${LOG_LEVEL:INFO}
     "[org.springframework.web]": INFO
     "[org.hibernate.SQL]": ${SHOW_SQL:false}
     "[org.hibernate.type.descriptor.sql.BasicBinder]": ${SHOW_SQL:false}
-    "[org.springframework.web.servlet.DispatcherServlet]": DEBUG
+    "[org.springframework.web.servlet.DispatcherServlet]": INFO
 
 # Configuração de Impressão de Cupom Fiscal
 impressao:

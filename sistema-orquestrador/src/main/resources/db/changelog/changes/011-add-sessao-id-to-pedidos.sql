@@ -2,6 +2,8 @@
 
 --changeset snackbar:011-add-sessao-id-to-pedidos
 --comment: Migration: Adiciona coluna sessao_id na tabela pedidos para vincular pedidos a sessões de trabalho
+--preconditions onFail:MARK_RAN
+--precondition-sql-check expectedResult:0 SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'pedidos' AND column_name = 'sessao_id'
 
 -- Adiciona coluna sessao_id na tabela pedidos
 ALTER TABLE pedidos 

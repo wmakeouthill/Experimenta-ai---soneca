@@ -6,6 +6,9 @@
         Administração
       </h1>
       <div class="header-actions">
+        <button class="btn-header" routerLink="/gestao-mesas">
+          🍽️ Administrar Mesas
+        </button>
         <button class="btn-header btn-primary" (click)="abrirModalCriar()">
           ➕ Novo Usuário
         </button>
@@ -59,8 +62,8 @@
                   <button class="btn-edit" (click)="abrirModalEditar(usuario)">
                     Editar
                   </button>
-                  <button 
-                    class="btn-toggle" 
+                  <button
+                    class="btn-toggle"
                     (click)="alternarStatus(usuario)"
                     [class.btn-ativar]="!usuario.ativo"
                     [class.btn-desativar]="usuario.ativo"

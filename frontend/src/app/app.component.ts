@@ -1,8 +1,8 @@
 import { Component, inject, OnInit, DestroyRef, PLATFORM_ID } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { catchError } from 'rxjs/operators';
+import { catchError, filter } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { PedidoPollingService } from './services/pedido-polling.service';
 import { SessaoTrabalhoService } from './services/sessao-trabalho.service';
@@ -22,16 +22,43 @@ export class AppComponent implements OnInit {
 
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
+  private readonly router = inject(Router);
   private readonly pollingService = inject(PedidoPollingService);
   private readonly sessaoService = inject(SessaoTrabalhoService);
   private readonly impressaoService = inject(ImpressaoService);
   private readonly notificationService = inject(NotificationService);
   private readonly destroyRef = inject(DestroyRef);
 
+  // Rotas públicas que não devem iniciar serviços autenticados
+  private readonly rotasPublicas = ['/mesa/', '/pedido-mesa/'];
+
   ngOnInit(): void {
     if (this.isBrowser) {
-      this.iniciarServicosGlobais();
+      // Verifica se a rota atual é pública usando window.location
+      // pois this.router.url pode não estar atualizado no ngOnInit
+      const urlAtual = window.location.pathname;
+
+      console.log('🔍 URL atual:', urlAtual, '| É pública:', this.isRotaPublica(urlAtual));
+
+      if (!this.isRotaPublica(urlAtual)) {
+        this.iniciarServicosGlobais();
+      }
+
+      // Monitora mudanças de rota para iniciar/parar serviços
+      this.router.events.pipe(
+        filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe((event) => {
+        if (this.isRotaPublica(event.urlAfterRedirects)) {
+          // Rota pública - para os serviços
+          this.pollingService.pararPolling();
+        }
+      });
     }
+  }
+
+  private isRotaPublica(url: string): boolean {
+    return this.rotasPublicas.some(rota => url.includes(rota));
   }
 
   private iniciarServicosGlobais() {

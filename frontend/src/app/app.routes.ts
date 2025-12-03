@@ -57,6 +57,19 @@ export const routes: Routes = [
     canActivate: [adminGuard]
   },
   {
+    path: 'gestao-mesas',
+    loadComponent: () => import('./components/gestao-mesas/gestao-mesas.component').then(m => m.GestaoMesasComponent),
+    canActivate: [adminGuard]
+  },
+  {
+    path: 'mesa/:token',
+    loadComponent: () => import('./components/pedido-cliente-mesa/pedido-cliente-mesa.component').then(m => m.PedidoClienteMesaComponent)
+  },
+  {
+    path: 'pedido-mesa/:token',
+    loadComponent: () => import('./components/pedido-cliente-mesa/pedido-cliente-mesa.component').then(m => m.PedidoClienteMesaComponent)
+  },
+  {
     path: 'lobby-pedidos',
     loadComponent: () => import('./components/lobby-pedidos/lobby-pedidos.component').then(m => m.LobbyPedidosComponent),
     canActivate: [operadorGuard]

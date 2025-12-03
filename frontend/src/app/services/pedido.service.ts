@@ -36,6 +36,8 @@ export interface Pedido {
   meiosPagamento?: MeioPagamentoDTO[];
   usuarioId?: string;
   sessaoId?: string;
+  mesaId?: string;
+  nomeClienteMesa?: string;
   dataPedido: string;
   createdAt: string;
   updatedAt: string;
@@ -92,33 +94,33 @@ export class PedidoService {
     if (!filters || Object.keys(filters).length === 0) {
       return this.http.get<Pedido[]>(this.apiUrl);
     }
-    
+
     let params = new HttpParams();
-    
+
     if (filters.status) {
       params = params.set('status', filters.status);
     }
-    
+
     if (filters.clienteId) {
       params = params.set('clienteId', filters.clienteId);
     }
-    
+
     if (filters.dataInicio) {
       params = params.set('dataInicio', filters.dataInicio);
     }
-    
+
     if (filters.dataFim) {
       params = params.set('dataFim', filters.dataFim);
     }
-    
+
     if (filters.sessaoId) {
       params = params.set('sessaoId', filters.sessaoId);
     }
-    
+
     if (filters.dataInicioSessao) {
       params = params.set('dataInicioSessao', filters.dataInicioSessao);
     }
-    
+
     return this.http.get<Pedido[]>(this.apiUrl, { params });
   }
 

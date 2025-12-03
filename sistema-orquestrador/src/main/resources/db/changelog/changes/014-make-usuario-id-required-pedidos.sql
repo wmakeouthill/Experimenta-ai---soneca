@@ -34,6 +34,11 @@ AND EXISTS (SELECT 1 FROM usuarios);
 ALTER TABLE pedidos 
 MODIFY COLUMN usuario_id VARCHAR(36) NOT NULL;
 
+--changeset snackbar:014-add-fk-usuario-pedidos
+--comment: Adiciona foreign key de usuario_id em pedidos
+--preconditions onFail:MARK_RAN
+--precondition-sql-check expectedResult:0 SELECT COUNT(*) FROM information_schema.table_constraints WHERE table_schema = DATABASE() AND table_name = 'pedidos' AND constraint_name = 'fk_pedidos_usuario_id'
+
 -- Adiciona foreign key para garantir integridade referencial
 ALTER TABLE pedidos
 ADD CONSTRAINT fk_pedidos_usuario_id 

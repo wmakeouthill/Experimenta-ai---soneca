@@ -1,0 +1,103 @@
+package com.snackbar.pedidos.infrastructure.web;
+
+import com.snackbar.pedidos.application.dto.CriarPedidoMesaRequest;
+import com.snackbar.pedidos.application.dto.MesaDTO;
+import com.snackbar.pedidos.application.dto.PedidoDTO;
+import com.snackbar.pedidos.application.dto.CardapioPublicoDTO;
+import com.snackbar.pedidos.application.dto.ClientePublicoDTO;
+import com.snackbar.pedidos.application.dto.CadastrarClienteRequest;
+import com.snackbar.pedidos.application.usecases.BuscarMesaPorTokenUseCase;
+import com.snackbar.pedidos.application.usecases.CriarPedidoMesaUseCase;
+import com.snackbar.pedidos.application.usecases.BuscarCardapioPublicoUseCase;
+import com.snackbar.pedidos.application.ports.ClienteGatewayPort;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
+import org.springframework.web.bind.annotation.*;
+
+/**
+ * Controller REST público para pedidos via mesa (QR Code).
+ * Este controller não requer autenticação, pois é acessado pelo cliente via QR
+ * code.
+ */
+@RestController
+@RequestMapping("/api/public/mesa")
+@RequiredArgsConstructor
+public class PedidoMesaRestController {
+
+    private final BuscarMesaPorTokenUseCase buscarMesaPorTokenUseCase;
+    private final CriarPedidoMesaUseCase criarPedidoMesaUseCase;
+    private final BuscarCardapioPublicoUseCase buscarCardapioPublicoUseCase;
+    private final ClienteGatewayPort clienteGateway;
+
+    /**
+     * Valida o token da mesa e retorna os dados da mesa.
+     * Endpoint público acessado quando cliente escaneia QR code.
+     */
+    @GetMapping("/{token}")
+    public ResponseEntity<MesaDTO> validarMesa(@NonNull @PathVariable String token) {
+        MesaDTO mesa = buscarMesaPorTokenUseCase.executar(token);
+        return ResponseEntity.ok(mesa);
+    }
+
+    /**
+     * Retorna o cardápio público para a mesa.
+     * Contém categorias ativas e produtos disponíveis.
+     */
+    @GetMapping("/{token}/cardapio")
+    public ResponseEntity<CardapioPublicoDTO> buscarCardapio(@NonNull @PathVariable String token) {
+        // Primeiro valida se a mesa existe e está ativa
+        buscarMesaPorTokenUseCase.executar(token);
+        CardapioPublicoDTO cardapio = buscarCardapioPublicoUseCase.executar();
+        return ResponseEntity.ok(cardapio);
+    }
+
+    /**
+     * Busca cliente por telefone.
+     * Retorna 404 se cliente não encontrado (para redirecionar para cadastro).
+     */
+    @GetMapping("/{token}/cliente/{telefone}")
+    public ResponseEntity<ClientePublicoDTO> buscarClientePorTelefone(
+            @NonNull @PathVariable String token,
+            @NonNull @PathVariable String telefone) {
+        // Valida se a mesa existe
+        buscarMesaPorTokenUseCase.executar(token);
+
+        return clienteGateway.buscarPorTelefone(telefone)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Cadastra novo cliente via mesa.
+     * Endpoint público para auto-cadastro do cliente.
+     */
+    @PostMapping("/{token}/cliente")
+    public ResponseEntity<ClientePublicoDTO> cadastrarCliente(
+            @NonNull @PathVariable String token,
+            @Valid @RequestBody CadastrarClienteRequest request) {
+        // Valida se a mesa existe
+        buscarMesaPorTokenUseCase.executar(token);
+
+        // Verifica se já existe cliente com este telefone
+        var clienteExistente = clienteGateway.buscarPorTelefone(request.getTelefone());
+        if (clienteExistente.isPresent()) {
+            return ResponseEntity.ok(clienteExistente.get());
+        }
+
+        ClientePublicoDTO novoCliente = clienteGateway.cadastrar(request.getNome(), request.getTelefone());
+        return ResponseEntity.status(HttpStatus.CREATED).body(novoCliente);
+    }
+
+    /**
+     * Cria um pedido via mesa (QR Code).
+     * Endpoint público que não requer autenticação.
+     */
+    @PostMapping("/pedido")
+    public ResponseEntity<PedidoDTO> criarPedido(@Valid @RequestBody CriarPedidoMesaRequest request) {
+        PedidoDTO pedido = criarPedidoMesaUseCase.executar(request.mesaToken(), request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(pedido);
+    }
+}

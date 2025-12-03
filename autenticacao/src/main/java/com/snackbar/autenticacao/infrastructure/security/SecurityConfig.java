@@ -32,6 +32,9 @@ public class SecurityConfig {
     private static final String CONFIG_ANIMACAO_PATH = "/api/config-animacao";
     private static final String CONFIG_ANIMACAO_PATTERN = "/api/config-animacao/**";
     private static final String HTTP_METHOD_DELETE = "DELETE";
+    private static final String MESAS_PATH = "/api/mesas";
+    private static final String MESAS_PATTERN = "/api/mesas/**";
+    private static final String PUBLIC_MESA_PATTERN = "/api/public/mesa/**";
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
@@ -52,6 +55,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/api/status").permitAll()
                         .requestMatchers("/api/health").permitAll()
+                        // Endpoints públicos de mesas (QR Code) - Permite pedidos de clientes
+                        .requestMatchers(PUBLIC_MESA_PATTERN).permitAll()
 
                         // Endpoints de autenticação (exigem autenticação)
                         .requestMatchers("/api/auth/**").authenticated()
@@ -107,6 +112,17 @@ public class SecurityConfig {
 
                         // Endpoints de gestão de caixa - APENAS ADMINISTRADOR
                         .requestMatchers("/api/caixa", "/api/caixa/**")
+                        .hasRole(ROLE_ADMINISTRADOR)
+
+                        // Endpoints de mesas - Leitura para ADMINISTRADOR e OPERADOR, escrita apenas
+                        // ADMINISTRADOR
+                        .requestMatchers("GET", MESAS_PATH, MESAS_PATTERN)
+                        .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
+                        .requestMatchers("POST", MESAS_PATH, MESAS_PATTERN)
+                        .hasRole(ROLE_ADMINISTRADOR)
+                        .requestMatchers("PUT", MESAS_PATH, MESAS_PATTERN)
+                        .hasRole(ROLE_ADMINISTRADOR)
+                        .requestMatchers(HTTP_METHOD_DELETE, MESAS_PATH, MESAS_PATTERN)
                         .hasRole(ROLE_ADMINISTRADOR)
 
                         // Endpoints de clientes - ADMINISTRADOR e OPERADOR (necessário para criar

@@ -2,6 +2,8 @@
 
 --changeset snackbar:019-gestao-caixa-1
 --comment: Migration: Adicionar colunas de valores de abertura e fechamento de caixa na tabela de sessões
+--preconditions onFail:MARK_RAN
+--precondition-sql-check expectedResult:0 SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'sessoes_trabalho' AND column_name = 'valor_abertura'
 
 -- Adiciona colunas de valor de abertura e fechamento na tabela de sessões de trabalho
 ALTER TABLE sessoes_trabalho 
@@ -12,6 +14,8 @@ ALTER TABLE sessoes_trabalho
 
 --changeset snackbar:019-gestao-caixa-2
 --comment: Migration: Criação da tabela de movimentações de caixa
+--preconditions onFail:MARK_RAN
+--precondition-sql-check expectedResult:0 SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'movimentacoes_caixa'
 
 -- Tabela de Movimentações de Caixa
 -- Registra todas as transações em dinheiro durante uma sessão de trabalho

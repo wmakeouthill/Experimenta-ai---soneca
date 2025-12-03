@@ -30,6 +30,13 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!-- Módulo Gestão de Clientes (para integração com clientes via mesa) -->
+        <dependency>
+            <groupId>com.snackbar</groupId>
+            <artifactId>gestao-clientes</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Spring Boot Starters (apenas para Infrastructure) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

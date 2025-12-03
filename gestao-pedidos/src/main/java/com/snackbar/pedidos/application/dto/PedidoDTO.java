@@ -27,40 +27,43 @@ public class PedidoDTO {
     private List<MeioPagamentoDTO> meiosPagamento;
     private String usuarioId;
     private String sessaoId;
+    private String mesaId;
+    private String nomeClienteMesa;
     private LocalDateTime dataPedido;
     private LocalDateTime dataFinalizacao;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    
+
     public static PedidoDTO de(Pedido pedido) {
         return PedidoDTO.builder()
-            .id(pedido.getId())
-            .numeroPedido(pedido.getNumeroPedido().getNumero())
-            .clienteId(pedido.getClienteId())
-            .clienteNome(pedido.getClienteNome())
-            .status(pedido.getStatus())
-            .itens(pedido.getItens().stream()
-                .map(item -> ItemPedidoDTO.builder()
-                    .produtoId(item.getProdutoId())
-                    .produtoNome(item.getProdutoNome())
-                    .quantidade(item.getQuantidade())
-                    .precoUnitario(item.getPrecoUnitario().getAmount())
-                    .subtotal(item.calcularSubtotal().getAmount())
-                    .observacoes(item.getObservacoes())
-                    .build())
-                .toList())
-            .valorTotal(pedido.getValorTotal().getAmount())
-            .observacoes(pedido.getObservacoes())
-            .meiosPagamento(pedido.getMeiosPagamento().stream()
-                .map(MeioPagamentoDTO::de)
-                .toList())
-            .usuarioId(pedido.getUsuarioId())
-            .sessaoId(pedido.getSessaoId())
-            .dataPedido(pedido.getDataPedido())
-            .dataFinalizacao(pedido.getDataFinalizacao())
-            .createdAt(pedido.getCreatedAt())
-            .updatedAt(pedido.getUpdatedAt())
-            .build();
+                .id(pedido.getId())
+                .numeroPedido(pedido.getNumeroPedido().getNumero())
+                .clienteId(pedido.getClienteId())
+                .clienteNome(pedido.getClienteNome())
+                .status(pedido.getStatus())
+                .itens(pedido.getItens().stream()
+                        .map(item -> ItemPedidoDTO.builder()
+                                .produtoId(item.getProdutoId())
+                                .produtoNome(item.getProdutoNome())
+                                .quantidade(item.getQuantidade())
+                                .precoUnitario(item.getPrecoUnitario().getAmount())
+                                .subtotal(item.calcularSubtotal().getAmount())
+                                .observacoes(item.getObservacoes())
+                                .build())
+                        .toList())
+                .valorTotal(pedido.getValorTotal().getAmount())
+                .observacoes(pedido.getObservacoes())
+                .meiosPagamento(pedido.getMeiosPagamento().stream()
+                        .map(MeioPagamentoDTO::de)
+                        .toList())
+                .usuarioId(pedido.getUsuarioId())
+                .sessaoId(pedido.getSessaoId())
+                .mesaId(pedido.getMesaId())
+                .nomeClienteMesa(pedido.getNomeClienteMesa())
+                .dataPedido(pedido.getDataPedido())
+                .dataFinalizacao(pedido.getDataFinalizacao())
+                .createdAt(pedido.getCreatedAt())
+                .updatedAt(pedido.getUpdatedAt())
+                .build();
     }
 }
-

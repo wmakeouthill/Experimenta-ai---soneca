@@ -172,8 +172,12 @@
             <div class="pedido-info-principal">
               <h3 class="pedido-numero">Pedido #{{ pedido.numeroPedido }}</h3>
               <p class="pedido-cliente-data">
-                <span class="pedido-cliente" [title]="pedido.clienteNome">{{ truncarNomeCliente(pedido.clienteNome)
-                  }}</span>
+                @if (pedido.mesaId) {
+                  <span class="pedido-mesa-badge">🍽️ Mesa</span>
+                  <span class="pedido-cliente" [title]="pedido.nomeClienteMesa || 'Cliente da mesa'">{{ pedido.nomeClienteMesa || 'Cliente' }}</span>
+                } @else {
+                  <span class="pedido-cliente" [title]="pedido.clienteNome">{{ truncarNomeCliente(pedido.clienteNome) }}</span>
+                }
                 <span class="pedido-separador"> - </span>
                 <span class="pedido-data">{{ formatarData(pedido.dataPedido) }}</span>
               </p>

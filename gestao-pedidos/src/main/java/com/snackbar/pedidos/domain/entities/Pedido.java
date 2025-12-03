@@ -22,9 +22,11 @@ public class Pedido extends BaseEntity {
     private List<MeioPagamentoPedido> meiosPagamento;
     private String usuarioId; // Para futuro login
     private String sessaoId; // ID da sessão de trabalho
+    private String mesaId; // ID da mesa (para pedidos via QR code)
+    private String nomeClienteMesa; // Nome do cliente informado na mesa
     private LocalDateTime dataPedido;
     private LocalDateTime dataFinalizacao; // Data definitiva de finalização (imutável após definida)
-    
+
     private Pedido() {
         super();
         this.itens = new ArrayList<>();
@@ -33,10 +35,10 @@ public class Pedido extends BaseEntity {
         this.dataPedido = LocalDateTime.now();
         this.dataFinalizacao = null; // Inicialmente nulo, será definido apenas quando finalizado
     }
-    
+
     public static Pedido criar(NumeroPedido numeroPedido, String clienteId, String clienteNome, String usuarioId) {
         validarDados(numeroPedido, clienteId, clienteNome, usuarioId);
-        
+
         Pedido pedido = new Pedido();
         pedido.numeroPedido = numeroPedido;
         pedido.clienteId = clienteId;
@@ -46,7 +48,7 @@ public class Pedido extends BaseEntity {
         pedido.touch();
         return pedido;
     }
-    
+
     public void adicionarItem(ItemPedido item) {
         if (item == null) {
             throw new ValidationException("Item não pode ser nulo");
@@ -54,12 +56,12 @@ public class Pedido extends BaseEntity {
         if (status == StatusPedido.FINALIZADO || status == StatusPedido.CANCELADO) {
             throw new ValidationException("Não é possível adicionar itens a um pedido finalizado ou cancelado");
         }
-        
+
         itens.add(item);
         recalcularValorTotal();
         touch();
     }
-    
+
     public void removerItem(int indice) {
         if (indice < 0 || indice >= itens.size()) {
             throw new ValidationException("Índice do item inválido");
@@ -67,56 +69,60 @@ public class Pedido extends BaseEntity {
         if (status == StatusPedido.FINALIZADO || status == StatusPedido.CANCELADO) {
             throw new ValidationException("Não é possível remover itens de um pedido finalizado ou cancelado");
         }
-        
+
         itens.remove(indice);
         recalcularValorTotal();
         touch();
     }
-    
+
     public void atualizarStatus(StatusPedido novoStatus) {
         if (novoStatus == null) {
             throw new ValidationException("Status não pode ser nulo");
         }
         if (!status.podeSerAtualizadoPara(novoStatus)) {
-            throw new ValidationException("Não é possível atualizar o status de " + status.getDescricao() + " para " + novoStatus.getDescricao());
+            throw new ValidationException("Não é possível atualizar o status de " + status.getDescricao() + " para "
+                    + novoStatus.getDescricao());
         }
-        
-        // Define data de finalização apenas quando o status muda para FINALIZADO pela primeira vez
+
+        // Define data de finalização apenas quando o status muda para FINALIZADO pela
+        // primeira vez
         if (novoStatus == StatusPedido.FINALIZADO && this.dataFinalizacao == null) {
             this.dataFinalizacao = LocalDateTime.now();
         }
-        
+
         this.status = novoStatus;
         touch();
     }
-    
+
     public void atualizarObservacoes(String novasObservacoes) {
         this.observacoes = novasObservacoes != null ? novasObservacoes.trim() : null;
         touch();
     }
-    
+
     public void adicionarMeioPagamento(MeioPagamentoPedido meioPagamentoPedido) {
         if (meioPagamentoPedido == null) {
             throw new ValidationException("Meio de pagamento não pode ser nulo");
         }
         if (status == StatusPedido.FINALIZADO || status == StatusPedido.CANCELADO) {
-            throw new ValidationException("Não é possível adicionar meios de pagamento a um pedido finalizado ou cancelado");
+            throw new ValidationException(
+                    "Não é possível adicionar meios de pagamento a um pedido finalizado ou cancelado");
         }
         this.meiosPagamento.add(meioPagamentoPedido);
         touch();
     }
-    
+
     public void removerMeioPagamento(int indice) {
         if (indice < 0 || indice >= meiosPagamento.size()) {
             throw new ValidationException("Índice do meio de pagamento inválido");
         }
         if (status == StatusPedido.FINALIZADO || status == StatusPedido.CANCELADO) {
-            throw new ValidationException("Não é possível remover meios de pagamento de um pedido finalizado ou cancelado");
+            throw new ValidationException(
+                    "Não é possível remover meios de pagamento de um pedido finalizado ou cancelado");
         }
         meiosPagamento.remove(indice);
         touch();
     }
-    
+
     public Preco calcularTotalMeiosPagamento() {
         Preco total = Preco.zero();
         for (MeioPagamentoPedido meioPagamento : meiosPagamento) {
@@ -124,25 +130,52 @@ public class Pedido extends BaseEntity {
         }
         return total;
     }
-    
+
     public void cancelar() {
         // Permite cancelar pedidos finalizados para casos especiais
         this.status = StatusPedido.CANCELADO;
         touch();
     }
-    
+
     public void definirSessaoId(String sessaoId) {
         this.sessaoId = sessaoId;
     }
-    
+
+    /**
+     * Define a mesa e o nome do cliente para pedidos via QR code.
+     */
+    public void definirMesa(String mesaId, String nomeClienteMesa) {
+        if (mesaId != null && !mesaId.trim().isEmpty()) {
+            this.mesaId = mesaId.trim();
+        }
+        if (nomeClienteMesa != null && !nomeClienteMesa.trim().isEmpty()) {
+            this.nomeClienteMesa = nomeClienteMesa.trim();
+        }
+    }
+
+    /**
+     * Restaura os dados da mesa do banco de dados (usado pelos mappers).
+     */
+    public void restaurarMesaDoBanco(String mesaId, String nomeClienteMesa) {
+        this.mesaId = mesaId;
+        this.nomeClienteMesa = nomeClienteMesa;
+    }
+
+    /**
+     * Verifica se o pedido foi feito via mesa (QR code).
+     */
+    public boolean isPedidoMesa() {
+        return mesaId != null && !mesaId.isEmpty();
+    }
+
     public boolean estaFinalizado() {
         return status == StatusPedido.FINALIZADO;
     }
-    
+
     public boolean estaCancelado() {
         return status == StatusPedido.CANCELADO;
     }
-    
+
     private void recalcularValorTotal() {
         Preco total = Preco.zero();
         for (ItemPedido item : itens) {
@@ -150,7 +183,7 @@ public class Pedido extends BaseEntity {
         }
         this.valorTotal = total;
     }
-    
+
     /**
      * Restaura o ID e timestamps do banco de dados (usado pelos mappers).
      */
@@ -158,7 +191,7 @@ public class Pedido extends BaseEntity {
         restaurarId(id);
         restaurarTimestamps(createdAt, updatedAt);
     }
-    
+
     /**
      * Restaura itens do banco de dados sem validações (usado pelos mappers).
      * Este método é usado quando estamos apenas restaurando dados existentes,
@@ -172,9 +205,10 @@ public class Pedido extends BaseEntity {
         }
         recalcularValorTotal();
     }
-    
+
     /**
-     * Restaura meios de pagamento do banco de dados sem validações (usado pelos mappers).
+     * Restaura meios de pagamento do banco de dados sem validações (usado pelos
+     * mappers).
      */
     public void restaurarMeiosPagamentoDoBanco(List<MeioPagamentoPedido> meiosPagamentoRestaurados) {
         if (meiosPagamentoRestaurados == null) {
@@ -183,7 +217,7 @@ public class Pedido extends BaseEntity {
             this.meiosPagamento = new ArrayList<>(meiosPagamentoRestaurados);
         }
     }
-    
+
     /**
      * Restaura a data do pedido do banco de dados (usado pelos mappers).
      * Este método preserva a data original de criação do pedido.
@@ -193,19 +227,21 @@ public class Pedido extends BaseEntity {
             this.dataPedido = dataPedido;
         }
     }
-    
+
     /**
      * Restaura a data de finalização do banco de dados (usado pelos mappers).
      * Este método preserva a data original de finalização do pedido.
      * IMPORTANTE: A data de finalização é imutável após ser definida.
-     * Este método é usado apenas ao restaurar do banco, então sempre restaura o valor do banco.
+     * Este método é usado apenas ao restaurar do banco, então sempre restaura o
+     * valor do banco.
      */
     public void restaurarDataFinalizacaoDoBanco(LocalDateTime dataFinalizacao) {
         // Sempre restaura do banco (este método é usado apenas na restauração)
         this.dataFinalizacao = dataFinalizacao;
     }
-    
-    private static void validarDados(NumeroPedido numeroPedido, String clienteId, String clienteNome, String usuarioId) {
+
+    private static void validarDados(NumeroPedido numeroPedido, String clienteId, String clienteNome,
+            String usuarioId) {
         if (numeroPedido == null) {
             throw new ValidationException("Número do pedido não pode ser nulo");
         }
@@ -220,4 +256,3 @@ public class Pedido extends BaseEntity {
         }
     }
 }
-

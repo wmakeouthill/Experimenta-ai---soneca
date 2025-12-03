@@ -100,6 +100,16 @@
   color: #666;
 }
 
+.pedido-mesa-badge {
+  background: linear-gradient(135deg, #FF6B35, #F7931E);
+  color: white;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-right: 0.3rem;
+}
+
 .pedido-separador {
   color: #999;
   font-weight: 400;
