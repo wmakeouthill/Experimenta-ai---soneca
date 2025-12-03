@@ -77,6 +77,9 @@
     <!-- Migration: Permite usuario_id nulo para pedidos via mesa (QR code) -->
     <include file="changes/024-make-usuario-id-nullable-pedidos.sql" relativeToChangelogFile="true"/>
 
+    <!-- Migration: Adiciona coluna numero_mesa na tabela pedidos -->
+    <include file="changes/025-add-numero-mesa-to-pedidos.sql" relativeToChangelogFile="true"/>
+
     <!-- 
     NOTA: O usuário administrador inicial é criado automaticamente via CommandLineRunner
     (UsuarioInicialConfig) na primeira execução da aplicação.

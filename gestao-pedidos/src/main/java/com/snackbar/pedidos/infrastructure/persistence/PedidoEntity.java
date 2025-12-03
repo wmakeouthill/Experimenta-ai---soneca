@@ -58,6 +58,9 @@ public class PedidoEntity {
     @Column(name = "mesa_id", length = 36)
     private String mesaId;
 
+    @Column(name = "numero_mesa")
+    private Integer numeroMesa;
+
     @Column(name = "nome_cliente_mesa", length = 100)
     private String nomeClienteMesa;
 

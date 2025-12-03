@@ -23,6 +23,7 @@ public class Pedido extends BaseEntity {
     private String usuarioId; // Para futuro login
     private String sessaoId; // ID da sessão de trabalho
     private String mesaId; // ID da mesa (para pedidos via QR code)
+    private Integer numeroMesa; // Número da mesa (para exibição)
     private String nomeClienteMesa; // Nome do cliente informado na mesa
     private LocalDateTime dataPedido;
     private LocalDateTime dataFinalizacao; // Data definitiva de finalização (imutável após definida)
@@ -161,10 +162,11 @@ public class Pedido extends BaseEntity {
     /**
      * Define a mesa e o nome do cliente para pedidos via QR code.
      */
-    public void definirMesa(String mesaId, String nomeClienteMesa) {
+    public void definirMesa(String mesaId, Integer numeroMesa, String nomeClienteMesa) {
         if (mesaId != null && !mesaId.trim().isEmpty()) {
             this.mesaId = mesaId.trim();
         }
+        this.numeroMesa = numeroMesa;
         if (nomeClienteMesa != null && !nomeClienteMesa.trim().isEmpty()) {
             this.nomeClienteMesa = nomeClienteMesa.trim();
         }
@@ -173,8 +175,9 @@ public class Pedido extends BaseEntity {
     /**
      * Restaura os dados da mesa do banco de dados (usado pelos mappers).
      */
-    public void restaurarMesaDoBanco(String mesaId, String nomeClienteMesa) {
+    public void restaurarMesaDoBanco(String mesaId, Integer numeroMesa, String nomeClienteMesa) {
         this.mesaId = mesaId;
+        this.numeroMesa = numeroMesa;
         this.nomeClienteMesa = nomeClienteMesa;
     }
 

@@ -37,6 +37,7 @@ export interface Pedido {
   usuarioId?: string;
   sessaoId?: string;
   mesaId?: string;
+  numeroMesa?: number;
   nomeClienteMesa?: string;
   dataPedido: string;
   createdAt: string;

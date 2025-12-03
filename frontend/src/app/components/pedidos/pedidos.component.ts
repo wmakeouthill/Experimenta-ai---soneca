@@ -1,4 +1,4 @@
-import { Component, inject, PLATFORM_ID, OnInit, signal, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
+import { Component, inject, PLATFORM_ID, OnInit, OnDestroy, signal, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -10,8 +10,9 @@ import { AuthService } from '../../services/auth.service';
 import { ImpressaoService, TipoImpressora } from '../../services/impressao.service';
 import { NovoPedidoModalComponent } from './components/novo-pedido-modal/novo-pedido-modal.component';
 import { MenuContextoPedidoComponent } from './components/menu-contexto-pedido/menu-contexto-pedido.component';
-import { catchError, of } from 'rxjs';
+import { catchError, of, Subscription, interval, startWith, switchMap } from 'rxjs';
 import { NotificationService } from '../../services/notification.service';
+import { FilaPedidosMesaService, PedidoPendente } from '../../services/fila-pedidos-mesa.service';
 
 @Component({
   selector: 'app-pedidos',
@@ -27,7 +28,7 @@ import { NotificationService } from '../../services/notification.service';
   styleUrl: './pedidos.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class PedidosComponent implements OnInit {
+export class PedidosComponent implements OnInit, OnDestroy {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
   private readonly pedidoService = inject(PedidoService);
@@ -36,6 +37,10 @@ export class PedidosComponent implements OnInit {
   private readonly impressaoService = inject(ImpressaoService);
   private readonly notificationService = inject(NotificationService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly filaPedidosMesaService = inject(FilaPedidosMesaService);
+
+  // Subscription para polling de fila de mesa
+  private filaPollingSubscription?: Subscription;
 
   // Composable com toda a lógica de pedidos - inicializado no construtor para contexto de injeção válido
   readonly pedidosComposable!: ReturnType<typeof usePedidos>;
@@ -85,6 +90,11 @@ export class PedidosComponent implements OnInit {
   readonly temSessaoAtiva = signal<boolean>(false);
   readonly sessaoAtiva = signal<SessaoTrabalho | null>(null);
 
+  // Fila de pedidos de mesa pendentes
+  readonly pedidosPendentesMesa = signal<PedidoPendente[]>([]);
+  readonly carregandoFilaMesa = signal(false);
+  readonly filtroFilaMesa = signal(false); // quando true, mostra apenas pedidos da fila
+
   constructor() {
     this.pedidosComposable = usePedidos();
   }
@@ -94,6 +104,7 @@ export class PedidosComponent implements OnInit {
       // verificarSessaoAtiva já chama carregarDados internamente
       this.verificarSessaoAtiva();
       this.pedidosComposable.carregarProdutos();
+      this.iniciarPollingFilaMesa();
 
       // Notificação visual apenas (impressão é global no AppComponent)
       this.pedidosComposable.onNovoPedido
@@ -111,6 +122,32 @@ export class PedidosComponent implements OnInit {
         }
       });
     }
+  }
+
+  ngOnDestroy(): void {
+    this.filaPollingSubscription?.unsubscribe();
+  }
+
+  private iniciarPollingFilaMesa(): void {
+    this.filaPollingSubscription?.unsubscribe();
+
+    this.filaPollingSubscription = interval(5000).pipe(
+      startWith(0),
+      switchMap(() => this.filaPedidosMesaService.listarPedidosPendentes()),
+      catchError(err => {
+        console.error('Erro ao carregar fila de mesa:', err);
+        return of([]);
+      })
+    ).subscribe(pedidos => {
+      const pedidosAnteriores = this.pedidosPendentesMesa();
+      this.pedidosPendentesMesa.set(pedidos);
+
+      // Notificar se há novos pedidos de mesa
+      if (pedidos.length > pedidosAnteriores.length) {
+        const novos = pedidos.length - pedidosAnteriores.length;
+        this.notificationService.info(`🍽️ ${novos} novo(s) pedido(s) de mesa aguardando aceitação!`);
+      }
+    });
   }
 
   verificarSessaoAtiva(): void {
@@ -149,6 +186,7 @@ export class PedidosComponent implements OnInit {
   }
 
   filtrarPorStatus(status: StatusPedido): void {
+    this.filtroFilaMesa.set(false); // Desativa filtro de fila ao filtrar por status
     this.pedidosComposable.filtrarPorStatus(status);
   }
 
@@ -158,10 +196,73 @@ export class PedidosComponent implements OnInit {
 
   limparFiltros(): void {
     this.pedidosComposable.limparFiltros();
+    this.filtroFilaMesa.set(false);
+  }
+
+  filtrarPorFilaMesa(): void {
+    this.pedidosComposable.limparFiltros(); // Limpa filtros de status normais
+    this.filtroFilaMesa.set(true);
   }
 
   recarregar(): void {
     this.carregarDados();
+  }
+
+  // Métodos de fila de pedidos de mesa
+  aceitarPedidoMesa(pedidoId: string): void {
+    if (!this.temSessaoAtiva()) {
+      if (this.isBrowser) {
+        alert('É necessário ter uma sessão de trabalho ativa para aceitar pedidos.');
+      }
+      return;
+    }
+
+    this.carregandoFilaMesa.set(true);
+    this.filaPedidosMesaService.aceitarPedido(pedidoId).subscribe({
+      next: (pedidoCriado) => {
+        this.notificationService.sucesso('✅ Pedido aceito e criado com sucesso!');
+        // Remove da fila local
+        this.pedidosPendentesMesa.update(lista => lista.filter(p => p.id !== pedidoId));
+        // Recarrega pedidos para mostrar o novo
+        this.carregarDados();
+        this.carregandoFilaMesa.set(false);
+      },
+      error: (error) => {
+        console.error('Erro ao aceitar pedido:', error);
+        this.notificationService.erro('❌ Erro ao aceitar pedido: ' + (error.error?.message || error.message));
+        this.carregandoFilaMesa.set(false);
+      }
+    });
+  }
+
+  rejeitarPedidoMesa(pedidoId: string): void {
+    if (!this.isBrowser) return;
+
+    const motivo = prompt('Motivo da rejeição (opcional):');
+    if (motivo === null) return; // Usuário cancelou
+
+    this.carregandoFilaMesa.set(true);
+    this.filaPedidosMesaService.rejeitarPedido(pedidoId, motivo || undefined).subscribe({
+      next: () => {
+        this.notificationService.info('Pedido rejeitado.');
+        // Remove da fila local
+        this.pedidosPendentesMesa.update(lista => lista.filter(p => p.id !== pedidoId));
+        this.carregandoFilaMesa.set(false);
+      },
+      error: (error) => {
+        console.error('Erro ao rejeitar pedido:', error);
+        this.notificationService.erro('❌ Erro ao rejeitar pedido: ' + (error.error?.message || error.message));
+        this.carregandoFilaMesa.set(false);
+      }
+    });
+  }
+
+  formatarTempoEspera(segundos: number): string {
+    return this.filaPedidosMesaService.formatarTempoEspera(segundos);
+  }
+
+  getClasseTempoEspera(segundos: number): string {
+    return this.filaPedidosMesaService.getClasseTempoEspera(segundos);
   }
 
   abrirFormulario(): void {

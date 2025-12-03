@@ -28,6 +28,7 @@ public class PedidoDTO {
     private String usuarioId;
     private String sessaoId;
     private String mesaId;
+    private Integer numeroMesa;
     private String nomeClienteMesa;
     private LocalDateTime dataPedido;
     private LocalDateTime dataFinalizacao;
@@ -59,6 +60,7 @@ public class PedidoDTO {
                 .usuarioId(pedido.getUsuarioId())
                 .sessaoId(pedido.getSessaoId())
                 .mesaId(pedido.getMesaId())
+                .numeroMesa(pedido.getNumeroMesa())
                 .nomeClienteMesa(pedido.getNomeClienteMesa())
                 .dataPedido(pedido.getDataPedido())
                 .dataFinalizacao(pedido.getDataFinalizacao())

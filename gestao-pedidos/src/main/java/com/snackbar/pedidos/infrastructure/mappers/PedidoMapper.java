@@ -28,6 +28,7 @@ public class PedidoMapper {
                 .usuarioId(pedido.getUsuarioId())
                 .sessaoId(pedido.getSessaoId())
                 .mesaId(pedido.getMesaId())
+                .numeroMesa(pedido.getNumeroMesa())
                 .nomeClienteMesa(pedido.getNomeClienteMesa())
                 .dataPedido(pedido.getDataPedido())
                 .dataFinalizacao(pedido.getDataFinalizacao())
@@ -110,7 +111,7 @@ public class PedidoMapper {
         pedido.definirSessaoId(entity.getSessaoId());
 
         // Restaurar dados da mesa (se houver)
-        pedido.restaurarMesaDoBanco(entity.getMesaId(), entity.getNomeClienteMesa());
+        pedido.restaurarMesaDoBanco(entity.getMesaId(), entity.getNumeroMesa(), entity.getNomeClienteMesa());
 
         // Restaurar data do pedido do banco (preserva a data original de criação)
         pedido.restaurarDataPedidoDoBanco(entity.getDataPedido());
