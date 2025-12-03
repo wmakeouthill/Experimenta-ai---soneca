@@ -1,6 +1,6 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, NgZone } from '@angular/core';
 import { catchError, switchMap, takeWhile } from 'rxjs/operators';
-import { of, timer, Subject, Subscription } from 'rxjs';
+import { of, timer, Subject, Subscription, Observable } from 'rxjs';
 import { PedidoService, Pedido } from './pedido.service';
 
 @Injectable({
@@ -8,6 +8,7 @@ import { PedidoService, Pedido } from './pedido.service';
 })
 export class PedidoPollingService {
   private readonly pedidoService = inject(PedidoService);
+  private readonly ngZone = inject(NgZone);
 
   // Estados Globais
   readonly pedidos = signal<Pedido[]>([]);
@@ -36,25 +37,31 @@ export class PedidoPollingService {
     this.pollingAtivo.set(true);
     console.log('Iniciando polling global de pedidos...');
 
-    // Polling a cada 5 segundos
-    this.pollingSubscription = timer(0, 5000).pipe(
-      takeWhile(() => this.pollingAtivo()),
-      switchMap(() => {
-        const filters = sessaoId ? { sessaoId } : undefined;
-        return this.pedidoService.listar(filters).pipe(
-          catchError(err => {
-            console.error('Erro no polling global:', err);
-            this.erro.set('Erro ao buscar pedidos');
-            return of([]); // Continua o polling mesmo com erro
-          })
-        );
-      })
-    ).subscribe(resultado => {
-      // Sempre atualiza os pedidos, mesmo que seja vazio (para refletir filtros/limpeza)
-      this.processarNovosPedidos(resultado);
-      // Força nova referência de array para garantir detecção de mudança
-      this.pedidos.set([...resultado]);
-      this.erro.set(null);
+    // Executa o timer fora da zona Angular para não bloquear hidratação/estabilidade
+    // Isso evita o erro NG0506 (ApplicationRef.isStable() timeout)
+    this.ngZone.runOutsideAngular(() => {
+      // Polling a cada 5 segundos
+      this.pollingSubscription = timer(0, 5000).pipe(
+        takeWhile(() => this.pollingAtivo()),
+        switchMap(() => {
+          const filters = sessaoId ? { sessaoId } : undefined;
+          return this.pedidoService.listar(filters).pipe(
+            catchError(err => {
+              console.error('Erro no polling global:', err);
+              // Atualiza estado dentro da zona Angular
+              this.ngZone.run(() => this.erro.set('Erro ao buscar pedidos'));
+              return of([]); // Continua o polling mesmo com erro
+            })
+          );
+        })
+      ).subscribe(resultado => {
+        // Executa atualizações de estado dentro da zona Angular para trigger change detection
+        this.ngZone.run(() => {
+          this.processarNovosPedidos(resultado);
+          this.pedidos.set([...resultado]);
+          this.erro.set(null);
+        });
+      });
     });
   }
 

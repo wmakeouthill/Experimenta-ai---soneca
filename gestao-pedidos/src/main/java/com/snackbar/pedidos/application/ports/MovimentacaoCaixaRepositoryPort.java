@@ -1,5 +1,7 @@
 package com.snackbar.pedidos.application.ports;
 
+import com.snackbar.pedidos.application.dto.DescricaoMovimentacaoDTO;
+import com.snackbar.pedidos.application.dto.EstatisticaMovimentacaoDTO;
 import com.snackbar.pedidos.domain.entities.MovimentacaoCaixa;
 import com.snackbar.pedidos.domain.entities.TipoMovimentacaoCaixa;
 
@@ -13,15 +15,34 @@ import java.util.Optional;
  * Vendas em dinheiro são buscadas da tabela de pedidos.
  */
 public interface MovimentacaoCaixaRepositoryPort {
-    
-    MovimentacaoCaixa salvar(MovimentacaoCaixa movimentacao);
-    
-    Optional<MovimentacaoCaixa> buscarPorId(String id);
-    
-    List<MovimentacaoCaixa> buscarPorSessaoId(String sessaoId);
-    
-    BigDecimal calcularSaldoSessao(String sessaoId);
-    
-    boolean existeMovimentacaoTipo(String sessaoId, TipoMovimentacaoCaixa tipo);
-}
 
+    MovimentacaoCaixa salvar(MovimentacaoCaixa movimentacao);
+
+    Optional<MovimentacaoCaixa> buscarPorId(String id);
+
+    List<MovimentacaoCaixa> buscarPorSessaoId(String sessaoId);
+
+    BigDecimal calcularSaldoSessao(String sessaoId);
+
+    boolean existeMovimentacaoTipo(String sessaoId, TipoMovimentacaoCaixa tipo);
+
+    /**
+     * Busca todas as descrições de movimentações com contagem de uso.
+     * Ordenado pela mais usada primeiro.
+     */
+    List<DescricaoMovimentacaoDTO> buscarDescricoesComContagem();
+
+    /**
+     * Busca estatísticas de sangrias agrupadas por descrição.
+     * 
+     * @param limite número máximo de resultados
+     */
+    List<EstatisticaMovimentacaoDTO> buscarEstatisticasSangrias(int limite);
+
+    /**
+     * Busca estatísticas de suprimentos agrupadas por descrição.
+     * 
+     * @param limite número máximo de resultados
+     */
+    List<EstatisticaMovimentacaoDTO> buscarEstatisticasSuprimentos(int limite);
+}

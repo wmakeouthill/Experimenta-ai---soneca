@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed, effect, ChangeDetectionStrategy, PLATFORM_ID, afterNextRender, Injector } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed, effect, ChangeDetectionStrategy, PLATFORM_ID, afterNextRender, Injector, NgZone } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { StatusPedido, Pedido } from '../../services/pedido.service';
 import { useLobbyPedidos } from './composables/use-lobby-pedidos';
@@ -31,6 +31,7 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly injector = inject(Injector);
   private readonly authService = inject(AuthService);
+  private readonly ngZone = inject(NgZone);
 
   readonly pedidosAnteriores = signal<Pedido[]>([]);
 
@@ -111,9 +112,13 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
   }
 
   private iniciarPolling() {
-    this.pollingInterval = setInterval(() => {
-      this.lobbyPedidos.carregarPedidos();
-    }, this.intervaloPolling);
+    // Executa o polling fora da zona Angular para não bloquear hidratação/estabilidade
+    this.ngZone.runOutsideAngular(() => {
+      this.pollingInterval = setInterval(() => {
+        // Executa a carga dentro da zona para trigger change detection
+        this.ngZone.run(() => this.lobbyPedidos.carregarPedidos());
+      }, this.intervaloPolling);
+    });
   }
 
   private verificarMudancas(anteriores: Pedido[], atuais: Pedido[]) {
@@ -220,7 +225,7 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
     }
 
     const config = this.animations.animacaoConfig();
-    
+
     // Só iniciar se animação automática estiver ativada
     if (!config.animacaoAtivada) {
       return;
@@ -229,27 +234,32 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
     // Converter intervaloAnimacao de segundos para milissegundos
     const intervaloMs = config.intervaloAnimacao * 1000;
 
-    // Iniciar intervalo periódico
-    this.animacaoPeriodicaInterval = setInterval(() => {
-      // Verificar se ainda está ativada (pode ter mudado)
-      const configAtual = this.animations.animacaoConfig();
-      if (!configAtual.animacaoAtivada) {
-        // Se foi desativada, parar o intervalo
-        if (this.animacaoPeriodicaInterval) {
-          clearInterval(this.animacaoPeriodicaInterval);
-          this.animacaoPeriodicaInterval = null;
-        }
-        return;
-      }
+    // Iniciar intervalo periódico fora da zona Angular para não bloquear estabilidade
+    this.ngZone.runOutsideAngular(() => {
+      this.animacaoPeriodicaInterval = setInterval(() => {
+        // Executa dentro da zona Angular para trigger change detection
+        this.ngZone.run(() => {
+          // Verificar se ainda está ativada (pode ter mudado)
+          const configAtual = this.animations.animacaoConfig();
+          if (!configAtual.animacaoAtivada) {
+            // Se foi desativada, parar o intervalo
+            if (this.animacaoPeriodicaInterval) {
+              clearInterval(this.animacaoPeriodicaInterval);
+              this.animacaoPeriodicaInterval = null;
+            }
+            return;
+          }
 
-      // Não animar se já estiver animando
-      if (this.animations.isAnimating()) {
-        return;
-      }
+          // Não animar se já estiver animando
+          if (this.animations.isAnimating()) {
+            return;
+          }
 
-      // Disparar animação global
-      this.animations.animarGlobal(configAtual.duracaoAnimacao);
-    }, intervaloMs);
+          // Disparar animação global
+          this.animations.animarGlobal(configAtual.duracaoAnimacao);
+        });
+      }, intervaloMs);
+    });
   }
 
   handleFecharConfig() {

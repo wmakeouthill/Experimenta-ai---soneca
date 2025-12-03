@@ -1,8 +1,10 @@
-import { Component, inject, PLATFORM_ID, OnInit, ChangeDetectionStrategy, signal, ViewChild, ElementRef } from '@angular/core';
+import { Component, inject, PLATFORM_ID, OnInit, ChangeDetectionStrategy, signal, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { useGestaoCaixa } from './composables/use-gestao-caixa';
+import { useSugestoesDescricao } from './composables/use-sugestoes-descricao';
+import { useEstatisticasCaixa } from './composables/use-estatisticas-caixa';
 import { useUsuarios } from '../sessoes/composables/use-usuarios';
 import { SessaoTrabalho, StatusSessao } from '../../services/sessao-trabalho.service';
 import { TipoItemCaixa } from '../../services/gestao-caixa.service';
@@ -21,11 +23,14 @@ export class GestaoCaixaComponent implements OnInit {
   private readonly isBrowser = isPlatformBrowser(this.platformId);
 
   readonly caixaComposable = useGestaoCaixa();
+  readonly sugestoesComposable = useSugestoesDescricao();
+  readonly estatisticasComposable = useEstatisticasCaixa();
   private readonly usuariosStore = useUsuarios();
   readonly StatusSessao = StatusSessao;
   readonly TipoItemCaixa = TipoItemCaixa;
 
   @ViewChild('tabelaCaixa', { static: false }) tabelaCaixaRef?: ElementRef<HTMLElement>;
+  @ViewChild('descricaoDropdown', { static: false }) descricaoDropdownRef?: ElementRef<HTMLElement>;
 
   // Modal de movimentação
   readonly mostrarModalMovimentacao = signal(false);
@@ -47,6 +52,23 @@ export class GestaoCaixaComponent implements OnInit {
     if (this.isBrowser) {
       this.caixaComposable.carregarSessoes();
       this.usuariosStore.carregarUsuarios();
+      this.sugestoesComposable.carregarDescricoes();
+    }
+  }
+
+  /**
+   * Fecha o dropdown ao clicar fora.
+   */
+  @HostListener('document:mousedown', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.mostrarModalMovimentacao()) return;
+    if (!this.sugestoesComposable.mostrarSugestoes()) return;
+
+    const target = event.target as HTMLElement;
+    const dropdown = this.descricaoDropdownRef?.nativeElement;
+
+    if (dropdown && !dropdown.contains(target)) {
+      this.sugestoesComposable.fecharSugestoes();
     }
   }
 
@@ -104,6 +126,7 @@ export class GestaoCaixaComponent implements OnInit {
     this.tipoMovimentacao.set('sangria');
     this.valorMovimentacao.set(null);
     this.descricaoMovimentacao.set('');
+    this.sugestoesComposable.resetar();
     this.mostrarModalMovimentacao.set(true);
   }
 
@@ -111,6 +134,7 @@ export class GestaoCaixaComponent implements OnInit {
     this.tipoMovimentacao.set('suprimento');
     this.valorMovimentacao.set(null);
     this.descricaoMovimentacao.set('');
+    this.sugestoesComposable.resetar();
     this.mostrarModalMovimentacao.set(true);
   }
 
@@ -118,13 +142,17 @@ export class GestaoCaixaComponent implements OnInit {
     this.mostrarModalMovimentacao.set(false);
     this.valorMovimentacao.set(null);
     this.descricaoMovimentacao.set('');
+    this.sugestoesComposable.resetar();
   }
 
   confirmarMovimentacao(): void {
     const valor = this.valorMovimentacao();
-    if (!valor || valor <= 0) return;
+    const descricao = this.descricaoMovimentacao().trim();
 
-    const descricao = this.descricaoMovimentacao() || undefined;
+    if (!valor || valor <= 0 || !descricao) return;
+
+    // Adiciona descrição à lista local se for nova
+    this.sugestoesComposable.adicionarDescricaoLocal(descricao);
 
     if (this.tipoMovimentacao() === 'sangria') {
       this.caixaComposable.registrarSangria(valor, descricao);
@@ -133,6 +161,50 @@ export class GestaoCaixaComponent implements OnInit {
     }
 
     this.fecharModalMovimentacao();
+  }
+
+  /**
+   * Verifica se o formulário de movimentação é válido.
+   */
+  formularioMovimentacaoValido(): boolean {
+    const valor = this.valorMovimentacao();
+    const descricao = this.descricaoMovimentacao().trim();
+    return !!valor && valor > 0 && !!descricao;
+  }
+
+  /**
+   * Atualiza a descrição e filtra sugestões.
+   */
+  onDescricaoInput(valor: string): void {
+    this.descricaoMovimentacao.set(valor);
+    this.sugestoesComposable.buscar(valor);
+    this.sugestoesComposable.abrirSugestoes();
+  }
+
+  /**
+   * Seleciona uma sugestão de descrição.
+   */
+  selecionarSugestao(descricao: string): void {
+    this.descricaoMovimentacao.set(descricao);
+    this.sugestoesComposable.fecharSugestoes();
+  }
+
+  /**
+   * Abre o dropdown de sugestões no foco do input.
+   */
+  onDescricaoFocus(): void {
+    this.sugestoesComposable.abrirSugestoes();
+  }
+
+  /**
+   * Alterna a exibição do dropdown de sugestões.
+   */
+  toggleSugestoes(): void {
+    if (this.sugestoesComposable.mostrarSugestoes()) {
+      this.sugestoesComposable.fecharSugestoes();
+    } else {
+      this.sugestoesComposable.abrirSugestoes();
+    }
   }
 
   sessaoEstaAberta(): boolean {
@@ -146,11 +218,11 @@ export class GestaoCaixaComponent implements OnInit {
   calcularTotalDinheiro(): number {
     const resumo = this.resumoCaixa();
     if (!resumo) return 0;
-    
+
     const vendas = resumo.totalVendasDinheiro || 0;
     const suprimentos = resumo.totalSuprimentos || 0;
     const sangrias = resumo.totalSangrias || 0;
-    
+
     return vendas + suprimentos - sangrias;
   }
 
@@ -160,12 +232,12 @@ export class GestaoCaixaComponent implements OnInit {
   calcularSaldoEsperado(): number {
     const resumo = this.resumoCaixa();
     if (!resumo) return 0;
-    
+
     const abertura = resumo.valorAbertura || 0;
     const vendas = resumo.totalVendasDinheiro || 0;
     const suprimentos = resumo.totalSuprimentos || 0;
     const sangrias = resumo.totalSangrias || 0;
-    
+
     return abertura + vendas + suprimentos - sangrias;
   }
 
@@ -177,7 +249,7 @@ export class GestaoCaixaComponent implements OnInit {
     if (!resumo || resumo.valorFechamento === null || resumo.valorFechamento === undefined) {
       return 0;
     }
-    
+
     const saldoEsperado = this.calcularSaldoEsperado();
     return resumo.valorFechamento - saldoEsperado;
   }
@@ -189,20 +261,20 @@ export class GestaoCaixaComponent implements OnInit {
     if (valor === null || valor === undefined) {
       return '-';
     }
-    
+
     const sinal = valor >= 0 ? '+' : '';
     return sinal + this.formatarMoeda(valor);
   }
 
   irParaPagina(pagina: number): void {
     this.caixaComposable.irParaPagina(pagina);
-    
+
     if (this.isBrowser) {
       requestAnimationFrame(() => {
         if (this.tabelaCaixaRef?.nativeElement) {
-          this.tabelaCaixaRef.nativeElement.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'start' 
+          this.tabelaCaixaRef.nativeElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
           });
         }
       });

@@ -1,8 +1,12 @@
 package com.snackbar.pedidos.infrastructure.web;
 
+import com.snackbar.pedidos.application.dto.DescricaoMovimentacaoDTO;
+import com.snackbar.pedidos.application.dto.EstatisticasCaixaDTO;
 import com.snackbar.pedidos.application.dto.MovimentacaoCaixaDTO;
 import com.snackbar.pedidos.application.dto.RegistrarMovimentacaoRequest;
 import com.snackbar.pedidos.application.dto.ResumoCaixaDTO;
+import com.snackbar.pedidos.application.usecases.BuscarDescricoesMovimentacaoUseCase;
+import com.snackbar.pedidos.application.usecases.BuscarEstatisticasCaixaUseCase;
 import com.snackbar.pedidos.application.usecases.BuscarResumoCaixaUseCase;
 import com.snackbar.pedidos.application.usecases.ListarMovimentacoesCaixaUseCase;
 import com.snackbar.pedidos.application.usecases.RegistrarMovimentacaoCaixaUseCase;
@@ -22,11 +26,13 @@ import java.util.List;
 @RequestMapping("/api/caixa")
 @RequiredArgsConstructor
 public class GestaoCaixaRestController {
-    
+
     private final ListarMovimentacoesCaixaUseCase listarMovimentacoesUseCase;
     private final BuscarResumoCaixaUseCase buscarResumoUseCase;
     private final RegistrarMovimentacaoCaixaUseCase registrarMovimentacaoUseCase;
-    
+    private final BuscarDescricoesMovimentacaoUseCase buscarDescricoesUseCase;
+    private final BuscarEstatisticasCaixaUseCase buscarEstatisticasUseCase;
+
     /**
      * Lista todas as movimentações de caixa de uma sessão.
      */
@@ -36,7 +42,7 @@ public class GestaoCaixaRestController {
         List<MovimentacaoCaixaDTO> movimentacoes = listarMovimentacoesUseCase.executar(sessaoId);
         return ResponseEntity.ok(movimentacoes);
     }
-    
+
     /**
      * Busca o resumo do caixa de uma sessão.
      */
@@ -46,7 +52,7 @@ public class GestaoCaixaRestController {
         ResumoCaixaDTO resumo = buscarResumoUseCase.executar(sessaoId);
         return ResponseEntity.ok(resumo);
     }
-    
+
     /**
      * Registra uma sangria (retirada de dinheiro) no caixa.
      */
@@ -61,7 +67,7 @@ public class GestaoCaixaRestController {
                 request.getDescricao());
         return ResponseEntity.status(HttpStatus.CREATED).body(movimentacao);
     }
-    
+
     /**
      * Registra um suprimento (entrada de dinheiro) no caixa.
      */
@@ -76,5 +82,25 @@ public class GestaoCaixaRestController {
                 request.getDescricao());
         return ResponseEntity.status(HttpStatus.CREATED).body(movimentacao);
     }
-}
 
+    /**
+     * Busca todas as descrições de movimentações com contagem de uso.
+     * Usado para autocomplete no frontend, ordenado por frequência de uso.
+     */
+    @GetMapping("/descricoes-movimentacao")
+    public ResponseEntity<List<DescricaoMovimentacaoDTO>> buscarDescricoesMovimentacao() {
+        List<DescricaoMovimentacaoDTO> descricoes = buscarDescricoesUseCase.executar();
+        return ResponseEntity.ok(descricoes);
+    }
+
+    /**
+     * Busca estatísticas de movimentações (sangrias e suprimentos).
+     * Retorna as 20 descrições mais usadas para cada tipo com quantidade e valor
+     * total.
+     */
+    @GetMapping("/estatisticas")
+    public ResponseEntity<EstatisticasCaixaDTO> buscarEstatisticas() {
+        EstatisticasCaixaDTO estatisticas = buscarEstatisticasUseCase.executar();
+        return ResponseEntity.ok(estatisticas);
+    }
+}
