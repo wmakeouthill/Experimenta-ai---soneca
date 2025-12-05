@@ -21,6 +21,12 @@ import {
   useAvaliacao
 } from './composables';
 
+import {
+  SucessoScreenComponent,
+  CardapioFooterNavComponent,
+  AbaNavegacao
+} from './components';
+
 type EtapaPrincipal = 'identificacao' | 'cadastro' | 'cardapio' | 'sucesso';
 type AbaCliente = 'inicio' | 'cardapio' | 'perfil';
 type SecaoPerfil = 'principal' | 'favoritos' | 'pedidos' | 'senha';
@@ -32,7 +38,13 @@ type SecaoPerfil = 'principal' | 'favoritos' | 'pedidos' | 'senha';
 @Component({
   selector: 'app-pedido-cliente-mesa',
   standalone: true,
-  imports: [CommonModule, FormsModule, DraggableScrollDirective],
+  imports: [
+    CommonModule,
+    FormsModule,
+    DraggableScrollDirective,
+    SucessoScreenComponent,
+    CardapioFooterNavComponent
+  ],
   templateUrl: './pedido-cliente-mesa.component.html',
   styleUrls: [
     './styles/base.css',
@@ -113,6 +125,21 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
     return pedidos.some(pedido =>
       pedido.status === 'FINALIZADO' && !this.avaliacao.isPedidoAvaliado(pedido.id)
     );
+  });
+
+  // Verifica se há pedido ativo (não finalizado/cancelado)
+  readonly pedidoAtivoNaoFinalizado = computed(() => {
+    const pedidos = this.meusPedidos.pedidos();
+    if (!pedidos || pedidos.length === 0) return null;
+
+    return pedidos.find(pedido =>
+      pedido.status !== 'FINALIZADO' && pedido.status !== 'CANCELADO'
+    ) || null;
+  });
+
+  // Verifica se deve mostrar CTA de pedido ativo (quando não está na tela de sucesso)
+  readonly mostrarCtaPedidoAtivo = computed(() => {
+    return this.pedidoAtivoNaoFinalizado() !== null && this.etapaAtual() !== 'sucesso';
   });
 
   // ========== Bindings para NgModel ==========
@@ -284,6 +311,31 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
     this.secaoPerfil.set('pedidos');
     this.meusPedidos.carregar();
     this.avaliacao.carregarAvaliacoesCliente();
+  }
+
+  // ========== Status do Pedido ==========
+  verStatusPedido(pedidoId: string): void {
+    // Fecha o modal de detalhes se estiver aberto
+    this.meusPedidos.fecharDetalhes();
+    // Inicia acompanhamento do pedido e vai para tela de sucesso
+    this.sucesso.iniciarAcompanhamento(pedidoId);
+    this.etapaAtual.set('sucesso');
+  }
+
+  verStatusPedidoAtivo(): void {
+    const pedidoAtivo = this.pedidoAtivoNaoFinalizado();
+    if (pedidoAtivo) {
+      this.verStatusPedido(pedidoAtivo.id);
+    }
+  }
+
+  /**
+   * Minimiza a tela de sucesso e volta para o cardápio.
+   * Mantém o polling de status ativo em background.
+   */
+  continuarNavegando(): void {
+    this.etapaAtual.set('cardapio');
+    // NÃO limpa o sucesso - mantém o polling ativo
   }
 
   adicionarAoCarrinhoRapido(produto: Produto): void {

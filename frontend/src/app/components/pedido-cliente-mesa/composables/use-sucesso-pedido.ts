@@ -6,6 +6,11 @@ import { interval, Subscription, switchMap, takeWhile, catchError, of } from 'rx
 const POLLING_INTERVAL_MS = 5000; // 5 segundos
 
 /**
+ * Tipo de retorno do composable useSucessoPedido
+ */
+export type UseSucessoPedidoReturn = ReturnType<typeof useSucessoPedido>;
+
+/**
  * Composable para gerenciar o status do pedido após envio.
  * Faz polling do status até o pedido ser finalizado ou cancelado.
  */

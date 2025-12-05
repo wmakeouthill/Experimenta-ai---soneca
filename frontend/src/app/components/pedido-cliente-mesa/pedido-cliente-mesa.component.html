@@ -741,6 +741,11 @@
                                     </div>
 
                                     <div class="modal-footer">
+                                        @if (meusPedidos.pedidoSelecionado()?.status !== 'FINALIZADO' && meusPedidos.pedidoSelecionado()?.status !== 'CANCELADO') {
+                                            <button class="btn-ver-status" (click)="verStatusPedido(meusPedidos.pedidoSelecionado()!.id)">
+                                                📍 Ver Status do Pedido
+                                            </button>
+                                        }
                                         <button class="btn-fechar" (click)="meusPedidos.fecharDetalhes()">Fechar</button>
                                     </div>
                                 </div>
@@ -828,131 +833,37 @@
             </div>
         }
 
+        <!-- ========== CTA PEDIDO ATIVO ========== -->
+        @if (mostrarCtaPedidoAtivo()) {
+            <div class="cta-pedido-ativo" (click)="verStatusPedidoAtivo()">
+                <div class="cta-pedido-ativo-content">
+                    <span class="cta-pedido-ativo-icon">🍽️</span>
+                    <div class="cta-pedido-ativo-texto">
+                        <strong>Pedido em andamento</strong>
+                        <span>Toque para ver o status</span>
+                    </div>
+                </div>
+                <span class="cta-pedido-ativo-seta">›</span>
+            </div>
+        }
+
         <!-- ========== FOOTER NAVEGAÇÃO ========== -->
-        <nav class="footer-nav">
-            <button class="nav-item" [class.ativo]="abaAtual() === 'inicio'" (click)="navegarPara('inicio')">
-                <span class="nav-icon">🏠</span>
-                <span class="nav-label">Início</span>
-            </button>
-            <button class="nav-item" [class.ativo]="abaAtual() === 'cardapio'" (click)="navegarPara('cardapio')">
-                <span class="nav-icon">📋</span>
-                <span class="nav-label">Cardápio</span>
-            </button>
-            <button class="nav-item carrinho-nav" [class.ativo]="carrinho.mostrarCarrinho()" (click)="navegarPara('carrinho')">
-                <span class="nav-icon">🛒</span>
-                @if (carrinho.totalItens() > 0) {
-                    <span class="carrinho-badge">{{ carrinho.totalItens() }}</span>
-                }
-                <span class="nav-label">Carrinho</span>
-            </button>
-            <button class="nav-item" [class.ativo]="abaAtual() === 'perfil'" (click)="navegarPara('perfil')">
-                <span class="nav-icon">👤</span>
-                <span class="nav-label">Perfil</span>
-            </button>
-        </nav>
+        <app-cardapio-footer-nav
+            [abaAtual]="abaAtual()"
+            [totalCarrinho]="carrinho.totalItens()"
+            (abaMudou)="navegarPara($event)"
+            (abrirCarrinho)="navegarPara('carrinho')"
+        />
     }
 
     <!-- ========== ETAPA 4: SUCESSO ========== -->
     @if (etapaAtual() === 'sucesso') {
-        <div class="success-screen">
-            @if (sucesso.pedidoCancelado()) {
-                <!-- Pedido cancelado/rejeitado -->
-                <div class="success-icon cancelado">❌</div>
-                <h2>Pedido Cancelado</h2>
-                <p class="success-main">Infelizmente seu pedido foi cancelado.</p>
-                @if (sucesso.statusPedido()?.motivoCancelamento) {
-                    <p class="motivo-cancelamento">
-                        Motivo: {{ sucesso.statusPedido()?.motivoCancelamento }}
-                    </p>
-                }
-            } @else {
-                <!-- Pedido em andamento -->
-                <div class="success-icon">🍽️</div>
-                @if (sucesso.numeroPedido()) {
-                    <h2>Pedido #{{ sucesso.numeroPedido() }}</h2>
-                } @else {
-                    <h2>Pedido Recebido!</h2>
-                }
-                <p class="success-main">{{ sucesso.statusDescricao() }}</p>
-
-                <div class="success-steps">
-                    <!-- Passo 1: Pedido enviado (sempre completo) -->
-                    <div class="step completed">
-                        <span class="step-icon">✅</span>
-                        <span>Pedido enviado</span>
-                    </div>
-
-                    <!-- Passo 2: Aguardando confirmação -->
-                    <div class="step"
-                         [class.completed]="sucesso.passoAtual() > 1"
-                         [class.waiting]="sucesso.passoAtual() === 1">
-                        @if (sucesso.passoAtual() > 1) {
-                            <span class="step-icon">✅</span>
-                        } @else {
-                            <span class="step-icon">⏳</span>
-                        }
-                        <span>Aguardando confirmação</span>
-                    </div>
-
-                    <!-- Passo 3: Em preparação -->
-                    <div class="step"
-                         [class.completed]="sucesso.passoAtual() > 2"
-                         [class.waiting]="sucesso.passoAtual() === 2"
-                         [class.pending]="sucesso.passoAtual() < 2">
-                        @if (sucesso.passoAtual() > 2) {
-                            <span class="step-icon">✅</span>
-                        } @else if (sucesso.passoAtual() === 2) {
-                            <span class="step-icon">👨‍🍳</span>
-                        } @else {
-                            <span class="step-icon">⏸️</span>
-                        }
-                        <span>Em preparação</span>
-                    </div>
-
-                    <!-- Passo 4: Pronto -->
-                    <div class="step"
-                         [class.completed]="sucesso.passoAtual() >= 3"
-                         [class.pending]="sucesso.passoAtual() < 3">
-                        @if (sucesso.passoAtual() >= 3) {
-                            <span class="step-icon">🎉</span>
-                        } @else {
-                            <span class="step-icon">⏸️</span>
-                        }
-                        <span>Pronto!</span>
-                    </div>
-                </div>
-
-                @if (sucesso.pedidoFinalizado()) {
-                    <p class="success-info pronto">
-                        🎉 Seu pedido está pronto!<br>
-                        Aguarde que iremos servir na mesa {{ mesa()?.numero }}.
-                    </p>
-                } @else {
-                    <p class="success-info">
-                        @if (sucesso.passoAtual() === 1) {
-                            Um atendente irá confirmar seu pedido em breve.
-                        } @else {
-                            Seu pedido está sendo preparado.
-                        }
-                        <br>
-                        Fique à vontade na mesa {{ mesa()?.numero }}!
-                    </p>
-                    <p class="tempo-espera">
-                        ⏱️ Tempo de espera: {{ sucesso.formatarTempoEspera() }}
-                    </p>
-                }
-            }
-
-            @if (sucesso.pedidoTerminado()) {
-                <button class="btn-novo-pedido" (click)="novoPedido()">
-                    Fazer Novo Pedido
-                </button>
-            } @else {
-                <p class="aguardando-finalizacao">
-                    <small>Você poderá fazer um novo pedido quando este for finalizado.</small>
-                </p>
-            }
-        </div>
+        <app-sucesso-screen
+            [sucesso]="sucesso"
+            [mesaNumero]="mesa()?.numero"
+            (continuarNavegando)="continuarNavegando()"
+            (novoPedido)="novoPedido()"
+        />
     }
 
     <!-- ========== MODAL: DETALHES DO PRODUTO ========== -->
