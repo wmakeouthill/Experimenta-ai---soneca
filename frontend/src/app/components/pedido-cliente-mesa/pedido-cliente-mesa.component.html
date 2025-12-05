@@ -656,28 +656,28 @@
                                         @if (meusPedidos.pedidoSelecionado()?.status === 'FINALIZADO') {
                                             <div class="secao-avaliacao">
                                                 <!-- Se já avaliou e não está editando: mostra resumo -->
-                                                @if (pedidoJaAvaliado() && !isEditandoAvaliacao()) {
+                                                @if (avaliacao.pedidoJaAvaliado() && !avaliacao.isEditando()) {
                                                     <div class="avaliacao-resumo">
                                                         <div class="avaliacao-resumo-header">
                                                             <div class="avaliacao-resumo-info">
                                                                 <span class="avaliacao-resumo-titulo">Sua avaliação</span>
                                                                 <div class="avaliacao-resumo-estrelas">
                                                                     @for (estrela of [1, 2, 3, 4, 5]; track estrela) {
-                                                                        <span class="estrela-resumo" [class.ativa]="getMediaAvaliacaoPedido() >= estrela">
-                                                                            {{ getMediaAvaliacaoPedido() >= estrela ? '★' : '☆' }}
+                                                                        <span class="estrela-resumo" [class.ativa]="avaliacao.getMediaAvaliacaoPedido() >= estrela">
+                                                                            {{ avaliacao.getMediaAvaliacaoPedido() >= estrela ? '★' : '☆' }}
                                                                         </span>
                                                                     }
                                                                 </div>
                                                             </div>
-                                                            <button class="btn-editar-avaliacao" (click)="editarAvaliacao()">
+                                                            <button class="btn-editar-avaliacao" (click)="avaliacao.entrarModoEdicao()">
                                                                 ✏️ Editar
                                                             </button>
                                                         </div>
 
-                                                        @if (getComentarioPedido()) {
+                                                        @if (avaliacao.getComentarioPedido()) {
                                                             <div class="avaliacao-comentario-salvo">
                                                                 <span class="comentario-label">💬 Seu comentário:</span>
-                                                                <p class="comentario-texto">"{{ getComentarioPedido() }}"</p>
+                                                                <p class="comentario-texto">"{{ avaliacao.getComentarioPedido() }}"</p>
                                                             </div>
                                                         }
                                                     </div>
@@ -686,7 +686,7 @@
                                                     <div class="avaliacao-edicao">
                                                         <div class="avaliacao-edicao-header">
                                                             <h4>⭐ Avalie este pedido</h4>
-                                                            @if (pedidoJaAvaliado()) {
+                                                            @if (avaliacao.pedidoJaAvaliado()) {
                                                                 <span class="avaliacao-modo-edicao">Editando</span>
                                                             }
                                                         </div>
@@ -699,9 +699,9 @@
                                                                     <div class="estrelas-avaliacao">
                                                                         @for (estrela of [1, 2, 3, 4, 5]; track estrela) {
                                                                             <button class="estrela-btn"
-                                                                                    [class.ativa]="getAvaliacaoProduto(item.produtoId) >= estrela"
-                                                                                    (click)="avaliarProduto(item.produtoId, estrela)">
-                                                                                {{ getAvaliacaoProduto(item.produtoId) >= estrela ? '★' : '☆' }}
+                                                                                    [class.ativa]="avaliacao.getAvaliacaoProduto(item.produtoId) >= estrela"
+                                                                                    (click)="avaliacao.avaliarProduto(item.produtoId, estrela)">
+                                                                                {{ avaliacao.getAvaliacaoProduto(item.produtoId) >= estrela ? '★' : '☆' }}
                                                                             </button>
                                                                         }
                                                                     </div>
@@ -714,21 +714,21 @@
                                                             <label for="comentarioPedido">💬 Comentário (opcional)</label>
                                                             <textarea
                                                                 id="comentarioPedido"
-                                                                [value]="getComentarioPedido()"
-                                                                (input)="setComentarioPedido($any($event.target).value)"
+                                                                [value]="avaliacao.getComentarioPedido()"
+                                                                (input)="avaliacao.setComentarioPedido($any($event.target).value)"
                                                                 placeholder="Conte-nos sobre sua experiência..."
                                                                 rows="3"
                                                                 class="textarea-comentario"
-                                                                [disabled]="salvandoComentario()"
+                                                                [disabled]="avaliacao.salvando()"
                                                             ></textarea>
                                                         </div>
 
                                                         <!-- Botão Enviar Avaliação -->
                                                         <button
                                                             class="btn-enviar-avaliacao"
-                                                            (click)="enviarAvaliacao()"
-                                                            [disabled]="salvandoComentario() || !temAlgumaAvaliacao()">
-                                                            @if (salvandoComentario()) {
+                                                            (click)="avaliacao.enviarAvaliacao()"
+                                                            [disabled]="avaliacao.salvando() || !avaliacao.temAlgumaAvaliacao()">
+                                                            @if (avaliacao.salvando()) {
                                                                 ⏳ Enviando...
                                                             } @else {
                                                                 ✓ Enviar Avaliação
