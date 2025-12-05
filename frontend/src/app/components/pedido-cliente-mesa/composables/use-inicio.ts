@@ -5,6 +5,7 @@ import { Produto } from '../../../services/produto.service';
 
 export interface ProdutoPopular extends Produto {
     quantidadeVendida?: number;
+    quantidadeFavoritos?: number;
     mediaAvaliacao?: number;
     totalAvaliacoes?: number;
 }
@@ -24,12 +25,12 @@ export function useInicio(
     const carregando = signal(false);
     const erro = signal<string | null>(null);
     const produtosMaisPedidos = signal<ProdutoPopular[]>([]);
-    const produtosMaisPedidosCliente = signal<ProdutoPopular[]>([]);
+    const produtosMaisFavoritados = signal<ProdutoPopular[]>([]);
     const produtosBemAvaliados = signal<ProdutoPopular[]>([]);
 
     // Computed
     const temFavoritos = computed(() => getProdutosFavoritos().length > 0);
-    const temMaisPedidosCliente = computed(() => produtosMaisPedidosCliente().length > 0);
+    const temMaisFavoritados = computed(() => produtosMaisFavoritados().length > 0);
 
     /**
      * Carrega os produtos populares da API
@@ -44,8 +45,8 @@ export function useInicio(
         try {
             // Carregar mais pedidos (geral)
             await carregarMaisPedidos(token);
-            // Carregar mais pedidos do cliente
-            await carregarMaisPedidosCliente(token);
+            // Carregar mais favoritados (geral)
+            await carregarMaisFavoritados(token);
             // Carregar mais bem avaliados
             await carregarBemAvaliados(token);
         } catch (e) {
@@ -73,24 +74,18 @@ export function useInicio(
     }
 
     /**
-     * Carrega os produtos mais pedidos pelo cliente específico
+     * Carrega os produtos mais favoritados (geral)
      */
-    async function carregarMaisPedidosCliente(token: string): Promise<void> {
-        const clienteId = getClienteId();
-        if (!clienteId) {
-            produtosMaisPedidosCliente.set([]);
-            return;
-        }
-
+    async function carregarMaisFavoritados(token: string): Promise<void> {
         try {
             const produtos = await http.get<ProdutoPopular[]>(
-                `${environment.apiUrl}/public/mesa/${token}/produtos/mais-pedidos-cliente/${clienteId}?limite=8`
+                `${environment.apiUrl}/public/mesa/${token}/produtos/mais-favoritados?limite=20`
             ).toPromise();
 
-            produtosMaisPedidosCliente.set(produtos || []);
+            produtosMaisFavoritados.set(produtos || []);
         } catch (e) {
-            console.warn('Endpoint mais-pedidos-cliente não disponível');
-            produtosMaisPedidosCliente.set([]);
+            console.warn('Endpoint mais-favoritados não disponível');
+            produtosMaisFavoritados.set([]);
         }
     }
 
@@ -115,10 +110,10 @@ export function useInicio(
         carregando: carregando.asReadonly(),
         erro: erro.asReadonly(),
         produtosMaisPedidos: produtosMaisPedidos.asReadonly(),
-        produtosMaisPedidosCliente: produtosMaisPedidosCliente.asReadonly(),
+        produtosMaisFavoritados: produtosMaisFavoritados.asReadonly(),
         produtosBemAvaliados: produtosBemAvaliados.asReadonly(),
         temFavoritos,
-        temMaisPedidosCliente,
+        temMaisFavoritados,
 
         // Ações
         carregar

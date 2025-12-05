@@ -49,6 +49,7 @@ export interface ClientePublico {
     id: string;
     nome: string;
     telefone: string;
+    fotoUrl?: string;
 }
 
 export interface CadastrarClienteRequest {

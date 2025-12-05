@@ -169,7 +169,7 @@
                         @if (inicio.carregando()) {
                             <div class="carrossel-loading">Carregando...</div>
                         } @else if (inicio.produtosMaisPedidos().length > 0) {
-                            <div class="carrossel-horizontal">
+                            <div class="carrossel-horizontal" appDraggableScroll>
                                 @for (produto of inicio.produtosMaisPedidos(); track produto.id) {
                                     <div class="produto-card-mini" (click)="abrirDetalhesProduto(produto)">
                                         <button
@@ -200,12 +200,12 @@
                         }
                     </div>
 
-                    <!-- Seus Favoritos de Sempre (mais pedidos pelo cliente) -->
-                    @if (inicio.temMaisPedidosCliente()) {
+                    <!-- Favoritos de Sempre (mais favoritados por todos os clientes) -->
+                    @if (inicio.temMaisFavoritados()) {
                         <div class="inicio-section">
-                            <h2 class="section-titulo">📋 Seus Favoritos de Sempre</h2>
-                            <div class="carrossel-horizontal">
-                                @for (produto of inicio.produtosMaisPedidosCliente(); track produto.id) {
+                            <h2 class="section-titulo">💖 Favoritos de Sempre</h2>
+                            <div class="carrossel-horizontal" appDraggableScroll>
+                                @for (produto of inicio.produtosMaisFavoritados(); track produto.id) {
                                     <div class="produto-card-mini" (click)="abrirDetalhesProduto(produto)">
                                         <button
                                             class="btn-favorito"
@@ -225,8 +225,8 @@
                                         }
                                         <div class="produto-info-mini">
                                             <span class="produto-nome-mini">{{ produto.nome }}</span>
-                                            @if (produto.quantidadeVendida) {
-                                                <span class="produto-pedidos">Pediu {{ produto.quantidadeVendida }}x</span>
+                                            @if (produto.quantidadeFavoritos) {
+                                                <span class="produto-pedidos">{{ produto.quantidadeFavoritos }} ❤️</span>
                                             }
                                             <span class="produto-preco-mini">{{ formatarPreco(produto.preco) }}</span>
                                         </div>
@@ -242,7 +242,7 @@
                         @if (inicio.carregando()) {
                             <div class="carrossel-loading">Carregando...</div>
                         } @else if (inicio.produtosBemAvaliados().length > 0) {
-                            <div class="carrossel-horizontal">
+                            <div class="carrossel-horizontal" appDraggableScroll>
                                 @for (produto of inicio.produtosBemAvaliados(); track produto.id) {
                                     <div class="produto-card-mini" (click)="abrirDetalhesProduto(produto)">
                                         <button
@@ -280,7 +280,7 @@
                     @if (favoritos.produtosFavoritos().length > 0) {
                         <div class="inicio-section">
                             <h2 class="section-titulo">❤️ Meus Favoritos</h2>
-                            <div class="carrossel-horizontal">
+                            <div class="carrossel-horizontal" appDraggableScroll>
                                 @for (produto of favoritos.produtosFavoritos(); track produto.id) {
                                     <div class="produto-card-mini" (click)="abrirDetalhesProduto(produto)">
                                         <button class="btn-favorito ativo" (click)="toggleFavorito(produto.id, $event)" title="Remover dos favoritos">
@@ -616,7 +616,16 @@
                         <!-- Info do cliente -->
                         @if (identificacao.clienteIdentificado()) {
                             <div class="carrinho-cliente-info">
-                                <span class="cliente-icone">👤</span>
+                                @if (identificacao.clienteIdentificado()!.fotoUrl) {
+                                    <img
+                                        [src]="identificacao.clienteIdentificado()!.fotoUrl"
+                                        alt="Foto do cliente"
+                                        class="cliente-foto"
+                                        referrerpolicy="no-referrer"
+                                    />
+                                } @else {
+                                    <span class="cliente-icone">👤</span>
+                                }
                                 <div class="cliente-dados">
                                     <strong>{{ identificacao.clienteIdentificado()!.nome }}</strong>
                                     <span>{{ formatarTelefone(identificacao.clienteIdentificado()!.telefone) }}</span>

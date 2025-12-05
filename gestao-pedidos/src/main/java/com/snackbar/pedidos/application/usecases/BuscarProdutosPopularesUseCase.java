@@ -8,7 +8,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 /**
- * Use Case para buscar produtos populares (mais pedidos e mais bem avaliados).
+ * Use Case para buscar produtos populares (mais pedidos, mais favoritados e
+ * mais bem avaliados).
  */
 @Service
 @RequiredArgsConstructor
@@ -38,5 +39,13 @@ public class BuscarProdutosPopularesUseCase {
      */
     public List<ProdutoPopularDTO> buscarBemAvaliados(int limite) {
         return produtoPopularGateway.buscarBemAvaliados(limite);
+    }
+
+    /**
+     * Busca os produtos mais favoritados.
+     * Ordenados pela quantidade de clientes que favoritaram.
+     */
+    public List<ProdutoPopularDTO> buscarMaisFavoritados(int limite) {
+        return produtoPopularGateway.buscarMaisFavoritados(limite);
     }
 }

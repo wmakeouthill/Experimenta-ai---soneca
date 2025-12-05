@@ -27,4 +27,10 @@ public interface ProdutoPopularGatewayPort {
      * Ordenados pela média de avaliações (mínimo de 1 avaliação).
      */
     List<ProdutoPopularDTO> buscarBemAvaliados(int limite);
+
+    /**
+     * Busca os produtos mais favoritados.
+     * Ordenados pela quantidade de clientes que favoritaram.
+     */
+    List<ProdutoPopularDTO> buscarMaisFavoritados(int limite);
 }

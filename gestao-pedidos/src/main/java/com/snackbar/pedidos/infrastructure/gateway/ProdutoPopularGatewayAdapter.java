@@ -3,6 +3,7 @@ package com.snackbar.pedidos.infrastructure.gateway;
 import com.snackbar.cardapio.application.dto.ProdutoDTO;
 import com.snackbar.cardapio.application.usecases.BuscarProdutoPorIdUseCase;
 import com.snackbar.clientes.application.usecases.BuscarAvaliacoesUseCase;
+import com.snackbar.clientes.application.ports.ClienteFavoritoRepositoryPort;
 import com.snackbar.clientes.application.dto.ClienteAvaliacaoDTO;
 import com.snackbar.pedidos.application.dto.ProdutoPopularDTO;
 import com.snackbar.pedidos.application.ports.ProdutoPopularGatewayPort;
@@ -18,14 +19,25 @@ import java.util.stream.Collectors;
 /**
  * Implementação do gateway de produtos populares.
  * Combina dados de pedidos, produtos e avaliações.
+ * Exclui bebidas dos carrosséis para destacar pratos principais.
  */
 @Component
 @RequiredArgsConstructor
 public class ProdutoPopularGatewayAdapter implements ProdutoPopularGatewayPort {
 
+    private static final String CATEGORIA_BEBIDAS = "Bebidas";
+
     private final PedidoJpaRepository pedidoRepository;
     private final BuscarProdutoPorIdUseCase buscarProdutoPorIdUseCase;
     private final BuscarAvaliacoesUseCase buscarAvaliacoesUseCase;
+    private final ClienteFavoritoRepositoryPort favoritoRepository;
+
+    /**
+     * Verifica se a categoria deve ser excluída dos carrosséis.
+     */
+    private boolean isCategoriaBebida(String categoria) {
+        return categoria != null && categoria.equalsIgnoreCase(CATEGORIA_BEBIDAS);
+    }
 
     @Override
     public List<ProdutoPopularDTO> buscarMaisPedidos(int limite) {
@@ -39,13 +51,16 @@ public class ProdutoPopularGatewayAdapter implements ProdutoPopularGatewayPort {
                         ItemPedidoEntity::getProdutoId,
                         Collectors.summingLong(ItemPedidoEntity::getQuantidade)));
 
-        // Ordena por quantidade e pega os top N
+        // Ordena por quantidade, filtra bebidas e pega os top N
         return contagem.entrySet().stream()
                 .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
-                .limit(limite)
                 .map(entry -> {
                     try {
                         ProdutoDTO produto = buscarProdutoPorIdUseCase.executar(entry.getKey());
+                        // Exclui bebidas do carrossel
+                        if (isCategoriaBebida(produto.getCategoria())) {
+                            return null;
+                        }
                         return ProdutoPopularDTO.maisPedido(
                                 produto.getId(),
                                 produto.getNome(),
@@ -59,6 +74,7 @@ public class ProdutoPopularGatewayAdapter implements ProdutoPopularGatewayPort {
                     }
                 })
                 .filter(Objects::nonNull)
+                .limit(limite)
                 .toList();
     }
 
@@ -74,13 +90,16 @@ public class ProdutoPopularGatewayAdapter implements ProdutoPopularGatewayPort {
                         ItemPedidoEntity::getProdutoId,
                         Collectors.summingLong(ItemPedidoEntity::getQuantidade)));
 
-        // Ordena por quantidade e pega os top N
+        // Ordena por quantidade, filtra bebidas e pega os top N
         return contagem.entrySet().stream()
                 .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
-                .limit(limite)
                 .map(entry -> {
                     try {
                         ProdutoDTO produto = buscarProdutoPorIdUseCase.executar(entry.getKey());
+                        // Exclui bebidas do carrossel
+                        if (isCategoriaBebida(produto.getCategoria())) {
+                            return null;
+                        }
                         return ProdutoPopularDTO.maisPedido(
                                 produto.getId(),
                                 produto.getNome(),
@@ -94,6 +113,7 @@ public class ProdutoPopularGatewayAdapter implements ProdutoPopularGatewayPort {
                     }
                 })
                 .filter(Objects::nonNull)
+                .limit(limite)
                 .toList();
     }
 
@@ -109,11 +129,17 @@ public class ProdutoPopularGatewayAdapter implements ProdutoPopularGatewayPort {
                 .map(ItemPedidoEntity::getProdutoId)
                 .collect(Collectors.toSet());
 
-        // Para cada produto, busca as avaliações e calcula a média
+        // Para cada produto, busca as avaliações e calcula a média (excluindo bebidas)
         List<ProdutoComAvaliacao> produtosComAvaliacao = produtoIds.stream()
                 .map(produtoId -> {
                     try {
                         ProdutoDTO produto = buscarProdutoPorIdUseCase.executar(produtoId);
+
+                        // Exclui bebidas do carrossel
+                        if (isCategoriaBebida(produto.getCategoria())) {
+                            return null;
+                        }
+
                         List<ClienteAvaliacaoDTO> avaliacoes = buscarAvaliacoesUseCase.buscarPorProduto(produtoId);
 
                         if (avaliacoes.isEmpty()) {
@@ -145,6 +171,37 @@ public class ProdutoPopularGatewayAdapter implements ProdutoPopularGatewayPort {
                         p.produto().getCategoria(),
                         p.media(),
                         p.totalAvaliacoes()))
+                .toList();
+    }
+
+    @Override
+    public List<ProdutoPopularDTO> buscarMaisFavoritados(int limite) {
+        // Busca todos os produtos favoritados com contagem
+        Map<String, Long> maisFavoritados = favoritoRepository.buscarMaisFavoritados();
+
+        // Transforma em lista de DTOs, filtrando bebidas
+        return maisFavoritados.entrySet().stream()
+                .map(entry -> {
+                    try {
+                        ProdutoDTO produto = buscarProdutoPorIdUseCase.executar(entry.getKey());
+                        // Exclui bebidas do carrossel
+                        if (isCategoriaBebida(produto.getCategoria())) {
+                            return null;
+                        }
+                        return ProdutoPopularDTO.maisFavoritado(
+                                produto.getId(),
+                                produto.getNome(),
+                                produto.getDescricao(),
+                                produto.getPreco(),
+                                produto.getFoto(),
+                                produto.getCategoria(),
+                                entry.getValue());
+                    } catch (Exception e) {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .limit(limite)
                 .toList();
     }
 

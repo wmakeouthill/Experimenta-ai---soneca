@@ -8,7 +8,9 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Component
@@ -53,5 +55,17 @@ public class ClienteFavoritoRepositoryAdapter implements ClienteFavoritoReposito
     @Override
     public int contarPorCliente(@NonNull String clienteId) {
         return jpaRepository.countByClienteId(clienteId);
+    }
+
+    @Override
+    public Map<String, Long> buscarMaisFavoritados() {
+        List<Object[]> resultados = jpaRepository.findMaisFavoritados();
+        Map<String, Long> mapa = new LinkedHashMap<>();
+        for (Object[] row : resultados) {
+            String produtoId = (String) row[0];
+            Long count = (Long) row[1];
+            mapa.put(produtoId, count);
+        }
+        return mapa;
     }
 }

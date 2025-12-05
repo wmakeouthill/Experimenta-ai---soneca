@@ -3,7 +3,8 @@ package com.snackbar.pedidos.application.dto;
 import java.math.BigDecimal;
 
 /**
- * DTO para produtos populares (mais pedidos ou mais bem avaliados).
+ * DTO para produtos populares (mais pedidos, mais favoritados ou mais bem
+ * avaliados).
  */
 public record ProdutoPopularDTO(
         String id,
@@ -13,6 +14,7 @@ public record ProdutoPopularDTO(
         String foto,
         String categoriaNome,
         Long quantidadeVendida,
+        Long quantidadeFavoritos,
         Double mediaAvaliacao,
         Integer totalAvaliacoes) {
     /**
@@ -21,7 +23,18 @@ public record ProdutoPopularDTO(
     public static ProdutoPopularDTO maisPedido(
             String id, String nome, String descricao, BigDecimal preco,
             String foto, String categoriaNome, Long quantidadeVendida) {
-        return new ProdutoPopularDTO(id, nome, descricao, preco, foto, categoriaNome, quantidadeVendida, null, null);
+        return new ProdutoPopularDTO(id, nome, descricao, preco, foto, categoriaNome, quantidadeVendida, null, null,
+                null);
+    }
+
+    /**
+     * Construtor para produtos mais favoritados
+     */
+    public static ProdutoPopularDTO maisFavoritado(
+            String id, String nome, String descricao, BigDecimal preco,
+            String foto, String categoriaNome, Long quantidadeFavoritos) {
+        return new ProdutoPopularDTO(id, nome, descricao, preco, foto, categoriaNome, null, quantidadeFavoritos, null,
+                null);
     }
 
     /**
@@ -30,7 +43,7 @@ public record ProdutoPopularDTO(
     public static ProdutoPopularDTO bemAvaliado(
             String id, String nome, String descricao, BigDecimal preco,
             String foto, String categoriaNome, Double mediaAvaliacao, Integer totalAvaliacoes) {
-        return new ProdutoPopularDTO(id, nome, descricao, preco, foto, categoriaNome, null, mediaAvaliacao,
+        return new ProdutoPopularDTO(id, nome, descricao, preco, foto, categoriaNome, null, null, mediaAvaliacao,
                 totalAvaliacoes);
     }
 }

@@ -5,6 +5,7 @@ import { ActivatedRoute } from '@angular/router';
 import { PedidoMesaService, ItemPedidoMesaRequest, CriarPedidoMesaRequest } from '../../services/pedido-mesa.service';
 import { Mesa } from '../../services/mesa.service';
 import { Produto } from '../../services/produto.service';
+import { DraggableScrollDirective } from './directives/draggable-scroll.directive';
 
 import {
   useIdentificacaoCliente,
@@ -26,7 +27,7 @@ type AbaCliente = 'inicio' | 'cardapio' | 'perfil';
 @Component({
   selector: 'app-pedido-cliente-mesa',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DraggableScrollDirective],
   templateUrl: './pedido-cliente-mesa.component.html',
   styleUrls: [
     './styles/base.css',
@@ -53,7 +54,7 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   readonly carregando = signal(true);
   readonly erro = signal<string | null>(null);
   readonly etapaAtual = signal<EtapaPrincipal>('identificacao');
-  readonly abaAtual = signal<AbaCliente>('cardapio');
+  readonly abaAtual = signal<AbaCliente>('inicio');
   readonly enviando = signal(false);
 
   // ========== Composables ==========
@@ -95,6 +96,9 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   get observacaoTempValue(): string { return this.carrinho.getObservacao(); }
   set observacaoTempValue(value: string) { this.carrinho.setObservacao(value); }
 
+  // Handler para back button do navegador
+  private readonly boundHandlePopState = this.handlePopState.bind(this);
+
   // ========== Lifecycle ==========
   ngOnInit(): void {
     if (!this.isBrowser) return;
@@ -105,6 +109,9 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
       return;
     }
     this.carregarMesa(token);
+
+    // Listener para fechar carrinho no back button do celular
+    window.addEventListener('popstate', this.boundHandlePopState);
   }
 
   ngAfterViewInit(): void {
@@ -114,6 +121,23 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   ngOnDestroy(): void {
     this.googleAuth.destroy();
     this.identificacao.destroy();
+    if (this.isBrowser) {
+      window.removeEventListener('popstate', this.boundHandlePopState);
+    }
+  }
+
+  /**
+   * Handler para o evento popstate (back button)
+   * Fecha o carrinho em vez de navegar para trás
+   */
+  private handlePopState(): void {
+    if (this.carrinho.mostrarCarrinho()) {
+      // Fecha o carrinho
+      this.carrinho.fecharCarrinho();
+      this.pagamento.resetarEtapa();
+      // Adiciona nova entrada no histórico para manter a posição
+      history.pushState({ carrinho: false }, '');
+    }
   }
 
   // ========== Ações Gerais ==========
@@ -195,6 +219,10 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   abrirCarrinho(): void {
     this.carrinho.abrirCarrinho();
     this.pagamento.resetarEtapa();
+    // Adiciona entrada no histórico para capturar back button
+    if (this.isBrowser) {
+      history.pushState({ carrinho: true }, '');
+    }
   }
 
   fecharCarrinho(): void {

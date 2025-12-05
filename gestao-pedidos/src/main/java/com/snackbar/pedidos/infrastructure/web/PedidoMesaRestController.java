@@ -157,4 +157,17 @@ public class PedidoMesaRestController {
         List<ProdutoPopularDTO> produtos = buscarProdutosPopularesUseCase.buscarBemAvaliados(limite);
         return ResponseEntity.ok(produtos);
     }
+
+    /**
+     * Retorna os produtos mais favoritados.
+     * Baseado na quantidade de clientes que favoritaram cada produto.
+     */
+    @GetMapping("/{token}/produtos/mais-favoritados")
+    public ResponseEntity<List<ProdutoPopularDTO>> buscarMaisFavoritados(
+            @NonNull @PathVariable String token,
+            @RequestParam(defaultValue = "20") int limite) {
+        buscarMesaPorTokenUseCase.executar(token);
+        List<ProdutoPopularDTO> produtos = buscarProdutosPopularesUseCase.buscarMaisFavoritados(limite);
+        return ResponseEntity.ok(produtos);
+    }
 }

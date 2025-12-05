@@ -11,6 +11,7 @@ export interface ClienteIdentificado {
     nome: string;
     telefone: string;
     novoCliente: boolean;
+    fotoUrl?: string;
 }
 
 type EtapaIdentificacao = 'identificacao' | 'cadastro';
@@ -45,7 +46,8 @@ export function useIdentificacaoCliente(mesaToken: () => string | undefined) {
                     id: clienteLogado.id,
                     nome: clienteLogado.nome,
                     telefone: clienteLogado.telefone || '',
-                    novoCliente: false
+                    novoCliente: false,
+                    fotoUrl: clienteLogado.fotoUrl
                 };
                 clienteIdentificado.set(clienteData);
             }
@@ -65,7 +67,8 @@ export function useIdentificacaoCliente(mesaToken: () => string | undefined) {
                 id: clienteLogado.id,
                 nome: clienteLogado.nome,
                 telefone: clienteLogado.telefone || '',
-                novoCliente: false
+                novoCliente: false,
+                fotoUrl: clienteLogado.fotoUrl
             };
         }
 
@@ -181,7 +184,8 @@ export function useIdentificacaoCliente(mesaToken: () => string | undefined) {
                     id: cliente.id,
                     nome: cliente.nome,
                     telefone: cliente.telefone,
-                    novoCliente: false
+                    novoCliente: false,
+                    fotoUrl: cliente.fotoUrl
                 };
                 clienteIdentificado.set(clienteData);
                 persistirCliente(clienteData);
@@ -216,7 +220,8 @@ export function useIdentificacaoCliente(mesaToken: () => string | undefined) {
                     id: cliente.id,
                     nome: cliente.nome,
                     telefone: cliente.telefone,
-                    novoCliente: true
+                    novoCliente: true,
+                    fotoUrl: cliente.fotoUrl
                 };
                 clienteIdentificado.set(clienteData);
                 persistirCliente(clienteData);
@@ -249,12 +254,13 @@ export function useIdentificacaoCliente(mesaToken: () => string | undefined) {
      * Usado quando o cliente faz login via Google OAuth.
      * Nota: O ClienteAuthService já persiste no localStorage automaticamente.
      */
-    function setClienteFromGoogle(cliente: { id: string; nome: string; telefone: string }): void {
+    function setClienteFromGoogle(cliente: { id: string; nome: string; telefone: string; fotoUrl?: string }): void {
         const clienteData: ClienteIdentificado = {
             id: cliente.id,
             nome: cliente.nome,
             telefone: cliente.telefone || '',
-            novoCliente: false
+            novoCliente: false,
+            fotoUrl: cliente.fotoUrl
         };
         clienteIdentificado.set(clienteData);
         // Não precisa persistir aqui, o ClienteAuthService já faz isso
