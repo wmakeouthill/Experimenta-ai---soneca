@@ -263,6 +263,7 @@ export function useAvaliacao(
         // Estado (readonly)
         salvando: salvando.asReadonly(),
         comentarioSalvo: comentarioSalvo.asReadonly(),
+        pedidosAvaliados: avaliacaoSubmetida.asReadonly(),
 
         // Getters
         getAvaliacaoProduto,
@@ -274,6 +275,7 @@ export function useAvaliacao(
         pedidoJaAvaliado,
         isEditando,
         temAlgumaAvaliacao,
+        isPedidoAvaliado: (pedidoId: string) => avaliacaoSubmetida().get(pedidoId) || false,
 
         // Setters
         setComentarioPedido,

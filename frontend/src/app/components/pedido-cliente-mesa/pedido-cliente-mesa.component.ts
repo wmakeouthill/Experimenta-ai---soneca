@@ -105,6 +105,16 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
     !this.carrinho.carrinhoVazio() && this.identificacao.clienteIdentificado() !== null
   );
 
+  // Verifica se há pedidos finalizados não avaliados
+  readonly temPedidosNaoAvaliados = computed(() => {
+    const pedidos = this.meusPedidos.pedidos();
+    if (!pedidos || pedidos.length === 0) return false;
+
+    return pedidos.some(pedido =>
+      pedido.status === 'FINALIZADO' && !this.avaliacao.isPedidoAvaliado(pedido.id)
+    );
+  });
+
   // ========== Bindings para NgModel ==========
   get telefoneInputValue(): string { return this.identificacao.getTelefone(); }
   set telefoneInputValue(value: string) { this.identificacao.setTelefone(value); }

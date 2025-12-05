@@ -820,7 +820,7 @@
         }
 
         <!-- ========== CTA AVALIAÇÃO ========== -->
-        @if (meusPedidos.totalPedidos() > 0 && abaAtual() !== 'perfil') {
+        @if (temPedidosNaoAvaliados() && (abaAtual() === 'inicio' || abaAtual() === 'perfil')) {
             <div class="cta-avaliacao" (click)="irParaMeusPedidos(); navegarPara('perfil')">
                 <span class="cta-icon">⭐</span>
                 <span class="cta-texto">Avalie seus pedidos em <strong>Meus Pedidos</strong></span>
