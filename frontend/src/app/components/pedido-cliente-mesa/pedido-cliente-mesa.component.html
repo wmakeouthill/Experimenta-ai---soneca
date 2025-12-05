@@ -63,9 +63,9 @@
                 <!-- Botão Login Google -->
                 <button
                     class="btn-google"
-                    [disabled]="clienteAuth.carregando()"
+                    [disabled]="googleAuth.clienteAuth.carregando()"
                     (click)="loginComGoogle()">
-                    @if (clienteAuth.carregando()) {
+                    @if (googleAuth.clienteAuth.carregando()) {
                         <span class="spinner-mini"></span> Entrando...
                     } @else {
                         <svg class="google-icon" viewBox="0 0 24 24" width="20" height="20">
@@ -78,8 +78,8 @@
                     }
                 </button>
 
-                @if (clienteAuth.erro()) {
-                    <p class="erro-msg">{{ clienteAuth.erro() }}</p>
+                @if (googleAuth.clienteAuth.erro()) {
+                    <p class="erro-msg">{{ googleAuth.clienteAuth.erro() }}</p>
                 }
             </div>
         </div>
@@ -256,7 +256,7 @@
                         <h2 class="section-titulo">📂 Categorias</h2>
                         <div class="categorias-grid">
                             @for (categoria of cardapio.categorias(); track categoria.id) {
-                                <button class="categoria-card" (click)="selecionarCategoria(categoria.nome); navegarPara('cardapio')">
+                                <button class="categoria-card" (click)="cardapio.selecionarCategoria(categoria.nome); navegarPara('cardapio')">
                                     <span class="categoria-nome">{{ categoria.nome }}</span>
                                 </button>
                             }
@@ -272,14 +272,14 @@
                 <button
                     class="categoria-chip"
                     [class.ativa]="cardapio.categoriaSelecionada() === null"
-                    (click)="selecionarCategoria(null)">
+                    (click)="cardapio.selecionarCategoria(null)">
                     🍽️ Todos
                 </button>
                 @for (categoria of cardapio.categorias(); track categoria.id) {
                     <button
                         class="categoria-chip"
                         [class.ativa]="cardapio.categoriaSelecionada() === categoria.nome"
-                        (click)="selecionarCategoria(categoria.nome)">
+                        (click)="cardapio.selecionarCategoria(categoria.nome)">
                         {{ categoria.nome }}
                     </button>
                 }
@@ -359,11 +359,11 @@
                 <div class="aba-perfil">
                     <div class="perfil-header">
                         <div class="perfil-avatar">
-                            @if (clienteAuth.cliente()?.fotoUrl) {
-                                <img [src]="clienteAuth.cliente()!.fotoUrl"
+                            @if (googleAuth.clienteAuth.cliente()?.fotoUrl) {
+                                <img [src]="googleAuth.clienteAuth.cliente()!.fotoUrl"
                                      alt="Foto"
                                      class="avatar-img"
-                                     (error)="$event.target.style.display='none'">
+                                     (error)="onImageError($event)">
                             } @else {
                                 <span class="avatar-placeholder">👤</span>
                             }
@@ -372,14 +372,14 @@
                         @if (identificacao.clienteIdentificado()!.telefone) {
                             <p class="perfil-telefone">{{ formatarTelefone(identificacao.clienteIdentificado()!.telefone) }}</p>
                         }
-                        @if (clienteAuth.cliente()?.email) {
-                            <p class="perfil-email">{{ clienteAuth.cliente()!.email }}</p>
+                        @if (googleAuth.clienteAuth.cliente()?.email) {
+                            <p class="perfil-email">{{ googleAuth.clienteAuth.cliente()!.email }}</p>
                         }
                     </div>
 
                     <div class="perfil-menu">
                         <!-- Vincular/Desvincular Google -->
-                        @if (clienteAuth.cliente()?.googleVinculado) {
+                        @if (googleAuth.clienteAuth.cliente()?.googleVinculado) {
                             <button class="perfil-item google-vinculado" (click)="desvincularGoogle()">
                                 <span class="item-icon">
                                     <svg viewBox="0 0 24 24" width="20" height="20">
@@ -393,7 +393,7 @@
                                 <span class="item-badge vinculado">✓</span>
                             </button>
                         } @else {
-                            <button class="perfil-item google-vincular" (click)="vincularGoogle()" [disabled]="clienteAuth.carregando()">
+                            <button class="perfil-item google-vincular" (click)="vincularGoogle()" [disabled]="googleAuth.clienteAuth.carregando()">
                                 <span class="item-icon">
                                     <svg viewBox="0 0 24 24" width="20" height="20">
                                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -429,8 +429,8 @@
                         </button>
                     </div>
 
-                    @if (clienteAuth.erro()) {
-                        <p class="erro-msg">{{ clienteAuth.erro() }}</p>
+                    @if (googleAuth.clienteAuth.erro()) {
+                        <p class="erro-msg">{{ googleAuth.clienteAuth.erro() }}</p>
                     }
 
                     <p class="perfil-info">Mesa {{ mesa()!.numero }}</p>
@@ -448,10 +448,10 @@
                 <span class="nav-icon">📋</span>
                 <span class="nav-label">Cardápio</span>
             </button>
-            <button class="nav-item carrinho-nav" [class.ativo]="carrinhoState.mostrarCarrinho()" (click)="navegarPara('carrinho')">
+            <button class="nav-item carrinho-nav" [class.ativo]="carrinho.mostrarCarrinho()" (click)="navegarPara('carrinho')">
                 <span class="nav-icon">🛒</span>
-                @if (carrinhoState.totalItens() > 0) {
-                    <span class="carrinho-badge">{{ carrinhoState.totalItens() }}</span>
+                @if (carrinho.totalItens() > 0) {
+                    <span class="carrinho-badge">{{ carrinho.totalItens() }}</span>
                 }
                 <span class="nav-label">Carrinho</span>
             </button>
@@ -493,23 +493,23 @@
     }
 
     <!-- ========== MODAL: DETALHES DO PRODUTO ========== -->
-    @if (carrinhoState.mostrarDetalhes() && carrinhoState.produtoSelecionado()) {
-        <div class="modal-overlay" (click)="fecharDetalhesProduto()">
+    @if (carrinho.mostrarDetalhes() && carrinho.produtoSelecionado()) {
+        <div class="modal-overlay" (click)="carrinho.fecharDetalhes()">
             <div class="modal-produto" (click)="$event.stopPropagation()">
-                <button class="btn-fechar-modal" (click)="fecharDetalhesProduto()">×</button>
+                <button class="btn-fechar-modal" (click)="carrinho.fecharDetalhes()">×</button>
 
-                @if (carrinhoState.produtoSelecionado()!.foto) {
+                @if (carrinho.produtoSelecionado()!.foto) {
                     <div class="modal-produto-imagem">
-                        <img [src]="carrinhoState.produtoSelecionado()!.foto" [alt]="carrinhoState.produtoSelecionado()!.nome">
+                        <img [src]="carrinho.produtoSelecionado()!.foto" [alt]="carrinho.produtoSelecionado()!.nome">
                     </div>
                 }
 
                 <div class="modal-produto-content">
-                    <h2>{{ carrinhoState.produtoSelecionado()!.nome }}</h2>
-                    @if (carrinhoState.produtoSelecionado()!.descricao) {
-                        <p class="modal-descricao">{{ carrinhoState.produtoSelecionado()!.descricao }}</p>
+                    <h2>{{ carrinho.produtoSelecionado()!.nome }}</h2>
+                    @if (carrinho.produtoSelecionado()!.descricao) {
+                        <p class="modal-descricao">{{ carrinho.produtoSelecionado()!.descricao }}</p>
                     }
-                    <div class="modal-preco">{{ formatarPreco(carrinhoState.produtoSelecionado()!.preco) }}</div>
+                    <div class="modal-preco">{{ formatarPreco(carrinho.produtoSelecionado()!.preco) }}</div>
 
                     <div class="observacao-container">
                         <label>Alguma observação?</label>
@@ -521,13 +521,13 @@
                     </div>
 
                     <div class="quantidade-controle">
-                        <button class="btn-quantidade" (click)="decrementarQuantidade()" [disabled]="carrinhoState.quantidadeTemp() <= 1">−</button>
-                        <span class="quantidade-valor">{{ carrinhoState.quantidadeTemp() }}</span>
-                        <button class="btn-quantidade" (click)="incrementarQuantidade()">+</button>
+                        <button class="btn-quantidade" (click)="carrinho.decrementarQuantidade()" [disabled]="carrinho.quantidadeTemp() <= 1">−</button>
+                        <span class="quantidade-valor">{{ carrinho.quantidadeTemp() }}</span>
+                        <button class="btn-quantidade" (click)="carrinho.incrementarQuantidade()">+</button>
                     </div>
 
-                    <button class="btn-adicionar-carrinho" (click)="adicionarAoCarrinho()">
-                        Adicionar • {{ formatarPreco(carrinhoState.produtoSelecionado()!.preco * carrinhoState.quantidadeTemp()) }}
+                    <button class="btn-adicionar-carrinho" (click)="carrinho.adicionarAoCarrinho()">
+                        Adicionar • {{ formatarPreco(carrinho.produtoSelecionado()!.preco * carrinho.quantidadeTemp()) }}
                     </button>
                 </div>
             </div>
@@ -535,17 +535,17 @@
     }
 
     <!-- ========== MODAL: CARRINHO ========== -->
-    @if (carrinhoState.mostrarCarrinho()) {
+    @if (carrinho.mostrarCarrinho()) {
         <div class="modal-overlay carrinho-overlay" (click)="fecharCarrinho()">
             <div class="modal-carrinho" (click)="$event.stopPropagation()">
                 <div class="carrinho-header">
                     @if (pagamento.etapa() === 'itens') {
                         <h2>Seu Pedido</h2>
                     } @else if (pagamento.etapa() === 'pagamento') {
-                        <button class="btn-voltar-carrinho" (click)="voltarParaItens()">←</button>
+                        <button class="btn-voltar-carrinho" (click)="pagamento.voltarParaItens()">←</button>
                         <h2>Pagamento</h2>
                     } @else if (pagamento.etapa() === 'confirmacao') {
-                        <button class="btn-voltar-carrinho" (click)="voltarParaPagamento()">←</button>
+                        <button class="btn-voltar-carrinho" (click)="pagamento.voltarParaPagamento()">←</button>
                         <h2>Confirmar</h2>
                     }
                     <button class="btn-fechar-modal" (click)="fecharCarrinho()">×</button>
@@ -554,7 +554,7 @@
                 <!-- ========== ETAPA 1: ITENS ========== -->
                 @if (pagamento.etapa() === 'itens') {
                 <div class="carrinho-content">
-                    @if (carrinhoState.itens().length === 0) {
+                    @if (carrinho.itens().length === 0) {
                         <div class="carrinho-vazio">
                             <span>🛒</span>
                             <p>Seu carrinho está vazio</p>
@@ -572,7 +572,7 @@
                         }
 
                         <div class="carrinho-itens">
-                            @for (item of carrinhoState.itens(); track item.produto.id) {
+                            @for (item of carrinho.itens(); track item.produto.id) {
                                 <div class="carrinho-item">
                                     <div class="item-info">
                                         <h4>{{ item.produto.nome }}</h4>
@@ -582,18 +582,18 @@
                                         <span class="item-preco">{{ formatarPreco(item.produto.preco * item.quantidade) }}</span>
                                     </div>
                                     <div class="item-controles">
-                                        <button class="btn-qty-mini" (click)="alterarQuantidadeCarrinho(item.produto.id, -1)">−</button>
+                                        <button class="btn-qty-mini" (click)="carrinho.alterarQuantidade(item.produto.id, -1)">−</button>
                                         <span class="qty-mini">{{ item.quantidade }}</span>
-                                        <button class="btn-qty-mini" (click)="alterarQuantidadeCarrinho(item.produto.id, 1)">+</button>
+                                        <button class="btn-qty-mini" (click)="carrinho.alterarQuantidade(item.produto.id, 1)">+</button>
                                     </div>
-                                    <button class="btn-remover" (click)="removerDoCarrinho(item.produto.id)">🗑️</button>
+                                    <button class="btn-remover" (click)="carrinho.removerDoCarrinho(item.produto.id)">🗑️</button>
                                 </div>
                             }
                         </div>
 
                         <div class="carrinho-total">
                             <span>Total</span>
-                            <strong>{{ formatarPreco(carrinhoState.totalValor()) }}</strong>
+                            <strong>{{ formatarPreco(carrinho.totalValor()) }}</strong>
                         </div>
                     }
                 </div>
@@ -602,7 +602,7 @@
                     <button
                         class="btn-enviar-pedido"
                         [disabled]="!podeEnviarPedido()"
-                        (click)="avancarParaPagamento()">
+                        (click)="pagamento.avancarParaPagamento()">
                         Escolher Pagamento
                     </button>
                 </div>
@@ -613,13 +613,13 @@
                 <div class="carrinho-content pagamento-content">
                     <div class="pagamento-total-header">
                         <span>Total a pagar</span>
-                        <strong>{{ formatarPreco(carrinhoState.totalValor()) }}</strong>
+                        <strong>{{ formatarPreco(carrinho.totalValor()) }}</strong>
                     </div>
 
                     <!-- Toggle para dividir pagamento -->
                     <div class="pagamento-dividir">
                         <label class="toggle-dividir">
-                            <input type="checkbox" [checked]="pagamento.dividido()" (change)="togglePagamentoDividido()">
+                            <input type="checkbox" [checked]="pagamento.dividido()" (change)="pagamento.toggleDividido()">
                             <span class="toggle-slider"></span>
                             <span class="toggle-label">Dividir pagamento</span>
                         </label>
@@ -631,92 +631,92 @@
 
                         <!-- PIX -->
                         <div class="pagamento-opcao"
-                             [class.selecionado]="meioPagamentoSelecionado('PIX')"
-                             (click)="selecionarMeioPagamento('PIX')">
+                             [class.selecionado]="pagamento.meioPagamentoSelecionado('PIX')"
+                             (click)="pagamento.selecionarMeio('PIX')">
                             <div class="opcao-info">
                                 <span class="opcao-icone">📱</span>
                                 <span class="opcao-nome">PIX</span>
                             </div>
-                            @if (pagamento.dividido() && meioPagamentoSelecionado('PIX')) {
+                            @if (pagamento.dividido() && pagamento.meioPagamentoSelecionado('PIX')) {
                                 <div class="opcao-valor" (click)="$event.stopPropagation()">
                                     <span>R$</span>
                                     <input type="number"
-                                           [value]="getValorMeioPagamento('PIX')"
-                                           (input)="atualizarValorMeioPagamento('PIX', $any($event.target).valueAsNumber || 0)"
+                                           [value]="pagamento.getValorMeio('PIX')"
+                                           (input)="pagamento.atualizarValorMeio('PIX', $any($event.target).valueAsNumber || 0)"
                                            min="0"
                                            step="0.01">
                                 </div>
                             }
-                            @if (!pagamento.dividido() && meioPagamentoSelecionado('PIX')) {
+                            @if (!pagamento.dividido() && pagamento.meioPagamentoSelecionado('PIX')) {
                                 <span class="opcao-check">✓</span>
                             }
                         </div>
 
                         <!-- Cartão de Crédito -->
                         <div class="pagamento-opcao"
-                             [class.selecionado]="meioPagamentoSelecionado('CARTAO_CREDITO')"
-                             (click)="selecionarMeioPagamento('CARTAO_CREDITO')">
+                             [class.selecionado]="pagamento.meioPagamentoSelecionado('CARTAO_CREDITO')"
+                             (click)="pagamento.selecionarMeio('CARTAO_CREDITO')">
                             <div class="opcao-info">
                                 <span class="opcao-icone">💳</span>
                                 <span class="opcao-nome">Cartão de Crédito</span>
                             </div>
-                            @if (pagamento.dividido() && meioPagamentoSelecionado('CARTAO_CREDITO')) {
+                            @if (pagamento.dividido() && pagamento.meioPagamentoSelecionado('CARTAO_CREDITO')) {
                                 <div class="opcao-valor" (click)="$event.stopPropagation()">
                                     <span>R$</span>
                                     <input type="number"
-                                           [value]="getValorMeioPagamento('CARTAO_CREDITO')"
-                                           (input)="atualizarValorMeioPagamento('CARTAO_CREDITO', $any($event.target).valueAsNumber || 0)"
+                                           [value]="pagamento.getValorMeio('CARTAO_CREDITO')"
+                                           (input)="pagamento.atualizarValorMeio('CARTAO_CREDITO', $any($event.target).valueAsNumber || 0)"
                                            min="0"
                                            step="0.01">
                                 </div>
                             }
-                            @if (!pagamento.dividido() && meioPagamentoSelecionado('CARTAO_CREDITO')) {
+                            @if (!pagamento.dividido() && pagamento.meioPagamentoSelecionado('CARTAO_CREDITO')) {
                                 <span class="opcao-check">✓</span>
                             }
                         </div>
 
                         <!-- Cartão de Débito -->
                         <div class="pagamento-opcao"
-                             [class.selecionado]="meioPagamentoSelecionado('CARTAO_DEBITO')"
-                             (click)="selecionarMeioPagamento('CARTAO_DEBITO')">
+                             [class.selecionado]="pagamento.meioPagamentoSelecionado('CARTAO_DEBITO')"
+                             (click)="pagamento.selecionarMeio('CARTAO_DEBITO')">
                             <div class="opcao-info">
                                 <span class="opcao-icone">💳</span>
                                 <span class="opcao-nome">Cartão de Débito</span>
                             </div>
-                            @if (pagamento.dividido() && meioPagamentoSelecionado('CARTAO_DEBITO')) {
+                            @if (pagamento.dividido() && pagamento.meioPagamentoSelecionado('CARTAO_DEBITO')) {
                                 <div class="opcao-valor" (click)="$event.stopPropagation()">
                                     <span>R$</span>
                                     <input type="number"
-                                           [value]="getValorMeioPagamento('CARTAO_DEBITO')"
-                                           (input)="atualizarValorMeioPagamento('CARTAO_DEBITO', $any($event.target).valueAsNumber || 0)"
+                                           [value]="pagamento.getValorMeio('CARTAO_DEBITO')"
+                                           (input)="pagamento.atualizarValorMeio('CARTAO_DEBITO', $any($event.target).valueAsNumber || 0)"
                                            min="0"
                                            step="0.01">
                                 </div>
                             }
-                            @if (!pagamento.dividido() && meioPagamentoSelecionado('CARTAO_DEBITO')) {
+                            @if (!pagamento.dividido() && pagamento.meioPagamentoSelecionado('CARTAO_DEBITO')) {
                                 <span class="opcao-check">✓</span>
                             }
                         </div>
 
                         <!-- Dinheiro -->
                         <div class="pagamento-opcao"
-                             [class.selecionado]="meioPagamentoSelecionado('DINHEIRO')"
-                             (click)="selecionarMeioPagamento('DINHEIRO')">
+                             [class.selecionado]="pagamento.meioPagamentoSelecionado('DINHEIRO')"
+                             (click)="pagamento.selecionarMeio('DINHEIRO')">
                             <div class="opcao-info">
                                 <span class="opcao-icone">💵</span>
                                 <span class="opcao-nome">Dinheiro</span>
                             </div>
-                            @if (pagamento.dividido() && meioPagamentoSelecionado('DINHEIRO')) {
+                            @if (pagamento.dividido() && pagamento.meioPagamentoSelecionado('DINHEIRO')) {
                                 <div class="opcao-valor" (click)="$event.stopPropagation()">
                                     <span>R$</span>
                                     <input type="number"
-                                           [value]="getValorMeioPagamento('DINHEIRO')"
-                                           (input)="atualizarValorMeioPagamento('DINHEIRO', $any($event.target).valueAsNumber || 0)"
+                                           [value]="pagamento.getValorMeio('DINHEIRO')"
+                                           (input)="pagamento.atualizarValorMeio('DINHEIRO', $any($event.target).valueAsNumber || 0)"
                                            min="0"
                                            step="0.01">
                                 </div>
                             }
-                            @if (!pagamento.dividido() && meioPagamentoSelecionado('DINHEIRO')) {
+                            @if (!pagamento.dividido() && pagamento.meioPagamentoSelecionado('DINHEIRO')) {
                                 <span class="opcao-check">✓</span>
                             }
                         </div>
@@ -727,20 +727,20 @@
                         <div class="pagamento-resumo">
                             <div class="resumo-linha">
                                 <span>Total alocado</span>
-                                <span [class.valor-ok]="pagamentoValido()" [class.valor-erro]="!pagamentoValido()">
-                                    {{ formatarPreco(getTotalAlocado()) }}
+                                <span [class.valor-ok]="pagamento.pagamentoValido()" [class.valor-erro]="!pagamento.pagamentoValido()">
+                                    {{ formatarPreco(pagamento.totalAlocado()) }}
                                 </span>
                             </div>
-                            @if (getValorRestante() > 0.01) {
+                            @if (pagamento.valorRestante() > 0.01) {
                                 <div class="resumo-linha restante">
                                     <span>Falta alocar</span>
-                                    <span class="valor-erro">{{ formatarPreco(getValorRestante()) }}</span>
+                                    <span class="valor-erro">{{ formatarPreco(pagamento.valorRestante()) }}</span>
                                 </div>
                             }
-                            @if (getValorRestante() < -0.01) {
+                            @if (pagamento.valorRestante() < -0.01) {
                                 <div class="resumo-linha excedente">
                                     <span>Valor excedente</span>
-                                    <span class="valor-erro">{{ formatarPreco(Math.abs(getValorRestante())) }}</span>
+                                    <span class="valor-erro">{{ formatarPreco(Math.abs(pagamento.valorRestante())) }}</span>
                                 </div>
                             }
                         </div>
@@ -750,8 +750,8 @@
                 <div class="carrinho-footer">
                     <button
                         class="btn-enviar-pedido"
-                        [disabled]="!pagamentoValido()"
-                        (click)="irParaConfirmacao()">
+                        [disabled]="!pagamento.pagamentoValido()"
+                        (click)="pagamento.irParaConfirmacao()">
                         Revisar Pedido
                     </button>
                 </div>
@@ -780,8 +780,8 @@
 
                         <!-- Itens -->
                         <div class="resumo-secao">
-                            <span class="resumo-secao-titulo">Itens ({{ carrinhoState.itens().length }})</span>
-                            @for (item of carrinhoState.itens(); track item.produto.id) {
+                            <span class="resumo-secao-titulo">Itens ({{ carrinho.itens().length }})</span>
+                            @for (item of carrinho.itens(); track item.produto.id) {
                                 <div class="resumo-item-pedido">
                                     <div class="item-qtd-nome">
                                         <span class="item-qtd-badge">{{ item.quantidade }}x</span>
@@ -798,8 +798,8 @@
                             @for (pag of pagamento.meiosSelecionados(); track pag.tipo) {
                                 <div class="resumo-pagamento-item">
                                     <span class="pagamento-metodo">
-                                        <span>{{ getIconeMeioPagamento(pag.tipo) }}</span>
-                                        <span>{{ getNomeMeioPagamento(pag.tipo) }}</span>
+                                        <span>{{ pagamento.getIconeMeio(pag.tipo) }}</span>
+                                        <span>{{ pagamento.getNomeMeio(pag.tipo) }}</span>
                                     </span>
                                     <span class="pagamento-valor-resumo">{{ formatarPreco(pag.valor) }}</span>
                                 </div>
@@ -809,13 +809,13 @@
                         <!-- Total -->
                         <div class="resumo-total-final">
                             <span class="total-label">Total</span>
-                            <span class="total-valor-final">{{ formatarPreco(carrinhoState.totalValor()) }}</span>
+                            <span class="total-valor-final">{{ formatarPreco(carrinho.totalValor()) }}</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="carrinho-footer confirmacao-footer">
-                    <button class="btn-editar-pedido" (click)="voltarParaPagamento()">
+                    <button class="btn-editar-pedido" (click)="pagamento.voltarParaPagamento()">
                         ✏️ Editar
                     </button>
                     <button

@@ -9,3 +9,4 @@ export { usePagamento, type MeioPagamentoSelecionado, type MeioPagamentoTipo, ty
 export { useCardapio, type GrupoCategoria } from './use-cardapio';
 export { useFavoritos } from './use-favoritos';
 export { useClienteAuth } from './use-cliente-auth';
+export { useGoogleAuth } from './use-google-auth';
