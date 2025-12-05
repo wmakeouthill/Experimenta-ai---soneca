@@ -7,10 +7,12 @@ import com.snackbar.pedidos.application.dto.CardapioPublicoDTO;
 import com.snackbar.pedidos.application.dto.ClientePublicoDTO;
 import com.snackbar.pedidos.application.dto.CadastrarClienteRequest;
 import com.snackbar.pedidos.application.dto.ProdutoPopularDTO;
+import com.snackbar.pedidos.application.dto.StatusPedidoClienteDTO;
 import com.snackbar.pedidos.application.usecases.BuscarMesaPorTokenUseCase;
 import com.snackbar.pedidos.application.usecases.CriarPedidoMesaUseCase;
 import com.snackbar.pedidos.application.usecases.BuscarCardapioPublicoUseCase;
 import com.snackbar.pedidos.application.usecases.BuscarProdutosPopularesUseCase;
+import com.snackbar.pedidos.application.usecases.BuscarStatusPedidoClienteUseCase;
 import com.snackbar.pedidos.application.ports.ClienteGatewayPort;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +44,7 @@ public class PedidoMesaRestController {
     private final CriarPedidoMesaUseCase criarPedidoMesaUseCase;
     private final BuscarCardapioPublicoUseCase buscarCardapioPublicoUseCase;
     private final BuscarProdutosPopularesUseCase buscarProdutosPopularesUseCase;
+    private final BuscarStatusPedidoClienteUseCase buscarStatusPedidoClienteUseCase;
     private final ClienteGatewayPort clienteGateway;
 
     /**
@@ -115,6 +118,18 @@ public class PedidoMesaRestController {
     public ResponseEntity<PedidoPendenteDTO> criarPedido(@Valid @RequestBody CriarPedidoMesaRequest request) {
         PedidoPendenteDTO pedidoPendente = criarPedidoMesaUseCase.executar(request.mesaToken(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(pedidoPendente);
+    }
+
+    /**
+     * Busca o status de um pedido do cliente.
+     * Retorna o status atual do pedido (na fila ou já aceito).
+     * Endpoint público para polling do cliente.
+     */
+    @GetMapping("/pedido/{pedidoId}/status")
+    public ResponseEntity<StatusPedidoClienteDTO> buscarStatusPedido(@NonNull @PathVariable String pedidoId) {
+        return buscarStatusPedidoClienteUseCase.executar(pedidoId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     /**

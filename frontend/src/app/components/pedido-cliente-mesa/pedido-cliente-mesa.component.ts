@@ -14,7 +14,8 @@ import {
   useCardapio,
   useFavoritos,
   useGoogleAuth,
-  useInicio
+  useInicio,
+  useSucessoPedido
 } from './composables';
 
 type EtapaPrincipal = 'identificacao' | 'cadastro' | 'cardapio' | 'sucesso';
@@ -80,6 +81,7 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
     () => this.identificacao.clienteIdentificado()?.id,
     () => this.favoritos.produtosFavoritos()
   );
+  readonly sucesso = useSucessoPedido();
 
   // ========== Computed ==========
   readonly podeEnviarPedido = computed(() =>
@@ -121,6 +123,7 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   ngOnDestroy(): void {
     this.googleAuth.destroy();
     this.identificacao.destroy();
+    this.sucesso.destroy();
     if (this.isBrowser) {
       window.removeEventListener('popstate', this.boundHandlePopState);
     }
@@ -273,12 +276,17 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
     };
 
     this.pedidoMesaService.criarPedido(request).subscribe({
-      next: () => {
+      next: (response) => {
         this.enviando.set(false);
         this.etapaAtual.set('sucesso');
         this.carrinho.limparCarrinho();
         this.pagamento.limparPagamentos();
         this.carrinho.fecharCarrinho();
+
+        // Inicia acompanhamento do status do pedido
+        if (response.id) {
+          this.sucesso.iniciarAcompanhamento(response.id);
+        }
       },
       error: () => {
         this.enviando.set(false);
@@ -290,6 +298,7 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   novoPedido(): void {
     this.etapaAtual.set('cardapio');
     this.carrinho.limparCarrinho();
+    this.sucesso.limpar();
     this.erro.set(null);
   }
 

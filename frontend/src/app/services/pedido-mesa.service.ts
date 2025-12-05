@@ -57,6 +57,25 @@ export interface CadastrarClienteRequest {
     telefone: string;
 }
 
+export type StatusCliente =
+    | 'AGUARDANDO_ACEITACAO'
+    | 'ACEITO'
+    | 'PREPARANDO'
+    | 'PRONTO'
+    | 'FINALIZADO'
+    | 'CANCELADO';
+
+export interface StatusPedidoCliente {
+    pedidoId: string;
+    status: StatusCliente;
+    statusDescricao: string;
+    numeroMesa?: number;
+    dataHoraSolicitacao: string;
+    tempoEsperaSegundos: number;
+    numeroPedido?: number;
+    motivoCancelamento?: string;
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -82,5 +101,9 @@ export class PedidoMesaService {
 
     criarPedido(request: CriarPedidoMesaRequest): Observable<PedidoMesaResponse> {
         return this.http.post<PedidoMesaResponse>(`${this.publicApiUrl}/pedido`, request);
+    }
+
+    buscarStatusPedido(pedidoId: string): Observable<StatusPedidoCliente> {
+        return this.http.get<StatusPedidoCliente>(`${this.publicApiUrl}/pedido/${pedidoId}/status`);
     }
 }
