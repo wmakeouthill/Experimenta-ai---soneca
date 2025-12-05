@@ -655,35 +655,87 @@
                                         <!-- Seção de Avaliação -->
                                         @if (meusPedidos.pedidoSelecionado()?.status === 'FINALIZADO') {
                                             <div class="secao-avaliacao">
-                                                <h4>⭐ Avalie este pedido</h4>
-                                                <p class="avaliacao-instrucao">Toque nas estrelas para avaliar cada produto</p>
+                                                <!-- Se já avaliou e não está editando: mostra resumo -->
+                                                @if (pedidoJaAvaliado() && !isEditandoAvaliacao()) {
+                                                    <div class="avaliacao-resumo">
+                                                        <div class="avaliacao-resumo-header">
+                                                            <div class="avaliacao-resumo-info">
+                                                                <span class="avaliacao-resumo-titulo">Sua avaliação</span>
+                                                                <div class="avaliacao-resumo-estrelas">
+                                                                    @for (estrela of [1, 2, 3, 4, 5]; track estrela) {
+                                                                        <span class="estrela-resumo" [class.ativa]="getMediaAvaliacaoPedido() >= estrela">
+                                                                            {{ getMediaAvaliacaoPedido() >= estrela ? '★' : '☆' }}
+                                                                        </span>
+                                                                    }
+                                                                </div>
+                                                            </div>
+                                                            <button class="btn-editar-avaliacao" (click)="editarAvaliacao()">
+                                                                ✏️ Editar
+                                                            </button>
+                                                        </div>
 
-                                                @for (item of meusPedidos.pedidoSelecionado()?.itens; track item.produtoId) {
-                                                    <div class="item-avaliacao">
-                                                        <span class="item-nome-avaliacao">{{ item.nomeProduto }}</span>
-                                                        <div class="estrelas-avaliacao">
-                                                            @for (estrela of [1, 2, 3, 4, 5]; track estrela) {
-                                                                <button class="estrela-btn"
-                                                                        [class.ativa]="getAvaliacaoProduto(item.produtoId) >= estrela"
-                                                                        (click)="avaliarProduto(item.produtoId, estrela)">
-                                                                    {{ getAvaliacaoProduto(item.produtoId) >= estrela ? '★' : '☆' }}
-                                                                </button>
+                                                        @if (getComentarioPedido()) {
+                                                            <div class="avaliacao-comentario-salvo">
+                                                                <span class="comentario-label">💬 Seu comentário:</span>
+                                                                <p class="comentario-texto">"{{ getComentarioPedido() }}"</p>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                } @else {
+                                                    <!-- Modo de edição ou primeira avaliação -->
+                                                    <div class="avaliacao-edicao">
+                                                        <div class="avaliacao-edicao-header">
+                                                            <h4>⭐ Avalie este pedido</h4>
+                                                            @if (pedidoJaAvaliado()) {
+                                                                <span class="avaliacao-modo-edicao">Editando</span>
                                                             }
                                                         </div>
+                                                        <p class="avaliacao-instrucao">Toque nas estrelas para avaliar</p>
+
+                                                        <div class="itens-avaliacao-lista">
+                                                            @for (item of meusPedidos.pedidoSelecionado()?.itens; track item.produtoId) {
+                                                                <div class="item-avaliacao">
+                                                                    <span class="item-nome-avaliacao">{{ item.nomeProduto }}</span>
+                                                                    <div class="estrelas-avaliacao">
+                                                                        @for (estrela of [1, 2, 3, 4, 5]; track estrela) {
+                                                                            <button class="estrela-btn"
+                                                                                    [class.ativa]="getAvaliacaoProduto(item.produtoId) >= estrela"
+                                                                                    (click)="avaliarProduto(item.produtoId, estrela)">
+                                                                                {{ getAvaliacaoProduto(item.produtoId) >= estrela ? '★' : '☆' }}
+                                                                            </button>
+                                                                        }
+                                                                    </div>
+                                                                </div>
+                                                            }
+                                                        </div>
+
+                                                        <!-- Campo de comentário -->
+                                                        <div class="comentario-avaliacao">
+                                                            <label for="comentarioPedido">💬 Comentário (opcional)</label>
+                                                            <textarea
+                                                                id="comentarioPedido"
+                                                                [value]="getComentarioPedido()"
+                                                                (input)="setComentarioPedido($any($event.target).value)"
+                                                                placeholder="Conte-nos sobre sua experiência..."
+                                                                rows="3"
+                                                                class="textarea-comentario"
+                                                                [disabled]="salvandoComentario()"
+                                                            ></textarea>
+                                                        </div>
+
+                                                        <!-- Botão Enviar Avaliação -->
+                                                        <button
+                                                            class="btn-enviar-avaliacao"
+                                                            (click)="enviarAvaliacao()"
+                                                            [disabled]="salvandoComentario() || !temAlgumaAvaliacao()">
+                                                            @if (salvandoComentario()) {
+                                                                ⏳ Enviando...
+                                                            } @else {
+                                                                ✓ Enviar Avaliação
+                                                            }
+                                                        </button>
                                                     </div>
                                                 }
-
-                                                <!-- Campo de comentário geral do pedido -->
-                                                <div class="comentario-avaliacao">
-                                                    <label for="comentarioPedido">Deixe um comentário (opcional):</label>
-                                                    <textarea
-                                                        id="comentarioPedido"
-                                                        [(ngModel)]="comentarioAvaliacao"
-                                                        placeholder="Conte-nos sobre sua experiência..."
-                                                        rows="3"
-                                                        class="textarea-comentario"
-                                                    ></textarea>
-                                                </div>
                                             </div>
                                         }
                                     </div>

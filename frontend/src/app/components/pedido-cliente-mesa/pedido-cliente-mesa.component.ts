@@ -268,6 +268,7 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   irParaMeusPedidos(): void {
     this.secaoPerfil.set('pedidos');
     this.meusPedidos.carregar();
+    this.carregarAvaliacoesCliente();
   }
 
   adicionarAoCarrinhoRapido(produto: Produto): void {
@@ -327,9 +328,17 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   }
 
   // ========== Avaliação de Produtos ==========
-  // Chave: "pedidoId:produtoId" => { nota, comentario }
-  private readonly avaliacoes = signal<Map<string, { nota: number; comentario?: string }>>(new Map());
-  comentarioAvaliacao = '';
+  // Chave: "pedidoId:produtoId" => nota (número de estrelas)
+  private readonly avaliacoes = signal<Map<string, number>>(new Map());
+  // Comentário por pedido (não por produto)
+  private readonly comentariosPedido = signal<Map<string, string>>(new Map());
+  // Feedback visual: pedidoId => true se comentário foi salvo
+  readonly comentarioSalvo = signal<Map<string, boolean>>(new Map());
+  readonly salvandoComentario = signal(false);
+  // Modo de edição de avaliação por pedido
+  readonly editandoAvaliacao = signal<Map<string, boolean>>(new Map());
+  // Avaliação submetida (enviada pelo botão Enviar) por pedido
+  private readonly avaliacaoSubmetida = signal<Map<string, boolean>>(new Map());
 
   private getAvaliacaoKey(pedidoId: string, produtoId: string): string {
     return `${pedidoId}:${produtoId}`;
@@ -338,8 +347,80 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   getAvaliacaoProduto(produtoId: string): number {
     const pedido = this.meusPedidos.pedidoSelecionado();
     if (!pedido) return 0;
-    const key = this.getAvaliacaoKey(String(pedido.numeroPedido), produtoId);
-    return this.avaliacoes().get(key)?.nota || 0;
+    // Usa o ID do pedido (UUID) como chave
+    const key = this.getAvaliacaoKey(pedido.id, produtoId);
+    return this.avaliacoes().get(key) || 0;
+  }
+
+  // Verifica se o pedido já foi avaliado E submetido
+  pedidoJaAvaliado(): boolean {
+    const pedido = this.meusPedidos.pedidoSelecionado();
+    if (!pedido) return false;
+
+    // Só considera "avaliado" se foi submetido pelo botão Enviar
+    return this.avaliacaoSubmetida().get(pedido.id) || false;
+  }
+
+  // Verifica se está em modo de edição para o pedido atual
+  isEditandoAvaliacao(): boolean {
+    const pedido = this.meusPedidos.pedidoSelecionado();
+    if (!pedido) return false;
+    return this.editandoAvaliacao().get(pedido.id) || false;
+  }
+
+  // Ativa modo de edição
+  editarAvaliacao(): void {
+    const pedido = this.meusPedidos.pedidoSelecionado();
+    if (!pedido) return;
+    const novoStatus = new Map(this.editandoAvaliacao());
+    novoStatus.set(pedido.id, true);
+    this.editandoAvaliacao.set(novoStatus);
+  }
+
+  // Calcula média das avaliações do pedido
+  getMediaAvaliacaoPedido(): number {
+    const pedido = this.meusPedidos.pedidoSelecionado();
+    if (!pedido || !pedido.itens || pedido.itens.length === 0) return 0;
+
+    let soma = 0;
+    let count = 0;
+    for (const item of pedido.itens) {
+      const key = this.getAvaliacaoKey(pedido.id, item.produtoId);
+      const nota = this.avaliacoes().get(key) || 0;
+      if (nota > 0) {
+        soma += nota;
+        count++;
+      }
+    }
+    return count > 0 ? Math.round(soma / count) : 0;
+  }
+
+  // Getter para o comentário do pedido atual
+  getComentarioPedido(): string {
+    const pedido = this.meusPedidos.pedidoSelecionado();
+    if (!pedido) return '';
+    return this.comentariosPedido().get(pedido.id) || '';
+  }
+
+  // Verifica se o comentário do pedido atual foi salvo
+  isComentarioSalvo(): boolean {
+    const pedido = this.meusPedidos.pedidoSelecionado();
+    if (!pedido) return false;
+    return this.comentarioSalvo().get(pedido.id) || false;
+  }
+
+  // Setter para o comentário do pedido atual
+  setComentarioPedido(comentario: string): void {
+    const pedido = this.meusPedidos.pedidoSelecionado();
+    if (!pedido) return;
+    const novosComentarios = new Map(this.comentariosPedido());
+    novosComentarios.set(pedido.id, comentario);
+    this.comentariosPedido.set(novosComentarios);
+
+    // Remove o status de "salvo" quando editar
+    const novoStatus = new Map(this.comentarioSalvo());
+    novoStatus.delete(pedido.id);
+    this.comentarioSalvo.set(novoStatus);
   }
 
   avaliarProduto(produtoId: string, nota: number): void {
@@ -347,17 +428,19 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
     const pedido = this.meusPedidos.pedidoSelecionado();
     if (!cliente || !pedido) return;
 
-    const pedidoIdStr = String(pedido.numeroPedido);
-    const key = this.getAvaliacaoKey(pedidoIdStr, produtoId);
+    // Usa o ID do pedido (UUID) para a chave local e para enviar ao backend
+    const key = this.getAvaliacaoKey(pedido.id, produtoId);
 
     // Atualiza localmente
     const novasAvaliacoes = new Map(this.avaliacoes());
-    const avaliacaoAtual = novasAvaliacoes.get(key) || { nota: 0 };
-    novasAvaliacoes.set(key, { ...avaliacaoAtual, nota });
+    novasAvaliacoes.set(key, nota);
     this.avaliacoes.set(novasAvaliacoes);
 
-    // Envia para o backend
-    this.pedidoMesaService.avaliarProduto(cliente.id, produtoId, pedidoIdStr, nota, this.comentarioAvaliacao || undefined).subscribe({
+    // Pega o comentário atual do pedido
+    const comentario = this.comentariosPedido().get(pedido.id);
+
+    // Envia para o backend com o ID do pedido (UUID)
+    this.pedidoMesaService.avaliarProduto(cliente.id, produtoId, pedido.id, nota, comentario || undefined).subscribe({
       next: () => {
         // Sucesso - já está atualizado localmente
       },
@@ -367,35 +450,194 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
     });
   }
 
-  salvarComentarioAvaliacao(produtoId: string): void {
+  salvarComentarioPedido(): void {
     const cliente = this.identificacao.clienteIdentificado();
     const pedido = this.meusPedidos.pedidoSelecionado();
     if (!cliente || !pedido) return;
 
-    const pedidoIdStr = String(pedido.numeroPedido);
-    const key = this.getAvaliacaoKey(pedidoIdStr, produtoId);
-    const avaliacaoAtual = this.avaliacoes().get(key);
-    if (!avaliacaoAtual || avaliacaoAtual.nota === 0) return;
+    const comentario = this.comentariosPedido().get(pedido.id) || '';
 
-    // Atualiza comentário localmente
-    const novasAvaliacoes = new Map(this.avaliacoes());
-    novasAvaliacoes.set(key, { ...avaliacaoAtual, comentario: this.comentarioAvaliacao });
-    this.avaliacoes.set(novasAvaliacoes);
+    // Se não tem comentário, não precisa salvar
+    if (!comentario.trim()) return;
 
-    // Envia para o backend com o comentário
-    this.pedidoMesaService.avaliarProduto(
-      cliente.id,
-      produtoId,
-      pedidoIdStr,
-      avaliacaoAtual.nota,
-      this.comentarioAvaliacao || undefined
-    ).subscribe({
-      next: () => {
-        // Limpa o campo de comentário após salvar
-        this.comentarioAvaliacao = '';
+    // Pega todos os produtos avaliados deste pedido para atualizar o comentário
+    const itens = pedido.itens || [];
+    if (itens.length === 0) return;
+
+    // Atualiza o comentário no primeiro produto que tem avaliação
+    for (const item of itens) {
+      const key = this.getAvaliacaoKey(pedido.id, item.produtoId);
+      const nota = this.avaliacoes().get(key);
+      if (nota && nota > 0) {
+        this.salvandoComentario.set(true);
+
+        // Envia para o backend com o comentário atualizado
+        this.pedidoMesaService.avaliarProduto(
+          cliente.id,
+          item.produtoId,
+          pedido.id,
+          nota,
+          comentario
+        ).subscribe({
+          next: () => {
+            this.salvandoComentario.set(false);
+            // Marca como salvo
+            const novoStatus = new Map(this.comentarioSalvo());
+            novoStatus.set(pedido.id, true);
+            this.comentarioSalvo.set(novoStatus);
+          },
+          error: () => {
+            this.salvandoComentario.set(false);
+            console.error('Erro ao salvar comentário');
+          }
+        });
+        break; // Só precisa salvar uma vez
+      }
+    }
+
+    // Se não tem nenhum produto avaliado, avalia o primeiro com nota 5 para poder salvar o comentário
+    if (!itens.some(item => {
+      const key = this.getAvaliacaoKey(pedido.id, item.produtoId);
+      return (this.avaliacoes().get(key) || 0) > 0;
+    }) && itens.length > 0) {
+      const primeiroItem = itens[0];
+      this.salvandoComentario.set(true);
+
+      // Salva com nota 5 (avaliação positiva padrão para permitir comentário)
+      this.pedidoMesaService.avaliarProduto(
+        cliente.id,
+        primeiroItem.produtoId,
+        pedido.id,
+        5,
+        comentario
+      ).subscribe({
+        next: () => {
+          this.salvandoComentario.set(false);
+          // Atualiza localmente
+          const novasAvaliacoes = new Map(this.avaliacoes());
+          const key = this.getAvaliacaoKey(pedido.id, primeiroItem.produtoId);
+          novasAvaliacoes.set(key, 5);
+          this.avaliacoes.set(novasAvaliacoes);
+          // Marca como salvo
+          const novoStatus = new Map(this.comentarioSalvo());
+          novoStatus.set(pedido.id, true);
+          this.comentarioSalvo.set(novoStatus);
+        },
+        error: () => {
+          this.salvandoComentario.set(false);
+          console.error('Erro ao salvar comentário');
+        }
+      });
+    }
+  }
+
+  // Verifica se tem pelo menos uma estrela marcada
+  temAlgumaAvaliacao(): boolean {
+    const pedido = this.meusPedidos.pedidoSelecionado();
+    if (!pedido || !pedido.itens) return false;
+
+    for (const item of pedido.itens) {
+      const key = this.getAvaliacaoKey(pedido.id, item.produtoId);
+      if ((this.avaliacoes().get(key) || 0) > 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Envia a avaliação e muda para modo visualização
+  enviarAvaliacao(): void {
+    const cliente = this.identificacao.clienteIdentificado();
+    const pedido = this.meusPedidos.pedidoSelecionado();
+    if (!cliente || !pedido) return;
+
+    const comentario = this.comentariosPedido().get(pedido.id) || '';
+    const itens = pedido.itens || [];
+    if (itens.length === 0) return;
+
+    this.salvandoComentario.set(true);
+
+    // Salva todas as avaliações com o comentário
+    let salvou = false;
+    for (const item of itens) {
+      const key = this.getAvaliacaoKey(pedido.id, item.produtoId);
+      const nota = this.avaliacoes().get(key);
+      if (nota && nota > 0) {
+        this.pedidoMesaService.avaliarProduto(
+          cliente.id,
+          item.produtoId,
+          pedido.id,
+          nota,
+          salvou ? undefined : comentario // Só envia comentário na primeira
+        ).subscribe({
+          next: () => {
+            this.salvandoComentario.set(false);
+            // Marca como salvo e sai do modo edição
+            const novoStatusSalvo = new Map(this.comentarioSalvo());
+            novoStatusSalvo.set(pedido.id, true);
+            this.comentarioSalvo.set(novoStatusSalvo);
+
+            // Marca como submetida
+            const novoStatusSubmetida = new Map(this.avaliacaoSubmetida());
+            novoStatusSubmetida.set(pedido.id, true);
+            this.avaliacaoSubmetida.set(novoStatusSubmetida);
+
+            // Sai do modo edição
+            const novoStatusEditando = new Map(this.editandoAvaliacao());
+            novoStatusEditando.delete(pedido.id);
+            this.editandoAvaliacao.set(novoStatusEditando);
+          },
+          error: () => {
+            this.salvandoComentario.set(false);
+            console.error('Erro ao salvar avaliação');
+          }
+        });
+        salvou = true;
+      }
+    }
+
+    // Se não salvou nenhuma (não tinha estrelas), mostra erro
+    if (!salvou) {
+      this.salvandoComentario.set(false);
+    }
+  }
+
+  // Carrega avaliações do cliente quando entra em Meus Pedidos
+  carregarAvaliacoesCliente(): void {
+    const cliente = this.identificacao.clienteIdentificado();
+    if (!cliente) return;
+
+    this.pedidoMesaService.buscarAvaliacoesCliente(cliente.id).subscribe({
+      next: (avaliacoesList) => {
+        const novasAvaliacoes = new Map<string, number>();
+        const novosComentarios = new Map<string, string>();
+        const pedidosComAvaliacao = new Set<string>();
+
+        for (const avaliacao of avaliacoesList) {
+          if (avaliacao.pedidoId && avaliacao.produtoId) {
+            const key = this.getAvaliacaoKey(avaliacao.pedidoId, avaliacao.produtoId);
+            novasAvaliacoes.set(key, avaliacao.nota);
+            pedidosComAvaliacao.add(avaliacao.pedidoId);
+
+            // Guarda o comentário por pedido (pega o primeiro que encontrar)
+            if (avaliacao.comentario && !novosComentarios.has(avaliacao.pedidoId)) {
+              novosComentarios.set(avaliacao.pedidoId, avaliacao.comentario);
+            }
+          }
+        }
+
+        this.avaliacoes.set(novasAvaliacoes);
+        this.comentariosPedido.set(novosComentarios);
+
+        // Marca pedidos que têm avaliação do backend como submetidos
+        const novoStatusSubmetida = new Map<string, boolean>();
+        for (const pedidoId of pedidosComAvaliacao) {
+          novoStatusSubmetida.set(pedidoId, true);
+        }
+        this.avaliacaoSubmetida.set(novoStatusSubmetida);
       },
       error: () => {
-        console.error('Erro ao salvar comentário');
+        console.error('Erro ao carregar avaliações');
       }
     });
   }

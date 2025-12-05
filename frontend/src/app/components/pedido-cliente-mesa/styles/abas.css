@@ -980,29 +980,187 @@
 /* ========== SEÇÃO AVALIAÇÃO NO MODAL ========== */
 .secao-avaliacao {
     background: linear-gradient(135deg, #FFF9E6 0%, #FFF5D6 100%);
-    border-radius: 12px;
-    padding: 1rem;
+    border-radius: 16px;
+    padding: 1.25rem;
     border: 1px solid #FFE4A0;
+    margin-top: 1rem;
 }
 
-.secao-avaliacao h4 {
-    margin: 0 0 0.5rem;
+/* ========== RESUMO DA AVALIAÇÃO (já avaliado) ========== */
+.avaliacao-resumo {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.avaliacao-resumo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.avaliacao-resumo-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.avaliacao-resumo-titulo {
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.avaliacao-resumo-estrelas {
+    display: flex;
+    gap: 0.1rem;
+}
+
+.estrela-resumo {
+    font-size: 1.4rem;
+    color: #ddd;
+}
+
+.estrela-resumo.ativa {
+    color: #FFB800;
+}
+
+.btn-editar-avaliacao {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-editar-avaliacao:hover {
+    background: #f5f5f5;
+    border-color: #FFB800;
+    color: #333;
+}
+
+.avaliacao-comentario-salvo {
+    background: #fff;
+    border-radius: 12px;
+    padding: 0.875rem;
+    border: 1px solid #eee;
+}
+
+.avaliacao-comentario-salvo .comentario-label {
+    font-size: 0.75rem;
+    color: #888;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.avaliacao-comentario-salvo .comentario-texto {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #333;
+    font-style: italic;
+    line-height: 1.5;
+}
+
+/* ========== MODO EDIÇÃO DA AVALIAÇÃO ========== */
+.avaliacao-edicao {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.avaliacao-edicao-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.avaliacao-edicao-header h4 {
+    margin: 0;
     font-size: 1rem;
     color: #333;
+}
+
+.avaliacao-modo-edicao {
+    font-size: 0.7rem;
+    background: #FFB800;
+    color: #fff;
+    padding: 0.2rem 0.5rem;
+    border-radius: 10px;
+    font-weight: 500;
 }
 
 .avaliacao-instrucao {
     font-size: 0.8rem;
     color: #666;
-    margin: 0 0 1rem;
+    margin: 0;
+}
+
+.avaliacao-botoes {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.btn-enviar-avaliacao {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    background: #FFB800;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+}
+
+.btn-enviar-avaliacao:hover:not(:disabled) {
+    background: #e6a600;
+    transform: translateY(-1px);
+}
+
+.btn-enviar-avaliacao:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.btn-cancelar-avaliacao {
+    padding: 0.75rem 1rem;
+    background: #fff;
+    color: #666;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-cancelar-avaliacao:hover {
+    background: #f5f5f5;
+    border-color: #ccc;
+}
+
+.itens-avaliacao-lista {
+    background: #fff;
+    border-radius: 12px;
+    padding: 0.5rem;
+    border: 1px solid rgba(255, 184, 0, 0.2);
 }
 
 .item-avaliacao {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid rgba(255, 184, 0, 0.2);
+    padding: 0.625rem 0.5rem;
+    border-bottom: 1px solid rgba(255, 184, 0, 0.15);
 }
 
 .item-avaliacao:last-child {
@@ -1029,7 +1187,7 @@
     cursor: pointer;
     padding: 0;
     line-height: 1;
-    transition: transform 0.15s;
+    transition: transform 0.15s, color 0.15s;
 }
 
 .estrela-btn.ativa {
@@ -1040,11 +1198,15 @@
     transform: scale(1.2);
 }
 
+.estrela-btn:active {
+    transform: scale(0.95);
+}
+
 /* Comentário de avaliação */
 .comentario-avaliacao {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid rgba(255, 184, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
 .comentario-avaliacao label {
@@ -1054,15 +1216,42 @@
     margin-bottom: 0.5rem;
 }
 
+.comentario-footer {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.comentario-status {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 12px;
+}
+
+.comentario-status.salvando {
+    color: #666;
+    background: #f0f0f0;
+}
+
+.comentario-status.salvo {
+    color: #2e7d32;
+    background: #e8f5e9;
+}
+
+.comentario-dica {
+    font-size: 0.7rem;
+    color: #999;
+    font-style: italic;
+}
+
 .textarea-comentario {
     width: 100%;
     padding: 0.75rem;
     border: 1px solid #ddd;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 0.9rem;
     font-family: inherit;
-    resize: vertical;
-    min-height: 60px;
+    resize: none;
+    min-height: 70px;
     background: #fff;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
@@ -1071,6 +1260,11 @@
     outline: none;
     border-color: #FFB800;
     box-shadow: 0 0 0 3px rgba(255, 184, 0, 0.2);
+}
+
+.textarea-comentario:disabled {
+    background: #f9f9f9;
+    cursor: not-allowed;
 }
 
 .textarea-comentario::placeholder {
