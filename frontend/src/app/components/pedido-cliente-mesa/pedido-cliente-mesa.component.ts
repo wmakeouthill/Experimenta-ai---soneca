@@ -2,6 +2,7 @@ import { Component, inject, signal, computed, OnInit, OnDestroy, ChangeDetection
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { PedidoMesaService, ItemPedidoMesaRequest, CriarPedidoMesaRequest } from '../../services/pedido-mesa.service';
 import { Mesa } from '../../services/mesa.service';
 import { Produto } from '../../services/produto.service';
@@ -15,11 +16,13 @@ import {
   useFavoritos,
   useGoogleAuth,
   useInicio,
-  useSucessoPedido
+  useSucessoPedido,
+  useMeusPedidos
 } from './composables';
 
 type EtapaPrincipal = 'identificacao' | 'cadastro' | 'cardapio' | 'sucesso';
 type AbaCliente = 'inicio' | 'cardapio' | 'perfil';
+type SecaoPerfil = 'principal' | 'favoritos' | 'pedidos' | 'senha';
 
 /**
  * Componente de pedido para cliente via QR Code da mesa.
@@ -57,6 +60,7 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   readonly etapaAtual = signal<EtapaPrincipal>('identificacao');
   readonly abaAtual = signal<AbaCliente>('inicio');
   readonly enviando = signal(false);
+  readonly secaoPerfil = signal<SecaoPerfil>('principal');
 
   // ========== Composables ==========
   private readonly mesaToken = () => this.mesa()?.qrCodeToken;
@@ -82,6 +86,14 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
     () => this.favoritos.produtosFavoritos()
   );
   readonly sucesso = useSucessoPedido();
+  readonly meusPedidos = useMeusPedidos(() => this.identificacao.clienteIdentificado()?.id);
+
+  // ========== Estado para Seção de Senha ==========
+  senhaAtual = '';
+  novaSenha = '';
+  confirmarSenha = '';
+  readonly erroSenha = signal<string | null>(null);
+  readonly salvandoSenha = signal(false);
 
   // ========== Computed ==========
   readonly podeEnviarPedido = computed(() =>
@@ -204,6 +216,10 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
     } else {
       this.carrinho.fecharCarrinho();
       this.abaAtual.set(aba);
+      // Reset seção do perfil quando navegar para ele
+      if (aba === 'perfil') {
+        this.secaoPerfil.set('principal');
+      }
     }
   }
 
@@ -245,6 +261,68 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   async desvincularGoogle(): Promise<void> {
     if (confirm('Deseja desvincular sua conta Google?')) {
       await this.googleAuth.desvincular();
+    }
+  }
+
+  // ========== Seções do Perfil ==========
+  irParaMeusPedidos(): void {
+    this.secaoPerfil.set('pedidos');
+    this.meusPedidos.carregar();
+  }
+
+  adicionarAoCarrinhoRapido(produto: Produto): void {
+    this.carrinho.adicionarRapido(produto);
+    // Feedback visual pode ser adicionado aqui
+  }
+
+  async salvarSenha(): Promise<void> {
+    this.erroSenha.set(null);
+
+    // Validações
+    if (!this.novaSenha || this.novaSenha.length < 6) {
+      this.erroSenha.set('A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+
+    if (this.novaSenha !== this.confirmarSenha) {
+      this.erroSenha.set('As senhas não conferem');
+      return;
+    }
+
+    const cliente = this.identificacao.clienteIdentificado();
+    if (!cliente) return;
+
+    if (cliente.temSenha && !this.senhaAtual) {
+      this.erroSenha.set('Digite sua senha atual');
+      return;
+    }
+
+    this.salvandoSenha.set(true);
+
+    try {
+      await firstValueFrom(
+        this.pedidoMesaService.salvarSenhaCliente(
+          cliente.id,
+          this.novaSenha,
+          cliente.temSenha ? this.senhaAtual : undefined
+        )
+      );
+
+      // Sucesso - atualizar estado do cliente
+      this.identificacao.atualizarTemSenha(true);
+
+      // Limpar campos e voltar
+      this.senhaAtual = '';
+      this.novaSenha = '';
+      this.confirmarSenha = '';
+      this.secaoPerfil.set('principal');
+
+      alert('Senha salva com sucesso!');
+    } catch (err: unknown) {
+      const httpError = err as { error?: { message?: string } };
+      this.erroSenha.set(httpError.error?.message || 'Erro ao salvar senha');
+    } finally {
+      this.salvandoSenha.set(false);
     }
   }
 

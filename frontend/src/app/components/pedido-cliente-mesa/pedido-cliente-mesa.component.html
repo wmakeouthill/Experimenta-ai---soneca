@@ -410,83 +410,266 @@
             <!-- ========== ABA: PERFIL ========== -->
             @if (abaAtual() === 'perfil') {
                 <div class="aba-perfil">
-                    <div class="perfil-header">
-                        <div class="perfil-avatar">
-                            @if (googleAuth.clienteAuth.cliente()?.fotoUrl) {
-                                <img [src]="googleAuth.clienteAuth.cliente()!.fotoUrl"
-                                     alt="Foto"
-                                     class="avatar-img"
-                                     (error)="onImageError($event)">
-                            } @else {
-                                <span class="avatar-placeholder">👤</span>
+                    <!-- Seção Principal do Perfil -->
+                    @if (secaoPerfil() === 'principal') {
+                        <div class="perfil-header">
+                            <div class="perfil-avatar">
+                                @if (googleAuth.clienteAuth.cliente()?.fotoUrl) {
+                                    <img [src]="googleAuth.clienteAuth.cliente()!.fotoUrl"
+                                         alt="Foto"
+                                         class="avatar-img"
+                                         (error)="onImageError($event)">
+                                } @else {
+                                    <span class="avatar-placeholder">👤</span>
+                                }
+                            </div>
+                            <h2 class="perfil-nome">{{ identificacao.clienteIdentificado()!.nome }}</h2>
+                            @if (identificacao.clienteIdentificado()!.telefone) {
+                                <p class="perfil-telefone">{{ formatarTelefone(identificacao.clienteIdentificado()!.telefone) }}</p>
+                            }
+                            @if (googleAuth.clienteAuth.cliente()?.email) {
+                                <p class="perfil-email">{{ googleAuth.clienteAuth.cliente()!.email }}</p>
                             }
                         </div>
-                        <h2 class="perfil-nome">{{ identificacao.clienteIdentificado()!.nome }}</h2>
-                        @if (identificacao.clienteIdentificado()!.telefone) {
-                            <p class="perfil-telefone">{{ formatarTelefone(identificacao.clienteIdentificado()!.telefone) }}</p>
-                        }
-                        @if (googleAuth.clienteAuth.cliente()?.email) {
-                            <p class="perfil-email">{{ googleAuth.clienteAuth.cliente()!.email }}</p>
-                        }
-                    </div>
 
-                    <div class="perfil-menu">
-                        <!-- Vincular/Desvincular Google -->
-                        @if (googleAuth.clienteAuth.cliente()?.googleVinculado) {
-                            <button class="perfil-item google-vinculado" (click)="desvincularGoogle()">
-                                <span class="item-icon">
-                                    <svg viewBox="0 0 24 24" width="20" height="20">
-                                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                                    </svg>
-                                </span>
-                                <span class="item-texto">Google vinculado</span>
-                                <span class="item-badge vinculado">✓</span>
-                            </button>
-                        } @else {
-                            <button class="perfil-item google-vincular" (click)="vincularGoogle()" [disabled]="googleAuth.clienteAuth.carregando()">
-                                <span class="item-icon">
-                                    <svg viewBox="0 0 24 24" width="20" height="20">
-                                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                                    </svg>
-                                </span>
-                                <span class="item-texto">Vincular com Google</span>
+                        <div class="perfil-menu">
+                            <!-- Vincular/Desvincular Google -->
+                            @if (googleAuth.clienteAuth.cliente()?.googleVinculado) {
+                                <button class="perfil-item google-vinculado" (click)="desvincularGoogle()">
+                                    <span class="item-icon">
+                                        <svg viewBox="0 0 24 24" width="20" height="20">
+                                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                                        </svg>
+                                    </span>
+                                    <span class="item-texto">Google vinculado</span>
+                                    <span class="item-badge vinculado">✓</span>
+                                </button>
+                            } @else {
+                                <button class="perfil-item google-vincular" (click)="vincularGoogle()" [disabled]="googleAuth.clienteAuth.carregando()">
+                                    <span class="item-icon">
+                                        <svg viewBox="0 0 24 24" width="20" height="20">
+                                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                                        </svg>
+                                    </span>
+                                    <span class="item-texto">Vincular com Google</span>
+                                    <span class="item-arrow">›</span>
+                                </button>
+                            }
+
+                            <button class="perfil-item" (click)="trocarCliente()">
+                                <span class="item-icon">🔄</span>
+                                <span class="item-texto">Trocar conta</span>
                                 <span class="item-arrow">›</span>
                             </button>
+                            <button class="perfil-item" (click)="secaoPerfil.set('favoritos')">
+                                <span class="item-icon">⭐</span>
+                                <span class="item-texto">Favoritos</span>
+                                @if (favoritos.produtosFavoritos().length > 0) {
+                                    <span class="item-count">{{ favoritos.produtosFavoritos().length }}</span>
+                                }
+                                <span class="item-arrow">›</span>
+                            </button>
+                            <button class="perfil-item" (click)="irParaMeusPedidos()">
+                                <span class="item-icon">📋</span>
+                                <span class="item-texto">Meus Pedidos</span>
+                                <span class="item-arrow">›</span>
+                            </button>
+                            <button class="perfil-item" (click)="secaoPerfil.set('senha')">
+                                <span class="item-icon">🔒</span>
+                                <span class="item-texto">
+                                    @if (identificacao.clienteIdentificado()?.temSenha) {
+                                        Alterar Senha
+                                    } @else {
+                                        Criar Senha
+                                    }
+                                </span>
+                                <span class="item-arrow">›</span>
+                            </button>
+                        </div>
+
+                        @if (googleAuth.clienteAuth.erro()) {
+                            <p class="erro-msg">{{ googleAuth.clienteAuth.erro() }}</p>
                         }
 
-                        <button class="perfil-item" (click)="trocarCliente()">
-                            <span class="item-icon">🔄</span>
-                            <span class="item-texto">Trocar conta</span>
-                            <span class="item-arrow">›</span>
-                        </button>
-                        <button class="perfil-item disabled">
-                            <span class="item-icon">⭐</span>
-                            <span class="item-texto">Favoritos</span>
-                            <span class="item-badge">Em breve</span>
-                        </button>
-                        <button class="perfil-item disabled">
-                            <span class="item-icon">📋</span>
-                            <span class="item-texto">Meus Pedidos</span>
-                            <span class="item-badge">Em breve</span>
-                        </button>
-                        <button class="perfil-item disabled">
-                            <span class="item-icon">🔒</span>
-                            <span class="item-texto">Criar Senha</span>
-                            <span class="item-badge">Em breve</span>
-                        </button>
-                    </div>
-
-                    @if (googleAuth.clienteAuth.erro()) {
-                        <p class="erro-msg">{{ googleAuth.clienteAuth.erro() }}</p>
+                        <p class="perfil-info">Mesa {{ mesa()!.numero }}</p>
                     }
 
-                    <p class="perfil-info">Mesa {{ mesa()!.numero }}</p>
+                    <!-- Seção Favoritos -->
+                    @if (secaoPerfil() === 'favoritos') {
+                        <div class="secao-header">
+                            <button class="btn-voltar" (click)="secaoPerfil.set('principal')">
+                                <span>‹</span>
+                            </button>
+                            <h2 class="secao-titulo">Favoritos</h2>
+                        </div>
+
+                        <div class="lista-favoritos">
+                            @if (favoritos.produtosFavoritos().length === 0) {
+                                <div class="lista-vazia">
+                                    <span class="lista-vazia-icon">⭐</span>
+                                    <p>Nenhum item favorito ainda</p>
+                                    <small>Toque no ❤️ em um produto para favoritá-lo</small>
+                                </div>
+                            } @else {
+                                @for (produto of favoritos.produtosFavoritos(); track produto.id) {
+                                    <div class="item-favorito">
+                                        <div class="item-img-container">
+                                            @if (produto.foto) {
+                                                <img [src]="produto.foto" [alt]="produto.nome" class="item-img">
+                                            } @else {
+                                                <div class="item-img-placeholder">🍽️</div>
+                                            }
+                                        </div>
+                                        <div class="item-info">
+                                            <h4 class="item-nome">{{ produto.nome }}</h4>
+                                            <p class="item-preco">{{ produto.preco | currency:'BRL' }}</p>
+                                        </div>
+                                        <div class="item-acoes">
+                                            <button class="btn-adicionar-fav" (click)="adicionarAoCarrinhoRapido(produto)">
+                                                <span>+</span>
+                                            </button>
+                                            <button class="btn-remover-fav" (click)="favoritos.remover(produto.id)">
+                                                <span>🗑️</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    }
+
+                    <!-- Seção Meus Pedidos -->
+                    @if (secaoPerfil() === 'pedidos') {
+                        <div class="secao-header">
+                            <button class="btn-voltar" (click)="secaoPerfil.set('principal')">
+                                <span>‹</span>
+                            </button>
+                            <h2 class="secao-titulo">Meus Pedidos</h2>
+                        </div>
+
+                        <div class="lista-pedidos">
+                            @if (meusPedidos.carregando() && meusPedidos.pedidos().length === 0) {
+                                <div class="lista-carregando">
+                                    <span class="spinner"></span>
+                                    <p>Carregando pedidos...</p>
+                                </div>
+                            } @else if (meusPedidos.pedidos().length === 0) {
+                                <div class="lista-vazia">
+                                    <span class="lista-vazia-icon">📋</span>
+                                    <p>Nenhum pedido realizado ainda</p>
+                                    <small>Seus pedidos aparecerão aqui</small>
+                                </div>
+                            } @else {
+                                @for (pedido of meusPedidos.pedidos(); track pedido.id) {
+                                    <div class="item-pedido">
+                                        <div class="pedido-header">
+                                            <span class="pedido-data">{{ pedido.dataHoraPedido | date:'dd/MM/yyyy HH:mm' }}</span>
+                                            <span class="pedido-status" [class]="'status-' + pedido.status.toLowerCase()">
+                                                {{ pedido.statusDescricao }}
+                                            </span>
+                                        </div>
+                                        <div class="pedido-itens">
+                                            @for (item of pedido.itens; track item.produtoId) {
+                                                <span class="pedido-item">{{ item.quantidade }}x {{ item.nomeProduto }}</span>
+                                            }
+                                        </div>
+                                        <div class="pedido-footer">
+                                            <span class="pedido-total">{{ pedido.valorTotal | currency:'BRL' }}</span>
+                                            @if (pedido.numeroMesa) {
+                                                <span class="pedido-mesa">Mesa {{ pedido.numeroMesa }}</span>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+
+                                @if (meusPedidos.temMais()) {
+                                    <button class="btn-carregar-mais"
+                                            (click)="meusPedidos.carregarMais()"
+                                            [disabled]="meusPedidos.carregando()">
+                                        @if (meusPedidos.carregando()) {
+                                            <span class="spinner-sm"></span>
+                                        } @else {
+                                            Ver mais pedidos
+                                        }
+                                    </button>
+                                }
+                            }
+                        </div>
+                    }
+
+                    <!-- Seção Criar/Alterar Senha -->
+                    @if (secaoPerfil() === 'senha') {
+                        <div class="secao-header">
+                            <button class="btn-voltar" (click)="secaoPerfil.set('principal')">
+                                <span>‹</span>
+                            </button>
+                            <h2 class="secao-titulo">
+                                @if (identificacao.clienteIdentificado()?.temSenha) {
+                                    Alterar Senha
+                                } @else {
+                                    Criar Senha
+                                }
+                            </h2>
+                        </div>
+
+                        <div class="secao-senha">
+                            <p class="senha-info">
+                                @if (identificacao.clienteIdentificado()?.temSenha) {
+                                    Com sua senha, você pode fazer login usando seu telefone + senha, sem precisar do Google.
+                                } @else {
+                                    Crie uma senha para poder fazer login usando seu telefone, sem precisar do Google.
+                                }
+                            </p>
+
+                            @if (identificacao.clienteIdentificado()?.temSenha) {
+                                <div class="form-grupo">
+                                    <label>Senha Atual</label>
+                                    <input type="password"
+                                           [(ngModel)]="senhaAtual"
+                                           placeholder="Digite sua senha atual"
+                                           class="input-senha">
+                                </div>
+                            }
+
+                            <div class="form-grupo">
+                                <label>Nova Senha</label>
+                                <input type="password"
+                                       [(ngModel)]="novaSenha"
+                                       placeholder="Mínimo 6 caracteres"
+                                       minlength="6"
+                                       class="input-senha">
+                            </div>
+
+                            <div class="form-grupo">
+                                <label>Confirmar Nova Senha</label>
+                                <input type="password"
+                                       [(ngModel)]="confirmarSenha"
+                                       placeholder="Digite novamente"
+                                       class="input-senha">
+                            </div>
+
+                            @if (erroSenha()) {
+                                <p class="erro-msg">{{ erroSenha() }}</p>
+                            }
+
+                            <button class="btn-salvar-senha"
+                                    (click)="salvarSenha()"
+                                    [disabled]="salvandoSenha()">
+                                @if (salvandoSenha()) {
+                                    <span class="spinner-sm"></span>
+                                    Salvando...
+                                } @else {
+                                    Salvar Senha
+                                }
+                            </button>
+                        </div>
+                    }
                 </div>
             }
         }
@@ -606,9 +789,15 @@
                 }
             }
 
-            <button class="btn-novo-pedido" (click)="novoPedido()">
-                Fazer Novo Pedido
-            </button>
+            @if (sucesso.pedidoTerminado()) {
+                <button class="btn-novo-pedido" (click)="novoPedido()">
+                    Fazer Novo Pedido
+                </button>
+            } @else {
+                <p class="aguardando-finalizacao">
+                    <small>Você poderá fazer um novo pedido quando este for finalizado.</small>
+                </p>
+            }
         </div>
     }
 

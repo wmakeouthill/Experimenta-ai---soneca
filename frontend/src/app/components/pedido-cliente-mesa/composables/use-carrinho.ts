@@ -130,6 +130,24 @@ export function useCarrinho() {
         fecharDetalhes();
     }
 
+    /**
+     * Adiciona um produto diretamente ao carrinho com quantidade 1.
+     * Usado para adicionar rapidamente sem abrir detalhes.
+     */
+    function adicionarRapido(produto: Produto): void {
+        const existente = itens().find(item => item.produto.id === produto.id);
+        if (existente) {
+            alterarQuantidade(produto.id, 1);
+        } else {
+            const novoItem: ItemCarrinho = {
+                produto,
+                quantidade: 1,
+                observacao: ''
+            };
+            itens.update(lista => [...lista, novoItem]);
+        }
+    }
+
     function removerDoCarrinho(produtoId: string): void {
         itens.update(lista => lista.filter(item => item.produto.id !== produtoId));
     }
@@ -185,6 +203,7 @@ export function useCarrinho() {
         incrementarQuantidade,
         decrementarQuantidade,
         adicionarAoCarrinho,
+        adicionarRapido,
         removerDoCarrinho,
         alterarQuantidade,
         abrirCarrinho,

@@ -48,6 +48,7 @@ public class ClienteAuthRestController {
 class ClienteContaRestController {
 
     private final DefinirSenhaClienteUseCase definirSenhaClienteUseCase;
+    private final SalvarSenhaClienteUseCase salvarSenhaClienteUseCase;
     private final VincularGoogleUseCase vincularGoogleUseCase;
     private final DesvincularGoogleUseCase desvincularGoogleUseCase;
     private final BuscarClientePorIdUseCase buscarClientePorIdUseCase;
@@ -74,6 +75,18 @@ class ClienteContaRestController {
             @Valid @RequestBody DefinirSenhaClienteRequest request) {
         ClienteDTO cliente = definirSenhaClienteUseCase.executar(clienteId, request);
         return ResponseEntity.ok(cliente);
+    }
+
+    /**
+     * Salva senha do cliente (criação ou alteração).
+     * Se o cliente já tiver senha, exige a senha atual.
+     */
+    @PutMapping("/senha")
+    public ResponseEntity<Void> salvarSenha(
+            @RequestHeader("X-Cliente-Id") String clienteId,
+            @Valid @RequestBody SalvarSenhaRequest request) {
+        salvarSenhaClienteUseCase.executar(clienteId, request);
+        return ResponseEntity.ok().build();
     }
 
     /**

@@ -3,10 +3,10 @@ package com.snackbar.pedidos.application.usecases;
 import com.snackbar.pedidos.application.dto.StatusPedidoClienteDTO;
 import com.snackbar.pedidos.application.dto.StatusPedidoClienteDTO.StatusCliente;
 import com.snackbar.pedidos.application.dto.PedidoPendenteDTO;
-import com.snackbar.pedidos.application.services.FilaPedidosMesa;
+import com.snackbar.pedidos.application.services.FilaPedidosMesaService;
+import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
 import com.snackbar.pedidos.domain.entities.Pedido;
 import com.snackbar.pedidos.domain.entities.StatusPedido;
-import com.snackbar.pedidos.domain.ports.PedidoRepositoryPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +22,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class BuscarStatusPedidoClienteUseCase {
 
-    private final FilaPedidosMesa filaPedidosMesa;
+    private final FilaPedidosMesaService filaPedidosMesa;
     private final PedidoRepositoryPort pedidoRepository;
 
     /**
@@ -74,10 +74,11 @@ public class BuscarStatusPedidoClienteUseCase {
                 .pedidoId(pedido.getId())
                 .status(status)
                 .statusDescricao(status.getDescricao())
-                .numeroMesa(pedido.getMesa() != null ? pedido.getMesa().getNumero() : null)
+                .numeroMesa(pedido.getNumeroMesa())
                 .dataHoraSolicitacao(pedido.getDataPedido())
                 .tempoEsperaSegundos(tempoEspera)
-                .numeroPedido(pedido.getNumeroPedido())
+                .numeroPedido(pedido.getNumeroPedido() != null ? Integer.parseInt(pedido.getNumeroPedido().getNumero())
+                        : null)
                 .build();
     }
 

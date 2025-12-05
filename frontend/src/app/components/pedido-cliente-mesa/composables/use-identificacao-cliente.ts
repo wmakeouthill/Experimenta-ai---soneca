@@ -12,6 +12,7 @@ export interface ClienteIdentificado {
     telefone: string;
     novoCliente: boolean;
     fotoUrl?: string;
+    temSenha?: boolean;
 }
 
 type EtapaIdentificacao = 'identificacao' | 'cadastro';
@@ -266,6 +267,14 @@ export function useIdentificacaoCliente(mesaToken: () => string | undefined) {
         // Não precisa persistir aqui, o ClienteAuthService já faz isso
     }
 
+    function atualizarTemSenha(temSenha: boolean): void {
+        const cliente = clienteIdentificado();
+        if (cliente) {
+            clienteIdentificado.set({ ...cliente, temSenha });
+            persistirCliente({ ...cliente, temSenha });
+        }
+    }
+
     return {
         // Estado
         etapa: etapa.asReadonly(),
@@ -291,6 +300,7 @@ export function useIdentificacaoCliente(mesaToken: () => string | undefined) {
         voltarParaIdentificacao,
         trocarCliente,
         setClienteFromGoogle,
+        atualizarTemSenha,
         destroy,
 
         // Utilitários

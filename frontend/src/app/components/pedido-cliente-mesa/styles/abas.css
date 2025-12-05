@@ -348,6 +348,378 @@
     margin-top: 2rem;
 }
 
+/* ========== SEÇÕES DO PERFIL ========== */
+.secao-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 1rem;
+}
+
+.btn-voltar {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: #f5f5f5;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    color: #333;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-voltar:active {
+    background: #e0e0e0;
+}
+
+.secao-titulo {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+}
+
+/* Lista Favoritos */
+.lista-favoritos,
+.lista-pedidos {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.lista-vazia {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #999;
+}
+
+.lista-vazia-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.lista-vazia p {
+    font-size: 1rem;
+    margin: 0 0 0.5rem;
+}
+
+.lista-vazia small {
+    font-size: 0.85rem;
+    color: #aaa;
+}
+
+.lista-carregando {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #666;
+}
+
+.item-favorito {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 8px;
+}
+
+.item-img-container {
+    width: 50px;
+    height: 50px;
+    flex-shrink: 0;
+}
+
+.item-img-container .item-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.item-img-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f5f5f5;
+    border-radius: 6px;
+    font-size: 1.5rem;
+}
+
+.item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.item-nome {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #333;
+    margin: 0 0 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.item-preco {
+    font-size: 0.85rem;
+    color: #FF6B6B;
+    font-weight: 600;
+    margin: 0;
+}
+
+.item-acoes {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-adicionar-fav,
+.btn-remover-fav {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.btn-adicionar-fav {
+    background: #4CAF50;
+    color: #fff;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.btn-remover-fav {
+    background: #f5f5f5;
+    color: #666;
+}
+
+.btn-adicionar-fav:active {
+    background: #388E3C;
+}
+
+.btn-remover-fav:active {
+    background: #e0e0e0;
+}
+
+/* Lista de Pedidos */
+.item-pedido {
+    padding: 1rem;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 8px;
+}
+
+.pedido-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.pedido-data {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.pedido-status {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    text-transform: uppercase;
+}
+
+.pedido-status.status-finalizado {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.pedido-status.status-cancelado {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.pedido-status.status-preparando {
+    background: #fff3e0;
+    color: #ef6c00;
+}
+
+.pedido-status.status-pronto {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.pedido-status.status-pendente,
+.pedido-status.status-aguardando_aceitacao {
+    background: #f5f5f5;
+    color: #666;
+}
+
+.pedido-itens {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.pedido-item {
+    font-size: 0.8rem;
+    color: #333;
+    background: #f9f9f9;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+}
+
+.pedido-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.5rem;
+    border-top: 1px solid #f0f0f0;
+}
+
+.pedido-total {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #FF6B6B;
+}
+
+.pedido-mesa {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.btn-carregar-mais {
+    width: 100%;
+    padding: 0.75rem;
+    background: #f5f5f5;
+    border: none;
+    border-radius: 8px;
+    color: #333;
+    font-size: 0.9rem;
+    cursor: pointer;
+    margin-top: 0.5rem;
+}
+
+.btn-carregar-mais:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-carregar-mais:active:not(:disabled) {
+    background: #e0e0e0;
+}
+
+/* Seção Senha */
+.secao-senha {
+    padding: 1rem 0;
+}
+
+.senha-info {
+    font-size: 0.9rem;
+    color: #666;
+    margin: 0 0 1.5rem;
+    line-height: 1.5;
+}
+
+.form-grupo {
+    margin-bottom: 1rem;
+}
+
+.form-grupo label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.input-senha {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.input-senha:focus {
+    outline: none;
+    border-color: #FF6B6B;
+}
+
+.btn-salvar-senha {
+    width: 100%;
+    padding: 1rem;
+    background: #FF6B6B;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn-salvar-senha:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.btn-salvar-senha:active:not(:disabled) {
+    background: #E55555;
+}
+
+/* Spinners */
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #eee;
+    border-top-color: #FF6B6B;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+.spinner-sm {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Item count badge */
+.item-count {
+    background: #FF6B6B;
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+    font-weight: 500;
+}
+
 /* ========== CARROSSEL ESTADOS ========== */
 .carrossel-loading {
     text-align: center;

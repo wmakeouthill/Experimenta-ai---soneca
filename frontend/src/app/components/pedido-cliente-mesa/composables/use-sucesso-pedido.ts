@@ -67,6 +67,10 @@ export function useSucessoPedido() {
         const status = statusAtual();
         return status === 'FINALIZADO' || status === 'PRONTO';
     });
+    const pedidoTerminado = computed(() => {
+        const status = statusAtual();
+        return status === 'FINALIZADO' || status === 'CANCELADO';
+    });
 
     /**
      * Inicia o acompanhamento do pedido.
@@ -204,6 +208,7 @@ export function useSucessoPedido() {
         passoAtual,
         pedidoCancelado,
         pedidoFinalizado,
+        pedidoTerminado,
 
         // Funções de verificação de etapa
         etapaConcluida,

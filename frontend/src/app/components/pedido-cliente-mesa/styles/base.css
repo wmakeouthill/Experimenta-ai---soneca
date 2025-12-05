@@ -190,6 +190,19 @@
     transform: scale(0.95);
 }
 
+.aguardando-finalizacao {
+    margin-top: 2rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    text-align: center;
+}
+
+.aguardando-finalizacao small {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.85rem;
+}
+
 .spinner-mini {
     display: inline-block;
     width: 20px;

@@ -50,6 +50,7 @@ export interface ClientePublico {
     nome: string;
     telefone: string;
     fotoUrl?: string;
+    temSenha?: boolean;
 }
 
 export interface CadastrarClienteRequest {
@@ -74,6 +75,32 @@ export interface StatusPedidoCliente {
     tempoEsperaSegundos: number;
     numeroPedido?: number;
     motivoCancelamento?: string;
+}
+
+export interface ItemHistoricoPedido {
+    produtoId: string;
+    nomeProduto: string;
+    quantidade: number;
+    precoUnitario: number;
+    subtotal: number;
+}
+
+export interface HistoricoPedidoCliente {
+    id: string;
+    numeroPedido: number;
+    status: string;
+    statusDescricao: string;
+    dataHoraPedido: string;
+    valorTotal: number;
+    numeroMesa?: number;
+    itens: ItemHistoricoPedido[];
+}
+
+export interface HistoricoPedidosResponse {
+    pedidos: HistoricoPedidoCliente[];
+    paginaAtual: number;
+    totalPaginas: number;
+    totalPedidos: number;
 }
 
 @Injectable({
@@ -105,5 +132,20 @@ export class PedidoMesaService {
 
     buscarStatusPedido(pedidoId: string): Observable<StatusPedidoCliente> {
         return this.http.get<StatusPedidoCliente>(`${this.publicApiUrl}/pedido/${pedidoId}/status`);
+    }
+
+    buscarHistoricoPedidos(clienteId: string, pagina: number, tamanho: number): Observable<HistoricoPedidosResponse> {
+        return this.http.get<HistoricoPedidosResponse>(
+            `/api/cliente/conta/pedidos?pagina=${pagina}&tamanho=${tamanho}`,
+            { headers: { 'X-Cliente-Id': clienteId } }
+        );
+    }
+
+    salvarSenhaCliente(clienteId: string, novaSenha: string, senhaAtual?: string): Observable<void> {
+        return this.http.post<void>(
+            `/api/cliente/conta/senha`,
+            { novaSenha, senhaAtual },
+            { headers: { 'X-Cliente-Id': clienteId } }
+        );
     }
 }

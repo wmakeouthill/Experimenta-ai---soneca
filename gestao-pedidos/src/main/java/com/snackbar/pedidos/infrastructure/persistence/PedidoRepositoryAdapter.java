@@ -5,6 +5,8 @@ import com.snackbar.pedidos.domain.entities.Pedido;
 import com.snackbar.pedidos.domain.entities.StatusPedido;
 import com.snackbar.pedidos.infrastructure.mappers.PedidoMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
@@ -53,6 +55,12 @@ public class PedidoRepositoryAdapter implements PedidoRepositoryPort {
         return jpaRepository.findByClienteId(clienteId).stream()
                 .map(mapper::paraDomain)
                 .toList();
+    }
+
+    @Override
+    public Page<Pedido> buscarPorClienteId(String clienteId, Pageable pageable) {
+        return jpaRepository.findByClienteId(clienteId, pageable)
+                .map(mapper::paraDomain);
     }
 
     @Override

@@ -12,3 +12,4 @@ export { useClienteAuth } from './use-cliente-auth';
 export { useGoogleAuth } from './use-google-auth';
 export { useInicio, type ProdutoPopular } from './use-inicio';
 export { useSucessoPedido } from './use-sucesso-pedido';
+export { useMeusPedidos } from './use-meus-pedidos';
