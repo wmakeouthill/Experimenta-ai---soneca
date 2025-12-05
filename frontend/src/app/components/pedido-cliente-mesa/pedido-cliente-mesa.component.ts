@@ -12,7 +12,8 @@ import {
   usePagamento,
   useCardapio,
   useFavoritos,
-  useGoogleAuth
+  useGoogleAuth,
+  useInicio
 } from './composables';
 
 type EtapaPrincipal = 'identificacao' | 'cadastro' | 'cardapio' | 'sucesso';
@@ -73,6 +74,11 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
       this.irParaCardapio();
     }
   );
+  readonly inicio = useInicio(
+    this.mesaToken,
+    () => this.identificacao.clienteIdentificado()?.id,
+    () => this.favoritos.produtosFavoritos()
+  );
 
   // ========== Computed ==========
   readonly podeEnviarPedido = computed(() =>
@@ -107,6 +113,7 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
 
   ngOnDestroy(): void {
     this.googleAuth.destroy();
+    this.identificacao.destroy();
   }
 
   // ========== Ações Gerais ==========
@@ -123,6 +130,11 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
         }
         this.mesa.set(mesa);
         this.carregando.set(false);
+
+        // Se cliente já está identificado (restaurado do sessionStorage), vai direto para cardápio
+        if (this.identificacao.clienteIdentificado()) {
+          this.irParaCardapio();
+        }
       },
       error: () => {
         this.erro.set('Mesa não encontrada ou indisponível');
@@ -156,6 +168,7 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
     this.etapaAtual.set('cardapio');
     this.cardapio.carregar();
     this.favoritos.carregar();
+    this.inicio.carregar();
   }
 
   navegarPara(aba: AbaCliente | 'carrinho'): void {

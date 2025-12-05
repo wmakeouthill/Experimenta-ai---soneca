@@ -127,33 +127,33 @@ export class ClienteAuthService {
         this._clienteLogado.next(null);
         this._token.next(null);
 
-        if (typeof localStorage !== 'undefined') {
-            localStorage.removeItem(TOKEN_KEY);
-            localStorage.removeItem(CLIENTE_KEY);
+        if (typeof sessionStorage !== 'undefined') {
+            sessionStorage.removeItem(TOKEN_KEY);
+            sessionStorage.removeItem(CLIENTE_KEY);
         }
     }
 
     /**
-     * Salva sessão no localStorage
+     * Salva sessão no sessionStorage (persiste apenas na aba atual)
      */
     private salvarSessao(response: ClienteLoginResponse): void {
         this._token.next(response.token);
         this._clienteLogado.next(response.cliente);
 
-        if (typeof localStorage !== 'undefined') {
-            localStorage.setItem(TOKEN_KEY, response.token);
-            localStorage.setItem(CLIENTE_KEY, JSON.stringify(response.cliente));
+        if (typeof sessionStorage !== 'undefined') {
+            sessionStorage.setItem(TOKEN_KEY, response.token);
+            sessionStorage.setItem(CLIENTE_KEY, JSON.stringify(response.cliente));
         }
     }
 
     /**
-     * Restaura sessão do localStorage
+     * Restaura sessão do sessionStorage
      */
     private restaurarSessao(): void {
-        if (typeof localStorage === 'undefined') return;
+        if (typeof sessionStorage === 'undefined') return;
 
-        const token = localStorage.getItem(TOKEN_KEY);
-        const clienteStr = localStorage.getItem(CLIENTE_KEY);
+        const token = sessionStorage.getItem(TOKEN_KEY);
+        const clienteStr = sessionStorage.getItem(CLIENTE_KEY);
 
         if (token && clienteStr) {
             try {

@@ -6,6 +6,7 @@ import com.snackbar.clientes.infrastructure.mappers.ClienteFavoritoMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +27,7 @@ public class ClienteFavoritoRepositoryAdapter implements ClienteFavoritoReposito
     }
 
     @Override
+    @Transactional
     public void remover(@NonNull String clienteId, @NonNull String produtoId) {
         jpaRepository.deleteByClienteIdAndProdutoId(clienteId, produtoId);
     }

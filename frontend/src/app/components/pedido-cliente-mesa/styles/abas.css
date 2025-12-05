@@ -347,3 +347,34 @@
     font-size: 0.85rem;
     margin-top: 2rem;
 }
+
+/* ========== CARROSSEL ESTADOS ========== */
+.carrossel-loading {
+    text-align: center;
+    color: #999;
+    padding: 2rem;
+    font-size: 0.9rem;
+}
+
+.carrossel-vazio {
+    text-align: center;
+    color: #999;
+    padding: 1.5rem;
+    font-size: 0.85rem;
+    font-style: italic;
+    background: #f9f9f9;
+    border-radius: 8px;
+    margin: 0.5rem;
+}
+
+.produto-avaliacao {
+    font-size: 0.7rem;
+    color: #FFB800;
+    font-weight: 600;
+}
+
+.produto-pedidos {
+    font-size: 0.65rem;
+    color: #666;
+    font-style: italic;
+}

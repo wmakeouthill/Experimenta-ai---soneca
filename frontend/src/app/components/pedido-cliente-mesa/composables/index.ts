@@ -10,3 +10,4 @@ export { useCardapio, type GrupoCategoria } from './use-cardapio';
 export { useFavoritos } from './use-favoritos';
 export { useClienteAuth } from './use-cliente-auth';
 export { useGoogleAuth } from './use-google-auth';
+export { useInicio, type ProdutoPopular } from './use-inicio';

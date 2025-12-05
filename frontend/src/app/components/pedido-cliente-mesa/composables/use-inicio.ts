@@ -1,0 +1,126 @@
+import { signal, inject, computed } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
+import { Produto } from '../../../services/produto.service';
+
+export interface ProdutoPopular extends Produto {
+    quantidadeVendida?: number;
+    mediaAvaliacao?: number;
+    totalAvaliacoes?: number;
+}
+
+/**
+ * Composable para gerenciar a aba Início.
+ * Responsabilidade única: carrossel de produtos populares e bem avaliados.
+ */
+export function useInicio(
+    getMesaToken: () => string | undefined,
+    getClienteId: () => string | undefined,
+    getProdutosFavoritos: () => Produto[]
+) {
+    const http = inject(HttpClient);
+
+    // Estado
+    const carregando = signal(false);
+    const erro = signal<string | null>(null);
+    const produtosMaisPedidos = signal<ProdutoPopular[]>([]);
+    const produtosMaisPedidosCliente = signal<ProdutoPopular[]>([]);
+    const produtosBemAvaliados = signal<ProdutoPopular[]>([]);
+
+    // Computed
+    const temFavoritos = computed(() => getProdutosFavoritos().length > 0);
+    const temMaisPedidosCliente = computed(() => produtosMaisPedidosCliente().length > 0);
+
+    /**
+     * Carrega os produtos populares da API
+     */
+    async function carregar(): Promise<void> {
+        const token = getMesaToken();
+        if (!token) return;
+
+        carregando.set(true);
+        erro.set(null);
+
+        try {
+            // Carregar mais pedidos (geral)
+            await carregarMaisPedidos(token);
+            // Carregar mais pedidos do cliente
+            await carregarMaisPedidosCliente(token);
+            // Carregar mais bem avaliados
+            await carregarBemAvaliados(token);
+        } catch (e) {
+            console.error('Erro ao carregar produtos populares:', e);
+            erro.set('Erro ao carregar produtos');
+        } finally {
+            carregando.set(false);
+        }
+    }
+
+    /**
+     * Carrega os produtos mais pedidos (geral)
+     */
+    async function carregarMaisPedidos(token: string): Promise<void> {
+        try {
+            const produtos = await http.get<ProdutoPopular[]>(
+                `${environment.apiUrl}/public/mesa/${token}/produtos/mais-pedidos?limite=8`
+            ).toPromise();
+
+            produtosMaisPedidos.set(produtos || []);
+        } catch (e) {
+            console.warn('Endpoint mais-pedidos não disponível');
+            produtosMaisPedidos.set([]);
+        }
+    }
+
+    /**
+     * Carrega os produtos mais pedidos pelo cliente específico
+     */
+    async function carregarMaisPedidosCliente(token: string): Promise<void> {
+        const clienteId = getClienteId();
+        if (!clienteId) {
+            produtosMaisPedidosCliente.set([]);
+            return;
+        }
+
+        try {
+            const produtos = await http.get<ProdutoPopular[]>(
+                `${environment.apiUrl}/public/mesa/${token}/produtos/mais-pedidos-cliente/${clienteId}?limite=8`
+            ).toPromise();
+
+            produtosMaisPedidosCliente.set(produtos || []);
+        } catch (e) {
+            console.warn('Endpoint mais-pedidos-cliente não disponível');
+            produtosMaisPedidosCliente.set([]);
+        }
+    }
+
+    /**
+     * Carrega os produtos mais bem avaliados
+     */
+    async function carregarBemAvaliados(token: string): Promise<void> {
+        try {
+            const produtos = await http.get<ProdutoPopular[]>(
+                `${environment.apiUrl}/public/mesa/${token}/produtos/bem-avaliados?limite=8`
+            ).toPromise();
+
+            produtosBemAvaliados.set(produtos || []);
+        } catch (e) {
+            console.warn('Endpoint bem-avaliados não disponível');
+            produtosBemAvaliados.set([]);
+        }
+    }
+
+    return {
+        // Estado (readonly)
+        carregando: carregando.asReadonly(),
+        erro: erro.asReadonly(),
+        produtosMaisPedidos: produtosMaisPedidos.asReadonly(),
+        produtosMaisPedidosCliente: produtosMaisPedidosCliente.asReadonly(),
+        produtosBemAvaliados: produtosBemAvaliados.asReadonly(),
+        temFavoritos,
+        temMaisPedidosCliente,
+
+        // Ações
+        carregar
+    };
+}

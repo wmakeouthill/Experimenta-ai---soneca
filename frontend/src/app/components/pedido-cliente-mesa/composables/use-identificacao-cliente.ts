@@ -1,5 +1,10 @@
-import { signal, computed, inject } from '@angular/core';
+import { signal, computed, inject, PLATFORM_ID, effect } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { PedidoMesaService } from '../../../services/pedido-mesa.service';
+import { ClienteAuthService } from '../../../services/cliente-auth.service';
+import { Subscription } from 'rxjs';
+
+const CLIENTE_STORAGE_KEY = 'pedido-mesa-cliente';
 
 export interface ClienteIdentificado {
     id: string;
@@ -16,14 +21,98 @@ type EtapaIdentificacao = 'identificacao' | 'cadastro';
  */
 export function useIdentificacaoCliente(mesaToken: () => string | undefined) {
     const pedidoMesaService = inject(PedidoMesaService);
+    const clienteAuthService = inject(ClienteAuthService);
+    const platformId = inject(PLATFORM_ID);
+    const isBrowser = isPlatformBrowser(platformId);
 
     // Estado interno
     const _telefoneInput = signal('');
     const _nomeInput = signal('');
     const etapa = signal<EtapaIdentificacao>('identificacao');
     const buscando = signal(false);
-    const clienteIdentificado = signal<ClienteIdentificado | null>(null);
+    const clienteIdentificado = signal<ClienteIdentificado | null>(restaurarCliente());
     const erro = signal<string | null>(null);
+
+    // Subscription para escutar mudanças no ClienteAuthService
+    let clienteLogadoSub: Subscription | null = null;
+
+    // Inicializa escuta de mudanças no cliente logado
+    if (isBrowser) {
+        clienteLogadoSub = clienteAuthService.clienteLogado$.subscribe(clienteLogado => {
+            if (clienteLogado) {
+                // Atualiza cliente identificado quando login Google/senha é restaurado
+                const clienteData: ClienteIdentificado = {
+                    id: clienteLogado.id,
+                    nome: clienteLogado.nome,
+                    telefone: clienteLogado.telefone || '',
+                    novoCliente: false
+                };
+                clienteIdentificado.set(clienteData);
+            }
+        });
+    }
+
+    /**
+     * Restaura cliente do sessionStorage ou do ClienteAuthService
+     */
+    function restaurarCliente(): ClienteIdentificado | null {
+        if (!isBrowser) return null;
+
+        // Primeiro tenta restaurar do ClienteAuthService (login Google/senha)
+        const clienteLogado = clienteAuthService.clienteLogado;
+        if (clienteLogado) {
+            return {
+                id: clienteLogado.id,
+                nome: clienteLogado.nome,
+                telefone: clienteLogado.telefone || '',
+                novoCliente: false
+            };
+        }
+
+        // Se não tem login, tenta restaurar do sessionStorage (identificação por telefone)
+        try {
+            const stored = sessionStorage.getItem(CLIENTE_STORAGE_KEY);
+            if (stored) {
+                return JSON.parse(stored) as ClienteIdentificado;
+            }
+        } catch {
+            // Ignora erros de parse
+        }
+
+        return null;
+    }
+
+    /**
+     * Limpa subscription ao destruir
+     */
+    function destroy(): void {
+        clienteLogadoSub?.unsubscribe();
+        clienteLogadoSub = null;
+    }
+
+    /**
+     * Persiste cliente no sessionStorage
+     */
+    function persistirCliente(cliente: ClienteIdentificado): void {
+        if (!isBrowser) return;
+        try {
+            sessionStorage.setItem(CLIENTE_STORAGE_KEY, JSON.stringify(cliente));
+        } catch {
+            // Ignora erros de storage
+        }
+    }
+
+    /**
+     * Limpa cliente do sessionStorage
+     */
+    function limparClientePersistido(): void {
+        if (!isBrowser) return;
+        try {
+            sessionStorage.removeItem(CLIENTE_STORAGE_KEY);
+        } catch {
+            // Ignora erros
+        }
+    }
 
     // Computed para validações
     const telefoneValido = computed(() => {
@@ -88,12 +177,14 @@ export function useIdentificacaoCliente(mesaToken: () => string | undefined) {
         pedidoMesaService.buscarClientePorTelefone(token, telefone).subscribe({
             next: (cliente) => {
                 buscando.set(false);
-                clienteIdentificado.set({
+                const clienteData: ClienteIdentificado = {
                     id: cliente.id,
                     nome: cliente.nome,
                     telefone: cliente.telefone,
                     novoCliente: false
-                });
+                };
+                clienteIdentificado.set(clienteData);
+                persistirCliente(clienteData);
                 onSucesso();
             },
             error: (err) => {
@@ -121,12 +212,14 @@ export function useIdentificacaoCliente(mesaToken: () => string | undefined) {
         pedidoMesaService.cadastrarCliente(token, { nome, telefone }).subscribe({
             next: (cliente) => {
                 buscando.set(false);
-                clienteIdentificado.set({
+                const clienteData: ClienteIdentificado = {
                     id: cliente.id,
                     nome: cliente.nome,
                     telefone: cliente.telefone,
                     novoCliente: true
-                });
+                };
+                clienteIdentificado.set(clienteData);
+                persistirCliente(clienteData);
                 onSucesso();
             },
             error: () => {
@@ -144,6 +237,8 @@ export function useIdentificacaoCliente(mesaToken: () => string | undefined) {
 
     function trocarCliente(): void {
         clienteIdentificado.set(null);
+        limparClientePersistido();
+        clienteAuthService.logout(); // Também faz logout do ClienteAuthService
         _telefoneInput.set('');
         _nomeInput.set('');
         etapa.set('identificacao');
@@ -152,14 +247,17 @@ export function useIdentificacaoCliente(mesaToken: () => string | undefined) {
     /**
      * Define o cliente identificado a partir dos dados do login Google.
      * Usado quando o cliente faz login via Google OAuth.
+     * Nota: O ClienteAuthService já persiste no localStorage automaticamente.
      */
     function setClienteFromGoogle(cliente: { id: string; nome: string; telefone: string }): void {
-        clienteIdentificado.set({
+        const clienteData: ClienteIdentificado = {
             id: cliente.id,
             nome: cliente.nome,
             telefone: cliente.telefone || '',
             novoCliente: false
-        });
+        };
+        clienteIdentificado.set(clienteData);
+        // Não precisa persistir aqui, o ClienteAuthService já faz isso
     }
 
     return {
@@ -187,6 +285,7 @@ export function useIdentificacaoCliente(mesaToken: () => string | undefined) {
         voltarParaIdentificacao,
         trocarCliente,
         setClienteFromGoogle,
+        destroy,
 
         // Utilitários
         formatarTelefone

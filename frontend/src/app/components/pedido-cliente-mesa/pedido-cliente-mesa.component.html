@@ -163,64 +163,117 @@
             <!-- ========== ABA: INÍCIO ========== -->
             @if (abaAtual() === 'inicio') {
                 <div class="aba-inicio">
+                    <!-- Mais Pedidos -->
                     <div class="inicio-section">
                         <h2 class="section-titulo">🔥 Mais Pedidos</h2>
-                        <div class="carrossel-horizontal">
-                            @for (produto of cardapio.produtos().slice(0, 6); track produto.id) {
-                                <div class="produto-card-mini" (click)="abrirDetalhesProduto(produto)">
-                                    <button
-                                        class="btn-favorito"
-                                        [class.ativo]="favoritos.isFavorito(produto.id)"
-                                        (click)="toggleFavorito(produto.id, $event)"
-                                        [title]="favoritos.isFavorito(produto.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'">
-                                        {{ favoritos.isFavorito(produto.id) ? '❤️' : '🤍' }}
-                                    </button>
-                                    @if (produto.foto) {
-                                        <div class="produto-imagem-mini">
-                                            <img [src]="produto.foto" [alt]="produto.nome">
+                        @if (inicio.carregando()) {
+                            <div class="carrossel-loading">Carregando...</div>
+                        } @else if (inicio.produtosMaisPedidos().length > 0) {
+                            <div class="carrossel-horizontal">
+                                @for (produto of inicio.produtosMaisPedidos(); track produto.id) {
+                                    <div class="produto-card-mini" (click)="abrirDetalhesProduto(produto)">
+                                        <button
+                                            class="btn-favorito"
+                                            [class.ativo]="favoritos.isFavorito(produto.id)"
+                                            (click)="toggleFavorito(produto.id, $event)"
+                                            [title]="favoritos.isFavorito(produto.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'">
+                                            {{ favoritos.isFavorito(produto.id) ? '❤️' : '🤍' }}
+                                        </button>
+                                        @if (produto.foto) {
+                                            <div class="produto-imagem-mini">
+                                                <img [src]="produto.foto" [alt]="produto.nome">
+                                            </div>
+                                        } @else {
+                                            <div class="produto-imagem-mini produto-sem-foto">
+                                                <span>🍽️</span>
+                                            </div>
+                                        }
+                                        <div class="produto-info-mini">
+                                            <span class="produto-nome-mini">{{ produto.nome }}</span>
+                                            <span class="produto-preco-mini">{{ formatarPreco(produto.preco) }}</span>
                                         </div>
-                                    } @else {
-                                        <div class="produto-imagem-mini produto-sem-foto">
-                                            <span>🍽️</span>
-                                        </div>
-                                    }
-                                    <div class="produto-info-mini">
-                                        <span class="produto-nome-mini">{{ produto.nome }}</span>
-                                        <span class="produto-preco-mini">{{ formatarPreco(produto.preco) }}</span>
                                     </div>
-                                </div>
-                            }
-                        </div>
+                                }
+                            </div>
+                        } @else {
+                            <p class="carrossel-vazio">Nenhum produto ainda. Faça seu primeiro pedido!</p>
+                        }
                     </div>
 
+                    <!-- Seus Favoritos de Sempre (mais pedidos pelo cliente) -->
+                    @if (inicio.temMaisPedidosCliente()) {
+                        <div class="inicio-section">
+                            <h2 class="section-titulo">📋 Seus Favoritos de Sempre</h2>
+                            <div class="carrossel-horizontal">
+                                @for (produto of inicio.produtosMaisPedidosCliente(); track produto.id) {
+                                    <div class="produto-card-mini" (click)="abrirDetalhesProduto(produto)">
+                                        <button
+                                            class="btn-favorito"
+                                            [class.ativo]="favoritos.isFavorito(produto.id)"
+                                            (click)="toggleFavorito(produto.id, $event)"
+                                            [title]="favoritos.isFavorito(produto.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'">
+                                            {{ favoritos.isFavorito(produto.id) ? '❤️' : '🤍' }}
+                                        </button>
+                                        @if (produto.foto) {
+                                            <div class="produto-imagem-mini">
+                                                <img [src]="produto.foto" [alt]="produto.nome">
+                                            </div>
+                                        } @else {
+                                            <div class="produto-imagem-mini produto-sem-foto">
+                                                <span>🍽️</span>
+                                            </div>
+                                        }
+                                        <div class="produto-info-mini">
+                                            <span class="produto-nome-mini">{{ produto.nome }}</span>
+                                            @if (produto.quantidadeVendida) {
+                                                <span class="produto-pedidos">Pediu {{ produto.quantidadeVendida }}x</span>
+                                            }
+                                            <span class="produto-preco-mini">{{ formatarPreco(produto.preco) }}</span>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Mais Bem Avaliados -->
                     <div class="inicio-section">
                         <h2 class="section-titulo">⭐ Mais Bem Avaliados</h2>
-                        <div class="carrossel-horizontal">
-                            @for (produto of cardapio.produtos().slice(0, 6); track produto.id) {
-                                <div class="produto-card-mini" (click)="abrirDetalhesProduto(produto)">
-                                    <button
-                                        class="btn-favorito"
-                                        [class.ativo]="favoritos.isFavorito(produto.id)"
-                                        (click)="toggleFavorito(produto.id, $event)"
-                                        [title]="favoritos.isFavorito(produto.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'">
-                                        {{ favoritos.isFavorito(produto.id) ? '❤️' : '🤍' }}
-                                    </button>
-                                    @if (produto.foto) {
-                                        <div class="produto-imagem-mini">
-                                            <img [src]="produto.foto" [alt]="produto.nome">
+                        @if (inicio.carregando()) {
+                            <div class="carrossel-loading">Carregando...</div>
+                        } @else if (inicio.produtosBemAvaliados().length > 0) {
+                            <div class="carrossel-horizontal">
+                                @for (produto of inicio.produtosBemAvaliados(); track produto.id) {
+                                    <div class="produto-card-mini" (click)="abrirDetalhesProduto(produto)">
+                                        <button
+                                            class="btn-favorito"
+                                            [class.ativo]="favoritos.isFavorito(produto.id)"
+                                            (click)="toggleFavorito(produto.id, $event)"
+                                            [title]="favoritos.isFavorito(produto.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'">
+                                            {{ favoritos.isFavorito(produto.id) ? '❤️' : '🤍' }}
+                                        </button>
+                                        @if (produto.foto) {
+                                            <div class="produto-imagem-mini">
+                                                <img [src]="produto.foto" [alt]="produto.nome">
+                                            </div>
+                                        } @else {
+                                            <div class="produto-imagem-mini produto-sem-foto">
+                                                <span>🍽️</span>
+                                            </div>
+                                        }
+                                        <div class="produto-info-mini">
+                                            <span class="produto-nome-mini">{{ produto.nome }}</span>
+                                            @if (produto.mediaAvaliacao) {
+                                                <span class="produto-avaliacao">⭐ {{ produto.mediaAvaliacao.toFixed(1) }}</span>
+                                            }
+                                            <span class="produto-preco-mini">{{ formatarPreco(produto.preco) }}</span>
                                         </div>
-                                    } @else {
-                                        <div class="produto-imagem-mini produto-sem-foto">
-                                            <span>🍽️</span>
-                                        </div>
-                                    }
-                                    <div class="produto-info-mini">
-                                        <span class="produto-nome-mini">{{ produto.nome }}</span>
-                                        <span class="produto-preco-mini">{{ formatarPreco(produto.preco) }}</span>
                                     </div>
-                                </div>
-                            }
-                        </div>
+                                }
+                            </div>
+                        } @else {
+                            <p class="carrossel-vazio">Nenhum produto avaliado ainda.</p>
+                        }
                     </div>
 
                     <!-- Meus Favoritos -->

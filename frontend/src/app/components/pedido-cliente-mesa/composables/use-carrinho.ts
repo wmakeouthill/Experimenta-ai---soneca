@@ -1,5 +1,8 @@
-import { signal, computed } from '@angular/core';
+import { signal, computed, inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { Produto } from '../../../services/produto.service';
+
+const CARRINHO_STORAGE_KEY = 'pedido-mesa-carrinho';
 
 export interface ItemCarrinho {
     produto: Produto;
@@ -10,10 +13,38 @@ export interface ItemCarrinho {
 /**
  * Composable para gerenciar o carrinho de compras.
  * Responsabilidade única: adicionar, remover e controlar itens do carrinho.
+ * Persiste no sessionStorage para manter entre atualizações de página.
  */
 export function useCarrinho() {
+    const platformId = inject(PLATFORM_ID);
+    const isBrowser = isPlatformBrowser(platformId);
+
+    // Restaura carrinho do sessionStorage
+    function restaurarCarrinho(): ItemCarrinho[] {
+        if (!isBrowser) return [];
+        try {
+            const stored = sessionStorage.getItem(CARRINHO_STORAGE_KEY);
+            if (stored) {
+                return JSON.parse(stored) as ItemCarrinho[];
+            }
+        } catch {
+            // Ignora erros de parse
+        }
+        return [];
+    }
+
+    // Persiste carrinho no sessionStorage
+    function persistirCarrinho(items: ItemCarrinho[]): void {
+        if (!isBrowser) return;
+        try {
+            sessionStorage.setItem(CARRINHO_STORAGE_KEY, JSON.stringify(items));
+        } catch {
+            // Ignora erros de storage
+        }
+    }
+
     // Estado
-    const itens = signal<ItemCarrinho[]>([]);
+    const itens = signal<ItemCarrinho[]>(restaurarCarrinho());
     const produtoSelecionado = signal<Produto | null>(null);
     const quantidadeTemp = signal(1);
     const _observacaoTemp = signal('');

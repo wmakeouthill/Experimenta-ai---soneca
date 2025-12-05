@@ -4,8 +4,11 @@ import com.snackbar.clientes.application.dto.*;
 import com.snackbar.clientes.application.usecases.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/publico/cliente/auth")
@@ -48,6 +51,9 @@ class ClienteContaRestController {
     private final VincularGoogleUseCase vincularGoogleUseCase;
     private final DesvincularGoogleUseCase desvincularGoogleUseCase;
     private final BuscarClientePorIdUseCase buscarClientePorIdUseCase;
+    private final AdicionarFavoritoUseCase adicionarFavoritoUseCase;
+    private final RemoverFavoritoUseCase removerFavoritoUseCase;
+    private final ListarFavoritosUseCase listarFavoritosUseCase;
 
     /**
      * Obtém dados do cliente logado
@@ -89,5 +95,49 @@ class ClienteContaRestController {
             @RequestHeader("X-Cliente-Id") String clienteId) {
         ClienteDTO cliente = desvincularGoogleUseCase.executar(clienteId);
         return ResponseEntity.ok(cliente);
+    }
+
+    // ========== FAVORITOS (endpoint público para cliente) ==========
+
+    /**
+     * Adiciona produto aos favoritos do cliente
+     */
+    @PostMapping("/favoritos")
+    public ResponseEntity<ClienteFavoritoDTO> adicionarFavorito(
+            @RequestHeader("X-Cliente-Id") String clienteId,
+            @Valid @RequestBody AdicionarFavoritoRequest request) {
+        ClienteFavoritoDTO favorito = adicionarFavoritoUseCase.executar(clienteId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(favorito);
+    }
+
+    /**
+     * Remove produto dos favoritos do cliente
+     */
+    @DeleteMapping("/favoritos/{produtoId}")
+    public ResponseEntity<Void> removerFavorito(
+            @RequestHeader("X-Cliente-Id") String clienteId,
+            @PathVariable String produtoId) {
+        removerFavoritoUseCase.executar(clienteId, produtoId);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Lista favoritos do cliente
+     */
+    @GetMapping("/favoritos")
+    public ResponseEntity<List<ClienteFavoritoDTO>> listarFavoritos(
+            @RequestHeader("X-Cliente-Id") String clienteId) {
+        List<ClienteFavoritoDTO> favoritos = listarFavoritosUseCase.executar(clienteId);
+        return ResponseEntity.ok(favoritos);
+    }
+
+    /**
+     * Lista IDs dos produtos favoritos do cliente
+     */
+    @GetMapping("/favoritos/ids")
+    public ResponseEntity<List<String>> listarIdsProdutosFavoritos(
+            @RequestHeader("X-Cliente-Id") String clienteId) {
+        List<String> ids = listarFavoritosUseCase.listarIdsProdutos(clienteId);
+        return ResponseEntity.ok(ids);
     }
 }

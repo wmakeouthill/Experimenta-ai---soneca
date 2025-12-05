@@ -6,9 +6,11 @@ import com.snackbar.pedidos.application.dto.PedidoPendenteDTO;
 import com.snackbar.pedidos.application.dto.CardapioPublicoDTO;
 import com.snackbar.pedidos.application.dto.ClientePublicoDTO;
 import com.snackbar.pedidos.application.dto.CadastrarClienteRequest;
+import com.snackbar.pedidos.application.dto.ProdutoPopularDTO;
 import com.snackbar.pedidos.application.usecases.BuscarMesaPorTokenUseCase;
 import com.snackbar.pedidos.application.usecases.CriarPedidoMesaUseCase;
 import com.snackbar.pedidos.application.usecases.BuscarCardapioPublicoUseCase;
+import com.snackbar.pedidos.application.usecases.BuscarProdutosPopularesUseCase;
 import com.snackbar.pedidos.application.ports.ClienteGatewayPort;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * Controller REST público para pedidos via mesa (QR Code).
@@ -37,6 +41,7 @@ public class PedidoMesaRestController {
     private final BuscarMesaPorTokenUseCase buscarMesaPorTokenUseCase;
     private final CriarPedidoMesaUseCase criarPedidoMesaUseCase;
     private final BuscarCardapioPublicoUseCase buscarCardapioPublicoUseCase;
+    private final BuscarProdutosPopularesUseCase buscarProdutosPopularesUseCase;
     private final ClienteGatewayPort clienteGateway;
 
     /**
@@ -110,5 +115,46 @@ public class PedidoMesaRestController {
     public ResponseEntity<PedidoPendenteDTO> criarPedido(@Valid @RequestBody CriarPedidoMesaRequest request) {
         PedidoPendenteDTO pedidoPendente = criarPedidoMesaUseCase.executar(request.mesaToken(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(pedidoPendente);
+    }
+
+    /**
+     * Retorna os produtos mais pedidos.
+     * Baseado na quantidade de vezes que o produto aparece em pedidos.
+     */
+    @GetMapping("/{token}/produtos/mais-pedidos")
+    public ResponseEntity<List<ProdutoPopularDTO>> buscarMaisPedidos(
+            @NonNull @PathVariable String token,
+            @RequestParam(defaultValue = "8") int limite) {
+        buscarMesaPorTokenUseCase.executar(token);
+        List<ProdutoPopularDTO> produtos = buscarProdutosPopularesUseCase.buscarMaisPedidos(limite);
+        return ResponseEntity.ok(produtos);
+    }
+
+    /**
+     * Retorna os produtos mais pedidos por um cliente específico.
+     * Baseado no histórico de pedidos do cliente.
+     */
+    @GetMapping("/{token}/produtos/mais-pedidos-cliente/{clienteId}")
+    public ResponseEntity<List<ProdutoPopularDTO>> buscarMaisPedidosCliente(
+            @NonNull @PathVariable String token,
+            @NonNull @PathVariable String clienteId,
+            @RequestParam(defaultValue = "8") int limite) {
+        buscarMesaPorTokenUseCase.executar(token);
+        List<ProdutoPopularDTO> produtos = buscarProdutosPopularesUseCase.buscarMaisPedidosPorCliente(clienteId,
+                limite);
+        return ResponseEntity.ok(produtos);
+    }
+
+    /**
+     * Retorna os produtos mais bem avaliados.
+     * Baseado na média de avaliações dos clientes.
+     */
+    @GetMapping("/{token}/produtos/bem-avaliados")
+    public ResponseEntity<List<ProdutoPopularDTO>> buscarBemAvaliados(
+            @NonNull @PathVariable String token,
+            @RequestParam(defaultValue = "8") int limite) {
+        buscarMesaPorTokenUseCase.executar(token);
+        List<ProdutoPopularDTO> produtos = buscarProdutosPopularesUseCase.buscarBemAvaliados(limite);
+        return ResponseEntity.ok(produtos);
     }
 }

@@ -36,6 +36,7 @@ public class SecurityConfig {
     private static final String MESAS_PATTERN = "/api/mesas/**";
     private static final String PUBLIC_MESA_PATTERN = "/api/public/mesa/**";
     private static final String PUBLIC_CLIENTE_AUTH_PATTERN = "/api/publico/cliente/auth/**";
+    private static final String CLIENTE_CONTA_PATTERN = "/api/cliente/conta/**";
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
@@ -60,6 +61,9 @@ public class SecurityConfig {
                         .requestMatchers(PUBLIC_MESA_PATTERN).permitAll()
                         // Endpoints públicos de autenticação de cliente (login, Google OAuth)
                         .requestMatchers(PUBLIC_CLIENTE_AUTH_PATTERN).permitAll()
+                        // Endpoints de conta do cliente (favoritos, perfil, etc.) - usa header
+                        // X-Cliente-Id
+                        .requestMatchers(CLIENTE_CONTA_PATTERN).permitAll()
 
                         // Endpoints de autenticação (exigem autenticação)
                         .requestMatchers("/api/auth/**").authenticated()
