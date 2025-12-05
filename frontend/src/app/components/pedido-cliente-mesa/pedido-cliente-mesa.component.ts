@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit, OnDestroy, ChangeDetectionStrategy, PLATFORM_ID, AfterViewInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, OnDestroy, ChangeDetectionStrategy, PLATFORM_ID, AfterViewInit, AfterViewChecked, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -58,7 +58,7 @@ type SecaoPerfil = 'principal' | 'favoritos' | 'pedidos' | 'senha';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewInit {
+export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewInit, AfterViewChecked {
   private readonly route = inject(ActivatedRoute);
   private readonly pedidoMesaService = inject(PedidoMesaService);
   private readonly platformId = inject(PLATFORM_ID);
@@ -104,6 +104,10 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
     () => this.identificacao.clienteIdentificado()?.id,
     () => this.meusPedidos.pedidoSelecionado()
   );
+
+  // ========== ViewChild para botão do Google ==========
+  @ViewChild('googleButtonLogin') googleButtonLoginRef?: ElementRef<HTMLDivElement>;
+  private googleButtonRendered = false;
 
   // ========== Estado para Seção de Senha ==========
   senhaAtual = '';
@@ -171,7 +175,28 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   }
 
   ngAfterViewInit(): void {
-    if (this.isBrowser) this.googleAuth.inicializar();
+    if (this.isBrowser) {
+      this.googleAuth.inicializar();
+    }
+  }
+
+  ngAfterViewChecked(): void {
+    // Tenta renderizar o botão do Google sempre que a view for checada
+    // Isso garante que o botão seja renderizado quando o elemento estiver disponível
+    this.renderizarBotaoGoogle();
+  }
+
+  /**
+   * Renderiza o botão oficial do Google Sign-In
+   */
+  private renderizarBotaoGoogle(): void {
+    if (!this.isBrowser) return;
+
+    const element = this.googleButtonLoginRef?.nativeElement;
+    if (element && !this.googleButtonRendered && this.googleAuth.inicializado()) {
+      this.googleAuth.renderizarBotao(element);
+      this.googleButtonRendered = true;
+    }
   }
 
   ngOnDestroy(): void {

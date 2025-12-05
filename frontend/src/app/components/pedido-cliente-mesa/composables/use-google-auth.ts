@@ -1,5 +1,4 @@
-import { signal, inject } from '@angular/core';
-import { PLATFORM_ID } from '@angular/core';
+import { signal, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { GoogleSignInService } from '../../../services/google-signin.service';
@@ -31,6 +30,7 @@ export function useGoogleAuth(
     const inicializado = signal(false);
     const processando = signal(false);
     const erro = signal<string | null>(null);
+    const botaoRenderizado = signal(false);
 
     // Subscription
     let credentialSub: Subscription | null = null;
@@ -56,6 +56,26 @@ export function useGoogleAuth(
         } catch (e) {
             console.error('Erro ao inicializar Google Sign-In:', e);
             erro.set('Erro ao carregar login com Google');
+        }
+    }
+
+    /**
+     * Renderiza o botão oficial do Google em um elemento
+     */
+    function renderizarBotao(element: HTMLElement): void {
+        if (!isBrowser || !inicializado() || botaoRenderizado()) return;
+
+        try {
+            googleService.renderButton(element, {
+                theme: 'outline',
+                size: 'large',
+                text: 'continue_with',
+                shape: 'rectangular',
+                width: 280
+            });
+            botaoRenderizado.set(true);
+        } catch (e) {
+            console.error('Erro ao renderizar botão Google:', e);
         }
     }
 
@@ -144,12 +164,14 @@ export function useGoogleAuth(
         inicializado: inicializado.asReadonly(),
         processando: processando.asReadonly(),
         erro: erro.asReadonly(),
+        botaoRenderizado: botaoRenderizado.asReadonly(),
 
         // Cliente Auth (para acessar dados do cliente logado)
         clienteAuth,
 
         // Ações
         inicializar,
+        renderizarBotao,
         abrirPrompt,
         desvincular,
         destroy

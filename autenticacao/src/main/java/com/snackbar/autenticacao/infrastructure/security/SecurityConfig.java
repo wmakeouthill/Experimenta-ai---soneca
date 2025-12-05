@@ -53,6 +53,14 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers("/assets/**", "/styles/**").permitAll()
 
+                        // Rotas do Angular Router (SPA) - PÚBLICO para frontend routing
+                        // Apenas rotas de auto-atendimento do cliente (QR Code) e login
+                        // A autenticação do cliente é feita via header X-Cliente-Id após o login na
+                        // tela
+                        .requestMatchers("/pedido-mesa/**", "/mesa/**", "/login").permitAll()
+                        // Rota de fallback para erros (tratada pelo SpaFallbackConfig)
+                        .requestMatchers("/error").permitAll()
+
                         // Endpoints públicos (sem autenticação)
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/api/status").permitAll()

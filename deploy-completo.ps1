@@ -164,7 +164,7 @@ if ($deploy -eq "S" -or $deploy -eq "s" -or $deploy -eq "Y" -or $deploy -eq "y")
         --min-instances 0 `
         --port 8080 `
         --add-cloudsql-instances $CLOUD_SQL_CONNECTION `
-        --set-secrets="DB_PASSWORD=db-password:latest,JWT_SECRET=jwt-secret:latest" `
+        --set-secrets="DB_PASSWORD=db-password:latest,JWT_SECRET=jwt-secret:latest,GOOGLE_CLIENT_ID=GOOGLE_CLIENT_ID:latest" `
         --set-env-vars="DB_URL=$DB_URL,DB_USERNAME=root,SERVER_PORT=8080,SPRING_PROFILES_ACTIVE=prod,SHOW_SQL=false,JWT_EXPIRATION=86400,LOG_LEVEL=INFO" `
         --project=$PROJECT_ID
     
