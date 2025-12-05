@@ -7,6 +7,14 @@ export const routes: Routes = [
     loadComponent: () => import('./components/login/login.component').then(m => m.LoginComponent)
   },
   {
+    path: 'politica-privacidade',
+    loadComponent: () => import('./components/politica-privacidade/politica-privacidade.component').then(m => m.PoliticaPrivacidadeComponent)
+  },
+  {
+    path: 'termos-uso',
+    loadComponent: () => import('./components/politica-privacidade/politica-privacidade.component').then(m => m.PoliticaPrivacidadeComponent)
+  },
+  {
     path: '',
     loadComponent: () => import('./components/home/home.component').then(m => m.HomeComponent),
     canActivate: [authGuard]

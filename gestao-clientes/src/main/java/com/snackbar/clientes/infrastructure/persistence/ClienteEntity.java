@@ -22,7 +22,7 @@ public class ClienteEntity {
     @Column(nullable = false, length = 200)
     private String nome;
 
-    @Column(nullable = false, length = 20)
+    @Column(length = 20)
     private String telefone;
 
     @Column(length = 200)

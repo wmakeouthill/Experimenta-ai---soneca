@@ -24,6 +24,8 @@ public class SpaFallbackConfig implements ErrorController {
             "/pedido-mesa/{token}",
             "/mesa/{token}",
             "/login",
+            "/politica-privacidade",
+            "/termos-uso",
             "/cardapio",
             "/pedidos",
             "/sessoes",
