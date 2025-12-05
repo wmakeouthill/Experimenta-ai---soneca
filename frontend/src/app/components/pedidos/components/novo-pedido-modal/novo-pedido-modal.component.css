@@ -336,13 +336,79 @@
     width: 100%;
     max-width: 100vw;
   }
- 
+
   .formulario-colunas {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem;
   }
 
   .produtos-itens-layout {
     grid-template-columns: 1fr;
+    gap: 0.3rem;
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  .formulario-conteudo {
+    padding: 0.4rem 0.75rem;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .formulario-header {
+    padding: 0.4rem 0.75rem;
+  }
+
+  .formulario-header h2 {
+    font-size: 1rem;
+  }
+
+  .produtos-coluna {
+    min-height: 120px;
+    max-height: 50vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .itens-coluna {
+    min-height: 60px;
+    max-height: 20vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .formulario-rodape {
+    padding-top: 0.3rem;
+    flex-shrink: 0;
+  }
+
+  .formulario-secao h3 {
+    font-size: 0.85rem;
+    margin-bottom: 0.2rem;
+    padding-bottom: 0.15rem;
+  }
+
+  .formulario-coluna .formulario-secao h3 {
+    font-size: 0.8rem;
+    margin-bottom: 0.15rem;
+  }
+
+  .form-textarea {
+    min-height: 50px;
+    font-size: 0.8rem;
+    padding: 0.4rem;
+  }
+
+  .btn-criar {
+    padding: 0.6rem;
+    font-size: 0.9rem;
+  }
+
+  .formulario-acoes {
+    padding-top: 0.4rem;
   }
 }
 

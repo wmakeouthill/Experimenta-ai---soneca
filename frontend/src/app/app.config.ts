@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';
 
 import { routes } from './app.routes';
-import { provideClientHydration } from '@angular/platform-browser';
+import { provideClientHydration, withNoHttpTransferCache } from '@angular/platform-browser';
 import { authInterceptor } from './interceptors/auth.interceptor';
 import { authErrorInterceptor } from './interceptors/auth-error.interceptor';
 import { silent404Interceptor } from './interceptors/silent-404.interceptor';
@@ -11,8 +11,10 @@ import { silent500ConfigInterceptor } from './interceptors/silent-500-config.int
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideRouter(routes), 
-    provideClientHydration(),
+    provideRouter(routes),
+    // withNoHttpTransferCache evita o warning NG0506 de hydration timeout
+    // causado por operações assíncronas como polling, intervals e effects
+    provideClientHydration(withNoHttpTransferCache()),
     provideHttpClient(
       withFetch(),
       withInterceptors([

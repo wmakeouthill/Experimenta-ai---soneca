@@ -19,8 +19,11 @@
       placeholder="Valor"
       step="0.01"
       min="0.01"
+      inputmode="decimal"
       [value]="valorMeioPagamento()"
       (input)="valorMeioPagamento.set(parseValorMeioPagamento($any($event.target).value))"
+      (focus)="onInputFocus()"
+      (blur)="onInputBlur()"
       [max]="valorRestante()"
     />
     <button

@@ -22,6 +22,9 @@ export class MeiosPagamentoComponent {
   readonly valorMeioPagamento = signal<number>(0);
   readonly MeioPagamento = MeioPagamento;
 
+  // Flag para controlar se o usuário está editando manualmente
+  private usuarioEditando = false;
+
   readonly valorRestante = computed(() => {
     return this.valorTotal() - this.calcularTotalMeiosPagamento();
   });
@@ -32,19 +35,38 @@ export class MeiosPagamentoComponent {
         const restante = this.valorRestante();
         const meioSelecionado = this.meioPagamentoSelecionado();
         const valorAtual = this.valorMeioPagamento();
-        
-        if (meioSelecionado && restante > 0) {
-          if (valorAtual === 0 || valorAtual > restante) {
+
+        // Só ajusta automaticamente se o usuário NÃO está editando
+        if (!this.usuarioEditando) {
+          if (meioSelecionado && restante > 0) {
+            // Só ajusta se o valor excede o restante (não quando é 0)
+            if (valorAtual > restante) {
+              setTimeout(() => {
+                this.valorMeioPagamento.set(restante);
+              }, 0);
+            }
+          } else if (restante <= 0) {
             setTimeout(() => {
-              this.valorMeioPagamento.set(restante);
+              this.valorMeioPagamento.set(0);
             }, 0);
           }
-        } else if (restante <= 0) {
-          setTimeout(() => {
-            this.valorMeioPagamento.set(0);
-          }, 0);
         }
       }, { allowSignalWrites: true });
+    }
+  }
+
+  // Métodos para controlar estado de edição
+  onInputFocus(): void {
+    this.usuarioEditando = true;
+  }
+
+  onInputBlur(): void {
+    this.usuarioEditando = false;
+    // Se o valor excede o restante, ajusta para o restante
+    const valorAtual = this.valorMeioPagamento();
+    const restante = this.valorRestante();
+    if (valorAtual > restante && restante > 0) {
+      this.valorMeioPagamento.set(restante);
     }
   }
 
@@ -64,32 +86,32 @@ export class MeiosPagamentoComponent {
   adicionarMeioPagamento(): void {
     const meioPagamento = this.meioPagamentoSelecionado();
     const valor = this.valorMeioPagamento();
-    
+
     if (!meioPagamento) {
       return;
     }
-    
+
     if (valor <= 0) {
       if (this.isBrowser) {
         alert('O valor deve ser maior que zero.');
       }
       return;
     }
-    
+
     const valorRestante = this.valorRestante();
-    
+
     if (valor > valorRestante) {
       if (this.isBrowser) {
         alert(`O valor não pode ser maior que o restante (${this.formatarPreco(valorRestante)}).`);
       }
       return;
     }
-    
+
     const novoMeioPagamento: MeioPagamentoPedido = {
       meioPagamento: meioPagamento,
       valor: valor
     };
-    
+
     const novosMeiosPagamento = [...this.meiosPagamento(), novoMeioPagamento];
     this.onMeiosPagamentoChange.emit(novosMeiosPagamento);
     this.meioPagamentoSelecionado.set(null);

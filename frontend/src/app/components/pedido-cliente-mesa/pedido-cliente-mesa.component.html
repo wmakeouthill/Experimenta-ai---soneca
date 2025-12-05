@@ -674,6 +674,20 @@
                                                             </button>
                                                         </div>
 
+                                                        <!-- Avaliações individuais dos itens -->
+                                                        <div class="avaliacao-itens-resumo">
+                                                            @for (item of meusPedidos.pedidoSelecionado()?.itens; track item.produtoId) {
+                                                                <div class="item-avaliacao-resumo">
+                                                                    <span class="item-nome-resumo">{{ item.nomeProduto }}</span>
+                                                                    <div class="estrelas-mini">
+                                                                        @for (estrela of [1, 2, 3, 4, 5]; track estrela) {
+                                                                            <span class="estrela-mini" [class.ativa]="avaliacao.getAvaliacaoProduto(item.produtoId) >= estrela">★</span>
+                                                                        }
+                                                                    </div>
+                                                                </div>
+                                                            }
+                                                        </div>
+
                                                         @if (avaliacao.getComentarioPedido()) {
                                                             <div class="avaliacao-comentario-salvo">
                                                                 <span class="comentario-label">💬 Seu comentário:</span>
@@ -690,7 +704,6 @@
                                                                 <span class="avaliacao-modo-edicao">Editando</span>
                                                             }
                                                         </div>
-                                                        <p class="avaliacao-instrucao">Toque nas estrelas para avaliar</p>
 
                                                         <div class="itens-avaliacao-lista">
                                                             @for (item of meusPedidos.pedidoSelecionado()?.itens; track item.produtoId) {

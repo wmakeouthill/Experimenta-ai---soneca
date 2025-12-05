@@ -25,8 +25,10 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
   margin-bottom: 0.5rem;
   max-width: 100%;
+  padding-right: 0.25rem;
 }
 
 .item-selecionado {

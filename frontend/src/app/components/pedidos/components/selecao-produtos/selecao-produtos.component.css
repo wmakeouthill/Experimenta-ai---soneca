@@ -5,7 +5,7 @@
   padding: 0;
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .produtos-container {
@@ -13,7 +13,7 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .produtos-header {
@@ -78,16 +78,39 @@
 
 .produtos-grid-form {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.3rem;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.5rem;
   min-height: 0;
-  overflow-y: auto;
-  padding: 0.25rem;
-  align-items: start;
+  overflow-y: scroll;
+  overflow-x: visible;
+  padding: 0.5rem;
+  padding-right: 0.75rem;
+  padding-bottom: 0.75rem;
+  align-items: stretch;
   align-content: start;
-  margin-top: 0.2rem;
+  margin-top: 0.4rem;
+  margin-right: -0.25rem;
   flex: 1;
-  grid-auto-rows: min-content;
+  grid-auto-rows: 55px;
+}
+
+/* Estiliza a barra de scroll */
+.produtos-grid-form::-webkit-scrollbar {
+  width: 6px;
+}
+
+.produtos-grid-form::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.produtos-grid-form::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.produtos-grid-form::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
 }
 
 .produto-item-form {
@@ -105,11 +128,10 @@
   overflow: hidden;
   position: relative;
   width: 100%;
-  height: calc(2.4em + 1.08rem + 0.2rem + 0.5rem) !important;
-  min-height: calc(2.4em + 1.08rem + 0.2rem + 0.5rem) !important;
-  max-height: calc(2.4em + 1.08rem + 0.2rem + 0.5rem) !important;
+  height: 55px;
+  min-height: 55px;
+  max-height: 55px;
   box-sizing: border-box;
-  align-self: start;
 }
 
 .produto-item-form.indisponivel {
@@ -159,45 +181,39 @@
 }
 
 .produto-foto-mini {
-  width: 50px !important;
-  flex: 0 0 50px !important;
-  height: calc(2.4em + 1.08rem + 0.2rem + 0.5rem) !important;
-  max-height: calc(2.4em + 1.08rem + 0.2rem + 0.5rem) !important;
-  min-height: calc(2.4em + 1.08rem + 0.2rem + 0.5rem) !important;
+  width: 55px;
+  flex: 0 0 55px;
+  height: 100%;
   object-fit: cover;
   object-position: center;
-  border-radius: 8px 0 0 8px;
+  border-radius: 6px 0 0 6px;
   display: block;
-  align-self: stretch;
-  flex-shrink: 0;
 }
 
 .produto-foto-placeholder-mini {
-  width: 50px !important;
-  flex: 0 0 50px !important;
-  height: calc(2.4em + 1.08rem + 0.2rem + 0.5rem) !important;
-  max-height: calc(2.4em + 1.08rem + 0.2rem + 0.5rem) !important;
-  min-height: calc(2.4em + 1.08rem + 0.2rem + 0.5rem) !important;
+  width: 55px;
+  flex: 0 0 55px;
+  height: 100%;
   background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.2rem;
-  flex-shrink: 0;
-  border-radius: 8px 0 0 8px;
+  border-radius: 6px 0 0 6px;
   opacity: 0.5;
-  align-self: stretch;
 }
 
 .produto-info-form {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 0.2rem;
+  gap: 0.15rem;
   flex: 1;
-  padding: 0.2rem 0.2rem;
+  padding: 0.25rem 0.4rem;
   min-width: 0;
   box-sizing: border-box;
+  overflow: hidden;
+}
   height: 100% !important;
   min-height: 0 !important;
 }
@@ -237,18 +253,88 @@
 }
 
 @media (max-width: 768px) {
+  :host {
+    overflow: auto;
+    min-height: 120px;
+  }
+
+  .produtos-container {
+    overflow: visible;
+  }
+
+  .produtos-header {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.3rem;
+    margin-bottom: 0;
+  }
+
+  .produtos-header h3 {
+    display: none;
+  }
+
   .produtos-filtros {
-    flex-direction: column;
+    flex-direction: row;
     width: 100%;
+    gap: 0.3rem;
   }
 
   .filtro-categoria {
-    width: 100%;
-    min-width: auto;
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 90px;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .input-pesquisa-produto {
+    flex: 1;
+    min-width: 0;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.8rem;
   }
 
   .produtos-grid-form {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.3rem;
+    padding: 0.2rem;
+    padding-bottom: 0.4rem;
+    padding-right: 0.2rem;
+    min-height: 100px;
+    max-height: none;
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin-top: 0.3rem;
+    margin-right: 0;
+    grid-auto-rows: 48px;
+  }
+
+  .produto-item-form {
+    height: 48px;
+    min-height: 48px;
+    max-height: 48px;
+  }
+
+  .produto-foto-mini,
+  .produto-foto-placeholder-mini {
+    width: 48px;
+    flex: 0 0 48px;
+    height: 100%;
+  }
+
+  .produto-info-form {
+    padding: 0.15rem 0.25rem;
+    gap: 0.1rem;
+  }
+
+  .produto-nome-form {
+    font-size: 0.65rem;
+    -webkit-line-clamp: 2;
+  }
+
+  .produto-preco-form {
+    font-size: 0.7rem;
   }
 }
 
