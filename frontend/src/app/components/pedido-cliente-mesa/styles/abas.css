@@ -750,3 +750,351 @@
     color: #666;
     font-style: italic;
 }
+
+/* ========== CTA AVALIAÇÃO ========== */
+.cta-avaliacao {
+    position: fixed;
+    bottom: 70px; /* Acima do footer */
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #FFB800 0%, #FF9500 100%);
+    color: white;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    z-index: 99;
+}
+
+.cta-avaliacao:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 184, 0, 0.4);
+}
+
+.cta-icon {
+    font-size: 1.25rem;
+}
+
+.cta-texto {
+    font-size: 0.9rem;
+}
+
+.cta-texto strong {
+    text-decoration: underline;
+}
+
+.cta-seta {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+/* ========== ITEM PEDIDO CLICÁVEL ========== */
+.item-pedido.clicavel {
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.item-pedido.clicavel:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.item-pedido.clicavel:active {
+    transform: translateY(0);
+}
+
+.pedido-footer-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.pedido-ver-mais {
+    font-size: 0.8rem;
+    color: #FF6B35;
+    font-weight: 500;
+}
+
+/* ========== MODAL DETALHES PEDIDO ========== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.modal-detalhes-pedido {
+    background: white;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 400px;
+    max-height: 85vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #eee;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #333;
+}
+
+.btn-fechar-modal {
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    color: #999;
+    cursor: pointer;
+    padding: 0.25rem;
+    line-height: 1;
+}
+
+.modal-body {
+    padding: 1.25rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.detalhes-info {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.35rem 0;
+}
+
+.info-row:not(:last-child) {
+    border-bottom: 1px solid #eee;
+}
+
+.info-label {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.info-value {
+    font-size: 0.9rem;
+    color: #333;
+    font-weight: 500;
+}
+
+.detalhes-itens {
+    margin-bottom: 1.25rem;
+}
+
+.detalhes-itens h4 {
+    font-size: 0.95rem;
+    color: #333;
+    margin: 0 0 0.75rem;
+}
+
+.detalhe-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.detalhe-item:last-child {
+    border-bottom: none;
+}
+
+.item-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.item-qtd {
+    font-size: 0.85rem;
+    color: #FF6B35;
+    font-weight: 600;
+    min-width: 28px;
+}
+
+.item-nome {
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.item-preco {
+    font-size: 0.9rem;
+    color: #333;
+    font-weight: 500;
+}
+
+.detalhes-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: #f0f0f0;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    margin-bottom: 1.25rem;
+}
+
+.detalhes-total strong {
+    color: #FF6B35;
+    font-size: 1.2rem;
+}
+
+/* ========== SEÇÃO AVALIAÇÃO NO MODAL ========== */
+.secao-avaliacao {
+    background: linear-gradient(135deg, #FFF9E6 0%, #FFF5D6 100%);
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid #FFE4A0;
+}
+
+.secao-avaliacao h4 {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+    color: #333;
+}
+
+.avaliacao-instrucao {
+    font-size: 0.8rem;
+    color: #666;
+    margin: 0 0 1rem;
+}
+
+.item-avaliacao {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255, 184, 0, 0.2);
+}
+
+.item-avaliacao:last-child {
+    border-bottom: none;
+}
+
+.item-nome-avaliacao {
+    font-size: 0.85rem;
+    color: #333;
+    flex: 1;
+    margin-right: 0.5rem;
+}
+
+.estrelas-avaliacao {
+    display: flex;
+    gap: 0.15rem;
+}
+
+.estrela-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #ddd;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: transform 0.15s;
+}
+
+.estrela-btn.ativa {
+    color: #FFB800;
+}
+
+.estrela-btn:hover {
+    transform: scale(1.2);
+}
+
+/* Comentário de avaliação */
+.comentario-avaliacao {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 184, 0, 0.3);
+}
+
+.comentario-avaliacao label {
+    display: block;
+    font-size: 0.85rem;
+    color: #555;
+    margin-bottom: 0.5rem;
+}
+
+.textarea-comentario {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 60px;
+    background: #fff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.textarea-comentario:focus {
+    outline: none;
+    border-color: #FFB800;
+    box-shadow: 0 0 0 3px rgba(255, 184, 0, 0.2);
+}
+
+.textarea-comentario::placeholder {
+    color: #aaa;
+}
+
+.modal-footer {
+    padding: 1rem 1.25rem;
+    border-top: 1px solid #eee;
+}
+
+.btn-fechar {
+    width: 100%;
+    padding: 0.875rem;
+    background: #f0f0f0;
+    color: #333;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-fechar:hover {
+    background: #e0e0e0;
+}

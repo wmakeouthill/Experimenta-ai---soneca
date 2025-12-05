@@ -30,7 +30,7 @@ public class BuscarAvaliacoesUseCase {
     }
 
     public Optional<ClienteAvaliacaoDTO> buscarAvaliacaoCliente(String clienteId, String produtoId) {
-        return avaliacaoRepository.buscar(clienteId, produtoId)
+        return avaliacaoRepository.buscarPorClienteProduto(clienteId, produtoId)
                 .map(ClienteAvaliacaoDTO::de);
     }
 

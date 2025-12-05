@@ -21,10 +21,30 @@ export function useMeusPedidos(clienteIdFn: () => string | undefined) {
     const totalPedidos = signal(0);
     const carregado = signal(false);
 
+    // Estado para detalhes do pedido selecionado
+    const pedidoSelecionado = signal<HistoricoPedidoCliente | null>(null);
+    const mostrandoDetalhes = signal(false);
+
     // Computed
     const temMaisPaginas = computed(() => paginaAtual() < totalPaginas() - 1);
     const temPaginaAnterior = computed(() => paginaAtual() > 0);
     const temMais = temMaisPaginas; // Alias para uso no template
+
+    /**
+     * Seleciona um pedido para ver detalhes.
+     */
+    function selecionarPedido(pedido: HistoricoPedidoCliente): void {
+        pedidoSelecionado.set(pedido);
+        mostrandoDetalhes.set(true);
+    }
+
+    /**
+     * Fecha os detalhes do pedido.
+     */
+    function fecharDetalhes(): void {
+        mostrandoDetalhes.set(false);
+        pedidoSelecionado.set(null);
+    }
 
     /**
      * Carrega a primeira página de pedidos.
@@ -161,6 +181,8 @@ export function useMeusPedidos(clienteIdFn: () => string | undefined) {
         totalPedidos.set(0);
         carregado.set(false);
         erro.set(null);
+        pedidoSelecionado.set(null);
+        mostrandoDetalhes.set(false);
     }
 
     /**
@@ -200,6 +222,8 @@ export function useMeusPedidos(clienteIdFn: () => string | undefined) {
         totalPaginas: totalPaginas.asReadonly(),
         totalPedidos: totalPedidos.asReadonly(),
         carregado: carregado.asReadonly(),
+        pedidoSelecionado: pedidoSelecionado.asReadonly(),
+        mostrandoDetalhes: mostrandoDetalhes.asReadonly(),
 
         // Computed
         temMaisPaginas,
@@ -214,6 +238,8 @@ export function useMeusPedidos(clienteIdFn: () => string | undefined) {
         recarregar,
         limpar,
         formatarStatus,
-        classeStatus
+        classeStatus,
+        selecionarPedido,
+        fecharDetalhes
     };
 }

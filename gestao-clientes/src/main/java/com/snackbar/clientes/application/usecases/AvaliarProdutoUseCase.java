@@ -22,20 +22,24 @@ public class AvaliarProdutoUseCase {
         clienteRepository.buscarPorId(clienteId)
                 .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado: " + clienteId));
 
-        // Verificar se já avaliou este produto
-        Optional<ClienteAvaliacao> avaliacaoExistente = avaliacaoRepository.buscar(clienteId, request.getProdutoId());
+        // Verificar se já avaliou este produto neste pedido específico
+        Optional<ClienteAvaliacao> avaliacaoExistente = avaliacaoRepository.buscar(
+                clienteId,
+                request.getProdutoId(),
+                request.getPedidoId());
 
         ClienteAvaliacao avaliacao;
 
         if (avaliacaoExistente.isPresent()) {
-            // Atualizar avaliação existente
+            // Atualizar avaliação existente para este pedido+produto
             avaliacao = avaliacaoExistente.get();
             avaliacao.atualizar(request.getNota(), request.getComentario());
         } else {
-            // Criar nova avaliação
+            // Criar nova avaliação para este pedido+produto
             avaliacao = ClienteAvaliacao.criar(
                     clienteId,
                     request.getProdutoId(),
+                    request.getPedidoId(),
                     request.getNota(),
                     request.getComentario());
         }

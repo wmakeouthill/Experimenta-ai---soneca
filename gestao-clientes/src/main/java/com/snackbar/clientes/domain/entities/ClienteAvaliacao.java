@@ -15,18 +15,21 @@ public class ClienteAvaliacao {
     private final String id;
     private final String clienteId;
     private final String produtoId;
+    private final String pedidoId;
     private Integer nota; // 1-5 estrelas
     private String comentario;
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public static ClienteAvaliacao criar(String clienteId, String produtoId, Integer nota, String comentario) {
+    public static ClienteAvaliacao criar(String clienteId, String produtoId, String pedidoId, Integer nota,
+            String comentario) {
         validarNota(nota);
         LocalDateTime agora = LocalDateTime.now();
         return ClienteAvaliacao.builder()
                 .id(UUID.randomUUID().toString())
                 .clienteId(clienteId)
                 .produtoId(produtoId)
+                .pedidoId(pedidoId)
                 .nota(nota)
                 .comentario(comentario)
                 .createdAt(agora)
@@ -38,6 +41,7 @@ public class ClienteAvaliacao {
             String id,
             String clienteId,
             String produtoId,
+            String pedidoId,
             Integer nota,
             String comentario,
             LocalDateTime createdAt,
@@ -46,6 +50,7 @@ public class ClienteAvaliacao {
                 .id(id)
                 .clienteId(clienteId)
                 .produtoId(produtoId)
+                .pedidoId(pedidoId)
                 .nota(nota)
                 .comentario(comentario)
                 .createdAt(createdAt)

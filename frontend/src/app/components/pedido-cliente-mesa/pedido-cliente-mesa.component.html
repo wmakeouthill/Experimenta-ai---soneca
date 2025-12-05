@@ -567,7 +567,7 @@
                                 </div>
                             } @else {
                                 @for (pedido of meusPedidos.pedidos(); track pedido.id) {
-                                    <div class="item-pedido">
+                                    <div class="item-pedido clicavel" (click)="meusPedidos.selecionarPedido(pedido)">
                                         <div class="pedido-header">
                                             <span class="pedido-data">{{ pedido.dataHoraPedido | date:'dd/MM/yyyy HH:mm' }}</span>
                                             <span class="pedido-status" [class]="'status-' + pedido.status.toLowerCase()">
@@ -581,9 +581,12 @@
                                         </div>
                                         <div class="pedido-footer">
                                             <span class="pedido-total">{{ pedido.valorTotal | currency:'BRL' }}</span>
-                                            @if (pedido.numeroMesa) {
-                                                <span class="pedido-mesa">Mesa {{ pedido.numeroMesa }}</span>
-                                            }
+                                            <div class="pedido-footer-right">
+                                                @if (pedido.numeroMesa) {
+                                                    <span class="pedido-mesa">Mesa {{ pedido.numeroMesa }}</span>
+                                                }
+                                                <span class="pedido-ver-mais">Ver detalhes ›</span>
+                                            </div>
                                         </div>
                                     </div>
                                 }
@@ -601,6 +604,96 @@
                                 }
                             }
                         </div>
+
+                        <!-- Modal Detalhes do Pedido -->
+                        @if (meusPedidos.mostrandoDetalhes() && meusPedidos.pedidoSelecionado()) {
+                            <div class="modal-overlay" (click)="meusPedidos.fecharDetalhes()">
+                                <div class="modal-detalhes-pedido" (click)="$event.stopPropagation()">
+                                    <div class="modal-header">
+                                        <h3>Pedido #{{ meusPedidos.pedidoSelecionado()?.numeroPedido }}</h3>
+                                        <button class="btn-fechar-modal" (click)="meusPedidos.fecharDetalhes()">✕</button>
+                                    </div>
+
+                                    <div class="modal-body">
+                                        <div class="detalhes-info">
+                                            <div class="info-row">
+                                                <span class="info-label">Data:</span>
+                                                <span class="info-value">{{ meusPedidos.pedidoSelecionado()?.dataHoraPedido | date:'dd/MM/yyyy HH:mm' }}</span>
+                                            </div>
+                                            <div class="info-row">
+                                                <span class="info-label">Status:</span>
+                                                <span class="info-value pedido-status" [class]="'status-' + meusPedidos.pedidoSelecionado()?.status?.toLowerCase()">
+                                                    {{ meusPedidos.pedidoSelecionado()?.statusDescricao }}
+                                                </span>
+                                            </div>
+                                            @if (meusPedidos.pedidoSelecionado()?.numeroMesa) {
+                                                <div class="info-row">
+                                                    <span class="info-label">Mesa:</span>
+                                                    <span class="info-value">{{ meusPedidos.pedidoSelecionado()?.numeroMesa }}</span>
+                                                </div>
+                                            }
+                                        </div>
+
+                                        <div class="detalhes-itens">
+                                            <h4>Itens do Pedido</h4>
+                                            @for (item of meusPedidos.pedidoSelecionado()?.itens; track item.produtoId) {
+                                                <div class="detalhe-item">
+                                                    <div class="item-info">
+                                                        <span class="item-qtd">{{ item.quantidade }}x</span>
+                                                        <span class="item-nome">{{ item.nomeProduto }}</span>
+                                                    </div>
+                                                    <span class="item-preco">{{ item.subtotal | currency:'BRL' }}</span>
+                                                </div>
+                                            }
+                                        </div>
+
+                                        <div class="detalhes-total">
+                                            <span>Total:</span>
+                                            <strong>{{ meusPedidos.pedidoSelecionado()?.valorTotal | currency:'BRL' }}</strong>
+                                        </div>
+
+                                        <!-- Seção de Avaliação -->
+                                        @if (meusPedidos.pedidoSelecionado()?.status === 'FINALIZADO') {
+                                            <div class="secao-avaliacao">
+                                                <h4>⭐ Avalie este pedido</h4>
+                                                <p class="avaliacao-instrucao">Toque nas estrelas para avaliar cada produto</p>
+
+                                                @for (item of meusPedidos.pedidoSelecionado()?.itens; track item.produtoId) {
+                                                    <div class="item-avaliacao">
+                                                        <span class="item-nome-avaliacao">{{ item.nomeProduto }}</span>
+                                                        <div class="estrelas-avaliacao">
+                                                            @for (estrela of [1, 2, 3, 4, 5]; track estrela) {
+                                                                <button class="estrela-btn"
+                                                                        [class.ativa]="getAvaliacaoProduto(item.produtoId) >= estrela"
+                                                                        (click)="avaliarProduto(item.produtoId, estrela)">
+                                                                    {{ getAvaliacaoProduto(item.produtoId) >= estrela ? '★' : '☆' }}
+                                                                </button>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                }
+
+                                                <!-- Campo de comentário geral do pedido -->
+                                                <div class="comentario-avaliacao">
+                                                    <label for="comentarioPedido">Deixe um comentário (opcional):</label>
+                                                    <textarea
+                                                        id="comentarioPedido"
+                                                        [(ngModel)]="comentarioAvaliacao"
+                                                        placeholder="Conte-nos sobre sua experiência..."
+                                                        rows="3"
+                                                        class="textarea-comentario"
+                                                    ></textarea>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <div class="modal-footer">
+                                        <button class="btn-fechar" (click)="meusPedidos.fecharDetalhes()">Fechar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
                     }
 
                     <!-- Seção Criar/Alterar Senha -->
@@ -672,6 +765,15 @@
                     }
                 </div>
             }
+        }
+
+        <!-- ========== CTA AVALIAÇÃO ========== -->
+        @if (meusPedidos.totalPedidos() > 0 && abaAtual() !== 'perfil') {
+            <div class="cta-avaliacao" (click)="irParaMeusPedidos(); navegarPara('perfil')">
+                <span class="cta-icon">⭐</span>
+                <span class="cta-texto">Avalie seus pedidos em <strong>Meus Pedidos</strong></span>
+                <span class="cta-seta">›</span>
+            </div>
         }
 
         <!-- ========== FOOTER NAVEGAÇÃO ========== -->

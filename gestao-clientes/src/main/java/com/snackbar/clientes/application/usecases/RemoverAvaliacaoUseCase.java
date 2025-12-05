@@ -11,7 +11,7 @@ public class RemoverAvaliacaoUseCase {
     private final ClienteAvaliacaoRepositoryPort avaliacaoRepository;
 
     public void executar(String clienteId, String produtoId) {
-        var avaliacao = avaliacaoRepository.buscar(clienteId, produtoId)
+        var avaliacao = avaliacaoRepository.buscarPorClienteProduto(clienteId, produtoId)
                 .orElseThrow(() -> new IllegalArgumentException("Avaliação não encontrada"));
 
         avaliacaoRepository.remover(avaliacao.getId());

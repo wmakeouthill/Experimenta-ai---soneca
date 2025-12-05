@@ -18,6 +18,9 @@ public class AvaliarProdutoRequest {
     @NotBlank(message = "ID do produto é obrigatório")
     private String produtoId;
 
+    @NotBlank(message = "ID do pedido é obrigatório")
+    private String pedidoId;
+
     @NotNull(message = "Nota é obrigatória")
     @Min(value = 1, message = "Nota mínima é 1")
     @Max(value = 5, message = "Nota máxima é 5")

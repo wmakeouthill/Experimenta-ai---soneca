@@ -17,6 +17,7 @@ public class ClienteAvaliacaoDTO {
     private String id;
     private String clienteId;
     private String produtoId;
+    private String pedidoId;
     private Integer nota;
     private String comentario;
     private LocalDateTime createdAt;
@@ -27,6 +28,7 @@ public class ClienteAvaliacaoDTO {
                 .id(avaliacao.getId())
                 .clienteId(avaliacao.getClienteId())
                 .produtoId(avaliacao.getProdutoId())
+                .pedidoId(avaliacao.getPedidoId())
                 .nota(avaliacao.getNota())
                 .comentario(avaliacao.getComentario())
                 .createdAt(avaliacao.getCreatedAt())

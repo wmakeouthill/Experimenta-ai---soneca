@@ -12,6 +12,7 @@ public class ClienteAvaliacaoMapper {
                 .id(avaliacao.getId())
                 .clienteId(avaliacao.getClienteId())
                 .produtoId(avaliacao.getProdutoId())
+                .pedidoId(avaliacao.getPedidoId())
                 .nota(avaliacao.getNota())
                 .comentario(avaliacao.getComentario())
                 .createdAt(avaliacao.getCreatedAt())
@@ -24,6 +25,7 @@ public class ClienteAvaliacaoMapper {
                 entity.getId(),
                 entity.getClienteId(),
                 entity.getProdutoId(),
+                entity.getPedidoId(),
                 entity.getNota(),
                 entity.getComentario(),
                 entity.getCreatedAt(),

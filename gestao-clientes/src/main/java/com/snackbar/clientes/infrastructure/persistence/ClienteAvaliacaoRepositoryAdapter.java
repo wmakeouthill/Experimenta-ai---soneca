@@ -31,7 +31,14 @@ public class ClienteAvaliacaoRepositoryAdapter implements ClienteAvaliacaoReposi
     }
 
     @Override
-    public Optional<ClienteAvaliacao> buscar(@NonNull String clienteId, @NonNull String produtoId) {
+    public Optional<ClienteAvaliacao> buscar(@NonNull String clienteId, @NonNull String produtoId,
+            @NonNull String pedidoId) {
+        return jpaRepository.findByClienteIdAndProdutoIdAndPedidoId(clienteId, produtoId, pedidoId)
+                .map(mapper::paraDomain);
+    }
+
+    @Override
+    public Optional<ClienteAvaliacao> buscarPorClienteProduto(@NonNull String clienteId, @NonNull String produtoId) {
         return jpaRepository.findByClienteIdAndProdutoId(clienteId, produtoId)
                 .map(mapper::paraDomain);
     }
@@ -52,6 +59,13 @@ public class ClienteAvaliacaoRepositoryAdapter implements ClienteAvaliacaoReposi
     @Override
     public List<ClienteAvaliacao> buscarPorProduto(@NonNull String produtoId) {
         return jpaRepository.findByProdutoIdOrderByCreatedAtDesc(produtoId).stream()
+                .map(mapper::paraDomain)
+                .toList();
+    }
+
+    @Override
+    public List<ClienteAvaliacao> buscarPorPedido(@NonNull String pedidoId) {
+        return jpaRepository.findByPedidoIdOrderByCreatedAtDesc(pedidoId).stream()
                 .map(mapper::paraDomain)
                 .toList();
     }

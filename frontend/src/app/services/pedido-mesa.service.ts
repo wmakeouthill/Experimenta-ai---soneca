@@ -142,9 +142,30 @@ export class PedidoMesaService {
     }
 
     salvarSenhaCliente(clienteId: string, novaSenha: string, senhaAtual?: string): Observable<void> {
-        return this.http.post<void>(
+        return this.http.put<void>(
             `/api/cliente/conta/senha`,
             { novaSenha, senhaAtual },
+            { headers: { 'X-Cliente-Id': clienteId } }
+        );
+    }
+
+    avaliarProduto(
+        clienteId: string,
+        produtoId: string,
+        pedidoId: string,
+        nota: number,
+        comentario?: string
+    ): Observable<void> {
+        return this.http.post<void>(
+            `/api/cliente/conta/avaliacoes`,
+            { produtoId, pedidoId, nota, comentario },
+            { headers: { 'X-Cliente-Id': clienteId } }
+        );
+    }
+
+    buscarAvaliacoesCliente(clienteId: string): Observable<{ produtoId: string; pedidoId: string; nota: number; comentario?: string }[]> {
+        return this.http.get<{ produtoId: string; pedidoId: string; nota: number; comentario?: string }[]>(
+            `/api/cliente/conta/avaliacoes`,
             { headers: { 'X-Cliente-Id': clienteId } }
         );
     }
