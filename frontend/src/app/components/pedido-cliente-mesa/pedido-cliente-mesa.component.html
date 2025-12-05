@@ -35,25 +35,52 @@
                         [(ngModel)]="telefoneInputValue"
                         placeholder="(00) 00000-0000"
                         class="input-telefone"
-                        [class.valido]="telefoneValido()"
+                        [class.valido]="identificacao.telefoneValido()"
                         maxlength="15"
                         inputmode="numeric">
                 </div>
 
-                @if (erroIdentificacao()) {
-                    <p class="erro-msg">{{ erroIdentificacao() }}</p>
+                @if (identificacao.erro()) {
+                    <p class="erro-msg">{{ identificacao.erro() }}</p>
                 }
 
                 <button
                     class="btn-continuar"
-                    [disabled]="!telefoneValido() || buscandoCliente()"
+                    [disabled]="!identificacao.podeBuscar()"
                     (click)="buscarCliente()">
-                    @if (buscandoCliente()) {
+                    @if (identificacao.buscando()) {
                         <span class="spinner-mini"></span> Buscando...
                     } @else {
                         Continuar
                     }
                 </button>
+
+                <!-- Divisor -->
+                <div class="divisor-ou">
+                    <span>ou</span>
+                </div>
+
+                <!-- Botão Login Google -->
+                <button
+                    class="btn-google"
+                    [disabled]="clienteAuth.carregando()"
+                    (click)="loginComGoogle()">
+                    @if (clienteAuth.carregando()) {
+                        <span class="spinner-mini"></span> Entrando...
+                    } @else {
+                        <svg class="google-icon" viewBox="0 0 24 24" width="20" height="20">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        Entrar com Google
+                    }
+                </button>
+
+                @if (clienteAuth.erro()) {
+                    <p class="erro-msg">{{ clienteAuth.erro() }}</p>
+                }
             </div>
         </div>
     }
@@ -75,7 +102,7 @@
                     <label>Telefone</label>
                     <input
                         type="tel"
-                        [value]="telefoneInput()"
+                        [value]="identificacao.getTelefone()"
                         disabled
                         class="input-telefone disabled">
                 </div>
@@ -87,19 +114,19 @@
                         [(ngModel)]="nomeInputValue"
                         placeholder="Como podemos te chamar?"
                         class="input-nome"
-                        [class.valido]="nomeValido()"
+                        [class.valido]="identificacao.nomeValido()"
                         maxlength="100">
                 </div>
 
-                @if (erroIdentificacao()) {
-                    <p class="erro-msg">{{ erroIdentificacao() }}</p>
+                @if (identificacao.erro()) {
+                    <p class="erro-msg">{{ identificacao.erro() }}</p>
                 }
 
                 <button
                     class="btn-continuar"
-                    [disabled]="!podeCadastrar() || buscandoCliente()"
+                    [disabled]="!identificacao.podeCadastrar()"
                     (click)="cadastrarCliente()">
-                    @if (buscandoCliente()) {
+                    @if (identificacao.buscando()) {
                         <span class="spinner-mini"></span> Cadastrando...
                     } @else {
                         Começar a pedir
@@ -114,40 +141,144 @@
     }
 
     <!-- ========== ETAPA 3: CARDÁPIO ========== -->
-    @if (!carregando() && !erro() && etapaAtual() === 'cardapio' && mesa() && clienteIdentificado()) {
+    @if (!carregando() && !erro() && etapaAtual() === 'cardapio' && mesa() && identificacao.clienteIdentificado()) {
         <!-- Header fixo -->
         <header class="header-cliente">
             <div class="header-content">
                 <img src="/assets/experimenta_ai_banner_circular.png" alt="Logo" class="logo-mini">
                 <div class="header-info">
-                    <span class="cliente-nome">Olá, {{ clienteIdentificado()!.nome.split(' ')[0] }}!</span>
+                    <span class="cliente-nome">Olá, {{ identificacao.clienteIdentificado()!.nome.split(' ')[0] }}!</span>
                     <span class="mesa-label">Mesa {{ mesa()!.numero }}</span>
                 </div>
-                <button class="btn-trocar-cliente" (click)="trocarCliente()" title="Trocar cliente">
-                    👤
-                </button>
             </div>
         </header>
 
         <!-- Carregando cardápio -->
-        @if (carregandoCardapio()) {
+        @if (cardapio.carregando()) {
             <div class="loading-cardapio">
                 <div class="loading-spinner"></div>
                 <p>Carregando cardápio...</p>
             </div>
         } @else {
+            <!-- ========== ABA: INÍCIO ========== -->
+            @if (abaAtual() === 'inicio') {
+                <div class="aba-inicio">
+                    <div class="inicio-section">
+                        <h2 class="section-titulo">🔥 Mais Pedidos</h2>
+                        <div class="carrossel-horizontal">
+                            @for (produto of cardapio.produtos().slice(0, 6); track produto.id) {
+                                <div class="produto-card-mini" (click)="abrirDetalhesProduto(produto)">
+                                    <button
+                                        class="btn-favorito"
+                                        [class.ativo]="favoritos.isFavorito(produto.id)"
+                                        (click)="toggleFavorito(produto.id, $event)"
+                                        [title]="favoritos.isFavorito(produto.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'">
+                                        {{ favoritos.isFavorito(produto.id) ? '❤️' : '🤍' }}
+                                    </button>
+                                    @if (produto.foto) {
+                                        <div class="produto-imagem-mini">
+                                            <img [src]="produto.foto" [alt]="produto.nome">
+                                        </div>
+                                    } @else {
+                                        <div class="produto-imagem-mini produto-sem-foto">
+                                            <span>🍽️</span>
+                                        </div>
+                                    }
+                                    <div class="produto-info-mini">
+                                        <span class="produto-nome-mini">{{ produto.nome }}</span>
+                                        <span class="produto-preco-mini">{{ formatarPreco(produto.preco) }}</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="inicio-section">
+                        <h2 class="section-titulo">⭐ Mais Bem Avaliados</h2>
+                        <div class="carrossel-horizontal">
+                            @for (produto of cardapio.produtos().slice(0, 6); track produto.id) {
+                                <div class="produto-card-mini" (click)="abrirDetalhesProduto(produto)">
+                                    <button
+                                        class="btn-favorito"
+                                        [class.ativo]="favoritos.isFavorito(produto.id)"
+                                        (click)="toggleFavorito(produto.id, $event)"
+                                        [title]="favoritos.isFavorito(produto.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'">
+                                        {{ favoritos.isFavorito(produto.id) ? '❤️' : '🤍' }}
+                                    </button>
+                                    @if (produto.foto) {
+                                        <div class="produto-imagem-mini">
+                                            <img [src]="produto.foto" [alt]="produto.nome">
+                                        </div>
+                                    } @else {
+                                        <div class="produto-imagem-mini produto-sem-foto">
+                                            <span>🍽️</span>
+                                        </div>
+                                    }
+                                    <div class="produto-info-mini">
+                                        <span class="produto-nome-mini">{{ produto.nome }}</span>
+                                        <span class="produto-preco-mini">{{ formatarPreco(produto.preco) }}</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Meus Favoritos -->
+                    @if (favoritos.produtosFavoritos().length > 0) {
+                        <div class="inicio-section">
+                            <h2 class="section-titulo">❤️ Meus Favoritos</h2>
+                            <div class="carrossel-horizontal">
+                                @for (produto of favoritos.produtosFavoritos(); track produto.id) {
+                                    <div class="produto-card-mini" (click)="abrirDetalhesProduto(produto)">
+                                        <button class="btn-favorito ativo" (click)="toggleFavorito(produto.id, $event)" title="Remover dos favoritos">
+                                            ❤️
+                                        </button>
+                                        @if (produto.foto) {
+                                            <div class="produto-imagem-mini">
+                                                <img [src]="produto.foto" [alt]="produto.nome">
+                                            </div>
+                                        } @else {
+                                            <div class="produto-imagem-mini produto-sem-foto">
+                                                <span>🍽️</span>
+                                            </div>
+                                        }
+                                        <div class="produto-info-mini">
+                                            <span class="produto-nome-mini">{{ produto.nome }}</span>
+                                            <span class="produto-preco-mini">{{ formatarPreco(produto.preco) }}</span>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <div class="inicio-categorias">
+                        <h2 class="section-titulo">📂 Categorias</h2>
+                        <div class="categorias-grid">
+                            @for (categoria of cardapio.categorias(); track categoria.id) {
+                                <button class="categoria-card" (click)="selecionarCategoria(categoria.nome); navegarPara('cardapio')">
+                                    <span class="categoria-nome">{{ categoria.nome }}</span>
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- ========== ABA: CARDÁPIO ========== -->
+            @if (abaAtual() === 'cardapio') {
             <!-- Categorias -->
             <div class="categorias-scroll">
                 <button
                     class="categoria-chip"
-                    [class.ativa]="categoriaSelecionada() === null"
+                    [class.ativa]="cardapio.categoriaSelecionada() === null"
                     (click)="selecionarCategoria(null)">
                     🍽️ Todos
                 </button>
-                @for (categoria of categorias(); track categoria.id) {
+                @for (categoria of cardapio.categorias(); track categoria.id) {
                     <button
                         class="categoria-chip"
-                        [class.ativa]="categoriaSelecionada() === categoria.nome"
+                        [class.ativa]="cardapio.categoriaSelecionada() === categoria.nome"
                         (click)="selecionarCategoria(categoria.nome)">
                         {{ categoria.nome }}
                     </button>
@@ -157,8 +288,8 @@
             <!-- Lista de Produtos -->
             <div class="produtos-container">
                 <!-- Exibição agrupada por categoria (quando "Todos" selecionado) -->
-                @if (mostrarPorCategoria()) {
-                    @for (grupo of produtosPorCategoria(); track grupo.id) {
+                @if (cardapio.categoriaSelecionada() === null) {
+                    @for (grupo of cardapio.produtosAgrupadosPorCategoria(); track grupo.id) {
                         <div class="categoria-section">
                             <h2 class="categoria-titulo">{{ grupo.nome }}</h2>
                             <div class="produtos-grid">
@@ -193,7 +324,7 @@
                 } @else {
                     <!-- Exibição normal (categoria específica selecionada) -->
                     <div class="produtos-grid">
-                        @for (produto of produtosFiltrados(); track produto.id) {
+                        @for (produto of cardapio.produtosFiltrados(); track produto.id) {
                             <div class="produto-card" (click)="abrirDetalhesProduto(produto)">
                                 @if (produto.foto) {
                                     <div class="produto-imagem">
@@ -221,18 +352,114 @@
                     </div>
                 }
             </div>
+            } <!-- Fecha @if abaAtual() === 'cardapio' -->
 
-            <!-- Botão do Carrinho Flutuante -->
-            @if (totalItens() > 0) {
-                <button class="btn-carrinho-flutuante" (click)="abrirCarrinho()">
-                    <span class="carrinho-icon">🛒</span>
-                    <span class="carrinho-info">
-                        <span class="carrinho-quantidade">{{ totalItens() }} {{ totalItens() === 1 ? 'item' : 'itens' }}</span>
-                        <span class="carrinho-total">{{ formatarPreco(totalCarrinho()) }}</span>
-                    </span>
-                </button>
+            <!-- ========== ABA: PERFIL ========== -->
+            @if (abaAtual() === 'perfil') {
+                <div class="aba-perfil">
+                    <div class="perfil-header">
+                        <div class="perfil-avatar">
+                            @if (clienteAuth.cliente()?.fotoUrl) {
+                                <img [src]="clienteAuth.cliente()!.fotoUrl"
+                                     alt="Foto"
+                                     class="avatar-img"
+                                     (error)="$event.target.style.display='none'">
+                            } @else {
+                                <span class="avatar-placeholder">👤</span>
+                            }
+                        </div>
+                        <h2 class="perfil-nome">{{ identificacao.clienteIdentificado()!.nome }}</h2>
+                        @if (identificacao.clienteIdentificado()!.telefone) {
+                            <p class="perfil-telefone">{{ formatarTelefone(identificacao.clienteIdentificado()!.telefone) }}</p>
+                        }
+                        @if (clienteAuth.cliente()?.email) {
+                            <p class="perfil-email">{{ clienteAuth.cliente()!.email }}</p>
+                        }
+                    </div>
+
+                    <div class="perfil-menu">
+                        <!-- Vincular/Desvincular Google -->
+                        @if (clienteAuth.cliente()?.googleVinculado) {
+                            <button class="perfil-item google-vinculado" (click)="desvincularGoogle()">
+                                <span class="item-icon">
+                                    <svg viewBox="0 0 24 24" width="20" height="20">
+                                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                                    </svg>
+                                </span>
+                                <span class="item-texto">Google vinculado</span>
+                                <span class="item-badge vinculado">✓</span>
+                            </button>
+                        } @else {
+                            <button class="perfil-item google-vincular" (click)="vincularGoogle()" [disabled]="clienteAuth.carregando()">
+                                <span class="item-icon">
+                                    <svg viewBox="0 0 24 24" width="20" height="20">
+                                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                                    </svg>
+                                </span>
+                                <span class="item-texto">Vincular com Google</span>
+                                <span class="item-arrow">›</span>
+                            </button>
+                        }
+
+                        <button class="perfil-item" (click)="trocarCliente()">
+                            <span class="item-icon">🔄</span>
+                            <span class="item-texto">Trocar conta</span>
+                            <span class="item-arrow">›</span>
+                        </button>
+                        <button class="perfil-item disabled">
+                            <span class="item-icon">⭐</span>
+                            <span class="item-texto">Favoritos</span>
+                            <span class="item-badge">Em breve</span>
+                        </button>
+                        <button class="perfil-item disabled">
+                            <span class="item-icon">📋</span>
+                            <span class="item-texto">Meus Pedidos</span>
+                            <span class="item-badge">Em breve</span>
+                        </button>
+                        <button class="perfil-item disabled">
+                            <span class="item-icon">🔒</span>
+                            <span class="item-texto">Criar Senha</span>
+                            <span class="item-badge">Em breve</span>
+                        </button>
+                    </div>
+
+                    @if (clienteAuth.erro()) {
+                        <p class="erro-msg">{{ clienteAuth.erro() }}</p>
+                    }
+
+                    <p class="perfil-info">Mesa {{ mesa()!.numero }}</p>
+                </div>
             }
         }
+
+        <!-- ========== FOOTER NAVEGAÇÃO ========== -->
+        <nav class="footer-nav">
+            <button class="nav-item" [class.ativo]="abaAtual() === 'inicio'" (click)="navegarPara('inicio')">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">Início</span>
+            </button>
+            <button class="nav-item" [class.ativo]="abaAtual() === 'cardapio'" (click)="navegarPara('cardapio')">
+                <span class="nav-icon">📋</span>
+                <span class="nav-label">Cardápio</span>
+            </button>
+            <button class="nav-item carrinho-nav" [class.ativo]="carrinhoState.mostrarCarrinho()" (click)="navegarPara('carrinho')">
+                <span class="nav-icon">🛒</span>
+                @if (carrinhoState.totalItens() > 0) {
+                    <span class="carrinho-badge">{{ carrinhoState.totalItens() }}</span>
+                }
+                <span class="nav-label">Carrinho</span>
+            </button>
+            <button class="nav-item" [class.ativo]="abaAtual() === 'perfil'" (click)="navegarPara('perfil')">
+                <span class="nav-icon">👤</span>
+                <span class="nav-label">Perfil</span>
+            </button>
+        </nav>
     }
 
     <!-- ========== ETAPA 4: SUCESSO ========== -->
@@ -266,23 +493,23 @@
     }
 
     <!-- ========== MODAL: DETALHES DO PRODUTO ========== -->
-    @if (mostrarDetalhesProduto() && produtoSelecionado()) {
+    @if (carrinhoState.mostrarDetalhes() && carrinhoState.produtoSelecionado()) {
         <div class="modal-overlay" (click)="fecharDetalhesProduto()">
             <div class="modal-produto" (click)="$event.stopPropagation()">
                 <button class="btn-fechar-modal" (click)="fecharDetalhesProduto()">×</button>
 
-                @if (produtoSelecionado()!.foto) {
+                @if (carrinhoState.produtoSelecionado()!.foto) {
                     <div class="modal-produto-imagem">
-                        <img [src]="produtoSelecionado()!.foto" [alt]="produtoSelecionado()!.nome">
+                        <img [src]="carrinhoState.produtoSelecionado()!.foto" [alt]="carrinhoState.produtoSelecionado()!.nome">
                     </div>
                 }
 
                 <div class="modal-produto-content">
-                    <h2>{{ produtoSelecionado()!.nome }}</h2>
-                    @if (produtoSelecionado()!.descricao) {
-                        <p class="modal-descricao">{{ produtoSelecionado()!.descricao }}</p>
+                    <h2>{{ carrinhoState.produtoSelecionado()!.nome }}</h2>
+                    @if (carrinhoState.produtoSelecionado()!.descricao) {
+                        <p class="modal-descricao">{{ carrinhoState.produtoSelecionado()!.descricao }}</p>
                     }
-                    <div class="modal-preco">{{ formatarPreco(produtoSelecionado()!.preco) }}</div>
+                    <div class="modal-preco">{{ formatarPreco(carrinhoState.produtoSelecionado()!.preco) }}</div>
 
                     <div class="observacao-container">
                         <label>Alguma observação?</label>
@@ -294,13 +521,13 @@
                     </div>
 
                     <div class="quantidade-controle">
-                        <button class="btn-quantidade" (click)="decrementarQuantidade()" [disabled]="quantidadeTemp() <= 1">−</button>
-                        <span class="quantidade-valor">{{ quantidadeTemp() }}</span>
+                        <button class="btn-quantidade" (click)="decrementarQuantidade()" [disabled]="carrinhoState.quantidadeTemp() <= 1">−</button>
+                        <span class="quantidade-valor">{{ carrinhoState.quantidadeTemp() }}</span>
                         <button class="btn-quantidade" (click)="incrementarQuantidade()">+</button>
                     </div>
 
                     <button class="btn-adicionar-carrinho" (click)="adicionarAoCarrinho()">
-                        Adicionar • {{ formatarPreco(produtoSelecionado()!.preco * quantidadeTemp()) }}
+                        Adicionar • {{ formatarPreco(carrinhoState.produtoSelecionado()!.preco * carrinhoState.quantidadeTemp()) }}
                     </button>
                 </div>
             </div>
@@ -308,34 +535,44 @@
     }
 
     <!-- ========== MODAL: CARRINHO ========== -->
-    @if (mostrarCarrinho()) {
+    @if (carrinhoState.mostrarCarrinho()) {
         <div class="modal-overlay carrinho-overlay" (click)="fecharCarrinho()">
             <div class="modal-carrinho" (click)="$event.stopPropagation()">
                 <div class="carrinho-header">
-                    <h2>Seu Pedido</h2>
+                    @if (pagamento.etapa() === 'itens') {
+                        <h2>Seu Pedido</h2>
+                    } @else if (pagamento.etapa() === 'pagamento') {
+                        <button class="btn-voltar-carrinho" (click)="voltarParaItens()">←</button>
+                        <h2>Pagamento</h2>
+                    } @else if (pagamento.etapa() === 'confirmacao') {
+                        <button class="btn-voltar-carrinho" (click)="voltarParaPagamento()">←</button>
+                        <h2>Confirmar</h2>
+                    }
                     <button class="btn-fechar-modal" (click)="fecharCarrinho()">×</button>
                 </div>
 
+                <!-- ========== ETAPA 1: ITENS ========== -->
+                @if (pagamento.etapa() === 'itens') {
                 <div class="carrinho-content">
-                    @if (carrinho().length === 0) {
+                    @if (carrinhoState.itens().length === 0) {
                         <div class="carrinho-vazio">
                             <span>🛒</span>
                             <p>Seu carrinho está vazio</p>
                         </div>
                     } @else {
                         <!-- Info do cliente -->
-                        @if (clienteIdentificado()) {
+                        @if (identificacao.clienteIdentificado()) {
                             <div class="carrinho-cliente-info">
                                 <span class="cliente-icone">👤</span>
                                 <div class="cliente-dados">
-                                    <strong>{{ clienteIdentificado()!.nome }}</strong>
-                                    <span>{{ formatarTelefone(clienteIdentificado()!.telefone) }}</span>
+                                    <strong>{{ identificacao.clienteIdentificado()!.nome }}</strong>
+                                    <span>{{ formatarTelefone(identificacao.clienteIdentificado()!.telefone) }}</span>
                                 </div>
                             </div>
                         }
 
                         <div class="carrinho-itens">
-                            @for (item of carrinho(); track item.produto.id) {
+                            @for (item of carrinhoState.itens(); track item.produto.id) {
                                 <div class="carrinho-item">
                                     <div class="item-info">
                                         <h4>{{ item.produto.nome }}</h4>
@@ -356,7 +593,7 @@
 
                         <div class="carrinho-total">
                             <span>Total</span>
-                            <strong>{{ formatarPreco(totalCarrinho()) }}</strong>
+                            <strong>{{ formatarPreco(carrinhoState.totalValor()) }}</strong>
                         </div>
                     }
                 </div>
@@ -364,15 +601,235 @@
                 <div class="carrinho-footer">
                     <button
                         class="btn-enviar-pedido"
-                        [disabled]="!podeEnviarPedido() || enviando()"
+                        [disabled]="!podeEnviarPedido()"
+                        (click)="avancarParaPagamento()">
+                        Escolher Pagamento
+                    </button>
+                </div>
+                }
+
+                <!-- ========== ETAPA 2: PAGAMENTO ========== -->
+                @if (pagamento.etapa() === 'pagamento') {
+                <div class="carrinho-content pagamento-content">
+                    <div class="pagamento-total-header">
+                        <span>Total a pagar</span>
+                        <strong>{{ formatarPreco(carrinhoState.totalValor()) }}</strong>
+                    </div>
+
+                    <!-- Toggle para dividir pagamento -->
+                    <div class="pagamento-dividir">
+                        <label class="toggle-dividir">
+                            <input type="checkbox" [checked]="pagamento.dividido()" (change)="togglePagamentoDividido()">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Dividir pagamento</span>
+                        </label>
+                    </div>
+
+                    <!-- Opções de pagamento -->
+                    <div class="pagamento-opcoes">
+                        <h3>Como deseja pagar?</h3>
+
+                        <!-- PIX -->
+                        <div class="pagamento-opcao"
+                             [class.selecionado]="meioPagamentoSelecionado('PIX')"
+                             (click)="selecionarMeioPagamento('PIX')">
+                            <div class="opcao-info">
+                                <span class="opcao-icone">📱</span>
+                                <span class="opcao-nome">PIX</span>
+                            </div>
+                            @if (pagamento.dividido() && meioPagamentoSelecionado('PIX')) {
+                                <div class="opcao-valor" (click)="$event.stopPropagation()">
+                                    <span>R$</span>
+                                    <input type="number"
+                                           [value]="getValorMeioPagamento('PIX')"
+                                           (input)="atualizarValorMeioPagamento('PIX', $any($event.target).valueAsNumber || 0)"
+                                           min="0"
+                                           step="0.01">
+                                </div>
+                            }
+                            @if (!pagamento.dividido() && meioPagamentoSelecionado('PIX')) {
+                                <span class="opcao-check">✓</span>
+                            }
+                        </div>
+
+                        <!-- Cartão de Crédito -->
+                        <div class="pagamento-opcao"
+                             [class.selecionado]="meioPagamentoSelecionado('CARTAO_CREDITO')"
+                             (click)="selecionarMeioPagamento('CARTAO_CREDITO')">
+                            <div class="opcao-info">
+                                <span class="opcao-icone">💳</span>
+                                <span class="opcao-nome">Cartão de Crédito</span>
+                            </div>
+                            @if (pagamento.dividido() && meioPagamentoSelecionado('CARTAO_CREDITO')) {
+                                <div class="opcao-valor" (click)="$event.stopPropagation()">
+                                    <span>R$</span>
+                                    <input type="number"
+                                           [value]="getValorMeioPagamento('CARTAO_CREDITO')"
+                                           (input)="atualizarValorMeioPagamento('CARTAO_CREDITO', $any($event.target).valueAsNumber || 0)"
+                                           min="0"
+                                           step="0.01">
+                                </div>
+                            }
+                            @if (!pagamento.dividido() && meioPagamentoSelecionado('CARTAO_CREDITO')) {
+                                <span class="opcao-check">✓</span>
+                            }
+                        </div>
+
+                        <!-- Cartão de Débito -->
+                        <div class="pagamento-opcao"
+                             [class.selecionado]="meioPagamentoSelecionado('CARTAO_DEBITO')"
+                             (click)="selecionarMeioPagamento('CARTAO_DEBITO')">
+                            <div class="opcao-info">
+                                <span class="opcao-icone">💳</span>
+                                <span class="opcao-nome">Cartão de Débito</span>
+                            </div>
+                            @if (pagamento.dividido() && meioPagamentoSelecionado('CARTAO_DEBITO')) {
+                                <div class="opcao-valor" (click)="$event.stopPropagation()">
+                                    <span>R$</span>
+                                    <input type="number"
+                                           [value]="getValorMeioPagamento('CARTAO_DEBITO')"
+                                           (input)="atualizarValorMeioPagamento('CARTAO_DEBITO', $any($event.target).valueAsNumber || 0)"
+                                           min="0"
+                                           step="0.01">
+                                </div>
+                            }
+                            @if (!pagamento.dividido() && meioPagamentoSelecionado('CARTAO_DEBITO')) {
+                                <span class="opcao-check">✓</span>
+                            }
+                        </div>
+
+                        <!-- Dinheiro -->
+                        <div class="pagamento-opcao"
+                             [class.selecionado]="meioPagamentoSelecionado('DINHEIRO')"
+                             (click)="selecionarMeioPagamento('DINHEIRO')">
+                            <div class="opcao-info">
+                                <span class="opcao-icone">💵</span>
+                                <span class="opcao-nome">Dinheiro</span>
+                            </div>
+                            @if (pagamento.dividido() && meioPagamentoSelecionado('DINHEIRO')) {
+                                <div class="opcao-valor" (click)="$event.stopPropagation()">
+                                    <span>R$</span>
+                                    <input type="number"
+                                           [value]="getValorMeioPagamento('DINHEIRO')"
+                                           (input)="atualizarValorMeioPagamento('DINHEIRO', $any($event.target).valueAsNumber || 0)"
+                                           min="0"
+                                           step="0.01">
+                                </div>
+                            }
+                            @if (!pagamento.dividido() && meioPagamentoSelecionado('DINHEIRO')) {
+                                <span class="opcao-check">✓</span>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Resumo do pagamento dividido -->
+                    @if (pagamento.dividido() && pagamento.meiosSelecionados().length > 0) {
+                        <div class="pagamento-resumo">
+                            <div class="resumo-linha">
+                                <span>Total alocado</span>
+                                <span [class.valor-ok]="pagamentoValido()" [class.valor-erro]="!pagamentoValido()">
+                                    {{ formatarPreco(getTotalAlocado()) }}
+                                </span>
+                            </div>
+                            @if (getValorRestante() > 0.01) {
+                                <div class="resumo-linha restante">
+                                    <span>Falta alocar</span>
+                                    <span class="valor-erro">{{ formatarPreco(getValorRestante()) }}</span>
+                                </div>
+                            }
+                            @if (getValorRestante() < -0.01) {
+                                <div class="resumo-linha excedente">
+                                    <span>Valor excedente</span>
+                                    <span class="valor-erro">{{ formatarPreco(Math.abs(getValorRestante())) }}</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div class="carrinho-footer">
+                    <button
+                        class="btn-enviar-pedido"
+                        [disabled]="!pagamentoValido()"
+                        (click)="irParaConfirmacao()">
+                        Revisar Pedido
+                    </button>
+                </div>
+                }
+
+                <!-- ========== ETAPA 3: CONFIRMAÇÃO ========== -->
+                @if (pagamento.etapa() === 'confirmacao') {
+                <div class="carrinho-content confirmacao-content">
+                    <div class="confirmacao-header">
+                        <span class="confirmacao-icone">📋</span>
+                        <h3 class="confirmacao-titulo">Revise seu pedido</h3>
+                        <p class="confirmacao-subtitulo">Confira os detalhes antes de enviar</p>
+                    </div>
+
+                    <div class="resumo-pedido">
+                        <!-- Cliente -->
+                        @if (identificacao.clienteIdentificado()) {
+                            <div class="resumo-secao">
+                                <span class="resumo-secao-titulo">Cliente</span>
+                                <div class="resumo-cliente-info">
+                                    <span class="cliente-nome-resumo">{{ identificacao.clienteIdentificado()!.nome }}</span>
+                                    <span class="cliente-telefone-resumo">{{ formatarTelefone(identificacao.clienteIdentificado()!.telefone) }}</span>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Itens -->
+                        <div class="resumo-secao">
+                            <span class="resumo-secao-titulo">Itens ({{ carrinhoState.itens().length }})</span>
+                            @for (item of carrinhoState.itens(); track item.produto.id) {
+                                <div class="resumo-item-pedido">
+                                    <div class="item-qtd-nome">
+                                        <span class="item-qtd-badge">{{ item.quantidade }}x</span>
+                                        <span class="item-nome-resumo">{{ item.produto.nome }}</span>
+                                    </div>
+                                    <span class="item-valor-resumo">{{ formatarPreco(item.produto.preco * item.quantidade) }}</span>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Pagamento -->
+                        <div class="resumo-secao">
+                            <span class="resumo-secao-titulo">Pagamento</span>
+                            @for (pag of pagamento.meiosSelecionados(); track pag.tipo) {
+                                <div class="resumo-pagamento-item">
+                                    <span class="pagamento-metodo">
+                                        <span>{{ getIconeMeioPagamento(pag.tipo) }}</span>
+                                        <span>{{ getNomeMeioPagamento(pag.tipo) }}</span>
+                                    </span>
+                                    <span class="pagamento-valor-resumo">{{ formatarPreco(pag.valor) }}</span>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Total -->
+                        <div class="resumo-total-final">
+                            <span class="total-label">Total</span>
+                            <span class="total-valor-final">{{ formatarPreco(carrinhoState.totalValor()) }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="carrinho-footer confirmacao-footer">
+                    <button class="btn-editar-pedido" (click)="voltarParaPagamento()">
+                        ✏️ Editar
+                    </button>
+                    <button
+                        class="btn-enviar-pedido btn-confirmar-final"
+                        [disabled]="enviando()"
                         (click)="enviarPedido()">
                         @if (enviando()) {
                             Enviando...
                         } @else {
-                            Enviar Pedido
+                            ✓ Confirmar Pedido
                         }
                     </button>
                 </div>
+                }
             </div>
         </div>
     }

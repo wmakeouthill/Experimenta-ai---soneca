@@ -1,0 +1,11 @@
+/**
+ * Composables do componente de pedido de cliente via mesa (QR Code).
+ * Cada composable tem responsabilidade única seguindo princípio SOLID.
+ */
+
+export { useIdentificacaoCliente, type ClienteIdentificado } from './use-identificacao-cliente';
+export { useCarrinho, type ItemCarrinho } from './use-carrinho';
+export { usePagamento, type MeioPagamentoSelecionado, type MeioPagamentoTipo, type EtapaCarrinho } from './use-pagamento';
+export { useCardapio, type GrupoCategoria } from './use-cardapio';
+export { useFavoritos } from './use-favoritos';
+export { useClienteAuth } from './use-cliente-auth';

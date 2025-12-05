@@ -51,4 +51,31 @@ public class ClienteRepositoryAdapter implements ClienteRepositoryPort {
                 .map(mapper::paraDomain)
                 .toList();
     }
+
+    @Override
+    public Optional<Cliente> buscarPorGoogleId(String googleId) {
+        return jpaRepository.findByGoogleId(googleId)
+                .map(mapper::paraDomain);
+    }
+
+    @Override
+    public Optional<Cliente> buscarPorEmail(String email) {
+        return jpaRepository.findByEmail(email)
+                .map(mapper::paraDomain);
+    }
+
+    @Override
+    public boolean existePorGoogleId(String googleId) {
+        return jpaRepository.existsByGoogleId(googleId);
+    }
+
+    @Override
+    public boolean existePorTelefone(String telefone) {
+        return jpaRepository.existsByTelefone(telefone);
+    }
+
+    @Override
+    public boolean existePorEmail(String email) {
+        return jpaRepository.existsByEmail(email);
+    }
 }

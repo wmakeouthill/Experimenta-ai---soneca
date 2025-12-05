@@ -11,11 +11,17 @@ export interface ItemPedidoMesaRequest {
     observacoes?: string;
 }
 
+export interface MeioPagamentoMesaRequest {
+    meioPagamento: 'PIX' | 'CARTAO_CREDITO' | 'CARTAO_DEBITO' | 'DINHEIRO';
+    valor: number;
+}
+
 export interface CriarPedidoMesaRequest {
     mesaToken: string;
     clienteId: string;
     nomeCliente: string;
     itens: ItemPedidoMesaRequest[];
+    meiosPagamento?: MeioPagamentoMesaRequest[];
 }
 
 export interface PedidoMesaResponse {

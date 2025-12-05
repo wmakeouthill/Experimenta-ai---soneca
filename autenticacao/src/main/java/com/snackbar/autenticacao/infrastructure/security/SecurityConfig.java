@@ -35,6 +35,7 @@ public class SecurityConfig {
     private static final String MESAS_PATH = "/api/mesas";
     private static final String MESAS_PATTERN = "/api/mesas/**";
     private static final String PUBLIC_MESA_PATTERN = "/api/public/mesa/**";
+    private static final String PUBLIC_CLIENTE_AUTH_PATTERN = "/api/publico/cliente/auth/**";
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
@@ -57,6 +58,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/health").permitAll()
                         // Endpoints públicos de mesas (QR Code) - Permite pedidos de clientes
                         .requestMatchers(PUBLIC_MESA_PATTERN).permitAll()
+                        // Endpoints públicos de autenticação de cliente (login, Google OAuth)
+                        .requestMatchers(PUBLIC_CLIENTE_AUTH_PATTERN).permitAll()
 
                         // Endpoints de autenticação (exigem autenticação)
                         .requestMatchers("/api/auth/**").authenticated()

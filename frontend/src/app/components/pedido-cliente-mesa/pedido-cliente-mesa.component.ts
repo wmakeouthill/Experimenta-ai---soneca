@@ -1,206 +1,115 @@
-import { Component, inject, signal, computed, OnInit, ChangeDetectionStrategy, PLATFORM_ID } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, OnDestroy, ChangeDetectionStrategy, PLATFORM_ID, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { PedidoMesaService, ItemPedidoMesaRequest, CriarPedidoMesaRequest } from '../../services/pedido-mesa.service';
+import { GoogleSignInService } from '../../services/google-signin.service';
 import { Mesa } from '../../services/mesa.service';
 import { Produto } from '../../services/produto.service';
-import { Categoria } from '../../services/categoria.service';
 
-interface ItemCarrinho {
-    produto: Produto;
-    quantidade: number;
-    observacao: string;
-}
+import {
+    useIdentificacaoCliente,
+    useCarrinho,
+    usePagamento,
+    useCardapio,
+    useFavoritos,
+    useClienteAuth
+} from './composables';
 
-interface ClienteIdentificado {
-    id: string;
-    nome: string;
-    telefone: string;
-    novoCliente: boolean;
-}
+type EtapaPrincipal = 'identificacao' | 'cadastro' | 'cardapio' | 'sucesso';
+type AbaCliente = 'inicio' | 'cardapio' | 'perfil';
 
-interface GrupoCategoria {
-    id: string;
-    nome: string;
-    produtos: Produto[];
-}
-
-type Etapa = 'identificacao' | 'cadastro' | 'cardapio' | 'sucesso';
-
+/**
+ * Componente de pedido para cliente via QR Code da mesa.
+ * Orquestra os composables de identificação, carrinho, pagamento e cardápio.
+ */
 @Component({
     selector: 'app-pedido-cliente-mesa',
     standalone: true,
     imports: [CommonModule, FormsModule],
     templateUrl: './pedido-cliente-mesa.component.html',
-    styleUrls: ['./pedido-cliente-mesa.component.css'],
+    styleUrls: [
+        './styles/base.css',
+        './styles/identificacao.css',
+        './styles/cardapio.css',
+        './styles/modal.css',
+        './styles/carrinho.css',
+        './styles/abas.css',
+        './styles/pagamento.css',
+        './styles/responsive.css'
+    ],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class PedidoClienteMesaComponent implements OnInit {
+export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewInit {
     private readonly route = inject(ActivatedRoute);
     private readonly pedidoMesaService = inject(PedidoMesaService);
+    private readonly googleService = inject(GoogleSignInService);
     private readonly platformId = inject(PLATFORM_ID);
     private readonly isBrowser = isPlatformBrowser(this.platformId);
 
-    // Estado geral
+    // ViewChild para o botão do Google
+    @ViewChild('googleButtonRef') googleButtonRef?: ElementRef<HTMLDivElement>;
+
+    // Subscription para credenciais do Google
+    private googleCredentialSub?: Subscription;
+
+    // Expor Math para o template
+    protected readonly Math = Math;
+
+    // ========== Estado Geral ==========
     mesa = signal<Mesa | null>(null);
     carregando = signal(true);
     erro = signal<string | null>(null);
-    etapaAtual = signal<Etapa>('identificacao');
-
-    // Identificação do cliente
-    private readonly _telefoneInput = signal('');
-    private readonly _nomeInput = signal('');
-    buscandoCliente = signal(false);
-    clienteIdentificado = signal<ClienteIdentificado | null>(null);
-    erroIdentificacao = signal<string | null>(null);
-
-    // Cardápio
-    categorias = signal<Categoria[]>([]);
-    produtos = signal<Produto[]>([]);
-    carregandoCardapio = signal(false);
-
-    // Carrinho
-    carrinho = signal<ItemCarrinho[]>([]);
-
-    // Navegação do cardápio
-    categoriaSelecionada = signal<string | null>(null);
-    mostrarCarrinho = signal(false);
-    mostrarDetalhesProduto = signal(false);
-    produtoSelecionado = signal<Produto | null>(null);
-    quantidadeTemp = signal(1);
-    private readonly _observacaoTemp = signal('');
-
-    // Envio do pedido
+    etapaAtual = signal<EtapaPrincipal>('identificacao');
+    abaAtual = signal<AbaCliente>('cardapio');
     enviando = signal(false);
 
-    // ========== Getters e Setters para NgModel ==========
+    // ========== Composables ==========
+    private readonly mesaToken = () => this.mesa()?.qrCodeToken;
+
+    readonly identificacao = useIdentificacaoCliente(this.mesaToken);
+    readonly carrinhoState = useCarrinho();
+    readonly pagamento = usePagamento(() => this.carrinhoState.totalValor());
+    readonly cardapio = useCardapio(this.mesaToken);
+    readonly favoritos = useFavoritos(
+        () => this.identificacao.clienteIdentificado()?.id,
+        () => this.cardapio.produtos()
+    );
+    readonly clienteAuth = useClienteAuth();
+
+    // ========== Computed ==========
+    readonly podeEnviarPedido = computed(() =>
+        !this.carrinhoState.carrinhoVazio() && this.identificacao.clienteIdentificado() !== null
+    );
+
+    // ========== Bindings para NgModel ==========
     get telefoneInputValue(): string {
-        return this._telefoneInput();
+        return this.identificacao.getTelefone();
     }
     set telefoneInputValue(value: string) {
-        // Formata telefone enquanto digita
-        const numeros = value.replace(/\D/g, '');
-        if (numeros.length <= 11) {
-            this._telefoneInput.set(this.formatarTelefoneInput(numeros));
-        }
+        this.identificacao.setTelefone(value);
     }
 
     get nomeInputValue(): string {
-        return this._nomeInput();
+        return this.identificacao.getNome();
     }
     set nomeInputValue(value: string) {
-        this._nomeInput.set(value);
+        this.identificacao.setNome(value);
     }
 
     get observacaoTempValue(): string {
-        return this._observacaoTemp();
+        return this.carrinhoState.getObservacao();
     }
     set observacaoTempValue(value: string) {
-        this._observacaoTemp.set(value);
+        this.carrinhoState.setObservacao(value);
     }
-
-    // Expor signals
-    telefoneInput = this._telefoneInput.asReadonly();
-    nomeInput = this._nomeInput.asReadonly();
-    observacaoTemp = this._observacaoTemp.asReadonly();
-
-    // ========== Computed ==========
-    telefoneValido = computed(() => {
-        const numeros = this._telefoneInput().replace(/\D/g, '');
-        return numeros.length >= 10 && numeros.length <= 11;
-    });
-
-    nomeValido = computed(() => {
-        return this._nomeInput().trim().length >= 2;
-    });
-
-    podeCadastrar = computed(() => {
-        return this.telefoneValido() && this.nomeValido();
-    });
-
-    produtosFiltrados = computed(() => {
-        const categoria = this.categoriaSelecionada();
-        const todosProdutos = this.produtos();
-
-        if (!categoria) {
-            return todosProdutos.filter(p => p.disponivel);
-        }
-
-        return todosProdutos.filter(p => p.disponivel && p.categoria === categoria);
-    });
-
-    /**
-     * Produtos agrupados por categoria para exibição quando "Todos" está selecionado.
-     * Retorna um array de objetos { id, nome, produtos }.
-     */
-    produtosPorCategoria = computed((): GrupoCategoria[] => {
-        const categoriaSelecionada = this.categoriaSelecionada();
-        const todosProdutos = this.produtos().filter(p => p.disponivel);
-        const categoriasAtivas = this.categorias().filter(c => c.ativa);
-
-        // Se uma categoria específica está selecionada, não agrupa
-        if (categoriaSelecionada) {
-            return [];
-        }
-
-        // Agrupa produtos por categoria na ordem das categorias
-        const grupos: GrupoCategoria[] = [];
-
-        for (const categoria of categoriasAtivas) {
-            const produtosDaCategoria = todosProdutos.filter(p => p.categoria === categoria.nome);
-            if (produtosDaCategoria.length > 0) {
-                grupos.push({
-                    id: categoria.id,
-                    nome: categoria.nome,
-                    produtos: produtosDaCategoria
-                });
-            }
-        }
-
-        // Adiciona produtos sem categoria no final (se houver)
-        const produtosSemCategoria = todosProdutos.filter(p =>
-            !categoriasAtivas.some(c => c.nome === p.categoria)
-        );
-        if (produtosSemCategoria.length > 0) {
-            grupos.push({
-                id: 'outros',
-                nome: 'Outros',
-                produtos: produtosSemCategoria
-            });
-        }
-
-        return grupos;
-    });
-
-    /**
-     * Indica se deve mostrar produtos agrupados por categoria.
-     */
-    mostrarPorCategoria = computed(() => {
-        return this.categoriaSelecionada() === null;
-    });
-
-    totalItens = computed(() => {
-        return this.carrinho().reduce((acc, item) => acc + item.quantidade, 0);
-    });
-
-    totalCarrinho = computed(() => {
-        return this.carrinho().reduce((acc, item) => acc + (item.produto.preco * item.quantidade), 0);
-    });
-
-    podeEnviarPedido = computed(() => {
-        return this.carrinho().length > 0 && this.clienteIdentificado() !== null;
-    });
 
     // ========== Lifecycle ==========
     ngOnInit(): void {
-        // Só executa no browser para evitar problemas com SSR
-        if (!this.isBrowser) {
-            return;
-        }
+        if (!this.isBrowser) return;
 
         const token = this.route.snapshot.paramMap.get('token');
-
         if (!token) {
             this.erro.set('Token da mesa não encontrado');
             this.carregando.set(false);
@@ -210,7 +119,87 @@ export class PedidoClienteMesaComponent implements OnInit {
         this.carregarMesa(token);
     }
 
-    // ========== Carregamento inicial ==========
+    ngAfterViewInit(): void {
+        // Inicializar botão do Google quando estiver na tela de identificação
+        if (this.isBrowser) {
+            this.inicializarBotaoGoogle();
+        }
+    }
+
+    ngOnDestroy(): void {
+        // Cleanup subscription do Google
+        this.googleCredentialSub?.unsubscribe();
+        this.clienteAuth.destroy();
+    }
+
+    // ========== Autenticação Google ==========
+    private async inicializarBotaoGoogle(): Promise<void> {
+        try {
+            await this.googleService.initialize();
+
+            // Escuta credenciais do Google
+            this.googleCredentialSub = this.googleService.credential$.subscribe(async (token) => {
+                // Se já tem cliente identificado, é vinculação
+                if (this.identificacao.clienteIdentificado()) {
+                    await this.processarVinculacaoGoogle(token);
+                } else {
+                    // Senão é login
+                    await this.processarLoginGoogle(token);
+                }
+            });
+        } catch (error) {
+            console.error('Erro ao inicializar Google Sign-In:', error);
+        }
+    }
+
+    async loginComGoogle(): Promise<void> {
+        // Mostra o prompt do Google One Tap
+        this.googleService.showOneTap();
+    }
+
+    private async processarLoginGoogle(idToken: string): Promise<void> {
+        try {
+            const success = await this.clienteAuth.loginComGoogle(idToken);
+            if (success) {
+                const cliente = this.clienteAuth.cliente();
+                if (cliente) {
+                    // Definir o cliente identificado e ir para o cardápio
+                    this.identificacao.setClienteFromGoogle({
+                        id: cliente.id,
+                        nome: cliente.nome,
+                        telefone: cliente.telefone || ''
+                    });
+                    this.irParaCardapio();
+                }
+            }
+        } catch (error) {
+            console.error('Erro no login com Google:', error);
+        }
+    }
+
+    private async processarVinculacaoGoogle(idToken: string): Promise<void> {
+        try {
+            await this.clienteAuth.vincularGoogle(idToken);
+        } catch (error) {
+            console.error('Erro ao vincular Google:', error);
+        }
+    }
+
+    async vincularGoogle(): Promise<void> {
+        // Mostra o prompt do Google para vincular conta
+        this.googleService.showOneTap();
+
+        // A subscription já existe e vai chamar processarVinculacaoGoogle
+        // quando o usuário selecionar a conta
+    }
+
+    async desvincularGoogle(): Promise<void> {
+        if (confirm('Deseja desvincular sua conta Google?')) {
+            await this.clienteAuth.desvincularGoogle();
+        }
+    }
+
+    // ========== Ações Gerais ==========
     private carregarMesa(token: string): void {
         this.carregando.set(true);
         this.erro.set(null);
@@ -222,233 +211,195 @@ export class PedidoClienteMesaComponent implements OnInit {
                     this.carregando.set(false);
                     return;
                 }
-
                 this.mesa.set(mesa);
                 this.carregando.set(false);
             },
-            error: (err) => {
-                console.error('Erro ao buscar mesa:', err);
+            error: () => {
                 this.erro.set('Mesa não encontrada ou indisponível');
                 this.carregando.set(false);
             }
         });
     }
 
-    // ========== Identificação do Cliente ==========
+    // ========== Ações de Identificação ==========
     buscarCliente(): void {
-        if (!this.telefoneValido()) return;
-
-        const telefone = this._telefoneInput().replace(/\D/g, '');
-        this.buscandoCliente.set(true);
-        this.erroIdentificacao.set(null);
-
-        const mesaToken = this.mesa()?.qrCodeToken;
-        if (!mesaToken) return;
-
-        this.pedidoMesaService.buscarClientePorTelefone(mesaToken, telefone).subscribe({
-            next: (cliente) => {
-                this.buscandoCliente.set(false);
-                this.clienteIdentificado.set({
-                    id: cliente.id,
-                    nome: cliente.nome,
-                    telefone: cliente.telefone,
-                    novoCliente: false
-                });
-                // Cliente encontrado, ir direto para o cardápio
-                this.irParaCardapio();
-            },
-            error: (err) => {
-                this.buscandoCliente.set(false);
-                if (err.status === 404) {
-                    // Cliente não encontrado, ir para cadastro
-                    this.etapaAtual.set('cadastro');
-                } else {
-                    this.erroIdentificacao.set('Erro ao buscar cliente. Tente novamente.');
-                }
-            }
-        });
+        this.identificacao.buscarCliente(() => this.irParaCardapio());
     }
 
     cadastrarCliente(): void {
-        if (!this.podeCadastrar()) return;
-
-        const telefone = this._telefoneInput().replace(/\D/g, '');
-        const nome = this._nomeInput().trim();
-        this.buscandoCliente.set(true);
-        this.erroIdentificacao.set(null);
-
-        const mesaToken = this.mesa()?.qrCodeToken;
-        if (!mesaToken) return;
-
-        this.pedidoMesaService.cadastrarCliente(mesaToken, { nome, telefone }).subscribe({
-            next: (cliente) => {
-                this.buscandoCliente.set(false);
-                this.clienteIdentificado.set({
-                    id: cliente.id,
-                    nome: cliente.nome,
-                    telefone: cliente.telefone,
-                    novoCliente: true
-                });
-                this.irParaCardapio();
-            },
-            error: (err) => {
-                this.buscandoCliente.set(false);
-                console.error('Erro ao cadastrar cliente:', err);
-                this.erroIdentificacao.set('Erro ao cadastrar. Tente novamente.');
-            }
-        });
+        this.identificacao.cadastrarCliente(() => this.irParaCardapio());
     }
 
     voltarParaIdentificacao(): void {
+        this.identificacao.voltarParaIdentificacao();
         this.etapaAtual.set('identificacao');
-        this._nomeInput.set('');
-        this.erroIdentificacao.set(null);
     }
 
-    // ========== Cardápio ==========
+    trocarCliente(): void {
+        this.identificacao.trocarCliente();
+        this.carrinhoState.limparCarrinho();
+        this.etapaAtual.set('identificacao');
+    }
+
+    // ========== Navegação ==========
     private irParaCardapio(): void {
         this.etapaAtual.set('cardapio');
-        this.carregarCardapio();
+        this.cardapio.carregar();
+        this.favoritos.carregar();
     }
 
-    private carregarCardapio(): void {
-        const token = this.mesa()?.qrCodeToken;
-        if (!token) return;
-
-        this.carregandoCardapio.set(true);
-
-        this.pedidoMesaService.buscarCardapio(token).subscribe({
-            next: (cardapio) => {
-                this.categorias.set(cardapio.categorias.filter(c => c.ativa));
-                this.produtos.set(cardapio.produtos.filter(p => p.disponivel));
-                this.carregandoCardapio.set(false);
-            },
-            error: (err) => {
-                console.error('Erro ao carregar cardápio:', err);
-                this.erro.set('Erro ao carregar o cardápio');
-                this.carregandoCardapio.set(false);
-            }
-        });
-    }
-
-    selecionarCategoria(categoria: string | null): void {
-        this.categoriaSelecionada.set(categoria);
-    }
-
-    // ========== Detalhes do Produto ==========
-    abrirDetalhesProduto(produto: Produto): void {
-        this.produtoSelecionado.set(produto);
-        this.quantidadeTemp.set(1);
-        this._observacaoTemp.set('');
-
-        // Verificar se já está no carrinho
-        const itemExistente = this.carrinho().find(item => item.produto.id === produto.id);
-        if (itemExistente) {
-            this.quantidadeTemp.set(itemExistente.quantidade);
-            this._observacaoTemp.set(itemExistente.observacao);
+    navegarPara(aba: AbaCliente | 'carrinho'): void {
+        if (aba === 'carrinho') {
+            this.carrinhoState.abrirCarrinho();
+        } else {
+            this.carrinhoState.fecharCarrinho();
+            this.abaAtual.set(aba);
         }
+    }
 
-        this.mostrarDetalhesProduto.set(true);
+    // ========== Ações do Cardápio ==========
+    selecionarCategoria(categoria: string | null): void {
+        this.cardapio.selecionarCategoria(categoria);
+    }
+
+    abrirDetalhesProduto(produto: Produto): void {
+        this.carrinhoState.abrirDetalhes(produto);
     }
 
     fecharDetalhesProduto(): void {
-        this.mostrarDetalhesProduto.set(false);
-        this.produtoSelecionado.set(null);
+        this.carrinhoState.fecharDetalhes();
     }
 
     incrementarQuantidade(): void {
-        this.quantidadeTemp.update(q => q + 1);
+        this.carrinhoState.incrementarQuantidade();
     }
 
     decrementarQuantidade(): void {
-        if (this.quantidadeTemp() > 1) {
-            this.quantidadeTemp.update(q => q - 1);
-        }
+        this.carrinhoState.decrementarQuantidade();
     }
 
     adicionarAoCarrinho(): void {
-        const produto = this.produtoSelecionado();
-        if (!produto) return;
-
-        const carrinhoAtual = [...this.carrinho()];
-        const indexExistente = carrinhoAtual.findIndex(item => item.produto.id === produto.id);
-
-        if (indexExistente >= 0) {
-            carrinhoAtual[indexExistente] = {
-                ...carrinhoAtual[indexExistente],
-                quantidade: this.quantidadeTemp(),
-                observacao: this._observacaoTemp()
-            };
-        } else {
-            carrinhoAtual.push({
-                produto,
-                quantidade: this.quantidadeTemp(),
-                observacao: this._observacaoTemp()
-            });
-        }
-
-        this.carrinho.set(carrinhoAtual);
-        this.fecharDetalhesProduto();
+        this.carrinhoState.adicionarAoCarrinho();
     }
 
-    // ========== Carrinho ==========
+    // ========== Ações de Favoritos ==========
+    toggleFavorito(produtoId: string, event?: Event): void {
+        event?.stopPropagation();
+        this.favoritos.toggle(produtoId);
+    }
+
+    // ========== Ações do Carrinho ==========
     removerDoCarrinho(produtoId: string): void {
-        this.carrinho.update(items => items.filter(item => item.produto.id !== produtoId));
+        this.carrinhoState.removerDoCarrinho(produtoId);
     }
 
     alterarQuantidadeCarrinho(produtoId: string, delta: number): void {
-        this.carrinho.update(items => {
-            return items
-                .map(item => {
-                    if (item.produto.id === produtoId) {
-                        const novaQuantidade = item.quantidade + delta;
-                        if (novaQuantidade <= 0) return null;
-                        return { ...item, quantidade: novaQuantidade };
-                    }
-                    return item;
-                })
-                .filter((item): item is ItemCarrinho => item !== null);
-        });
+        this.carrinhoState.alterarQuantidade(produtoId, delta);
     }
 
     abrirCarrinho(): void {
-        this.mostrarCarrinho.set(true);
+        this.carrinhoState.abrirCarrinho();
+        this.pagamento.resetarEtapa();
     }
 
     fecharCarrinho(): void {
-        this.mostrarCarrinho.set(false);
+        this.carrinhoState.fecharCarrinho();
+        this.pagamento.resetarEtapa();
+    }
+
+    // ========== Ações de Pagamento ==========
+    avancarParaPagamento(): void {
+        this.pagamento.avancarParaPagamento();
+    }
+
+    voltarParaItens(): void {
+        this.pagamento.voltarParaItens();
+    }
+
+    irParaConfirmacao(): void {
+        this.pagamento.irParaConfirmacao();
+    }
+
+    voltarParaPagamento(): void {
+        this.pagamento.voltarParaPagamento();
+    }
+
+    togglePagamentoDividido(): void {
+        this.pagamento.toggleDividido();
+    }
+
+    selecionarMeioPagamento(tipo: 'PIX' | 'CARTAO_CREDITO' | 'CARTAO_DEBITO' | 'DINHEIRO'): void {
+        this.pagamento.selecionarMeio(tipo);
+    }
+
+    atualizarValorMeioPagamento(tipo: 'PIX' | 'CARTAO_CREDITO' | 'CARTAO_DEBITO' | 'DINHEIRO', valor: number): void {
+        this.pagamento.atualizarValorMeio(tipo, valor);
+    }
+
+    meioPagamentoSelecionado(tipo: string): boolean {
+        return this.pagamento.meioPagamentoSelecionado(tipo);
+    }
+
+    getValorMeioPagamento(tipo: string): number {
+        return this.pagamento.getValorMeio(tipo);
+    }
+
+    getTotalAlocado(): number {
+        return this.pagamento.totalAlocado();
+    }
+
+    getValorRestante(): number {
+        return this.pagamento.valorRestante();
+    }
+
+    pagamentoValido(): boolean {
+        return this.pagamento.pagamentoValido();
+    }
+
+    getNomeMeioPagamento(tipo: string): string {
+        return this.pagamento.getNomeMeio(tipo);
+    }
+
+    getIconeMeioPagamento(tipo: string): string {
+        return this.pagamento.getIconeMeio(tipo);
     }
 
     // ========== Envio do Pedido ==========
     enviarPedido(): void {
         const mesa = this.mesa();
-        const cliente = this.clienteIdentificado();
-        if (!mesa || !cliente || !this.podeEnviarPedido()) return;
+        const cliente = this.identificacao.clienteIdentificado();
+        if (!mesa || !cliente || !this.podeEnviarPedido() || !this.pagamentoValido()) return;
 
         this.enviando.set(true);
 
-        const itens: ItemPedidoMesaRequest[] = this.carrinho().map(item => ({
+        const itens: ItemPedidoMesaRequest[] = this.carrinhoState.itens().map(item => ({
             produtoId: item.produto.id,
             quantidade: item.quantidade,
             observacoes: item.observacao || undefined
+        }));
+
+        const meiosPagamento = this.pagamento.meiosSelecionados().map(m => ({
+            meioPagamento: m.tipo,
+            valor: m.valor
         }));
 
         const request: CriarPedidoMesaRequest = {
             mesaToken: mesa.qrCodeToken,
             clienteId: cliente.id,
             nomeCliente: cliente.nome,
-            itens
+            itens,
+            meiosPagamento
         };
 
         this.pedidoMesaService.criarPedido(request).subscribe({
             next: () => {
                 this.enviando.set(false);
                 this.etapaAtual.set('sucesso');
-                this.carrinho.set([]);
-                this.mostrarCarrinho.set(false);
+                this.carrinhoState.limparCarrinho();
+                this.pagamento.limparPagamentos();
+                this.carrinhoState.fecharCarrinho();
             },
-            error: (err) => {
-                console.error('Erro ao enviar pedido:', err);
+            error: () => {
                 this.enviando.set(false);
                 this.erro.set('Erro ao enviar o pedido. Tente novamente.');
             }
@@ -457,16 +408,8 @@ export class PedidoClienteMesaComponent implements OnInit {
 
     novoPedido(): void {
         this.etapaAtual.set('cardapio');
-        this.carrinho.set([]);
+        this.carrinhoState.limparCarrinho();
         this.erro.set(null);
-    }
-
-    trocarCliente(): void {
-        this.clienteIdentificado.set(null);
-        this._telefoneInput.set('');
-        this._nomeInput.set('');
-        this.carrinho.set([]);
-        this.etapaAtual.set('identificacao');
     }
 
     // ========== Formatação ==========
@@ -474,22 +417,7 @@ export class PedidoClienteMesaComponent implements OnInit {
         return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
-    private formatarTelefoneInput(numeros: string): string {
-        if (numeros.length === 0) return '';
-        if (numeros.length <= 2) return `(${numeros}`;
-        if (numeros.length <= 6) return `(${numeros.slice(0, 2)}) ${numeros.slice(2)}`;
-        if (numeros.length <= 10) return `(${numeros.slice(0, 2)}) ${numeros.slice(2, 6)}-${numeros.slice(6)}`;
-        return `(${numeros.slice(0, 2)}) ${numeros.slice(2, 7)}-${numeros.slice(7, 11)}`;
-    }
-
     formatarTelefone(telefone: string): string {
-        const numeros = telefone.replace(/\D/g, '');
-        if (numeros.length === 11) {
-            return `(${numeros.slice(0, 2)}) ${numeros.slice(2, 7)}-${numeros.slice(7)}`;
-        }
-        if (numeros.length === 10) {
-            return `(${numeros.slice(0, 2)}) ${numeros.slice(2, 6)}-${numeros.slice(6)}`;
-        }
-        return telefone;
+        return this.identificacao.formatarTelefone(telefone);
     }
 }
