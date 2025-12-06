@@ -686,6 +686,78 @@
     background: #E55555;
 }
 
+/* Seção Celular */
+.secao-celular {
+    padding: 1rem 0;
+}
+
+.celular-info {
+    font-size: 0.9rem;
+    color: #666;
+    margin: 0 0 1.5rem;
+    line-height: 1.5;
+}
+
+.input-celular {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.input-celular:focus {
+    outline: none;
+    border-color: #FF6B6B;
+}
+
+.btn-salvar-celular {
+    width: 100%;
+    padding: 1rem;
+    background: #FF6B6B;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn-salvar-celular:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.btn-salvar-celular:active:not(:disabled) {
+    background: #E55555;
+}
+
+.sucesso-msg {
+    color: #28a745;
+    font-size: 0.9rem;
+    text-align: center;
+    padding: 0.5rem;
+    background: #d4edda;
+    border-radius: 8px;
+    margin-top: 0.5rem;
+}
+
+.item-badge.telefone {
+    background: #e8f4fd;
+    color: #0066cc;
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 8px;
+    margin-left: auto;
+    margin-right: 0.5rem;
+}
+
 /* Spinners */
 .spinner {
     width: 40px;
@@ -751,12 +823,19 @@
     font-style: italic;
 }
 
-/* ========== CTA AVALIAÇÃO ========== */
-.cta-avaliacao {
+/* ========== CONTAINER CTAs ========== */
+.ctas-container {
     position: fixed;
     bottom: 70px; /* Acima do footer */
     left: 0;
     right: 0;
+    display: flex;
+    flex-direction: column;
+    z-index: 99;
+}
+
+/* ========== CTA AVALIAÇÃO ========== */
+.cta-avaliacao {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -766,12 +845,29 @@
     padding: 0.75rem 1rem;
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
-    z-index: 99;
 }
 
 .cta-avaliacao:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(255, 184, 0, 0.4);
+}
+
+/* ========== CTA TELEFONE ========== */
+.cta-telefone {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #4A90D9 0%, #2E7BC9 100%);
+    color: white;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.cta-telefone:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74, 144, 217, 0.4);
 }
 
 .cta-icon {

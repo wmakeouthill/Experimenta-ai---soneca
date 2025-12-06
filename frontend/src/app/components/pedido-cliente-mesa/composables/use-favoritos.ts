@@ -1,6 +1,6 @@
 import { signal, computed, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Produto } from '../../../services/produto.service';
 import { firstValueFrom } from 'rxjs';
 
@@ -53,15 +53,9 @@ export function useFavoritos(
         return favoritosIds().has(produtoId);
     }
 
-    /**
-     * Cria headers com X-Cliente-Id para autenticação
-     */
-    function criarHeaders(): HttpHeaders {
-        const cliente = clienteId();
-        return new HttpHeaders().set('X-Cliente-Id', cliente || '');
-    }
-
     // ========== OPERAÇÕES COM API (fonte de verdade) ==========
+    // Headers (Authorization e X-Cliente-Id) são adicionados automaticamente
+    // pelo clienteAuthInterceptor
 
     /**
      * Adiciona produto aos favoritos.
@@ -85,8 +79,7 @@ export function useFavoritos(
             await firstValueFrom(
                 http.post<FavoritoResponse>(
                     `${API_BASE}/favoritos`,
-                    { produtoId },
-                    { headers: criarHeaders() }
+                    { produtoId }
                 )
             );
             erro.set(null);
@@ -121,10 +114,7 @@ export function useFavoritos(
 
         try {
             await firstValueFrom(
-                http.delete(
-                    `${API_BASE}/favoritos/${produtoId}`,
-                    { headers: criarHeaders() }
-                )
+                http.delete(`${API_BASE}/favoritos/${produtoId}`)
             );
             erro.set(null);
             return true;
@@ -166,10 +156,7 @@ export function useFavoritos(
         try {
             // Busca da API (fonte de verdade)
             const idsFromApi = await firstValueFrom(
-                http.get<string[]>(
-                    `${API_BASE}/favoritos/ids`,
-                    { headers: criarHeaders() }
-                )
+                http.get<string[]>(`${API_BASE}/favoritos/ids`)
             );
 
             // Atualiza estado com dados da API
@@ -264,10 +251,7 @@ export function useFavoritos(
         for (const produtoId of idsAtuais) {
             try {
                 await firstValueFrom(
-                    http.delete(
-                        `${API_BASE}/favoritos/${produtoId}`,
-                        { headers: criarHeaders() }
-                    )
+                    http.delete(`${API_BASE}/favoritos/${produtoId}`)
                 );
             } catch {
                 // Continua tentando remover os outros

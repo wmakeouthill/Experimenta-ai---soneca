@@ -340,6 +340,13 @@
                             <div class="produtos-grid">
                                 @for (produto of grupo.produtos; track produto.id) {
                                     <div class="produto-card" (click)="abrirDetalhesProduto(produto)">
+                                        <button
+                                            class="btn-favorito"
+                                            [class.ativo]="favoritos.isFavorito(produto.id)"
+                                            (click)="toggleFavorito(produto.id, $event)"
+                                            [title]="favoritos.isFavorito(produto.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'">
+                                            {{ favoritos.isFavorito(produto.id) ? '❤️' : '🤍' }}
+                                        </button>
                                         @if (produto.foto) {
                                             <div class="produto-imagem">
                                                 <img [src]="produto.foto" [alt]="produto.nome">
@@ -371,6 +378,13 @@
                     <div class="produtos-grid">
                         @for (produto of cardapio.produtosFiltrados(); track produto.id) {
                             <div class="produto-card" (click)="abrirDetalhesProduto(produto)">
+                                <button
+                                    class="btn-favorito"
+                                    [class.ativo]="favoritos.isFavorito(produto.id)"
+                                    (click)="toggleFavorito(produto.id, $event)"
+                                    [title]="favoritos.isFavorito(produto.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'">
+                                    {{ favoritos.isFavorito(produto.id) ? '❤️' : '🤍' }}
+                                </button>
                                 @if (produto.foto) {
                                     <div class="produto-imagem">
                                         <img [src]="produto.foto" [alt]="produto.nome">
@@ -453,6 +467,22 @@
                                     <span class="item-arrow">›</span>
                                 </button>
                             }
+
+                            <!-- Adicionar/Editar Celular -->
+                            <button class="perfil-item" (click)="secaoPerfil.set('celular')">
+                                <span class="item-icon">📱</span>
+                                <span class="item-texto">
+                                    @if (googleAuth.clienteAuth.cliente()?.telefone) {
+                                        Meu celular
+                                    } @else {
+                                        Adicionar celular
+                                    }
+                                </span>
+                                @if (googleAuth.clienteAuth.cliente()?.telefone) {
+                                    <span class="item-badge telefone">{{ googleAuth.clienteAuth.cliente()!.telefone }}</span>
+                                }
+                                <span class="item-arrow">›</span>
+                            </button>
 
                             <button class="perfil-item" (click)="trocarCliente()">
                                 <span class="item-icon">🔄</span>
@@ -825,18 +855,88 @@
                             </button>
                         </div>
                     }
+
+                    <!-- Seção Adicionar/Editar Celular -->
+                    @if (secaoPerfil() === 'celular') {
+                        <div class="secao-header">
+                            <button class="btn-voltar" (click)="secaoPerfil.set('principal')">
+                                <span>‹</span>
+                            </button>
+                            <h2 class="secao-titulo">
+                                @if (googleAuth.clienteAuth.cliente()?.telefone) {
+                                    Editar Celular
+                                } @else {
+                                    Adicionar Celular
+                                }
+                            </h2>
+                        </div>
+
+                        <div class="secao-celular">
+                            <p class="celular-info">
+                                @if (googleAuth.clienteAuth.cliente()?.telefone) {
+                                    Atualize seu número de celular para facilitar sua identificação.
+                                } @else {
+                                    Adicione seu celular para poder fazer login mais rápido e receber novidades.
+                                }
+                            </p>
+
+                            <div class="form-grupo">
+                                <label>Número do Celular</label>
+                                <input type="tel"
+                                       [ngModel]="celularInput()"
+                                       (ngModelChange)="celularInput.set($event)"
+                                       placeholder="(00) 00000-0000"
+                                       inputmode="numeric"
+                                       maxlength="15"
+                                       class="input-celular">
+                            </div>
+
+                            @if (celularErro()) {
+                                <p class="erro-msg">{{ celularErro() }}</p>
+                            }
+
+                            @if (celularSucesso()) {
+                                <p class="sucesso-msg">✓ Celular salvo com sucesso!</p>
+                            }
+
+                            <button class="btn-salvar-celular"
+                                    (click)="salvarCelular()"
+                                    [disabled]="celularSalvando() || celularSucesso()">
+                                @if (celularSalvando()) {
+                                    <span class="spinner-sm"></span>
+                                    Salvando...
+                                } @else if (celularSucesso()) {
+                                    ✓ Salvo!
+                                } @else {
+                                    Salvar Celular
+                                }
+                            </button>
+                        </div>
+                    }
                 </div>
             }
         }
 
-        <!-- ========== CTA AVALIAÇÃO ========== -->
-        @if (temPedidosNaoAvaliados() && (abaAtual() === 'inicio' || abaAtual() === 'perfil')) {
-            <div class="cta-avaliacao" (click)="irParaMeusPedidos(); navegarPara('perfil')">
-                <span class="cta-icon">⭐</span>
-                <span class="cta-texto">Avalie seus pedidos em <strong>Meus Pedidos</strong></span>
-                <span class="cta-seta">›</span>
-            </div>
-        }
+        <!-- ========== CTAs DE NOTIFICAÇÃO ========== -->
+        <div class="ctas-container">
+            <!-- CTA Avaliação -->
+            @if (temPedidosNaoAvaliados() && (abaAtual() === 'inicio' || abaAtual() === 'perfil')) {
+                <div class="cta-avaliacao" (click)="irParaMeusPedidos(); navegarPara('perfil')">
+                    <span class="cta-icon">⭐</span>
+                    <span class="cta-texto">Avalie seus pedidos em <strong>Meus Pedidos</strong></span>
+                    <span class="cta-seta">›</span>
+                </div>
+            }
+
+            <!-- CTA Preencher Telefone -->
+            @if (!googleAuth.clienteAuth.cliente()?.telefone && (abaAtual() === 'inicio' || abaAtual() === 'perfil') && secaoPerfil() === 'principal') {
+                <div class="cta-telefone" (click)="abrirEdicaoCelular(); navegarPara('perfil')">
+                    <span class="cta-icon">📱</span>
+                    <span class="cta-texto">Cadastre seu celular para <strong>facilitar o atendimento</strong></span>
+                    <span class="cta-seta">›</span>
+                </div>
+            }
+        </div>
 
         <!-- ========== CTA PEDIDO ATIVO ========== -->
         @if (mostrarCtaPedidoAtivo()) {

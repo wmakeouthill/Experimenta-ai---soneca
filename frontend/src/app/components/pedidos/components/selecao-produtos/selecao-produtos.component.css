@@ -214,9 +214,6 @@
   box-sizing: border-box;
   overflow: hidden;
 }
-  height: 100% !important;
-  min-height: 0 !important;
-}
 
 .produto-nome-form {
   font-weight: 600;

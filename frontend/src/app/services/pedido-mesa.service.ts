@@ -134,21 +134,31 @@ export class PedidoMesaService {
         return this.http.get<StatusPedidoCliente>(`${this.publicApiUrl}/pedido/${pedidoId}/status`);
     }
 
+    /**
+     * Busca histórico de pedidos do cliente.
+     * Headers são adicionados automaticamente pelo clienteAuthInterceptor
+     */
     buscarHistoricoPedidos(clienteId: string, pagina: number, tamanho: number): Observable<HistoricoPedidosResponse> {
         return this.http.get<HistoricoPedidosResponse>(
-            `/api/cliente/conta/pedidos?pagina=${pagina}&tamanho=${tamanho}`,
-            { headers: { 'X-Cliente-Id': clienteId } }
+            `/api/cliente/conta/pedidos?pagina=${pagina}&tamanho=${tamanho}`
         );
     }
 
+    /**
+     * Salva senha do cliente.
+     * Headers são adicionados automaticamente pelo clienteAuthInterceptor
+     */
     salvarSenhaCliente(clienteId: string, novaSenha: string, senhaAtual?: string): Observable<void> {
         return this.http.put<void>(
             `/api/cliente/conta/senha`,
-            { novaSenha, senhaAtual },
-            { headers: { 'X-Cliente-Id': clienteId } }
+            { novaSenha, senhaAtual }
         );
     }
 
+    /**
+     * Avalia um produto de um pedido.
+     * Headers são adicionados automaticamente pelo clienteAuthInterceptor
+     */
     avaliarProduto(
         clienteId: string,
         produtoId: string,
@@ -158,15 +168,17 @@ export class PedidoMesaService {
     ): Observable<void> {
         return this.http.post<void>(
             `/api/cliente/conta/avaliacoes`,
-            { produtoId, pedidoId, nota, comentario },
-            { headers: { 'X-Cliente-Id': clienteId } }
+            { produtoId, pedidoId, nota, comentario }
         );
     }
 
+    /**
+     * Busca avaliações do cliente.
+     * Headers são adicionados automaticamente pelo clienteAuthInterceptor
+     */
     buscarAvaliacoesCliente(clienteId: string): Observable<{ produtoId: string; pedidoId: string; nota: number; comentario?: string }[]> {
         return this.http.get<{ produtoId: string; pedidoId: string; nota: number; comentario?: string }[]>(
-            `/api/cliente/conta/avaliacoes`,
-            { headers: { 'X-Cliente-Id': clienteId } }
+            `/api/cliente/conta/avaliacoes`
         );
     }
 }

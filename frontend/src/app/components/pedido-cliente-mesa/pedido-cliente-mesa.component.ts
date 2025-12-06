@@ -6,6 +6,7 @@ import { firstValueFrom } from 'rxjs';
 import { PedidoMesaService, ItemPedidoMesaRequest, CriarPedidoMesaRequest } from '../../services/pedido-mesa.service';
 import { Mesa } from '../../services/mesa.service';
 import { Produto } from '../../services/produto.service';
+import { ClienteAuthService } from '../../services/cliente-auth.service';
 import { DraggableScrollDirective } from './directives/draggable-scroll.directive';
 
 import {
@@ -29,7 +30,7 @@ import {
 
 type EtapaPrincipal = 'identificacao' | 'cadastro' | 'cardapio' | 'sucesso';
 type AbaCliente = 'inicio' | 'cardapio' | 'perfil';
-type SecaoPerfil = 'principal' | 'favoritos' | 'pedidos' | 'senha';
+type SecaoPerfil = 'principal' | 'favoritos' | 'pedidos' | 'senha' | 'celular';
 
 /**
  * Componente de pedido para cliente via QR Code da mesa.
@@ -63,6 +64,7 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   private readonly pedidoMesaService = inject(PedidoMesaService);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
+  private readonly clienteAuthService = inject(ClienteAuthService);
 
   protected readonly Math = Math;
 
@@ -74,6 +76,12 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   readonly abaAtual = signal<AbaCliente>('inicio');
   readonly enviando = signal(false);
   readonly secaoPerfil = signal<SecaoPerfil>('principal');
+
+  // Estado do formulário de celular
+  readonly celularInput = signal('');
+  readonly celularSalvando = signal(false);
+  readonly celularErro = signal<string | null>(null);
+  readonly celularSucesso = signal(false);
 
   // ========== Composables ==========
   private readonly mesaToken = () => this.mesa()?.qrCodeToken;
@@ -328,6 +336,50 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   async desvincularGoogle(): Promise<void> {
     if (confirm('Deseja desvincular sua conta Google?')) {
       await this.googleAuth.desvincular();
+    }
+  }
+
+  // ========== Celular ==========
+  abrirEdicaoCelular(): void {
+    const telefoneAtual = this.googleAuth.clienteAuth.cliente()?.telefone || '';
+    this.celularInput.set(telefoneAtual);
+    this.celularErro.set(null);
+    this.celularSucesso.set(false);
+    this.secaoPerfil.set('celular');
+  }
+
+  async salvarCelular(): Promise<void> {
+    const telefone = this.celularInput().trim();
+
+    // Validação básica
+    if (!telefone) {
+      this.celularErro.set('Digite um número de celular');
+      return;
+    }
+
+    // Remove formatação para validar
+    const apenasNumeros = telefone.replace(/\D/g, '');
+    if (apenasNumeros.length < 10 || apenasNumeros.length > 11) {
+      this.celularErro.set('Celular deve ter 10 ou 11 dígitos');
+      return;
+    }
+
+    this.celularSalvando.set(true);
+    this.celularErro.set(null);
+
+    try {
+      await firstValueFrom(this.clienteAuthService.atualizarTelefone(telefone));
+      this.celularSucesso.set(true);
+      // Aguarda 1.5s e volta para o perfil principal
+      setTimeout(() => {
+        this.secaoPerfil.set('principal');
+        this.celularSucesso.set(false);
+      }, 1500);
+    } catch (e) {
+      console.error('Erro ao salvar celular:', e);
+      this.celularErro.set('Erro ao salvar celular. Tente novamente.');
+    } finally {
+      this.celularSalvando.set(false);
     }
   }
 

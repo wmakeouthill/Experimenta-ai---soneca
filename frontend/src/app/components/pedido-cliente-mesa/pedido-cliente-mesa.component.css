@@ -562,13 +562,17 @@
     background: #FF6B35;
     color: white;
     border: none;
-    font-size: 1.5rem;
-    font-weight: 600;
+    font-size: 1.25rem;
+    font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     flex-shrink: 0;
+    line-height: 1;
+    padding: 0;
+    padding-bottom: 2px;
+    font-family: system-ui, -apple-system, sans-serif;
 }
 
 .sem-produtos {

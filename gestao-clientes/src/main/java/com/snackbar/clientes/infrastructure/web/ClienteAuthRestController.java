@@ -57,6 +57,7 @@ class ClienteContaRestController {
     private final ListarFavoritosUseCase listarFavoritosUseCase;
     private final AvaliarProdutoUseCase avaliarProdutoUseCase;
     private final BuscarAvaliacoesUseCase buscarAvaliacoesUseCase;
+    private final AtualizarTelefoneClienteUseCase atualizarTelefoneClienteUseCase;
 
     /**
      * Obtém dados do cliente logado
@@ -89,6 +90,18 @@ class ClienteContaRestController {
             @Valid @RequestBody SalvarSenhaRequest request) {
         salvarSenhaClienteUseCase.executar(clienteId, request);
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Atualiza o telefone do cliente.
+     * Útil para clientes que fizeram login via Google (que não fornece telefone).
+     */
+    @PutMapping("/telefone")
+    public ResponseEntity<ClienteDTO> atualizarTelefone(
+            @RequestHeader("X-Cliente-Id") String clienteId,
+            @Valid @RequestBody AtualizarTelefoneRequest request) {
+        ClienteDTO cliente = atualizarTelefoneClienteUseCase.executar(clienteId, request);
+        return ResponseEntity.ok(cliente);
     }
 
     /**
