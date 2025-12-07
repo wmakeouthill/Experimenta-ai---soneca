@@ -340,13 +340,6 @@
                             <div class="produtos-grid">
                                 @for (produto of grupo.produtos; track produto.id) {
                                     <div class="produto-card" (click)="abrirDetalhesProduto(produto)">
-                                        <button
-                                            class="btn-favorito"
-                                            [class.ativo]="favoritos.isFavorito(produto.id)"
-                                            (click)="toggleFavorito(produto.id, $event)"
-                                            [title]="favoritos.isFavorito(produto.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'">
-                                            {{ favoritos.isFavorito(produto.id) ? '❤️' : '🤍' }}
-                                        </button>
                                         @if (produto.foto) {
                                             <div class="produto-imagem">
                                                 <img [src]="produto.foto" [alt]="produto.nome">
@@ -362,8 +355,22 @@
                                                 <p class="produto-descricao">{{ produto.descricao }}</p>
                                             }
                                             <div class="produto-preco">{{ formatarPreco(produto.preco) }}</div>
+                                            <div class="produto-acoes">
+                                                <button
+                                                    class="btn-favorito btn-favorito-inline"
+                                                    [class.ativo]="favoritos.isFavorito(produto.id)"
+                                                    (click)="toggleFavorito(produto.id, $event)"
+                                                    [title]="favoritos.isFavorito(produto.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'">
+                                                    {{ favoritos.isFavorito(produto.id) ? '❤️' : '🤍' }}
+                                                </button>
+                                                <button
+                                                    class="btn-adicionar"
+                                                    (click)="adicionarAoCarrinhoRapido(produto); $event.stopPropagation()"
+                                                    aria-label="Adicionar ao carrinho">
+                                                    +
+                                                </button>
+                                            </div>
                                         </div>
-                                        <button class="btn-adicionar">+</button>
                                     </div>
                                 }
                             </div>
@@ -378,13 +385,6 @@
                     <div class="produtos-grid">
                         @for (produto of cardapio.produtosFiltrados(); track produto.id) {
                             <div class="produto-card" (click)="abrirDetalhesProduto(produto)">
-                                <button
-                                    class="btn-favorito"
-                                    [class.ativo]="favoritos.isFavorito(produto.id)"
-                                    (click)="toggleFavorito(produto.id, $event)"
-                                    [title]="favoritos.isFavorito(produto.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'">
-                                    {{ favoritos.isFavorito(produto.id) ? '❤️' : '🤍' }}
-                                </button>
                                 @if (produto.foto) {
                                     <div class="produto-imagem">
                                         <img [src]="produto.foto" [alt]="produto.nome">
@@ -400,8 +400,22 @@
                                         <p class="produto-descricao">{{ produto.descricao }}</p>
                                     }
                                     <div class="produto-preco">{{ formatarPreco(produto.preco) }}</div>
+                                    <div class="produto-acoes">
+                                        <button
+                                            class="btn-favorito btn-favorito-inline"
+                                            [class.ativo]="favoritos.isFavorito(produto.id)"
+                                            (click)="toggleFavorito(produto.id, $event)"
+                                            [title]="favoritos.isFavorito(produto.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'">
+                                            {{ favoritos.isFavorito(produto.id) ? '❤️' : '🤍' }}
+                                        </button>
+                                        <button
+                                            class="btn-adicionar"
+                                            (click)="adicionarAoCarrinhoRapido(produto); $event.stopPropagation()"
+                                            aria-label="Adicionar ao carrinho">
+                                            +
+                                        </button>
+                                    </div>
                                 </div>
-                                <button class="btn-adicionar">+</button>
                             </div>
                         } @empty {
                             <div class="sem-produtos">
