@@ -6,7 +6,9 @@ import com.snackbar.clientes.application.ports.ClienteFavoritoRepositoryPort;
 import com.snackbar.clientes.application.ports.ClienteRepositoryPort;
 import com.snackbar.clientes.domain.entities.ClienteFavorito;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -18,7 +20,8 @@ public class AdicionarFavoritoUseCase {
     public ClienteFavoritoDTO executar(String clienteId, AdicionarFavoritoRequest request) {
         // Validar se cliente existe
         clienteRepository.buscarPorId(clienteId)
-                .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado: " + clienteId));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Cliente não encontrado: " + clienteId));
 
         // Verificar se já é favorito
         if (favoritoRepository.existe(clienteId, request.getProdutoId())) {

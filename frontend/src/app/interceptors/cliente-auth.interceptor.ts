@@ -16,10 +16,8 @@ export const clienteAuthInterceptor: HttpInterceptorFn = (req, next) => {
         return next(req);
     }
 
-    // Não adiciona em requisições locais (servidor Electron)
-    if (req.url.startsWith('http://localhost:') || req.url.startsWith('http://127.0.0.1:')) {
-        return next(req);
-    }
+    // Sempre anexa os headers (inclusive em localhost e durante testes)
+    // para garantir chamadas autenticadas do cliente.
 
     // Tenta obter dados do sessionStorage
     let token: string | null = null;
