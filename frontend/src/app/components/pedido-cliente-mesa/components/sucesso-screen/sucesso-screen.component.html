@@ -28,7 +28,11 @@
                         @if (sucesso().pedidoFinalizado()) {
                             🎉
                         } @else if (sucesso().passoAtual() === 2) {
-                            👨‍🍳
+                            @if (sucesso().statusAtual() === 'ACEITO') {
+                                ⏳
+                            } @else {
+                                👨‍🍳
+                            }
                         } @else {
                             🍽️
                         }
@@ -89,7 +93,11 @@
                         @if (sucesso().passoAtual() > 2) {
                             <span class="timeline-icon">✓</span>
                         } @else if (sucesso().passoAtual() === 2) {
-                            <span class="timeline-icon cooking">👨‍🍳</span>
+                            @if (sucesso().statusAtual() === 'ACEITO') {
+                                <span class="timeline-icon waiting">⏳</span>
+                            } @else {
+                                <span class="timeline-icon cooking">👨‍🍳</span>
+                            }
                         } @else {
                             <span class="timeline-icon pending">○</span>
                         }
@@ -97,7 +105,11 @@
                     <div class="timeline-content">
                         <span class="timeline-label">Preparação</span>
                         @if (sucesso().passoAtual() === 2) {
-                            <span class="timeline-sublabel">Seu pedido está sendo preparado</span>
+                            @if (sucesso().statusAtual() === 'ACEITO') {
+                                <span class="timeline-sublabel">Pedido confirmado. Aguardando iniciar preparo</span>
+                            } @else {
+                                <span class="timeline-sublabel">Seu pedido está sendo preparado</span>
+                            }
                         }
                     </div>
                 </div>

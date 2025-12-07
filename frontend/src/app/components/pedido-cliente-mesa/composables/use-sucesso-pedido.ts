@@ -103,23 +103,37 @@ export function useSucessoPedido() {
 
         carregandoStatus.set(true);
 
+        // Primeiro tenta endpoint público; se 404, tenta autenticado.
         pedidoMesaService.buscarStatusPedido(id).subscribe({
             next: (status) => {
                 carregandoStatus.set(false);
                 statusPedido.set(status);
                 erroStatus.set(null);
 
-                // Para o polling se pedido finalizado ou cancelado
                 if (status.status === 'FINALIZADO' || status.status === 'CANCELADO') {
                     pararPolling();
                 }
             },
             error: (err) => {
-                carregandoStatus.set(false);
                 if (err.status === 404) {
-                    erroStatus.set('Pedido não encontrado');
-                    pararPolling();
+                    // Fallback autenticado
+                    pedidoMesaService.buscarStatusPedidoAutenticado(id).subscribe({
+                        next: (status) => {
+                            carregandoStatus.set(false);
+                            statusPedido.set(status);
+                            erroStatus.set(null);
+                            if (status.status === 'FINALIZADO' || status.status === 'CANCELADO') {
+                                pararPolling();
+                            }
+                        },
+                        error: (innerErr) => {
+                            carregandoStatus.set(false);
+                            erroStatus.set('Pedido não encontrado');
+                            pararPolling();
+                        }
+                    });
                 } else {
+                    carregandoStatus.set(false);
                     erroStatus.set('Erro ao buscar status');
                 }
             }
@@ -140,7 +154,12 @@ export function useSucessoPedido() {
                     const id = pedidoId();
                     if (!id) return of(null);
                     return pedidoMesaService.buscarStatusPedido(id).pipe(
-                        catchError(() => of(null))
+                        catchError((err) => {
+                            if (err.status === 404) {
+                                return pedidoMesaService.buscarStatusPedidoAutenticado(id).pipe(catchError(() => of(null)));
+                            }
+                            return of(null);
+                        })
                     );
                 }),
                 takeWhile((status) => {

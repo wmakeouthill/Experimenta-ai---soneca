@@ -7,6 +7,11 @@
     padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
 }
 
+.pedido-cliente-container.sucesso {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: transparent;
+}
+
 /* Loading Screen */
 .loading-screen {
     display: flex;

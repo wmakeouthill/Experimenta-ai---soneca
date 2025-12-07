@@ -1,4 +1,4 @@
-<div class="pedido-cliente-container">
+<div class="pedido-cliente-container" [class.sucesso]="etapaAtual() === 'sucesso'">
     <!-- Carregando Mesa -->
     @if (carregando()) {
         <div class="loading-screen">

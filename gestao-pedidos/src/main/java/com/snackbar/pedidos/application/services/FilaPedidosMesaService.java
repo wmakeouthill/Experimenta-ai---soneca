@@ -34,6 +34,10 @@ public class FilaPedidosMesaService {
     // Chave: ID do pedido pendente (UUID)
     private final Map<String, PedidoPendenteDTO> filaPedidos = new ConcurrentHashMap<>();
 
+    // Mapa para rastrear a conversão de pedidos pendentes em pedidos reais
+    // Chave: ID do pedido pendente | Valor: ID do pedido real criado
+    private final Map<String, String> mapaPendenteParaPedidoReal = new ConcurrentHashMap<>();
+
     // Tempo máximo que um pedido pode ficar na fila (30 minutos)
     private static final long TEMPO_MAXIMO_FILA_MINUTOS = 30;
 
@@ -125,6 +129,24 @@ public class FilaPedidosMesaService {
             log.info("Pedido removido da fila - ID: {}", pedidoId);
         }
         return removido;
+    }
+
+    /**
+     * Registra o mapeamento entre um pedido pendente e o pedido real criado ao
+     * aceitá-lo.
+     */
+    public void registrarConversaoParaPedidoReal(String pedidoPendenteId, String pedidoRealId) {
+        if (pedidoPendenteId != null && pedidoRealId != null) {
+            mapaPendenteParaPedidoReal.put(pedidoPendenteId, pedidoRealId);
+            log.info("Mapeado pedido pendente {} -> pedido real {}", pedidoPendenteId, pedidoRealId);
+        }
+    }
+
+    /**
+     * Obtém o ID do pedido real a partir do ID pendente, se existir.
+     */
+    public Optional<String> buscarPedidoRealPorPendente(String pedidoPendenteId) {
+        return Optional.ofNullable(mapaPendenteParaPedidoReal.get(pedidoPendenteId));
     }
 
     /**

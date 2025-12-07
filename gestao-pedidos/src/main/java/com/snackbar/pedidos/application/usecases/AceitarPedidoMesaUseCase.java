@@ -94,6 +94,10 @@ public class AceitarPedidoMesaUseCase {
         // Remove da fila somente após salvar com sucesso
         filaPedidosMesa.removerPedido(pedidoPendenteId);
 
+        // Registra mapeamento pendente -> pedido real para que o cliente acompanhe o
+        // status
+        filaPedidosMesa.registrarConversaoParaPedidoReal(pedidoPendenteId, pedidoSalvo.getId());
+
         log.info("Pedido aceito - Número: {}, Mesa: {}, Usuário: {}, Cliente: {}",
                 pedidoSalvo.getNumeroPedido().getNumero(),
                 pedidoPendente.getNumeroMesa(),

@@ -131,7 +131,15 @@ export class PedidoMesaService {
     }
 
     buscarStatusPedido(pedidoId: string): Observable<StatusPedidoCliente> {
-        return this.http.get<StatusPedidoCliente>(`${this.publicApiUrl}/pedido/${pedidoId}/status`);
+        // Endpoint público de status não precisa de token; adicionamos bust de cache.
+        const noCache = `t=${Date.now()}`;
+        return this.http.get<StatusPedidoCliente>(`${this.publicApiUrl}/pedido/${pedidoId}/status?${noCache}`);
+    }
+
+    buscarStatusPedidoAutenticado(pedidoId: string): Observable<StatusPedidoCliente> {
+        // Versão autenticada via /api/cliente para evitar 404 caso o público não exponha.
+        const noCache = `t=${Date.now()}`;
+        return this.http.get<StatusPedidoCliente>(`/api/cliente/mesa/pedido/${pedidoId}/status?${noCache}`);
     }
 
     /**

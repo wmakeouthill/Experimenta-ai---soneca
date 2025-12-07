@@ -46,6 +46,13 @@ public class BuscarStatusPedidoClienteUseCase {
             return Optional.of(fromPedido(pedido.get()));
         }
 
+        // Caso o pedido tenha sido aceito e convertido, tenta resolver o ID real a
+        // partir do pendente
+        Optional<String> pedidoRealId = filaPedidosMesa.buscarPedidoRealPorPendente(pedidoId);
+        if (pedidoRealId.isPresent()) {
+            return pedidoRepository.buscarPorId(pedidoRealId.get()).map(this::fromPedido);
+        }
+
         return Optional.empty();
     }
 
