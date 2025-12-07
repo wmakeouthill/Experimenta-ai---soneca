@@ -193,9 +193,10 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
       .subscribe(() => this.mostrarBannerPwa.set(this.pwaInstallService.shouldShow()));
   }
 
-  ngAfterViewInit(): void {
+  async ngAfterViewInit(): Promise<void> {
     if (this.isBrowser) {
-      this.googleAuth.inicializar();
+      await this.googleAuth.inicializar();
+      this.renderizarBotaoGoogle();
     }
   }
 

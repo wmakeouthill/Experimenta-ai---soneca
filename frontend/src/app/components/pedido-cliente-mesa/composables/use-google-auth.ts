@@ -63,7 +63,13 @@ export function useGoogleAuth(
      * Renderiza o botão oficial do Google em um elemento
      */
     function renderizarBotao(element: HTMLElement): void {
-        if (!isBrowser || !inicializado() || botaoRenderizado()) return;
+        if (!isBrowser || botaoRenderizado()) return;
+
+        // Se ainda não inicializou, posterga até o próximo ciclo
+        if (!inicializado()) {
+            queueMicrotask(() => renderizarBotao(element));
+            return;
+        }
 
         try {
             googleService.renderButton(element, {
