@@ -134,6 +134,18 @@
 
     <!-- ========== ETAPA 3: CARDÁPIO ========== -->
     @if (!carregando() && !erro() && etapaAtual() === 'cardapio' && mesa() && identificacao.clienteIdentificado()) {
+        @if (mostrarBannerPwa()) {
+            <div class="pwa-install-banner">
+                <div class="pwa-install-texto">
+                    <strong>Instale o app</strong>
+                    <span>Atalho na tela inicial, experiência fullscreen e mais rápida.</span>
+                </div>
+                <div class="pwa-install-botoes">
+                    <button class="pwa-btn-secundario" (click)="fecharBannerPwa($event)">Agora não</button>
+                    <button class="pwa-btn-primario" (click)="instalarPwa($event)">Adicionar</button>
+                </div>
+            </div>
+        }
         <!-- Header fixo -->
         <header class="header-cliente">
             <div class="header-content">
@@ -453,6 +465,14 @@
                         </div>
 
                         <div class="perfil-menu">
+                            @if (podeInstalarPwa()) {
+                                <button class="perfil-item pwa-instalar" (click)="instalarPwa($event)">
+                                    <span class="item-icon">📲</span>
+                                    <span class="item-texto">Adicionar como app</span>
+                                    <span class="item-arrow">›</span>
+                                </button>
+                            }
+
                             <!-- Vincular/Desvincular Google -->
                             @if (googleAuth.clienteAuth.cliente()?.googleVinculado) {
                                 <button class="perfil-item google-vinculado" (click)="desvincularGoogle()">

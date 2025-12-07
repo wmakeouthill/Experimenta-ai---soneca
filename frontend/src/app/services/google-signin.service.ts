@@ -101,6 +101,10 @@ export class GoogleSignInService {
                 return;
             }
 
+            // Firefox mobile ainda não suporta FedCM; desabilitamos para garantir
+            // renderização do botão e fallback padrão.
+            const isFirefox = typeof navigator !== 'undefined' && /firefox/i.test(navigator.userAgent);
+
             window.google!.accounts.id.initialize({
                 client_id: clientId,
                 callback: (response) => {
@@ -110,7 +114,7 @@ export class GoogleSignInService {
                 },
                 auto_select: false,
                 cancel_on_tap_outside: true,
-                use_fedcm_for_prompt: true // Habilita FedCM (obrigatório em breve)
+                use_fedcm_for_prompt: !isFirefox // evita falha em Firefox mobile
             });
 
             this.initialized = true;

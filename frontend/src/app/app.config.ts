@@ -1,4 +1,4 @@
-import { ApplicationConfig } from '@angular/core';
+import { ApplicationConfig, APP_INITIALIZER } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';
 
@@ -10,6 +10,13 @@ import { silent404Interceptor } from './interceptors/silent-404.interceptor';
 import { silent500ConfigInterceptor } from './interceptors/silent-500-config.interceptor';
 import { clienteAuthInterceptor } from './interceptors/cliente-auth.interceptor';
 import { clienteAuthErrorInterceptor } from './interceptors/cliente-auth-error.interceptor';
+import { PwaInstallService } from './services/pwa-install.service';
+
+// Instancia o serviço de PWA o mais cedo possível para não perder o evento beforeinstallprompt.
+const initPwaInstallService = (service: PwaInstallService) => () => {
+  // Apenas injetar já registra o listener; nenhuma ação extra aqui.
+  return void service;
+};
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -27,6 +34,12 @@ export const appConfig: ApplicationConfig = {
         silent404Interceptor,      // Trata 404 silenciosamente para sessões
         silent500ConfigInterceptor // Trata 500 silenciosamente para config
       ])
-    )
+    ),
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initPwaInstallService,
+      deps: [PwaInstallService],
+      multi: true
+    }
   ]
 };

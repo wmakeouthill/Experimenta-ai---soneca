@@ -350,6 +350,14 @@
     background: #fafafa;
 }
 
+.perfil-item.pwa-instalar {
+    background: #fff7f2;
+}
+
+.perfil-item.pwa-instalar:active {
+    background: #ffe9df;
+}
+
 .perfil-item.google-vincular:active:not(:disabled) {
     background: #f0f0f0;
 }

@@ -2,11 +2,12 @@ import { Component, inject, signal, computed, OnInit, OnDestroy, ChangeDetection
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Subject, takeUntil } from 'rxjs';
 import { PedidoMesaService, ItemPedidoMesaRequest, CriarPedidoMesaRequest } from '../../services/pedido-mesa.service';
 import { Mesa } from '../../services/mesa.service';
 import { Produto } from '../../services/produto.service';
 import { ClienteAuthService } from '../../services/cliente-auth.service';
+import { PwaInstallService } from '../../services/pwa-install.service';
 import { DraggableScrollDirective } from './directives/draggable-scroll.directive';
 
 import {
@@ -65,6 +66,7 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
   private readonly clienteAuthService = inject(ClienteAuthService);
+  private readonly pwaInstallService = inject(PwaInstallService);
 
   protected readonly Math = Math;
 
@@ -76,6 +78,8 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   readonly abaAtual = signal<AbaCliente>('inicio');
   readonly enviando = signal(false);
   readonly secaoPerfil = signal<SecaoPerfil>('principal');
+  readonly mostrarBannerPwa = signal(false);
+  readonly podeInstalarPwa = computed(() => this.pwaInstallService ? !this.pwaInstallService.isStandalone() : false);
 
   // Estado do formulário de celular
   readonly celularInput = signal('');
@@ -166,6 +170,7 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
 
   // Handler para back button do navegador
   private readonly boundHandlePopState = this.handlePopState.bind(this);
+  private readonly destroy$ = new Subject<void>();
 
   // ========== Lifecycle ==========
   ngOnInit(): void {
@@ -180,6 +185,12 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
 
     // Listener para fechar carrinho no back button do celular
     window.addEventListener('popstate', this.boundHandlePopState);
+
+    // Banner de instalação PWA (apenas web, não standalone)
+    this.mostrarBannerPwa.set(this.pwaInstallService.shouldShow());
+    this.pwaInstallService.onPromptChange
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.mostrarBannerPwa.set(this.pwaInstallService.shouldShow()));
   }
 
   ngAfterViewInit(): void {
@@ -214,6 +225,8 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
     if (this.isBrowser) {
       window.removeEventListener('popstate', this.boundHandlePopState);
     }
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   /**
@@ -301,6 +314,19 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   // ========== Ações do Cardápio ==========
   abrirDetalhesProduto(produto: Produto): void {
     this.carrinho.abrirDetalhes(produto);
+  }
+
+  // ========== PWA Banner ==========
+  async instalarPwa(event?: Event): Promise<void> {
+    event?.stopPropagation();
+    await this.pwaInstallService.promptInstall();
+    this.mostrarBannerPwa.set(this.pwaInstallService.shouldShow());
+  }
+
+  fecharBannerPwa(event?: Event): void {
+    event?.stopPropagation();
+    this.pwaInstallService.dismissPrompt();
+    this.mostrarBannerPwa.set(false);
   }
 
   // ========== Ações de Favoritos ==========
