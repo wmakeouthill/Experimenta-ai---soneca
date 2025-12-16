@@ -121,6 +121,27 @@ public class FilaPedidosMesaService {
     }
 
     /**
+     * Busca e remove atomicamente um pedido da fila.
+     * 
+     * IMPORTANTE: Este método é thread-safe e garante que apenas um funcionário
+     * consiga aceitar o mesmo pedido, evitando race conditions onde dois
+     * funcionários poderiam aceitar o mesmo pedido simultaneamente.
+     * 
+     * @param pedidoId ID do pedido a ser buscado e removido
+     * @return Optional contendo o pedido se encontrado e removido, ou empty se não
+     *         existir
+     */
+    public synchronized Optional<PedidoPendenteDTO> buscarERemoverAtomicamente(String pedidoId) {
+        PedidoPendenteDTO pedido = filaPedidos.remove(pedidoId);
+        if (pedido != null) {
+            pedido.atualizarTempoEspera();
+            log.info("Pedido removido atomicamente da fila - ID: {}, Mesa: {}",
+                    pedidoId, pedido.getNumeroMesa());
+        }
+        return Optional.ofNullable(pedido);
+    }
+
+    /**
      * Remove um pedido da fila (quando aceito ou rejeitado).
      */
     public PedidoPendenteDTO removerPedido(String pedidoId) {

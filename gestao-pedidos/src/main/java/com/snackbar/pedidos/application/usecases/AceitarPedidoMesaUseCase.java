@@ -8,11 +8,13 @@ import com.snackbar.pedidos.application.dto.PedidoPendenteDTO;
 import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
 import com.snackbar.pedidos.application.ports.SessaoTrabalhoRepositoryPort;
 import com.snackbar.pedidos.application.services.FilaPedidosMesaService;
+import com.snackbar.pedidos.application.services.GeradorNumeroPedidoService;
 import com.snackbar.pedidos.domain.entities.ItemPedido;
 import com.snackbar.pedidos.domain.entities.Pedido;
 import com.snackbar.pedidos.domain.valueobjects.NumeroPedido;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,10 +22,14 @@ import org.springframework.transaction.annotation.Transactional;
  * Use case para funcionário aceitar um pedido pendente de mesa.
  * 
  * Quando o funcionário aceita, o pedido é:
- * 1. Removido da fila de pendentes
- * 2. Criado como pedido real no sistema
+ * 1. Removido atomicamente da fila de pendentes (thread-safe)
+ * 2. Criado como pedido real no sistema (com retry em caso de conflito)
  * 3. Vinculado ao usuário que aceitou
  * 4. Colocado no status PENDENTE para preparação
+ * 
+ * PROTEÇÕES DE CONCORRÊNCIA:
+ * - Remoção atômica da fila evita que dois funcionários aceitem o mesmo pedido
+ * - Retry automático em caso de conflito de número de pedido
  */
 @Service
 @RequiredArgsConstructor
@@ -33,6 +39,9 @@ public class AceitarPedidoMesaUseCase {
     private final FilaPedidosMesaService filaPedidosMesa;
     private final PedidoRepositoryPort pedidoRepository;
     private final SessaoTrabalhoRepositoryPort sessaoTrabalhoRepository;
+    private final GeradorNumeroPedidoService geradorNumeroPedido;
+
+    private static final int MAX_TENTATIVAS_CONCORRENCIA = 3;
 
     @Transactional
     public PedidoDTO executar(String pedidoPendenteId, String usuarioId) {
@@ -44,16 +53,47 @@ public class AceitarPedidoMesaUseCase {
             throw new ValidationException("ID do usuário é obrigatório");
         }
 
-        // Busca e remove o pedido da fila
-        PedidoPendenteDTO pedidoPendente = filaPedidosMesa.buscarPorId(pedidoPendenteId)
+        // Busca e remove atomicamente o pedido da fila (thread-safe)
+        // Isso garante que apenas um funcionário consiga aceitar o mesmo pedido
+        PedidoPendenteDTO pedidoPendente = filaPedidosMesa.buscarERemoverAtomicamente(pedidoPendenteId)
                 .orElseThrow(() -> new ValidationException(
                         "Pedido pendente não encontrado ou já foi aceito/expirado: " + pedidoPendenteId));
 
-        // Gera número do pedido
-        int ultimoNumero = pedidoRepository.buscarUltimoNumeroPedido();
-        NumeroPedido numeroPedido = ultimoNumero == 0
-                ? NumeroPedido.gerarPrimeiro()
-                : NumeroPedido.gerarProximo(ultimoNumero);
+        // Tenta criar o pedido com retry em caso de conflito de número
+        return criarPedidoComRetry(pedidoPendente, usuarioId, pedidoPendenteId);
+    }
+
+    private PedidoDTO criarPedidoComRetry(PedidoPendenteDTO pedidoPendente, String usuarioId, String pedidoPendenteId) {
+        int tentativas = 0;
+        DataIntegrityViolationException ultimaExcecao = null;
+
+        while (tentativas < MAX_TENTATIVAS_CONCORRENCIA) {
+            tentativas++;
+
+            try {
+                return criarPedidoReal(pedidoPendente, usuarioId, pedidoPendenteId);
+            } catch (DataIntegrityViolationException e) {
+                if (geradorNumeroPedido.isDuplicacaoNumeroPedido(e)) {
+                    log.warn("Conflito de número de pedido ao aceitar (tentativa {}), tentando novamente...",
+                            tentativas);
+                    ultimaExcecao = e;
+                } else {
+                    throw e;
+                }
+            }
+        }
+
+        log.error("Falha ao aceitar pedido após {} tentativas por conflito de número",
+                MAX_TENTATIVAS_CONCORRENCIA);
+        throw new IllegalStateException(
+                "Não foi possível aceitar o pedido após " + MAX_TENTATIVAS_CONCORRENCIA +
+                        " tentativas devido a alta concorrência",
+                ultimaExcecao);
+    }
+
+    private PedidoDTO criarPedidoReal(PedidoPendenteDTO pedidoPendente, String usuarioId, String pedidoPendenteId) {
+        // Gera número do pedido usando o serviço dedicado
+        NumeroPedido numeroPedido = geradorNumeroPedido.gerarProximoNumero();
 
         // Cria o pedido real vinculado ao funcionário que aceitou
         Pedido pedido = Pedido.criar(
@@ -91,9 +131,8 @@ public class AceitarPedidoMesaUseCase {
         // Salva o pedido
         Pedido pedidoSalvo = pedidoRepository.salvar(pedido);
 
-        // Remove da fila somente após salvar com sucesso
-        filaPedidosMesa.removerPedido(pedidoPendenteId);
-
+        // Nota: A remoção da fila já foi feita atomicamente em
+        // buscarERemoverAtomicamente()
         // Registra mapeamento pendente -> pedido real para que o cliente acompanhe o
         // status
         filaPedidosMesa.registrarConversaoParaPedidoReal(pedidoPendenteId, pedidoSalvo.getId());

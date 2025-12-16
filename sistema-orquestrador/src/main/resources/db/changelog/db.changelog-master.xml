@@ -83,6 +83,9 @@
     <!-- Migration: Autenticação de cliente (senha, Google OAuth), favoritos e avaliações -->
     <include file="changes/026-cliente-autenticacao-favoritos-avaliacoes.sql" relativeToChangelogFile="true"/>
 
+    <!-- Migration: Adiciona colunas version para Optimistic Locking em pedidos e sessoes_trabalho -->
+    <include file="changes/027-add-version-columns-optimistic-locking.sql" relativeToChangelogFile="true"/>
+
     <!-- 
     NOTA: O usuário administrador inicial é criado automaticamente via CommandLineRunner
     (UsuarioInicialConfig) na primeira execução da aplicação.

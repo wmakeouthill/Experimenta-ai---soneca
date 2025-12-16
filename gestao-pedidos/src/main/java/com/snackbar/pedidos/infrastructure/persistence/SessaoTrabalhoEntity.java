@@ -21,36 +21,38 @@ public class SessaoTrabalhoEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    
+
     @Column(nullable = false)
     private Integer numeroSessao;
-    
+
     @Column(nullable = false)
     private LocalDate dataInicio;
-    
+
     @Column(nullable = false)
     private LocalDateTime dataInicioCompleta;
-    
+
     @Column
     private LocalDateTime dataFim;
-    
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private StatusSessao status;
-    
+
     @Column(nullable = false, length = 36)
     private String usuarioId;
-    
+
     @Column(precision = 10, scale = 2)
     private BigDecimal valorAbertura;
-    
+
     @Column(precision = 10, scale = 2)
     private BigDecimal valorFechamento;
-    
+
+    @Version
+    private Long version;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
-    
+
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 }
-

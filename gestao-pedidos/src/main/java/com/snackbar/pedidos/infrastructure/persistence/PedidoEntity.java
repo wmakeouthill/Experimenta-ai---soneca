@@ -70,6 +70,9 @@ public class PedidoEntity {
     @Column(nullable = true)
     private LocalDateTime dataFinalizacao;
 
+    @Version
+    private Long version;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
