@@ -8,8 +8,8 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Entidade JPA para pedidos pendentes de mesa.
@@ -67,7 +67,11 @@ public class PedidoPendenteEntity {
 
     @OneToMany(mappedBy = "pedidoPendente", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @Builder.Default
-    private List<ItemPedidoPendenteEntity> itens = new ArrayList<>();
+    private Set<ItemPedidoPendenteEntity> itens = new HashSet<>();
+
+    @OneToMany(mappedBy = "pedidoPendente", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @Builder.Default
+    private Set<MeioPagamentoPendenteEntity> meiosPagamento = new HashSet<>();
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -92,5 +96,13 @@ public class PedidoPendenteEntity {
     public void adicionarItem(ItemPedidoPendenteEntity item) {
         itens.add(item);
         item.setPedidoPendente(this);
+    }
+
+    /**
+     * Adiciona um meio de pagamento ao pedido pendente.
+     */
+    public void adicionarMeioPagamento(MeioPagamentoPendenteEntity meioPagamento) {
+        meiosPagamento.add(meioPagamento);
+        meioPagamento.setPedidoPendente(this);
     }
 }

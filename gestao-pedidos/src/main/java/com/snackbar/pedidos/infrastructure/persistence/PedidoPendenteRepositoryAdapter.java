@@ -1,6 +1,7 @@
 package com.snackbar.pedidos.infrastructure.persistence;
 
 import com.snackbar.pedidos.application.dto.ItemPedidoPendenteDTO;
+import com.snackbar.pedidos.application.dto.MeioPagamentoRequest;
 import com.snackbar.pedidos.application.dto.PedidoPendenteDTO;
 import com.snackbar.pedidos.application.ports.PedidoPendenteRepositoryPort;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -133,6 +135,17 @@ public class PedidoPendenteRepositoryAdapter implements PedidoPendenteRepository
             }
         }
 
+        // Mapear meios de pagamento
+        if (dto.getMeiosPagamento() != null) {
+            for (MeioPagamentoRequest mpRequest : dto.getMeiosPagamento()) {
+                MeioPagamentoPendenteEntity mpEntity = MeioPagamentoPendenteEntity.builder()
+                        .meioPagamento(mpRequest.getMeioPagamento())
+                        .valor(mpRequest.getValor())
+                        .build();
+                entity.adicionarMeioPagamento(mpEntity);
+            }
+        }
+
         return entity;
     }
 
@@ -148,6 +161,14 @@ public class PedidoPendenteRepositoryAdapter implements PedidoPendenteRepository
                         .build())
                 .collect(Collectors.toList());
 
+        // Mapear meios de pagamento
+        List<MeioPagamentoRequest> meiosPagamentoDTO = new ArrayList<>();
+        if (entity.getMeiosPagamento() != null) {
+            meiosPagamentoDTO = entity.getMeiosPagamento().stream()
+                    .map(mp -> new MeioPagamentoRequest(mp.getMeioPagamento(), mp.getValor()))
+                    .collect(Collectors.toList());
+        }
+
         long tempoEspera = Duration.between(
                 entity.getDataHoraSolicitacao(),
                 LocalDateTime.now()).getSeconds();
@@ -161,6 +182,7 @@ public class PedidoPendenteRepositoryAdapter implements PedidoPendenteRepository
                 .nomeCliente(entity.getNomeCliente())
                 .telefoneCliente(entity.getTelefoneCliente())
                 .itens(itensDTO)
+                .meiosPagamento(meiosPagamentoDTO)
                 .observacoes(entity.getObservacoes())
                 .valorTotal(entity.getValorTotal())
                 .dataHoraSolicitacao(entity.getDataHoraSolicitacao())

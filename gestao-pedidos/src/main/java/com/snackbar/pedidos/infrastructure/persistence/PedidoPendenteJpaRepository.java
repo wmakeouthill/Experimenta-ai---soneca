@@ -22,7 +22,11 @@ public interface PedidoPendenteJpaRepository extends JpaRepository<PedidoPendent
      * Lista pedidos pendentes (sem pedido_real_id) ordenados por data de
      * solicitação.
      */
-    @Query("SELECT p FROM PedidoPendenteEntity p WHERE p.pedidoRealId IS NULL ORDER BY p.dataHoraSolicitacao ASC")
+    @Query("SELECT DISTINCT p FROM PedidoPendenteEntity p " +
+            "LEFT JOIN FETCH p.itens " +
+            "LEFT JOIN FETCH p.meiosPagamento " +
+            "WHERE p.pedidoRealId IS NULL " +
+            "ORDER BY p.dataHoraSolicitacao ASC")
     List<PedidoPendenteEntity> findPendentes();
 
     /**
@@ -34,7 +38,10 @@ public interface PedidoPendenteJpaRepository extends JpaRepository<PedidoPendent
     /**
      * Busca pedido pendente que ainda não foi aceito.
      */
-    @Query("SELECT p FROM PedidoPendenteEntity p WHERE p.id = :id AND p.pedidoRealId IS NULL")
+    @Query("SELECT p FROM PedidoPendenteEntity p " +
+            "LEFT JOIN FETCH p.itens " +
+            "LEFT JOIN FETCH p.meiosPagamento " +
+            "WHERE p.id = :id AND p.pedidoRealId IS NULL")
     Optional<PedidoPendenteEntity> findPendenteById(@Param("id") String id);
 
     /**
@@ -42,7 +49,10 @@ public interface PedidoPendenteJpaRepository extends JpaRepository<PedidoPendent
      * consiga aceitar o mesmo pedido (evita race condition).
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT p FROM PedidoPendenteEntity p WHERE p.id = :id AND p.pedidoRealId IS NULL")
+    @Query("SELECT p FROM PedidoPendenteEntity p " +
+            "LEFT JOIN FETCH p.itens " +
+            "LEFT JOIN FETCH p.meiosPagamento " +
+            "WHERE p.id = :id AND p.pedidoRealId IS NULL")
     Optional<PedidoPendenteEntity> findPendenteByIdComLock(@Param("id") String id);
 
     /**

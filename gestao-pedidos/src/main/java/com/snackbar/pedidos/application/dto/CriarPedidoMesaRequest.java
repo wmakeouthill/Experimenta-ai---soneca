@@ -35,6 +35,13 @@ public class CriarPedidoMesaRequest {
 
     private String observacoes;
 
+    /**
+     * Meios de pagamento selecionados pelo cliente.
+     * Opcional - se não informado, o pagamento será registrado na entrega.
+     */
+    @Valid
+    private List<MeioPagamentoRequest> meiosPagamento;
+
     public String mesaToken() {
         return mesaToken;
     }

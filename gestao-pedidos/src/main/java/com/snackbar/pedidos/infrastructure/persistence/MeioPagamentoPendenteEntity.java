@@ -1,5 +1,6 @@
 package com.snackbar.pedidos.infrastructure.persistence;
 
+import com.snackbar.pedidos.domain.entities.MeioPagamento;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,15 +12,15 @@ import lombok.ToString;
 import java.math.BigDecimal;
 
 /**
- * Entidade JPA para itens de pedido pendente.
+ * Entidade JPA para meios de pagamento de pedido pendente de mesa.
  */
 @Entity
-@Table(name = "itens_pedido_pendente_mesa")
+@Table(name = "meios_pagamento_pendente_mesa")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ItemPedidoPendenteEntity {
+public class MeioPagamentoPendenteEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -31,21 +32,10 @@ public class ItemPedidoPendenteEntity {
     @ToString.Exclude
     private PedidoPendenteEntity pedidoPendente;
 
-    @Column(name = "produto_id", nullable = false, length = 36)
-    private String produtoId;
-
-    @Column(name = "nome_produto", nullable = false, length = 200)
-    private String nomeProduto;
-
-    @Column(nullable = false)
-    private Integer quantidade;
-
-    @Column(name = "preco_unitario", nullable = false, precision = 10, scale = 2)
-    private BigDecimal precoUnitario;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "meio_pagamento", nullable = false, length = 20)
+    private MeioPagamento meioPagamento;
 
     @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal subtotal;
-
-    @Column(columnDefinition = "TEXT")
-    private String observacoes;
+    private BigDecimal valor;
 }

@@ -89,6 +89,9 @@
     <!-- Migration: Cria tabelas para persistir pedidos pendentes de mesa (QR code) -->
     <include file="changes/028-create-pedidos-pendentes-mesa-table.sql" relativeToChangelogFile="true"/>
 
+    <!-- Migration: Cria tabela para meios de pagamento de pedidos pendentes de mesa -->
+    <include file="changes/030-create-meios-pagamento-pendente-mesa-table.sql" relativeToChangelogFile="true"/>
+
     <!-- 
     NOTA: O usuário administrador inicial é criado automaticamente via CommandLineRunner
     (UsuarioInicialConfig) na primeira execução da aplicação.

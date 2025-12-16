@@ -28,6 +28,7 @@ public class PedidoPendenteDTO {
     private String nomeCliente;
     private String telefoneCliente;
     private List<ItemPedidoPendenteDTO> itens;
+    private List<MeioPagamentoRequest> meiosPagamento;
     private String observacoes;
     private BigDecimal valorTotal;
     private LocalDateTime dataHoraSolicitacao;

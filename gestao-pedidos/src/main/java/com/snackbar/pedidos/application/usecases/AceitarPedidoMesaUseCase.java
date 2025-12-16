@@ -3,6 +3,7 @@ package com.snackbar.pedidos.application.usecases;
 import com.snackbar.cardapio.domain.valueobjects.Preco;
 import com.snackbar.kernel.domain.exceptions.ValidationException;
 import com.snackbar.pedidos.application.dto.ItemPedidoPendenteDTO;
+import com.snackbar.pedidos.application.dto.MeioPagamentoRequest;
 import com.snackbar.pedidos.application.dto.PedidoDTO;
 import com.snackbar.pedidos.application.dto.PedidoPendenteDTO;
 import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
@@ -10,6 +11,7 @@ import com.snackbar.pedidos.application.ports.SessaoTrabalhoRepositoryPort;
 import com.snackbar.pedidos.application.services.FilaPedidosMesaService;
 import com.snackbar.pedidos.application.services.GeradorNumeroPedidoService;
 import com.snackbar.pedidos.domain.entities.ItemPedido;
+import com.snackbar.pedidos.domain.entities.MeioPagamentoPedido;
 import com.snackbar.pedidos.domain.entities.Pedido;
 import com.snackbar.pedidos.domain.valueobjects.NumeroPedido;
 import lombok.RequiredArgsConstructor;
@@ -122,6 +124,18 @@ public class AceitarPedidoMesaUseCase {
         // Adiciona observações
         if (pedidoPendente.getObservacoes() != null && !pedidoPendente.getObservacoes().isBlank()) {
             pedido.atualizarObservacoes(pedidoPendente.getObservacoes());
+        }
+
+        // Adiciona meios de pagamento do pedido pendente
+        if (pedidoPendente.getMeiosPagamento() != null) {
+            for (MeioPagamentoRequest mpRequest : pedidoPendente.getMeiosPagamento()) {
+                MeioPagamentoPedido meioPagamento = MeioPagamentoPedido.criar(
+                        mpRequest.getMeioPagamento(),
+                        Preco.of(mpRequest.getValor()));
+                pedido.adicionarMeioPagamento(meioPagamento);
+            }
+            log.debug("Adicionados {} meios de pagamento ao pedido",
+                    pedidoPendente.getMeiosPagamento().size());
         }
 
         // Vincula sessão de trabalho ativa

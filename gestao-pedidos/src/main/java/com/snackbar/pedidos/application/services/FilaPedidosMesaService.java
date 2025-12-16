@@ -82,6 +82,7 @@ public class FilaPedidosMesaService {
                 .clienteId(request.getClienteId())
                 .nomeCliente(request.getNomeCliente())
                 .itens(itens)
+                .meiosPagamento(request.getMeiosPagamento()) // Incluir meios de pagamento
                 .observacoes(request.getObservacoes())
                 .valorTotal(valorTotal)
                 .dataHoraSolicitacao(LocalDateTime.now())
