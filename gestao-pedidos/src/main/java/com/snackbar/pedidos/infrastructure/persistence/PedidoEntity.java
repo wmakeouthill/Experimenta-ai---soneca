@@ -8,8 +8,8 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "pedidos")
@@ -37,11 +37,11 @@ public class PedidoEntity {
 
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
-    private List<ItemPedidoEntity> itens = new ArrayList<>();
+    private Set<ItemPedidoEntity> itens = new HashSet<>();
 
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
-    private List<MeioPagamentoPedidoEntity> meiosPagamento = new ArrayList<>();
+    private Set<MeioPagamentoPedidoEntity> meiosPagamento = new HashSet<>();
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal valorTotal;

@@ -116,7 +116,12 @@ public class CriarPedidoUseCase {
 
     private void vincularSessaoAtiva(Pedido pedido) {
         sessaoTrabalhoRepository.buscarSessaoAtiva()
-                .ifPresent(sessao -> pedido.definirSessaoId(sessao.getId()));
+                .ifPresentOrElse(
+                        sessao -> {
+                            pedido.definirSessaoId(sessao.getId());
+                            log.info("[PEDIDO] Pedido vinculado à sessão ativa: {}", sessao.getId());
+                        },
+                        () -> log.warn("[PEDIDO] Nenhuma sessão ativa encontrada! Pedido será criado sem sessão."));
     }
 
     private void validarProdutoDisponivel(String produtoId) {

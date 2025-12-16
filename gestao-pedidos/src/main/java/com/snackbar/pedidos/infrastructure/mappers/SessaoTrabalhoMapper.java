@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 public class SessaoTrabalhoMapper {
 
         public SessaoTrabalhoEntity paraEntity(SessaoTrabalho sessao) {
-                return SessaoTrabalhoEntity.builder()
+                SessaoTrabalhoEntity.SessaoTrabalhoEntityBuilder builder = SessaoTrabalhoEntity.builder()
                                 .id(sessao.getId())
                                 .numeroSessao(sessao.getNumeroSessao())
                                 .dataInicio(sessao.getDataInicio())
@@ -18,10 +18,16 @@ public class SessaoTrabalhoMapper {
                                 .usuarioId(sessao.getUsuarioId())
                                 .valorAbertura(sessao.getValorAbertura())
                                 .valorFechamento(sessao.getValorFechamento())
-                                .version(sessao.getVersion()) // Preserva version para Optimistic Locking
                                 .createdAt(sessao.getCreatedAt())
-                                .updatedAt(sessao.getUpdatedAt())
-                                .build();
+                                .updatedAt(sessao.getUpdatedAt());
+
+                // Só seta version se não for null (para novas entidades, deixa o
+                // @Builder.Default usar 0L)
+                if (sessao.getVersion() != null) {
+                        builder.version(sessao.getVersion());
+                }
+
+                return builder.build();
         }
 
         public SessaoTrabalho paraDomain(SessaoTrabalhoEntity entity) {

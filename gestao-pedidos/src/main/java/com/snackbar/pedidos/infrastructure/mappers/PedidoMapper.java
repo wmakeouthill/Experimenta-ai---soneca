@@ -11,13 +11,15 @@ import com.snackbar.pedidos.infrastructure.persistence.PedidoEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Component
 public class PedidoMapper {
 
     public PedidoEntity paraEntity(Pedido pedido) {
-        PedidoEntity entity = PedidoEntity.builder()
+        PedidoEntity.PedidoEntityBuilder builder = PedidoEntity.builder()
                 .id(pedido.getId())
                 .numeroPedido(pedido.getNumeroPedido().getNumero())
                 .clienteId(pedido.getClienteId())
@@ -32,12 +34,18 @@ public class PedidoMapper {
                 .nomeClienteMesa(pedido.getNomeClienteMesa())
                 .dataPedido(pedido.getDataPedido())
                 .dataFinalizacao(pedido.getDataFinalizacao())
-                .version(pedido.getVersion()) // Preserva version para Optimistic Locking
                 .createdAt(pedido.getCreatedAt())
-                .updatedAt(pedido.getUpdatedAt())
-                .build();
+                .updatedAt(pedido.getUpdatedAt());
 
-        List<ItemPedidoEntity> itensEntity = new ArrayList<>();
+        // Só seta version se não for null (para novas entidades, deixa o
+        // @Builder.Default usar 0L)
+        if (pedido.getVersion() != null) {
+            builder.version(pedido.getVersion());
+        }
+
+        PedidoEntity entity = builder.build();
+
+        Set<ItemPedidoEntity> itensEntity = new HashSet<>();
         for (ItemPedido item : pedido.getItens()) {
             ItemPedidoEntity itemEntity = ItemPedidoEntity.builder()
                     .pedido(entity)
@@ -51,7 +59,7 @@ public class PedidoMapper {
         }
         entity.setItens(itensEntity);
 
-        List<MeioPagamentoPedidoEntity> meiosPagamentoEntity = new ArrayList<>();
+        Set<MeioPagamentoPedidoEntity> meiosPagamentoEntity = new HashSet<>();
         for (MeioPagamentoPedido meioPagamentoPedido : pedido.getMeiosPagamento()) {
             MeioPagamentoPedidoEntity meioPagamentoEntity = MeioPagamentoPedidoEntity.builder()
                     .pedido(entity)
