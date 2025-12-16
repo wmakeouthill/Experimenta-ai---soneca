@@ -3,16 +3,17 @@ package com.snackbar.pedidos.application.services;
 import com.snackbar.pedidos.application.dto.*;
 import com.snackbar.pedidos.application.ports.CardapioServicePort;
 import com.snackbar.pedidos.application.ports.MesaRepositoryPort;
+import com.snackbar.pedidos.application.ports.PedidoPendenteRepositoryPort;
 import com.snackbar.pedidos.domain.entities.Mesa;
 import com.snackbar.pedidos.domain.exceptions.MesaNaoEncontradaException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -21,6 +22,11 @@ import java.util.stream.Collectors;
  * Quando um cliente faz um pedido via QR code, o pedido vai para esta fila.
  * Um funcionário logado pode ver os pedidos pendentes e aceitar,
  * momento em que o pedido é criado de verdade no sistema.
+ * 
+ * PERSISTÊNCIA EM BANCO:
+ * Os pedidos pendentes são armazenados em banco de dados para garantir
+ * que não sejam perdidos em caso de restart do servidor e para suportar
+ * múltiplas instâncias da aplicação.
  */
 @Service
 @RequiredArgsConstructor
@@ -29,14 +35,7 @@ public class FilaPedidosMesaService {
 
     private final MesaRepositoryPort mesaRepository;
     private final CardapioServicePort cardapioService;
-
-    // Cache em memória para pedidos pendentes
-    // Chave: ID do pedido pendente (UUID)
-    private final Map<String, PedidoPendenteDTO> filaPedidos = new ConcurrentHashMap<>();
-
-    // Mapa para rastrear a conversão de pedidos pendentes em pedidos reais
-    // Chave: ID do pedido pendente | Valor: ID do pedido real criado
-    private final Map<String, String> mapaPendenteParaPedidoReal = new ConcurrentHashMap<>();
+    private final PedidoPendenteRepositoryPort pedidoPendenteRepository;
 
     // Tempo máximo que um pedido pode ficar na fila (30 minutos)
     private static final long TEMPO_MAXIMO_FILA_MINUTOS = 30;
@@ -47,6 +46,7 @@ public class FilaPedidosMesaService {
      * @param request Request do pedido vindo do cliente
      * @return DTO do pedido pendente criado
      */
+    @Transactional
     public PedidoPendenteDTO adicionarPedido(CriarPedidoMesaRequest request) {
         Mesa mesa = mesaRepository.buscarPorQrCodeToken(request.getMesaToken())
                 .orElseThrow(() -> MesaNaoEncontradaException.porToken(request.getMesaToken()));
@@ -88,22 +88,25 @@ public class FilaPedidosMesaService {
                 .tempoEsperaSegundos(0)
                 .build();
 
-        filaPedidos.put(pedidoId, pedidoPendente);
+        // Persiste no banco de dados
+        PedidoPendenteDTO salvo = pedidoPendenteRepository.salvar(pedidoPendente);
 
-        log.info("Pedido adicionado à fila - ID: {}, Mesa: {}, Cliente: {}",
+        log.info("Pedido adicionado à fila (banco) - ID: {}, Mesa: {}, Cliente: {}",
                 pedidoId, mesa.getNumero(), request.getNomeCliente());
 
-        return pedidoPendente;
+        return salvo;
     }
 
     /**
      * Lista todos os pedidos pendentes na fila, ordenados por tempo de espera.
      * Remove automaticamente pedidos expirados.
      */
+    @Transactional
     public List<PedidoPendenteDTO> listarPedidosPendentes() {
-        removerPedidosExpirados();
+        // Remove expirados em background
+        pedidoPendenteRepository.removerExpirados(TEMPO_MAXIMO_FILA_MINUTOS);
 
-        return filaPedidos.values().stream()
+        return pedidoPendenteRepository.listarPendentes().stream()
                 .peek(PedidoPendenteDTO::atualizarTempoEspera)
                 .sorted(Comparator.comparing(PedidoPendenteDTO::getDataHoraSolicitacao))
                 .collect(Collectors.toList());
@@ -112,12 +115,13 @@ public class FilaPedidosMesaService {
     /**
      * Busca um pedido pendente pelo ID.
      */
+    @Transactional(readOnly = true)
     public Optional<PedidoPendenteDTO> buscarPorId(String pedidoId) {
-        PedidoPendenteDTO pedido = filaPedidos.get(pedidoId);
-        if (pedido != null) {
-            pedido.atualizarTempoEspera();
-        }
-        return Optional.ofNullable(pedido);
+        return pedidoPendenteRepository.buscarPendentePorId(pedidoId)
+                .map(pedido -> {
+                    pedido.atualizarTempoEspera();
+                    return pedido;
+                });
     }
 
     /**
@@ -127,38 +131,50 @@ public class FilaPedidosMesaService {
      * consiga aceitar o mesmo pedido, evitando race conditions onde dois
      * funcionários poderiam aceitar o mesmo pedido simultaneamente.
      * 
+     * Usa SELECT FOR UPDATE no banco para garantir lock pessimista.
+     * 
      * @param pedidoId ID do pedido a ser buscado e removido
      * @return Optional contendo o pedido se encontrado e removido, ou empty se não
      *         existir
      */
-    public synchronized Optional<PedidoPendenteDTO> buscarERemoverAtomicamente(String pedidoId) {
-        PedidoPendenteDTO pedido = filaPedidos.remove(pedidoId);
-        if (pedido != null) {
+    @Transactional
+    public Optional<PedidoPendenteDTO> buscarERemoverAtomicamente(String pedidoId) {
+        Optional<PedidoPendenteDTO> pedidoOpt = pedidoPendenteRepository.buscarPendentePorId(pedidoId);
+
+        if (pedidoOpt.isPresent()) {
+            PedidoPendenteDTO pedido = pedidoOpt.get();
+            pedidoPendenteRepository.remover(pedidoId);
             pedido.atualizarTempoEspera();
-            log.info("Pedido removido atomicamente da fila - ID: {}, Mesa: {}",
+            log.info("Pedido removido atomicamente da fila (banco) - ID: {}, Mesa: {}",
                     pedidoId, pedido.getNumeroMesa());
+            return Optional.of(pedido);
         }
-        return Optional.ofNullable(pedido);
+
+        return Optional.empty();
     }
 
     /**
      * Remove um pedido da fila (quando aceito ou rejeitado).
      */
+    @Transactional
     public PedidoPendenteDTO removerPedido(String pedidoId) {
-        PedidoPendenteDTO removido = filaPedidos.remove(pedidoId);
-        if (removido != null) {
+        Optional<PedidoPendenteDTO> pedidoOpt = pedidoPendenteRepository.buscarPorId(pedidoId);
+        if (pedidoOpt.isPresent()) {
+            pedidoPendenteRepository.remover(pedidoId);
             log.info("Pedido removido da fila - ID: {}", pedidoId);
+            return pedidoOpt.get();
         }
-        return removido;
+        return null;
     }
 
     /**
      * Registra o mapeamento entre um pedido pendente e o pedido real criado ao
      * aceitá-lo.
      */
+    @Transactional
     public void registrarConversaoParaPedidoReal(String pedidoPendenteId, String pedidoRealId) {
         if (pedidoPendenteId != null && pedidoRealId != null) {
-            mapaPendenteParaPedidoReal.put(pedidoPendenteId, pedidoRealId);
+            pedidoPendenteRepository.marcarComoAceito(pedidoPendenteId, pedidoRealId);
             log.info("Mapeado pedido pendente {} -> pedido real {}", pedidoPendenteId, pedidoRealId);
         }
     }
@@ -166,46 +182,36 @@ public class FilaPedidosMesaService {
     /**
      * Obtém o ID do pedido real a partir do ID pendente, se existir.
      */
+    @Transactional(readOnly = true)
     public Optional<String> buscarPedidoRealPorPendente(String pedidoPendenteId) {
-        return Optional.ofNullable(mapaPendenteParaPedidoReal.get(pedidoPendenteId));
+        return pedidoPendenteRepository.buscarPedidoRealPorPendente(pedidoPendenteId);
     }
 
     /**
      * Retorna a quantidade de pedidos na fila.
      */
+    @Transactional
     public int quantidadePedidosPendentes() {
-        removerPedidosExpirados();
-        return filaPedidos.size();
+        pedidoPendenteRepository.removerExpirados(TEMPO_MAXIMO_FILA_MINUTOS);
+        return (int) pedidoPendenteRepository.contarPendentes();
     }
 
     /**
      * Verifica se há pedidos pendentes na fila.
      */
+    @Transactional(readOnly = true)
     public boolean existemPedidosPendentes() {
-        return quantidadePedidosPendentes() > 0;
-    }
-
-    /**
-     * Remove pedidos que estão na fila há mais tempo que o permitido.
-     */
-    private void removerPedidosExpirados() {
-        LocalDateTime limite = LocalDateTime.now().minusMinutes(TEMPO_MAXIMO_FILA_MINUTOS);
-
-        filaPedidos.entrySet().removeIf(entry -> {
-            boolean expirado = entry.getValue().getDataHoraSolicitacao().isBefore(limite);
-            if (expirado) {
-                log.warn("Pedido expirado removido da fila - ID: {}, Mesa: {}",
-                        entry.getKey(), entry.getValue().getNumeroMesa());
-            }
-            return expirado;
-        });
+        return pedidoPendenteRepository.contarPendentes() > 0;
     }
 
     /**
      * Limpa toda a fila (para testes ou reset).
+     * Remove todos os pedidos pendentes do banco.
      */
+    @Transactional
     public void limparFila() {
-        filaPedidos.clear();
-        log.info("Fila de pedidos limpa");
+        // Remove todos os pendentes (tempoLimite = 0 remove tudo)
+        int removidos = pedidoPendenteRepository.removerExpirados(0);
+        log.info("Fila de pedidos limpa - {} pedidos removidos", removidos);
     }
 }

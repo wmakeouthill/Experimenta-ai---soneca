@@ -86,6 +86,9 @@
     <!-- Migration: Adiciona colunas version para Optimistic Locking em pedidos e sessoes_trabalho -->
     <include file="changes/027-add-version-columns-optimistic-locking.sql" relativeToChangelogFile="true"/>
 
+    <!-- Migration: Cria tabelas para persistir pedidos pendentes de mesa (QR code) -->
+    <include file="changes/028-create-pedidos-pendentes-mesa-table.sql" relativeToChangelogFile="true"/>
+
     <!-- 
     NOTA: O usuário administrador inicial é criado automaticamente via CommandLineRunner
     (UsuarioInicialConfig) na primeira execução da aplicação.
