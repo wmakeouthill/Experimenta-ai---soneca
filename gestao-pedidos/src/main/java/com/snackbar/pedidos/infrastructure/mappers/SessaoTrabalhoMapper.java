@@ -7,45 +7,49 @@ import org.springframework.stereotype.Component;
 @Component
 public class SessaoTrabalhoMapper {
 
-    public SessaoTrabalhoEntity paraEntity(SessaoTrabalho sessao) {
-        return SessaoTrabalhoEntity.builder()
-                .id(sessao.getId())
-                .numeroSessao(sessao.getNumeroSessao())
-                .dataInicio(sessao.getDataInicio())
-                .dataInicioCompleta(sessao.getDataInicioCompleta())
-                .dataFim(sessao.getDataFim())
-                .status(sessao.getStatus())
-                .usuarioId(sessao.getUsuarioId())
-                .valorAbertura(sessao.getValorAbertura())
-                .valorFechamento(sessao.getValorFechamento())
-                .createdAt(sessao.getCreatedAt())
-                .updatedAt(sessao.getUpdatedAt())
-                .build();
-    }
+        public SessaoTrabalhoEntity paraEntity(SessaoTrabalho sessao) {
+                return SessaoTrabalhoEntity.builder()
+                                .id(sessao.getId())
+                                .numeroSessao(sessao.getNumeroSessao())
+                                .dataInicio(sessao.getDataInicio())
+                                .dataInicioCompleta(sessao.getDataInicioCompleta())
+                                .dataFim(sessao.getDataFim())
+                                .status(sessao.getStatus())
+                                .usuarioId(sessao.getUsuarioId())
+                                .valorAbertura(sessao.getValorAbertura())
+                                .valorFechamento(sessao.getValorFechamento())
+                                .version(sessao.getVersion()) // Preserva version para Optimistic Locking
+                                .createdAt(sessao.getCreatedAt())
+                                .updatedAt(sessao.getUpdatedAt())
+                                .build();
+        }
 
-    public SessaoTrabalho paraDomain(SessaoTrabalhoEntity entity) {
-        // Usa factory de restauração para compatibilidade com sessões antigas
-        SessaoTrabalho sessao = SessaoTrabalho.restaurarDoBancoFactory(
-                entity.getNumeroSessao(),
-                entity.getUsuarioId());
+        public SessaoTrabalho paraDomain(SessaoTrabalhoEntity entity) {
+                // Usa factory de restauração para compatibilidade com sessões antigas
+                SessaoTrabalho sessao = SessaoTrabalho.restaurarDoBancoFactory(
+                                entity.getNumeroSessao(),
+                                entity.getUsuarioId());
 
-        sessao.restaurarDoBanco(
-                entity.getId(),
-                entity.getCreatedAt(),
-                entity.getUpdatedAt());
+                sessao.restaurarDoBanco(
+                                entity.getId(),
+                                entity.getCreatedAt(),
+                                entity.getUpdatedAt());
 
-        // IMPORTANTE: Restaurar as datas de início do banco (imutáveis após criação)
-        sessao.restaurarDatasInicioDoBanco(
-                entity.getDataInicio(),
-                entity.getDataInicioCompleta());
+                // IMPORTANTE: Restaurar as datas de início do banco (imutáveis após criação)
+                sessao.restaurarDatasInicioDoBanco(
+                                entity.getDataInicio(),
+                                entity.getDataInicioCompleta());
 
-        sessao.restaurarStatusDoBanco(entity.getStatus(), entity.getDataFim());
-        
-        // Restaurar valores de caixa (pode ser null em sessões antigas)
-        sessao.restaurarValoresCaixaDoBanco(
-                entity.getValorAbertura(),
-                entity.getValorFechamento());
+                sessao.restaurarStatusDoBanco(entity.getStatus(), entity.getDataFim());
 
-        return sessao;
-    }
+                // Restaurar valores de caixa (pode ser null em sessões antigas)
+                sessao.restaurarValoresCaixaDoBanco(
+                                entity.getValorAbertura(),
+                                entity.getValorFechamento());
+
+                // Restaurar version para Optimistic Locking (essencial para atualizações)
+                sessao.restaurarVersionDoBanco(entity.getVersion());
+
+                return sessao;
+        }
 }

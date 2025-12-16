@@ -48,7 +48,8 @@ public class SessaoTrabalhoEntity {
     private BigDecimal valorFechamento;
 
     @Version
-    private Long version;
+    @Builder.Default
+    private Long version = 0L;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;

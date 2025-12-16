@@ -32,6 +32,7 @@ public class PedidoMapper {
                 .nomeClienteMesa(pedido.getNomeClienteMesa())
                 .dataPedido(pedido.getDataPedido())
                 .dataFinalizacao(pedido.getDataFinalizacao())
+                .version(pedido.getVersion()) // Preserva version para Optimistic Locking
                 .createdAt(pedido.getCreatedAt())
                 .updatedAt(pedido.getUpdatedAt())
                 .build();
@@ -119,6 +120,9 @@ public class PedidoMapper {
         // Restaurar data de finalização do banco (preserva a data original de
         // finalização)
         pedido.restaurarDataFinalizacaoDoBanco(entity.getDataFinalizacao());
+
+        // Restaurar version para Optimistic Locking (essencial para atualizações)
+        pedido.restaurarVersionDoBanco(entity.getVersion());
 
         return pedido;
     }

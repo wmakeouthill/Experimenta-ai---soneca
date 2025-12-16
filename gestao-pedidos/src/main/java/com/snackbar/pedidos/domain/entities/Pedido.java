@@ -27,6 +27,7 @@ public class Pedido extends BaseEntity {
     private String nomeClienteMesa; // Nome do cliente informado na mesa
     private LocalDateTime dataPedido;
     private LocalDateTime dataFinalizacao; // Data definitiva de finalização (imutável após definida)
+    private Long version; // Para Optimistic Locking - preservado entre conversões domain/entity
 
     private Pedido() {
         super();
@@ -210,6 +211,15 @@ public class Pedido extends BaseEntity {
     public void restaurarDoBanco(String id, LocalDateTime createdAt, LocalDateTime updatedAt) {
         restaurarId(id);
         restaurarTimestamps(createdAt, updatedAt);
+    }
+
+    /**
+     * Restaura a versão do Optimistic Locking do banco de dados (usado pelos
+     * mappers).
+     * Essencial para preservar a versão entre conversões domain/entity.
+     */
+    public void restaurarVersionDoBanco(Long version) {
+        this.version = version;
     }
 
     /**

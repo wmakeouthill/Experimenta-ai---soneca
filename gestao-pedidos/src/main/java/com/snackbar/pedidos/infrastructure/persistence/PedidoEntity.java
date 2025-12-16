@@ -71,7 +71,8 @@ public class PedidoEntity {
     private LocalDateTime dataFinalizacao;
 
     @Version
-    private Long version;
+    @Builder.Default
+    private Long version = 0L;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
