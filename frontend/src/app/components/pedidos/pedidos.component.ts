@@ -1,4 +1,4 @@
-import { Component, inject, PLATFORM_ID, OnInit, OnDestroy, signal, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
+import { Component, inject, PLATFORM_ID, OnInit, OnDestroy, signal, ChangeDetectionStrategy, DestroyRef, NgZone } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -10,7 +10,7 @@ import { AuthService } from '../../services/auth.service';
 import { ImpressaoService, TipoImpressora } from '../../services/impressao.service';
 import { NovoPedidoModalComponent } from './components/novo-pedido-modal/novo-pedido-modal.component';
 import { MenuContextoPedidoComponent } from './components/menu-contexto-pedido/menu-contexto-pedido.component';
-import { catchError, of, Subscription, interval, startWith, switchMap } from 'rxjs';
+import { catchError, of, Subscription, timer, switchMap, takeWhile } from 'rxjs';
 import { NotificationService } from '../../services/notification.service';
 import { FilaPedidosMesaService, PedidoPendente } from '../../services/fila-pedidos-mesa.service';
 
@@ -38,9 +38,11 @@ export class PedidosComponent implements OnInit, OnDestroy {
   private readonly notificationService = inject(NotificationService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly filaPedidosMesaService = inject(FilaPedidosMesaService);
+  private readonly ngZone = inject(NgZone);
 
   // Subscription para polling de fila de mesa
   private filaPollingSubscription?: Subscription;
+  private filaPollingAtivo = false;
 
   // Composable com toda a lógica de pedidos - inicializado no construtor para contexto de injeção válido
   readonly pedidosComposable!: ReturnType<typeof usePedidos>;
@@ -125,28 +127,41 @@ export class PedidosComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.filaPollingAtivo = false;
     this.filaPollingSubscription?.unsubscribe();
   }
 
   private iniciarPollingFilaMesa(): void {
+    if (this.filaPollingAtivo) {
+      console.log('Polling de fila de mesa já está ativo.');
+      return;
+    }
+
+    this.filaPollingAtivo = true;
     this.filaPollingSubscription?.unsubscribe();
 
-    this.filaPollingSubscription = interval(5000).pipe(
-      startWith(0),
-      switchMap(() => this.filaPedidosMesaService.listarPedidosPendentes()),
-      catchError(err => {
-        console.error('Erro ao carregar fila de mesa:', err);
-        return of([]);
-      })
-    ).subscribe(pedidos => {
-      const pedidosAnteriores = this.pedidosPendentesMesa();
-      this.pedidosPendentesMesa.set(pedidos);
+    // Executa fora da zona Angular para não bloquear hidratação/estabilidade
+    this.ngZone.runOutsideAngular(() => {
+      this.filaPollingSubscription = timer(0, 5000).pipe(
+        takeWhile(() => this.filaPollingAtivo),
+        switchMap(() => this.filaPedidosMesaService.listarPedidosPendentes()),
+        catchError(err => {
+          console.error('Erro ao carregar fila de mesa:', err);
+          return of([]);
+        })
+      ).subscribe(pedidos => {
+        // Executa atualizações de estado dentro da zona Angular para trigger change detection
+        this.ngZone.run(() => {
+          const pedidosAnteriores = this.pedidosPendentesMesa();
+          this.pedidosPendentesMesa.set([...pedidos]); // Nova referência de array
 
-      // Notificar se há novos pedidos de mesa
-      if (pedidos.length > pedidosAnteriores.length) {
-        const novos = pedidos.length - pedidosAnteriores.length;
-        this.notificationService.info(`🍽️ ${novos} novo(s) pedido(s) de mesa aguardando aceitação!`);
-      }
+          // Notificar se há novos pedidos de mesa
+          if (pedidos.length > pedidosAnteriores.length) {
+            const novos = pedidos.length - pedidosAnteriores.length;
+            this.notificationService.info(`🍽️ ${novos} novo(s) pedido(s) de mesa aguardando aceitação!`);
+          }
+        });
+      });
     });
   }
 
