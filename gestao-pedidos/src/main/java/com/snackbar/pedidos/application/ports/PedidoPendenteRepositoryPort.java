@@ -28,6 +28,15 @@ public interface PedidoPendenteRepositoryPort {
     Optional<PedidoPendenteDTO> buscarPendentePorId(String id);
 
     /**
+     * Busca um pedido pendente COM LOCK PESSIMISTA.
+     * 
+     * Usa SELECT FOR UPDATE para garantir que apenas uma transação
+     * consiga processar o mesmo pedido simultaneamente.
+     * Essencial para evitar race condition na aceitação de pedidos.
+     */
+    Optional<PedidoPendenteDTO> buscarPendentePorIdComLock(String id);
+
+    /**
      * Busca qualquer pedido pendente por ID (aceito ou não).
      */
     Optional<PedidoPendenteDTO> buscarPorId(String id);

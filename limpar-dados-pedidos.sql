@@ -10,7 +10,7 @@
 -- 
 -- DADOS QUE SERÃO PRESERVADOS:
 -- - Usuários (administradores e operadores)
--- - Clientes (tabela de clientes)
+-- - Clientes
 -- - Cardápio (categorias e produtos)
 -- - Gestão de Estoque (itens_estoque)
 -- - Mesas (configuração de mesas)
@@ -21,8 +21,8 @@
 -- - Meios de pagamento dos pedidos
 -- - Sessões de trabalho
 -- - Movimentações de caixa
--- - Favoritos de clientes (vinculados a produtos, mas limpamos para recomeçar)
--- - Avaliações de clientes (vinculadas a pedidos)
+-- - Pedidos pendentes de mesa e respectivos itens
+-- - Dados derivados de clientes (favoritos e avaliações)
 --
 -- Como executar no IntelliJ:
 -- 1. Abra o Data Source configurado no IntelliJ
@@ -40,6 +40,8 @@ SELECT
     '=== CONTAGEM ANTES DA LIMPEZA (DADOS A SEREM DELETADOS) ===' AS informacao,
     IFNULL((SELECT COUNT(*) FROM pedidos), 0) AS total_pedidos,
     IFNULL((SELECT COUNT(*) FROM itens_pedido), 0) AS total_itens_pedido,
+    IFNULL((SELECT COUNT(*) FROM itens_pedido_pendente_mesa), 0) AS total_itens_pedido_pendente_mesa,
+    IFNULL((SELECT COUNT(*) FROM pedidos_pendentes_mesa), 0) AS total_pedidos_pendentes_mesa,
     IFNULL((SELECT COUNT(*) FROM meios_pagamento_pedido), 0) AS total_meios_pagamento,
     IFNULL((SELECT COUNT(*) FROM movimentacoes_caixa), 0) AS total_movimentacoes_caixa,
     IFNULL((SELECT COUNT(*) FROM sessoes_trabalho), 0) AS total_sessoes_trabalho,
@@ -67,13 +69,15 @@ SELECT
 -- você pode fazer ROLLBACK antes do COMMIT.
 -- 
 -- ORDEM DE EXCLUSÃO (importante devido às foreign keys):
--- 1. cliente_avaliacoes (FK para pedidos com ON DELETE CASCADE)
--- 2. meios_pagamento_pedido (FK para pedidos com ON DELETE CASCADE)
--- 3. itens_pedido (FK para pedidos com ON DELETE CASCADE)
--- 4. movimentacoes_caixa (FK para sessoes_trabalho com ON DELETE CASCADE)
--- 5. pedidos (FK para clientes, sessoes_trabalho e usuarios com ON DELETE RESTRICT)
--- 6. sessoes_trabalho (pedidos dependem dele, mas já deletamos pedidos)
--- 7. cliente_favoritos (opcional, para limpar histórico de favoritos)
+-- 1. itens_pedido_pendente_mesa (FK para pedidos_pendentes_mesa com ON DELETE CASCADE)
+-- 2. pedidos_pendentes_mesa (pedidos reais ainda não criados)
+-- 3. cliente_avaliacoes (FK para pedidos com ON DELETE CASCADE)
+-- 4. meios_pagamento_pedido (FK para pedidos com ON DELETE CASCADE)
+-- 5. itens_pedido (FK para pedidos com ON DELETE CASCADE)
+-- 6. movimentacoes_caixa (FK para sessoes_trabalho com ON DELETE CASCADE)
+-- 7. pedidos (FK para clientes, sessoes_trabalho e usuarios com ON DELETE RESTRICT)
+-- 8. sessoes_trabalho (pedidos dependem dele, mas já deletamos pedidos)
+-- 9. cliente_favoritos (opcional, para limpar histórico de favoritos)
 -- ============================================================
 
 START TRANSACTION;
@@ -84,31 +88,40 @@ START TRANSACTION;
 --       para garantir consistência e facilitar manutenção futura
 SET FOREIGN_KEY_CHECKS = 0;
 
--- 1. Deletar avaliações de clientes
+-- 1. Deletar itens dos pedidos pendentes de mesa
+-- Tabela: itens_pedido_pendente_mesa
+-- FK: pedido_pendente_id -> pedidos_pendentes_mesa(id) com ON DELETE CASCADE
+DELETE FROM itens_pedido_pendente_mesa;
+
+-- 2. Deletar pedidos pendentes de mesa
+-- Tabela: pedidos_pendentes_mesa
+DELETE FROM pedidos_pendentes_mesa;
+
+-- 3. Deletar avaliações de clientes
 -- Tabela: cliente_avaliacoes
 -- FK: pedido_id -> pedidos(id) com ON DELETE CASCADE
 -- (Deletamos explicitamente por segurança e clareza)
 DELETE FROM cliente_avaliacoes;
 
--- 2. Deletar dados da tabela de meios de pagamento dos pedidos
+-- 4. Deletar dados da tabela de meios de pagamento dos pedidos
 -- Tabela: meios_pagamento_pedido
 -- FK: pedido_id -> pedidos(id) com ON DELETE CASCADE
 -- (Deletamos explicitamente por segurança e clareza)
 DELETE FROM meios_pagamento_pedido;
 
--- 3. Deletar dados da tabela de itens de pedidos
+-- 5. Deletar dados da tabela de itens de pedidos
 -- Tabela: itens_pedido
 -- FK: pedido_id -> pedidos(id) com ON DELETE CASCADE
 -- (Deletamos explicitamente por segurança e clareza)
 DELETE FROM itens_pedido;
 
--- 4. Deletar dados da tabela de movimentações de caixa
+-- 6. Deletar dados da tabela de movimentações de caixa
 -- Tabela: movimentacoes_caixa
 -- FK: sessao_id -> sessoes_trabalho(id) com ON DELETE CASCADE
 -- (Deletamos explicitamente para garantir limpeza completa, mesmo com CASCADE na sessão)
 DELETE FROM movimentacoes_caixa;
 
--- 5. Deletar todos os pedidos
+-- 7. Deletar todos os pedidos
 -- Tabela: pedidos
 -- FK: cliente_id -> clientes(id) com ON DELETE RESTRICT
 -- FK: sessao_id -> sessoes_trabalho(id) com ON DELETE RESTRICT
@@ -119,17 +132,12 @@ DELETE FROM movimentacoes_caixa;
 --       então seriam deletados automaticamente, mas já deletamos explicitamente acima
 DELETE FROM pedidos;
 
--- 6. Deletar todas as sessões de trabalho
+-- 8. Deletar todas as sessões de trabalho
 -- Tabela: sessoes_trabalho
 -- (A FK de pedidos para sessoes_trabalho tem ON DELETE RESTRICT,
 --  por isso deletamos os pedidos primeiro antes de deletar as sessões)
 DELETE FROM sessoes_trabalho;
 
--- 7. Deletar favoritos de clientes (opcional - para limpar histórico)
--- Tabela: cliente_favoritos
--- FK: cliente_id -> clientes(id) com ON DELETE CASCADE
--- FK: produto_id -> produtos(id) com ON DELETE CASCADE
--- (Podemos manter ou deletar - aqui optamos por deletar para limpar completamente)
 DELETE FROM cliente_favoritos;
 
 -- Reabilitar verificação de chaves estrangeiras
@@ -153,6 +161,8 @@ SELECT
     '=== CONTAGEM APÓS A LIMPEZA (DADOS DELETADOS) ===' AS informacao,
     IFNULL((SELECT COUNT(*) FROM pedidos), 0) AS total_pedidos,
     IFNULL((SELECT COUNT(*) FROM itens_pedido), 0) AS total_itens_pedido,
+    IFNULL((SELECT COUNT(*) FROM itens_pedido_pendente_mesa), 0) AS total_itens_pedido_pendente_mesa,
+    IFNULL((SELECT COUNT(*) FROM pedidos_pendentes_mesa), 0) AS total_pedidos_pendentes_mesa,
     IFNULL((SELECT COUNT(*) FROM meios_pagamento_pedido), 0) AS total_meios_pagamento,
     IFNULL((SELECT COUNT(*) FROM movimentacoes_caixa), 0) AS total_movimentacoes_caixa,
     IFNULL((SELECT COUNT(*) FROM sessoes_trabalho), 0) AS total_sessoes_trabalho,

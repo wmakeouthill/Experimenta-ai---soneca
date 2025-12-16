@@ -1,6 +1,8 @@
 package com.snackbar.pedidos.infrastructure.persistence;
 
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -34,6 +36,14 @@ public interface PedidoPendenteJpaRepository extends JpaRepository<PedidoPendent
      */
     @Query("SELECT p FROM PedidoPendenteEntity p WHERE p.id = :id AND p.pedidoRealId IS NULL")
     Optional<PedidoPendenteEntity> findPendenteById(@Param("id") String id);
+
+    /**
+     * Busca pedido pendente COM LOCK para garantir que apenas uma transação
+     * consiga aceitar o mesmo pedido (evita race condition).
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM PedidoPendenteEntity p WHERE p.id = :id AND p.pedidoRealId IS NULL")
+    Optional<PedidoPendenteEntity> findPendenteByIdComLock(@Param("id") String id);
 
     /**
      * Busca o ID do pedido real associado a um pedido pendente.

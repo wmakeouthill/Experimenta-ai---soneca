@@ -49,6 +49,13 @@ public class PedidoPendenteRepositoryAdapter implements PedidoPendenteRepository
     }
 
     @Override
+    @Transactional
+    public Optional<PedidoPendenteDTO> buscarPendentePorIdComLock(String id) {
+        return jpaRepository.findPendenteByIdComLock(id)
+                .map(this::toDTO);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Optional<PedidoPendenteDTO> buscarPorId(String id) {
         return jpaRepository.findById(id)

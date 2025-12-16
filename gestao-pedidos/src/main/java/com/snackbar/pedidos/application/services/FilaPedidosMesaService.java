@@ -125,27 +125,33 @@ public class FilaPedidosMesaService {
     }
 
     /**
-     * Busca e remove atomicamente um pedido da fila.
+     * Busca e "remove" atomicamente um pedido da fila.
      * 
      * IMPORTANTE: Este método é thread-safe e garante que apenas um funcionário
      * consiga aceitar o mesmo pedido, evitando race conditions onde dois
      * funcionários poderiam aceitar o mesmo pedido simultaneamente.
      * 
-     * Usa SELECT FOR UPDATE no banco para garantir lock pessimista.
+     * Usa SELECT FOR UPDATE (lock pessimista) para garantir exclusividade.
      * 
-     * @param pedidoId ID do pedido a ser buscado e removido
-     * @return Optional contendo o pedido se encontrado e removido, ou empty se não
-     *         existir
+     * NOTA: O registro NÃO é deletado do banco. Ao ser aceito, o campo
+     * pedido_real_id
+     * será preenchido pelo método registrarConversaoParaPedidoReal(), removendo-o
+     * da listagem de pendentes (filtro: pedido_real_id IS NULL). Isso mantém
+     * histórico para auditoria.
+     * 
+     * @param pedidoId ID do pedido a ser buscado e marcado para aceitação
+     * @return Optional contendo o pedido se encontrado e ainda pendente, ou empty
      */
     @Transactional
     public Optional<PedidoPendenteDTO> buscarERemoverAtomicamente(String pedidoId) {
-        Optional<PedidoPendenteDTO> pedidoOpt = pedidoPendenteRepository.buscarPendentePorId(pedidoId);
+        // Usa lock pessimista para garantir que apenas uma transação processe este
+        // pedido
+        Optional<PedidoPendenteDTO> pedidoOpt = pedidoPendenteRepository.buscarPendentePorIdComLock(pedidoId);
 
         if (pedidoOpt.isPresent()) {
             PedidoPendenteDTO pedido = pedidoOpt.get();
-            pedidoPendenteRepository.remover(pedidoId);
             pedido.atualizarTempoEspera();
-            log.info("Pedido removido atomicamente da fila (banco) - ID: {}, Mesa: {}",
+            log.info("Pedido obtido para aceitação (com lock) - ID: {}, Mesa: {}",
                     pedidoId, pedido.getNumeroMesa());
             return Optional.of(pedido);
         }
