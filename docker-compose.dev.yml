@@ -61,6 +61,11 @@ services:
       - SHOW_SQL=${SHOW_SQL:-true}
       - LOG_LEVEL=${LOG_LEVEL:-DEBUG}
       - SPRING_PROFILES_ACTIVE=dev
+      # ========== Chat IA - OpenAI ==========
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-5-mini}
+      - OPENAI_MAX_TOKENS=${OPENAI_MAX_TOKENS:-4000}
+      - OPENAI_MODELS_FALLBACK=${OPENAI_MODELS_FALLBACK:-gpt-4o-mini,gpt-3.5-turbo}
     # Nota: Variáveis de ambiente acima têm valores padrão
     # Para usar valores customizados, crie um arquivo .env na raiz do projeto
     volumes:
@@ -72,6 +77,7 @@ services:
       - ./gestao-pedidos:/app/gestao-pedidos
       - ./autenticacao:/app/autenticacao
       - ./impressao-cupom-fiscal:/app/impressao-cupom-fiscal
+      - ./chat-ia:/app/chat-ia
       - ./pom.xml:/app/pom.xml
       # Cache do Maven para acelerar builds
       - maven_cache:/root/.m2

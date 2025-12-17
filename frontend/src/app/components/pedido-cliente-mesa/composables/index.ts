@@ -14,3 +14,4 @@ export { useInicio, type ProdutoPopular } from './use-inicio';
 export { useSucessoPedido } from './use-sucesso-pedido';
 export { useMeusPedidos } from './use-meus-pedidos';
 export { useAvaliacao } from './use-avaliacao';
+export { useChatIA, type MensagemChat, type ChatIAComposable } from './use-chat-ia';

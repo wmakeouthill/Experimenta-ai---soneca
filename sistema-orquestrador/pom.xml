@@ -48,6 +48,11 @@
             <artifactId>impressao-cupom-fiscal</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.snackbar</groupId>
+            <artifactId>chat-ia</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <!-- Outros módulos serão adicionados conforme implementados -->
         <!--
         <dependency>

@@ -1354,4 +1354,22 @@
             </div>
         </div>
     }
+
+    <!-- ========== CHAT IA - Botão flutuante e Chat fullscreen ========== -->
+    @if (etapaAtual() === 'cardapio' && !chatIA.isOpen()) {
+        <app-chat-ia-button
+            [pulse]="true"
+            (onClick)="chatIA.abrirChat()" />
+    }
+
+    <app-chat-ia-fullscreen
+        [isOpen]="chatIA.isOpen()"
+        [isLoading]="chatIA.isLoading()"
+        [inputText]="chatIA.inputText()"
+        [canSend]="chatIA.canSend()"
+        [mensagens]="chatIA.mensagens()"
+        (onClose)="chatIA.fecharChat()"
+        (onSend)="chatIA.enviarMensagem()"
+        (onInputChange)="chatIA.setInputText($event)"
+        (onNovaConversa)="chatIA.novaConversa()" />
 </div>

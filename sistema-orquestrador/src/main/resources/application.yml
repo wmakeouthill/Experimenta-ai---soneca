@@ -110,3 +110,18 @@ estabelecimento:
   endereco: ${ESTABELECIMENTO_ENDERECO:Av. Leandro da Mota, 58 - Dr. Laureano, Duque de Caxias.}
   telefone: ${ESTABELECIMENTO_TELEFONE:(21) 97439-7966}
   cnpj: ${ESTABELECIMENTO_CNPJ:12345678000190}
+
+# ========== Chat IA - OpenAI Configuration ==========
+# IMPORTANTE: Defina OPENAI_API_KEY no application-secrets.yml ou variável de ambiente
+openai:
+  api:
+    key: ${OPENAI_API_KEY:}
+  model: ${OPENAI_MODEL:gpt-4o-mini}
+  models:
+    fallback: ${OPENAI_MODELS_FALLBACK:gpt-3.5-turbo}
+  max-tokens: ${OPENAI_MAX_TOKENS:2000}
+
+# System prompt customizável para o assistente Soneca
+chat:
+  ia:
+    system-prompt: ${CHAT_IA_SYSTEM_PROMPT:Você é o Soneca, um assistente virtual simpático e prestativo de uma lanchonete chamada Experimenta Aí. Ajude os clientes com dúvidas sobre o cardápio, pedidos e funcionamento do estabelecimento. Seja amigável, use emojis ocasionalmente e mantenha respostas concisas. Você pode sugerir produtos populares e ajudar o cliente a montar seu pedido.}

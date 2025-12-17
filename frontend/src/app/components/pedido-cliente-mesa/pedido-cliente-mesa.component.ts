@@ -21,12 +21,15 @@ import {
   useInicio,
   useSucessoPedido,
   useMeusPedidos,
-  useAvaliacao
+  useAvaliacao,
+  useChatIA
 } from './composables';
 
 import {
   SucessoScreenComponent,
   CardapioFooterNavComponent,
+  ChatIAButtonComponent,
+  ChatIAFullscreenComponent,
   AbaNavegacao
 } from './components';
 
@@ -46,7 +49,9 @@ type SecaoPerfil = 'principal' | 'favoritos' | 'pedidos' | 'senha' | 'celular';
     FormsModule,
     DraggableScrollDirective,
     SucessoScreenComponent,
-    CardapioFooterNavComponent
+    CardapioFooterNavComponent,
+    ChatIAButtonComponent,
+    ChatIAFullscreenComponent
   ],
   templateUrl: './pedido-cliente-mesa.component.html',
   styleUrls: [
@@ -117,6 +122,7 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
     () => this.identificacao.clienteIdentificado()?.id,
     () => this.meusPedidos.pedidoSelecionado()
   );
+  readonly chatIA = useChatIA();
 
   // ========== ViewChild para botão do Google ==========
   @ViewChild('googleButtonLogin') googleButtonLoginRef?: ElementRef<HTMLDivElement>;
@@ -192,6 +198,9 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
     this.pwaInstallService.onPromptChange
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.mostrarBannerPwa.set(this.pwaInstallService.shouldShow()));
+
+    // Inicializa o Chat IA
+    this.chatIA.inicializar();
   }
 
   async ngAfterViewInit(): Promise<void> {
