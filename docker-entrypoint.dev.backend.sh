@@ -4,31 +4,11 @@ set +e
 
 echo "🚀 Iniciando backend em modo desenvolvimento..."
 
-# Função para aguardar MySQL estar pronto
-wait_for_mysql() {
-    echo "⏳ Aguardando MySQL estar disponível..."
-    local max_attempts=60
-    local attempt=1
-    
-    while [ $attempt -le $max_attempts ]; do
-        if nc -z ${DB_HOST:-mysql-dev} ${DB_PORT:-3306} 2>/dev/null; then
-            echo "✅ MySQL está disponível!"
-            return 0
-        fi
-        echo "⏳ Tentativa $attempt/$max_attempts: MySQL ainda não está pronto..."
-        sleep 2
-        attempt=$((attempt + 1))
-    done
-    
-    echo "❌ Erro: MySQL não está disponível após $max_attempts tentativas"
-    return 1
-}
-
-# Aguardar MySQL estar pronto
-if ! wait_for_mysql; then
-    echo "❌ Falha ao conectar ao MySQL"
-    exit 1
-fi
+# ✅ Docker Compose já garante que MySQL está healthy via depends_on: condition: service_healthy
+# O healthcheck do MySQL verifica se está aceitando conexões antes do backend iniciar
+# Portanto, não precisamos verificar manualmente - confiamos no Docker
+echo "✅ Docker Compose garantiu que MySQL está saudável (healthcheck passou)"
+echo "🚀 Iniciando backend (Spring Boot tentará conectar ao MySQL automaticamente)..."
 
 # Configurar variáveis de ambiente para Maven/Spring Boot
 export MAVEN_OPTS="-Xmx512m -Xms256m"
@@ -114,8 +94,24 @@ echo "🚀 Executando Spring Boot via JAR..."
 cd /app
 set -e
 
+# ✅ Otimizações JVM para melhor performance de I/O e throughput
+# G1GC: melhor para aplicações web com baixa latência
+# Compressed OOPs: reduz uso de memória
+# Otimizações de I/O: buffers maiores, menos syscalls
+JAVA_OPTS="-Xmx512m -Xms256m \
+    -XX:+UseG1GC \
+    -XX:MaxGCPauseMillis=200 \
+    -XX:+UseStringDeduplication \
+    -XX:+OptimizeStringConcat \
+    -XX:+UseCompressedOops \
+    -XX:+UseCompressedClassPointers \
+    -Djava.awt.headless=true \
+    -Dfile.encoding=UTF-8 \
+    -Djava.net.preferIPv4Stack=true"
+
 # Executar Spring Boot usando o JAR
 exec java \
+    $JAVA_OPTS \
     -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 \
     -Dspring.profiles.active=${SPRING_PROFILES_ACTIVE:-dev} \
     -Dspring.datasource.url=${DB_URL} \

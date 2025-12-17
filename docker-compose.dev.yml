@@ -12,11 +12,24 @@ services:
       - MYSQL_PASSWORD=${DB_PASSWORD:-dev_password}
     volumes:
       - mysql_dev_data:/var/lib/mysql
+    # ✅ Healthcheck melhorado: verifica se MySQL aceita conexões e queries
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p${DB_PASSWORD:-dev_password}",
+          "--silent",
+        ]
+      interval: 3s
+      timeout: 2s
+      retries: 20
+      start_period: 15s # Aguarda 15s antes de começar a verificar (tempo de inicialização do MySQL)
     restart: unless-stopped
 
   # Backend Spring Boot com hot-reload
@@ -28,6 +41,12 @@ services:
     ports:
       - "8080:8080"
       - "5005:5005" # Porta para debug remoto Java
+    # ✅ Otimizações de rede removidas temporariamente para garantir resolução DNS
+    # sysctls podem interferir na rede do Docker Compose
+    # sysctls:
+    #   - net.core.somaxconn=1024
+    #   - net.ipv4.tcp_fin_timeout=30
+    #   - net.ipv4.tcp_keepalive_time=300
     environment:
       - DB_HOST=mysql-dev
       - DB_PORT=3306
@@ -58,7 +77,7 @@ services:
       - maven_cache:/root/.m2
     depends_on:
       mysql-dev:
-        condition: service_healthy
+        condition: service_healthy # ✅ Aguarda MySQL estar saudável antes de iniciar backend
     restart: unless-stopped
 
   # Frontend Angular com hot-reload

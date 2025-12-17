@@ -49,6 +49,32 @@ server:
   error:
     include-message: always
     include-binding-errors: always
+  # ✅ Compressão GZIP para reduzir tamanho de transferência
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain,application/javascript,text/css,image/svg+xml
+    min-response-size: 1024 # Comprime apenas respostas > 1KB
+  # ✅ Otimizações do Tomcat para melhor performance de streaming
+  tomcat:
+    # Buffer de escrita maior para evitar transferências byte-a-byte
+    max-swallow-size: 2MB
+    # Thread pool otimizado
+    threads:
+      max: 200
+      min-spare: 10
+    # Connection timeout e keep-alive
+    connection-timeout: 20000
+    keep-alive-timeout: 60000
+    max-keep-alive-requests: 100
+    # Buffer de requisição maior
+    max-http-post-size: 10MB
+    # Accept count (fila de conexões)
+    accept-count: 100
+    # URIs encoding
+    uri-encoding: UTF-8
+    # Compressão no nível do Tomcat (backup)
+    compression: on
+    compressable-mime-type: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json,application/xml
 
 logging:
   level:
