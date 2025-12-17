@@ -7,6 +7,9 @@
 **/.env.local
 **/.env.*.local
 **/.env.*
+# Permitir .env.example para documentação (sem credenciais reais)
+!.env.example
+!**/.env.example
 **/secrets/
 **/*secret*
 **/*password*

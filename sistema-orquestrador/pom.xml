@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
-         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -88,7 +87,7 @@
             <artifactId>mysql-connector-j</artifactId>
             <scope>runtime</scope>
         </dependency>
-        
+
         <!-- Cloud SQL Socket Factory (para conectar ao Cloud SQL via Cloud Run) -->
         <dependency>
             <groupId>com.google.cloud.sql</groupId>
@@ -109,6 +108,14 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
+
+        <!-- Spring Boot DevTools (apenas para desenvolvimento) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 
     <build>
@@ -127,7 +134,7 @@
                     </execution>
                 </executions>
             </plugin>
-            
+
             <!-- Plugin para buildar frontend Angular (quando existir) -->
             <plugin>
                 <groupId>com.github.eirslett</groupId>
@@ -177,7 +184,7 @@
                     </execution>
                 </executions>
             </plugin>
-            
+
             <!-- Copiar arquivos buildados do frontend para resources/static -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -195,7 +202,8 @@
                             <resources>
                                 <resource>
                                     <!-- Angular 17 gera em dist/frontend/browser -->
-                                    <directory>${project.parent.basedir}/frontend/dist/frontend/browser</directory>
+                                    <directory>
+                                        ${project.parent.basedir}/frontend/dist/frontend/browser</directory>
                                     <filtering>false</filtering>
                                 </resource>
                             </resources>
