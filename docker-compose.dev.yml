@@ -78,6 +78,9 @@ services:
       - frontend_node_modules:/app/frontend/node_modules
       # Cache do npm para acelerar instalações
       - npm_cache:/root/.npm
+    depends_on:
+      backend-dev:
+        condition: service_started
     restart: unless-stopped
 
 volumes:
