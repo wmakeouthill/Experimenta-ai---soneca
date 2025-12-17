@@ -69,6 +69,8 @@ public class SecurityConfig {
                         .requestMatchers(PUBLIC_MESA_PATTERN).permitAll()
                         // Endpoints públicos de autenticação de cliente (login, Google OAuth)
                         .requestMatchers(PUBLIC_CLIENTE_AUTH_PATTERN).permitAll()
+                        // Endpoint público para proxy de imagens (fotos do Google)
+                        .requestMatchers("/api/publico/cliente/imagem/**").permitAll()
                         // Endpoints de conta do cliente (favoritos, perfil, etc.) - usa header
                         // X-Cliente-Id
                         .requestMatchers(CLIENTE_CONTA_PATTERN).permitAll()

@@ -447,7 +447,7 @@
                         <div class="perfil-header">
                             <div class="perfil-avatar">
                                 @if (googleAuth.clienteAuth.cliente()?.fotoUrl) {
-                                    <img [src]="googleAuth.clienteAuth.cliente()!.fotoUrl"
+                                    <img [src]="getFotoUrlComProxy(googleAuth.clienteAuth.cliente()!.fotoUrl) || ''"
                                          alt="Foto"
                                          class="avatar-img"
                                          (error)="onImageError($event)">
@@ -1078,10 +1078,9 @@
                             <div class="carrinho-cliente-info">
                                 @if (identificacao.clienteIdentificado()!.fotoUrl) {
                                     <img
-                                        [src]="identificacao.clienteIdentificado()!.fotoUrl"
+                                        [src]="getFotoUrlComProxy(identificacao.clienteIdentificado()!.fotoUrl) || ''"
                                         alt="Foto do cliente"
                                         class="cliente-foto"
-                                        referrerpolicy="no-referrer"
                                     />
                                 } @else {
                                     <span class="cliente-icone">👤</span>

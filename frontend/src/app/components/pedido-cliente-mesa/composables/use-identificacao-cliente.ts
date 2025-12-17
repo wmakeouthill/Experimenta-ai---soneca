@@ -38,21 +38,25 @@ export function useIdentificacaoCliente(mesaToken: () => string | undefined) {
     // Subscription para escutar mudanças no ClienteAuthService
     let clienteLogadoSub: Subscription | null = null;
 
-    // Inicializa escuta de mudanças no cliente logado
+    // ✅ Inicializa escuta de mudanças no cliente logado APÓS hidratação
+    // Atrasa para evitar problemas de hidratação (NG0506)
     if (isBrowser) {
-        clienteLogadoSub = clienteAuthService.clienteLogado$.subscribe(clienteLogado => {
-            if (clienteLogado) {
-                // Atualiza cliente identificado quando login Google/senha é restaurado
-                const clienteData: ClienteIdentificado = {
-                    id: clienteLogado.id,
-                    nome: clienteLogado.nome,
-                    telefone: clienteLogado.telefone || '',
-                    novoCliente: false,
-                    fotoUrl: clienteLogado.fotoUrl
-                };
-                clienteIdentificado.set(clienteData);
-            }
-        });
+        // Aguarda a aplicação se tornar estável antes de iniciar subscription
+        setTimeout(() => {
+            clienteLogadoSub = clienteAuthService.clienteLogado$.subscribe(clienteLogado => {
+                if (clienteLogado) {
+                    // Atualiza cliente identificado quando login Google/senha é restaurado
+                    const clienteData: ClienteIdentificado = {
+                        id: clienteLogado.id,
+                        nome: clienteLogado.nome,
+                        telefone: clienteLogado.telefone || '',
+                        novoCliente: false,
+                        fotoUrl: clienteLogado.fotoUrl
+                    };
+                    clienteIdentificado.set(clienteData);
+                }
+            });
+        }, 100); // Delay de 100ms após inicialização
     }
 
     /**

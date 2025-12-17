@@ -79,6 +79,7 @@ export function useSucessoPedido() {
 
     /**
      * Inicia o acompanhamento do pedido.
+     * Aguarda a hidratação completar antes de iniciar o polling.
      */
     function iniciarAcompanhamento(id: string): void {
         if (!isBrowser) return;
@@ -90,8 +91,13 @@ export function useSucessoPedido() {
         // Busca inicial
         buscarStatus();
 
-        // Inicia polling
-        iniciarPolling();
+        // ✅ Atrasa o início do polling para evitar problemas de hidratação
+        // Aguarda a aplicação se tornar estável (após hidratação)
+        setTimeout(() => {
+            if (pedidoId() === id) { // Verifica se ainda é o mesmo pedido
+                iniciarPolling();
+            }
+        }, 100); // Delay de 100ms após a busca inicial
     }
 
     /**

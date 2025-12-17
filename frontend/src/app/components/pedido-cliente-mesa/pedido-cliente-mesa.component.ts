@@ -9,6 +9,7 @@ import { Produto } from '../../services/produto.service';
 import { ClienteAuthService } from '../../services/cliente-auth.service';
 import { PwaInstallService } from '../../services/pwa-install.service';
 import { DraggableScrollDirective } from './directives/draggable-scroll.directive';
+import { ImageProxyUtil } from '../../utils/image-proxy.util';
 
 import {
   useIdentificacaoCliente,
@@ -559,6 +560,13 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
 
   formatarTelefone(telefone: string): string {
     return this.identificacao.formatarTelefone(telefone);
+  }
+
+  /**
+   * Obtém a URL da foto do cliente com proxy (para evitar 429 do Google)
+   */
+  getFotoUrlComProxy(fotoUrl: string | null | undefined): string | null {
+    return ImageProxyUtil.getProxyUrl(fotoUrl);
   }
 
   // ========== Utilitários ==========
