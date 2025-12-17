@@ -36,6 +36,7 @@
 **/application-prod.properties
 **/application-dev.yml
 **/application-dev.properties
+wmakeouthill.github.io/
 
 # Certificados e Chaves
 *.pem
