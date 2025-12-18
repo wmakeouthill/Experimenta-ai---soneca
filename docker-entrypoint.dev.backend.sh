@@ -62,6 +62,50 @@ echo ""
 
 cd /app/sistema-orquestrador
 
+# ========================================================
+# INICIAR PROCESSO DE RECOMPILAÇÃO AUTOMÁTICA EM BACKGROUND
+# ========================================================
+echo "🔄 Iniciando monitor de recompilação automática..."
+
+# Função para recompilar quando detectar mudanças
+recompile_on_change() {
+    echo "👀 Monitor de mudanças iniciado..."
+    LAST_COMPILE=$(date +%s)
+    
+    while true; do
+        sleep 3
+        
+        # Encontrar arquivos .java modificados nos últimos 5 segundos
+        CHANGED=$(find /app -name "*.java" -newer /tmp/.last_compile 2>/dev/null | head -1)
+        
+        if [ -n "$CHANGED" ]; then
+            echo ""
+            echo "🔄 ============================================"
+            echo "🔄 Mudança detectada! Recompilando..."
+            echo "🔄 ============================================"
+            
+            # Recompilar apenas os módulos afetados (rápido)
+            cd /app
+            if mvn compile -DskipTests -B -q -T 2C 2>/dev/null; then
+                echo "✅ Recompilação concluída! DevTools vai reiniciar automaticamente."
+            else
+                echo "⚠️ Erro na compilação - verifique o código"
+            fi
+            
+            # Atualizar timestamp
+            touch /tmp/.last_compile
+        fi
+    done
+}
+
+# Criar arquivo de referência para timestamp
+touch /tmp/.last_compile
+
+# Iniciar monitor em background
+recompile_on_change &
+MONITOR_PID=$!
+echo "✅ Monitor de recompilação iniciado (PID: $MONITOR_PID)"
+
 # Executar Spring Boot com DevTools habilitado
 exec mvn spring-boot:run \
     -Dspring-boot.run.jvmArguments="-Xmx512m -Xms256m -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 -Dspring.datasource.url=${DB_URL} -Dspring.datasource.username=${DB_USERNAME} -Dspring.datasource.password=${DB_PASSWORD} -Dserver.port=${SERVER_PORT:-8080} -Djwt.secret=${JWT_SECRET} -Djwt.expiration=${JWT_EXPIRATION:-86400} -Dlogging.level.com.snackbar=${LOG_LEVEL:-DEBUG} -Dspring.devtools.restart.enabled=true -Dspring.devtools.restart.poll-interval=2000 -Dspring.devtools.restart.quiet-period=1000" \

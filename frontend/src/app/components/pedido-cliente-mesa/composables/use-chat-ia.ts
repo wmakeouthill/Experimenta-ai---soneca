@@ -166,6 +166,13 @@ export function useChatIA(clienteIdGetter?: () => string | null | undefined) {
         // Envia para o backend
         chatService.enviarMensagem(text, sessionId, clienteId).subscribe({
             next: (response: ChatIAResponse) => {
+                // Debug: Verificar produtos destacados recebidos
+                console.log('🤖 Chat IA Response:', {
+                    reply: response.reply?.substring(0, 100) + '...',
+                    produtosDestacados: response.produtosDestacados,
+                    totalProdutos: response.produtosDestacados?.length || 0
+                });
+
                 const msgAssistente: MensagemChat = {
                     id: crypto.randomUUID(),
                     from: 'assistant',

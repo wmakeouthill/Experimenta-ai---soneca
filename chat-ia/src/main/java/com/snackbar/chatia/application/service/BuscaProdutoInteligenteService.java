@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 public class BuscaProdutoInteligenteService {
 
     private static final int MAX_LEVENSHTEIN_DISTANCE = 3;
-    private static final double MIN_SIMILARITY_SCORE = 0.6;
+    private static final double MIN_SIMILARITY_SCORE = 0.4;  // Reduzido de 0.6 para melhor detecção
     private static final int MAX_RESULTADOS = 5;
 
     // Mapa de stemming básico para português (plural -> singular, variações comuns)
@@ -91,13 +91,15 @@ public class BuscaProdutoInteligenteService {
      */
     public List<ProdutoContextDTO> buscarProdutosRelevantes(String mensagem, CardapioContextDTO cardapio) {
         if (mensagem == null || mensagem.isBlank() || cardapio == null || cardapio.produtos().isEmpty()) {
+            log.debug("❌ Busca abortada: mensagem ou cardápio vazio");
             return List.of();
         }
 
         String mensagemNormalizada = normalizar(mensagem);
         List<String> palavras = extrairPalavras(mensagemNormalizada);
         
-        log.debug("Buscando produtos para mensagem: '{}' -> palavras: {}", mensagem, palavras);
+        log.info("🔍 Buscando produtos para mensagem: '{}' -> palavras: {}", mensagem, palavras);
+        log.info("📦 Total de produtos disponíveis no cardápio: {}", cardapio.produtos().stream().filter(ProdutoContextDTO::disponivel).count());
 
         // Calcula score de relevância para cada produto
         Map<ProdutoContextDTO, Double> scores = new HashMap<>();
@@ -106,8 +108,10 @@ public class BuscaProdutoInteligenteService {
             if (!produto.disponivel()) continue;
             
             double score = calcularScoreRelevancia(produto, palavras, mensagemNormalizada);
+            log.debug("   Produto '{}' - Score: {} (threshold: {})", produto.nome(), score, MIN_SIMILARITY_SCORE);
             if (score > MIN_SIMILARITY_SCORE) {
                 scores.put(produto, score);
+                log.info("   ✅ Produto '{}' aceito com score {}", produto.nome(), score);
             }
         }
 
@@ -118,7 +122,8 @@ public class BuscaProdutoInteligenteService {
             .map(Map.Entry::getKey)
             .collect(Collectors.toList());
 
-        log.debug("Encontrados {} produtos relevantes", resultados.size());
+        log.info("✅ Encontrados {} produtos relevantes: {}", resultados.size(), 
+                 resultados.stream().map(ProdutoContextDTO::nome).toList());
         return resultados;
     }
 

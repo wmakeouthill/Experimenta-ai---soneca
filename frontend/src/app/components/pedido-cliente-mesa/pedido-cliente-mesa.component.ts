@@ -586,17 +586,21 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   // ========== Chat IA - Integração com Carrinho ==========
   /**
    * Adiciona um produto do chat ao carrinho abrindo o modal de detalhes.
-   * Converte ProdutoDestacado para Produto e abre o modal.
+   * O modal abre por cima do chat, permitindo continuar a conversa.
    */
   adicionarProdutoChatAoCarrinho(produtoDestacado: { id: string; nome: string; descricao: string; categoria: string; preco: number; imagemUrl: string; disponivel: boolean }): void {
+    console.log('🛒 Adicionando produto do chat:', produtoDestacado);
+
     // Busca o produto completo no cardápio
     const produtoCompleto = this.cardapio.produtos().find(p => p.id === produtoDestacado.id);
+    console.log('📦 Produto completo encontrado:', produtoCompleto);
 
     if (produtoCompleto) {
       // Usa o produto completo do cardápio
       this.carrinho.abrirDetalhes(produtoCompleto);
     } else {
       // Fallback: cria um objeto Produto mínimo
+      console.log('⚠️ Produto não encontrado no cardápio, usando fallback');
       const produtoMinimo: Produto = {
         id: produtoDestacado.id,
         nome: produtoDestacado.nome,

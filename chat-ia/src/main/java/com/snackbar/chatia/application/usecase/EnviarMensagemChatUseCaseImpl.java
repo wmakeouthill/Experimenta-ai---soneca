@@ -83,8 +83,16 @@ public class EnviarMensagemChatUseCaseImpl implements EnviarMensagemChatUseCase 
                 .map(this::toProdutoDestacado)
                 .toList();
             
-            log.info("Resposta do chat gerada com sucesso - Session: {}, Produtos destacados: {}", 
+            log.info("✅ Resposta do chat gerada - Session: {}, Produtos encontrados: {}", 
                      sessionId, produtosDestacados.size());
+            
+            // Log detalhado dos produtos destacados
+            if (!produtosDestacados.isEmpty()) {
+                log.info("📦 Produtos destacados para o frontend:");
+                produtosDestacados.forEach(p -> 
+                    log.info("   - {} (ID: {}, R$ {}, disponivel: {})", 
+                             p.nome(), p.id(), p.preco(), p.disponivel()));
+            }
             
             return ChatResponseDTO.comProdutos(respostaIA, produtosDestacados);
             
@@ -130,6 +138,16 @@ public class EnviarMensagemChatUseCaseImpl implements EnviarMensagemChatUseCase 
         }
         
         List<ProdutoContextDTO> produtosEncontrados = new java.util.ArrayList<>();
+        String mensagemLower = mensagem.toLowerCase();
+        
+        // 0. Verifica se é uma pergunta genérica sobre o cardápio
+        if (isPerguntaGenericaCardapio(mensagemLower)) {
+            log.info("📋 Pergunta genérica sobre cardápio detectada - retornando produtos destacados");
+            // Retorna até 5 produtos variados (1 de cada categoria se possível)
+            List<ProdutoContextDTO> produtosDestaque = obterProdutosDestaque(cardapio);
+            produtosEncontrados.addAll(produtosDestaque);
+            return produtosEncontrados;
+        }
         
         // 1. Primeiro verifica se é uma busca por categoria
         Optional<String> categoriaMencionada = buscaProdutoService.identificarCategoriaMencionada(mensagem, cardapio);
@@ -149,6 +167,64 @@ public class EnviarMensagemChatUseCaseImpl implements EnviarMensagemChatUseCase 
         
         log.debug("Total de {} produtos encontrados para a mensagem", produtosEncontrados.size());
         return produtosEncontrados;
+    }
+    
+    /**
+     * Detecta se a mensagem é uma pergunta genérica sobre o cardápio
+     */
+    private boolean isPerguntaGenericaCardapio(String mensagem) {
+        List<String> frasesCardapio = List.of(
+            "cardapio", "cardápio", "menu",
+            "o que tem", "o que voce tem", "o que você tem",
+            "o que vocês tem", "o que vcs tem",
+            "quais opcoes", "quais opções", "quais são as opcoes", "quais são as opções",
+            "o que posso pedir", "o que da pra pedir",
+            "me mostra", "mostra o", "mostra ai", "mostra aí",
+            "quero ver", "ver opcoes", "ver opções",
+            "me fala", "fala o que tem",
+            "sugestao", "sugestão", "sugestoes", "sugestões",
+            "recomenda", "recomendacao", "recomendação",
+            "o que voce recomenda", "o que você recomenda"
+        );
+        
+        return frasesCardapio.stream().anyMatch(mensagem::contains);
+    }
+    
+    /**
+     * Retorna produtos de destaque variados (1 por categoria quando possível)
+     */
+    private List<ProdutoContextDTO> obterProdutosDestaque(CardapioContextDTO cardapio) {
+        List<ProdutoContextDTO> destaques = new java.util.ArrayList<>();
+        java.util.Set<String> categoriasUsadas = new java.util.HashSet<>();
+        
+        // Primeiro, pega 1 produto de cada categoria
+        for (ProdutoContextDTO produto : cardapio.produtos()) {
+            if (!produto.disponivel()) continue;
+            
+            String categoria = produto.categoria();
+            if (!categoriasUsadas.contains(categoria)) {
+                destaques.add(produto);
+                categoriasUsadas.add(categoria);
+            }
+            
+            if (destaques.size() >= 5) break;
+        }
+        
+        // Se não completou 5, adiciona mais produtos disponíveis
+        if (destaques.size() < 5) {
+            for (ProdutoContextDTO produto : cardapio.produtos()) {
+                if (!produto.disponivel()) continue;
+                if (destaques.contains(produto)) continue;
+                
+                destaques.add(produto);
+                if (destaques.size() >= 5) break;
+            }
+        }
+        
+        log.info("📦 Produtos de destaque selecionados: {}", 
+                 destaques.stream().map(ProdutoContextDTO::nome).toList());
+        
+        return destaques;
     }
     
     /**

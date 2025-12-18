@@ -60,36 +60,42 @@ import { MensagemChat, ProdutoDestacado } from '../composables/use-chat-ia';
                   <span class="message-time">{{ formatTime(msg.timestamp) }}</span>
                 </div>
                 
-                <!-- Cards de produtos destacados -->
+                <!-- Cards de produtos destacados, agrupados por categoria -->
                 @if (msg.produtosDestacados && msg.produtosDestacados.length > 0) {
                   <div class="produtos-destacados">
-                    @for (produto of msg.produtosDestacados; track produto.id) {
-                      <div class="produto-card" [class.indisponivel]="!produto.disponivel">
-                        @if (produto.imagemUrl) {
-                          <img [src]="produto.imagemUrl" [alt]="produto.nome" class="produto-imagem">
-                        } @else {
-                          <div class="produto-imagem-placeholder">🍔</div>
-                        }
-                        <div class="produto-info">
-                          <h4 class="produto-nome">{{ produto.nome }}</h4>
-                          <p class="produto-categoria">{{ produto.categoria }}</p>
-                          @if (produto.descricao) {
-                            <p class="produto-descricao">{{ produto.descricao }}</p>
-                          }
-                          <div class="produto-footer">
-                            <span class="produto-preco">{{ produto.preco | currency:'BRL':'symbol':'1.2-2' }}</span>
-                            @if (produto.disponivel) {
-                              <button 
-                                class="btn-adicionar"
-                                (click)="adicionarAoCarrinho(produto)"
-                                title="Adicionar ao carrinho">
-                                + Adicionar
-                              </button>
+                    @for (categoria of agruparPorCategoria(msg.produtosDestacados); track categoria.nome) {
+                      <div class="categoria-grupo">
+                        <h5 class="categoria-titulo">📁 {{ categoria.nome }}</h5>
+                        @for (produto of categoria.produtos; track produto.id) {
+                          <div class="produto-card" 
+                               [class.indisponivel]="!produto.disponivel"
+                               (click)="adicionarAoCarrinho(produto)">
+                            @if (produto.imagemUrl) {
+                              <img [src]="produto.imagemUrl" [alt]="produto.nome" class="produto-imagem">
                             } @else {
-                              <span class="produto-indisponivel">Indisponível</span>
+                              <div class="produto-imagem-placeholder">🍔</div>
                             }
+                            <div class="produto-info">
+                              <h4 class="produto-nome">{{ produto.nome }}</h4>
+                              @if (produto.descricao) {
+                                <p class="produto-descricao">{{ produto.descricao }}</p>
+                              }
+                              <div class="produto-footer">
+                                <span class="produto-preco">{{ produto.preco | currency:'BRL':'symbol':'1.2-2' }}</span>
+                                @if (produto.disponivel) {
+                                  <button 
+                                    class="btn-adicionar"
+                                    (click)="adicionarAoCarrinho(produto); $event.stopPropagation()"
+                                    title="Adicionar ao carrinho">
+                                    + Adicionar
+                                  </button>
+                                } @else {
+                                  <span class="produto-indisponivel">Indisponível</span>
+                                }
+                              </div>
+                            </div>
                           </div>
-                        </div>
+                        }
                       </div>
                     }
                   </div>
@@ -446,8 +452,23 @@ import { MensagemChat, ProdutoDestacado } from '../composables/use-chat-ia';
     .produtos-destacados {
       display: flex;
       flex-direction: column;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    .categoria-grupo {
+      display: flex;
+      flex-direction: column;
       gap: 0.5rem;
-      margin-top: 0.25rem;
+    }
+
+    .categoria-titulo {
+      margin: 0;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #e67e22;
+      padding: 0.25rem 0;
+      border-bottom: 1px solid rgba(230, 126, 34, 0.3);
     }
 
     .produto-card {
@@ -458,10 +479,28 @@ import { MensagemChat, ProdutoDestacado } from '../composables/use-chat-ia';
       border-radius: 12px;
       padding: 0.75rem;
       animation: fadeIn 0.3s ease;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .produto-card:hover {
+      transform: translateX(4px);
+      box-shadow: 0 2px 8px rgba(230, 126, 34, 0.2);
+      border-color: rgba(230, 126, 34, 0.4);
+    }
+
+    .produto-card:active {
+      transform: scale(0.98);
     }
 
     .produto-card.indisponivel {
       opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .produto-card.indisponivel:hover {
+      transform: none;
+      box-shadow: none;
     }
 
     .produto-imagem {
@@ -677,5 +716,22 @@ export class ChatIAFullscreenComponent implements AfterViewChecked {
         if (this.chatInput?.nativeElement) {
             this.chatInput.nativeElement.focus();
         }
+    }
+
+    /**
+     * Agrupa produtos por categoria para exibição organizada.
+     */
+    agruparPorCategoria(produtos: ProdutoDestacado[]): { nome: string; produtos: ProdutoDestacado[] }[] {
+        const grupos = new Map<string, ProdutoDestacado[]>();
+
+        for (const produto of produtos) {
+            const categoria = produto.categoria || 'Outros';
+            if (!grupos.has(categoria)) {
+                grupos.set(categoria, []);
+            }
+            grupos.get(categoria)!.push(produto);
+        }
+
+        return Array.from(grupos.entries()).map(([nome, produtos]) => ({ nome, produtos }));
     }
 }
