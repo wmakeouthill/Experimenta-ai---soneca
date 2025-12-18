@@ -104,6 +104,10 @@
     OAuth) -->
     <include file="changes/031-allow-null-telefone-clientes.sql" relativeToChangelogFile="true" />
 
+    <!-- Migration: Criação da tabela de histórico de conversas do Chat IA -->
+    <include file="changes/032-create-historico-conversas-chat-table.sql"
+        relativeToChangelogFile="true" />
+
     <!-- 
     NOTA: O usuário administrador inicial é criado automaticamente via CommandLineRunner
     (UsuarioInicialConfig) na primeira execução da aplicação.

@@ -1,5 +1,5 @@
 import { signal, computed, inject } from '@angular/core';
-import { ChatIAService, ChatIAResponse, ProdutoDestacado, AcaoChat } from '../../../services/chat-ia.service';
+import { ChatIAService, ChatIAResponse, ProdutoDestacado, AcaoChat, ConversaSalva as ConversaSalvaAPI, SalvarConversaDTO } from '../../../services/chat-ia.service';
 
 export interface MensagemChat {
     id: string;
@@ -12,10 +12,23 @@ export interface MensagemChat {
     acao?: AcaoChat;
 }
 
+/** Representa uma conversa salva no histórico */
+export interface ConversaSalva {
+    id: string;
+    sessionId: string;
+    titulo: string;
+    dataInicio: Date;
+    dataUltimaMensagem: Date;
+    mensagens: MensagemChat[];
+    previewUltimaMensagem: string;
+}
+
 export { ProdutoDestacado, AcaoChat, TipoAcao } from '../../../services/chat-ia.service';
 
 const SESSION_KEY = 'chat-ia-session-id';
 const MENSAGENS_KEY = 'chat-ia-mensagens';
+const HISTORICO_KEY = 'chat-ia-historico';
+const MAX_CONVERSAS_HISTORICO = 10;
 
 /**
  * Gera ou recupera o sessionId do sessionStorage.
@@ -65,6 +78,93 @@ function carregarMensagens(): MensagemChat[] {
 }
 
 /**
+ * Carrega o histórico de conversas do localStorage (persiste entre sessões).
+ * Usado como fallback quando não há clienteId (usuário não logado).
+ */
+function carregarHistoricoLocal(clienteId: string | null | undefined): ConversaSalva[] {
+    const key = clienteId ? `${HISTORICO_KEY}-${clienteId}` : HISTORICO_KEY;
+    const saved = localStorage.getItem(key);
+    if (!saved) return [];
+
+    try {
+        const parsed = JSON.parse(saved);
+        return parsed.map((c: ConversaSalva & { dataInicio: string; dataUltimaMensagem: string; mensagens: Array<MensagemChat & { timestamp: string }> }) => ({
+            ...c,
+            dataInicio: new Date(c.dataInicio),
+            dataUltimaMensagem: new Date(c.dataUltimaMensagem),
+            mensagens: c.mensagens.map(m => ({
+                ...m,
+                timestamp: new Date(m.timestamp)
+            }))
+        }));
+    } catch {
+        return [];
+    }
+}
+
+/**
+ * Salva o histórico de conversas no localStorage.
+ * Usado como fallback quando não há clienteId (usuário não logado).
+ */
+function salvarHistoricoLocal(clienteId: string | null | undefined, conversas: ConversaSalva[]): void {
+    const key = clienteId ? `${HISTORICO_KEY}-${clienteId}` : HISTORICO_KEY;
+    // Mantém apenas as últimas MAX_CONVERSAS_HISTORICO conversas
+    const limitadas = conversas.slice(0, MAX_CONVERSAS_HISTORICO);
+    localStorage.setItem(key, JSON.stringify(limitadas));
+}
+
+/**
+ * Converte ConversaSalvaAPI (do backend) para ConversaSalva (local).
+ */
+function converterApiParaLocal(apiConversa: ConversaSalvaAPI): ConversaSalva {
+    return {
+        id: apiConversa.id,
+        sessionId: apiConversa.sessionId,
+        titulo: apiConversa.titulo,
+        dataInicio: new Date(apiConversa.dataInicio),
+        dataUltimaMensagem: new Date(apiConversa.dataUltimaMensagem),
+        previewUltimaMensagem: apiConversa.previewUltimaMensagem,
+        mensagens: apiConversa.mensagens.map(m => ({
+            id: m.id,
+            from: m.from,
+            text: m.text,
+            timestamp: new Date(m.timestamp)
+        }))
+    };
+}
+
+/**
+ * Converte ConversaSalva (local) para SalvarConversaDTO (para API).
+ */
+function converterLocalParaDto(conversa: ConversaSalva): SalvarConversaDTO {
+    return {
+        sessionId: conversa.sessionId,
+        titulo: conversa.titulo,
+        previewUltimaMensagem: conversa.previewUltimaMensagem,
+        dataInicio: conversa.dataInicio.toISOString(),
+        dataUltimaMensagem: conversa.dataUltimaMensagem.toISOString(),
+        mensagens: conversa.mensagens.map(m => ({
+            id: m.id,
+            from: m.from,
+            text: m.text,
+            timestamp: m.timestamp.toISOString()
+        }))
+    };
+}
+
+/**
+ * Gera um título para a conversa baseado na primeira mensagem do usuário.
+ */
+function gerarTituloConversa(mensagens: MensagemChat[]): string {
+    const primeiraMsgUsuario = mensagens.find(m => m.from === 'user');
+    if (primeiraMsgUsuario) {
+        const texto = primeiraMsgUsuario.text;
+        return texto.length > 30 ? texto.substring(0, 30) + '...' : texto;
+    }
+    return 'Nova conversa';
+}
+
+/**
  * Composable para gerenciar o estado do Chat IA.
  * Fornece estado reativo e métodos para interação com o chat.
  * @param clienteIdGetter função que retorna o ID do cliente logado (opcional)
@@ -83,12 +183,15 @@ export function useChatIA(
     const mensagens = signal<MensagemChat[]>([]);
     const erro = signal<string | null>(null);
     const ultimaAcao = signal<AcaoChat | null>(null);
+    const historicoConversas = signal<ConversaSalva[]>([]);
+    const mostrarHistorico = signal(false);
 
     let sessionId = obterOuGerarSessionId();
 
     // Computed
     const canSend = computed(() => inputText().trim().length > 0 && !isLoading());
     const carrinhoVazio = computed(() => mensagens().length <= 1); // Só mensagem inicial
+    const temHistorico = computed(() => historicoConversas().length > 0);
 
     // Mensagem inicial de boas-vindas
     const mensagemInicial: MensagemChat = {
@@ -107,6 +210,31 @@ export function useChatIA(
             mensagens.set(salvas);
         } else {
             mensagens.set([mensagemInicial]);
+        }
+        // Carrega histórico de conversas (da API se logado, senão localStorage)
+        carregarHistoricoConversas();
+    }
+
+    /**
+     * Carrega o histórico de conversas da API (se logado) ou localStorage.
+     */
+    function carregarHistoricoConversas(): void {
+        const clienteId = clienteIdGetter?.();
+
+        if (clienteId) {
+            // Usuário logado: carrega da API
+            chatService.listarConversasSalvas(clienteId).subscribe({
+                next: (conversas) => {
+                    historicoConversas.set(conversas.map(converterApiParaLocal));
+                },
+                error: () => {
+                    // Fallback para localStorage em caso de erro
+                    historicoConversas.set(carregarHistoricoLocal(clienteId));
+                }
+            });
+        } else {
+            // Usuário não logado: usa localStorage
+            historicoConversas.set(carregarHistoricoLocal(null));
         }
     }
 
@@ -208,9 +336,58 @@ export function useChatIA(
     }
 
     /**
-     * Inicia uma nova conversa, limpando o histórico.
+     * Salva a conversa atual no histórico antes de iniciar uma nova.
+     */
+    function salvarConversaAtualNoHistorico(): void {
+        const msgs = mensagens();
+        // Só salva se tiver mais que a mensagem inicial (houve interação)
+        if (msgs.length <= 1) return;
+
+        const clienteId = clienteIdGetter?.();
+        const conversaAtual: ConversaSalva = {
+            id: crypto.randomUUID(),
+            sessionId,
+            titulo: gerarTituloConversa(msgs),
+            dataInicio: msgs[0].timestamp,
+            dataUltimaMensagem: msgs.at(-1)!.timestamp,
+            mensagens: msgs,
+            previewUltimaMensagem: msgs.at(-1)!.text.substring(0, 50) + (msgs.at(-1)!.text.length > 50 ? '...' : '')
+        };
+
+        if (clienteId) {
+            // Usuário logado: salva na API
+            const dto = converterLocalParaDto(conversaAtual);
+            chatService.salvarConversa(clienteId, dto).subscribe({
+                next: (conversaSalva) => {
+                    if (conversaSalva) {
+                        // Atualiza lista local com a resposta da API
+                        const novaConversa = converterApiParaLocal(conversaSalva);
+                        const historico = [novaConversa, ...historicoConversas().filter(c => c.id !== conversaSalva.id)].slice(0, MAX_CONVERSAS_HISTORICO);
+                        historicoConversas.set(historico);
+                    }
+                },
+                error: () => {
+                    // Fallback: salva localmente em caso de erro
+                    const historico = [conversaAtual, ...historicoConversas()].slice(0, MAX_CONVERSAS_HISTORICO);
+                    historicoConversas.set(historico);
+                    salvarHistoricoLocal(clienteId, historico);
+                }
+            });
+        } else {
+            // Usuário não logado: salva no localStorage
+            const historico = [conversaAtual, ...historicoConversas()].slice(0, MAX_CONVERSAS_HISTORICO);
+            historicoConversas.set(historico);
+            salvarHistoricoLocal(clienteId, historico);
+        }
+    }
+
+    /**
+     * Inicia uma nova conversa, salvando a atual no histórico.
      */
     function novaConversa(): void {
+        // Salva conversa atual no histórico antes de limpar
+        salvarConversaAtualNoHistorico();
+
         const sessionIdAntigo = sessionId;
 
         // Limpa frontend
@@ -225,6 +402,56 @@ export function useChatIA(
         chatService.limparHistorico(sessionIdAntigo).subscribe();
 
         salvarMensagens(mensagens());
+        mostrarHistorico.set(false);
+    }
+
+    /**
+     * Carrega uma conversa do histórico.
+     */
+    function carregarConversaDoHistorico(conversaId: string): void {
+        const conversa = historicoConversas().find(c => c.id === conversaId);
+        if (!conversa) return;
+
+        // Salva conversa atual antes de trocar (se tiver interação)
+        salvarConversaAtualNoHistorico();
+
+        // Carrega a conversa selecionada
+        mensagens.set(conversa.mensagens);
+        sessionId = conversa.sessionId;
+        sessionStorage.setItem(SESSION_KEY, sessionId);
+        salvarMensagens(mensagens());
+        mostrarHistorico.set(false);
+    }
+
+    /**
+     * Alterna a exibição do painel de histórico.
+     */
+    function toggleHistorico(): void {
+        mostrarHistorico.update(v => !v);
+    }
+
+    /**
+     * Remove uma conversa do histórico.
+     */
+    function removerDoHistorico(conversaId: string): void {
+        const clienteId = clienteIdGetter?.();
+
+        // Remove localmente imediatamente para feedback rápido
+        const novoHistorico = historicoConversas().filter(c => c.id !== conversaId);
+        historicoConversas.set(novoHistorico);
+
+        if (clienteId) {
+            // Usuário logado: remove na API
+            chatService.removerConversa(clienteId, conversaId).subscribe({
+                error: () => {
+                    // Em caso de erro, recarrega o histórico da API
+                    carregarHistoricoConversas();
+                }
+            });
+        } else {
+            // Usuário não logado: atualiza localStorage
+            salvarHistoricoLocal(clienteId, novoHistorico);
+        }
     }
 
     /**
@@ -251,10 +478,13 @@ export function useChatIA(
         mensagens,
         erro,
         ultimaAcao,
+        historicoConversas,
+        mostrarHistorico,
 
         // Computed
         canSend,
         carrinhoVazio,
+        temHistorico,
 
         // Métodos
         inicializar,
@@ -264,7 +494,10 @@ export function useChatIA(
         setInputText,
         enviarMensagem,
         novaConversa,
-        adicionarMensagemLocal
+        adicionarMensagemLocal,
+        toggleHistorico,
+        carregarConversaDoHistorico,
+        removerDoHistorico
     };
 }
 

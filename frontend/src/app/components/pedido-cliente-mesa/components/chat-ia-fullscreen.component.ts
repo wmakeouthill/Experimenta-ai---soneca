@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MensagemChat, ProdutoDestacado } from '../composables/use-chat-ia';
+import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/use-chat-ia';
 
 /**
  * Componente de Chat IA fullscreen responsivo.
@@ -48,12 +48,6 @@ import { MensagemChat, ProdutoDestacado } from '../composables/use-chat-ia';
           }
 
           <div class="chat-ia-header-actions">
-            <button 
-              class="btn-nova-conversa" 
-              (click)="onNovaConversa.emit()"
-              title="Nova conversa">
-              🔄
-            </button>
             <button class="btn-fechar" (click)="onClose.emit()" title="Fechar">
               ✕
             </button>
@@ -131,9 +125,54 @@ import { MensagemChat, ProdutoDestacado } from '../composables/use-chat-ia';
           }
         </div>
 
+        <!-- Painel de Histórico -->
+        @if (mostrarHistorico()) {
+          <div class="historico-panel">
+            <div class="historico-header">
+              <h3>📜 Conversas Anteriores</h3>
+              <button class="btn-fechar-historico" (click)="onToggleHistorico.emit()">✕</button>
+            </div>
+            <div class="historico-lista">
+              @if (historicoConversas().length === 0) {
+                <div class="historico-vazio">
+                  <span>💬</span>
+                  <p>Nenhuma conversa anterior</p>
+                </div>
+              } @else {
+                @for (conversa of historicoConversas(); track conversa.id) {
+                  <div class="historico-item" (click)="onCarregarConversa.emit(conversa.id)">
+                    <div class="historico-item-titulo">{{ conversa.titulo }}</div>
+                    <div class="historico-item-preview">{{ conversa.previewUltimaMensagem }}</div>
+                    <div class="historico-item-data">{{ formatDate(conversa.dataUltimaMensagem) }}</div>
+                    <button 
+                      class="btn-remover-conversa" 
+                      (click)="onRemoverConversa.emit(conversa.id); $event.stopPropagation()"
+                      title="Remover conversa">
+                      🗑️
+                    </button>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+        }
+
         <!-- Input -->
         <footer class="chat-ia-input-area">
           <div class="input-wrapper">
+            <button 
+              class="btn-nova-conversa-input" 
+              (click)="onNovaConversa.emit()"
+              title="Nova conversa">
+              ✨
+            </button>
+            <button 
+              class="btn-historico" 
+              [class.ativo]="mostrarHistorico()"
+              (click)="onToggleHistorico.emit()"
+              title="Ver conversas anteriores">
+              📜
+            </button>
             <input
               #chatInput
               type="text"
@@ -182,6 +221,7 @@ import { MensagemChat, ProdutoDestacado } from '../composables/use-chat-ia';
     }
 
     .chat-ia-container {
+      position: relative;
       width: 100%;
       height: 100%;
       max-width: 100dvw;
@@ -680,6 +720,156 @@ import { MensagemChat, ProdutoDestacado } from '../composables/use-chat-ia';
       font-weight: 500;
     }
 
+    /* Botões na área de input */
+    .btn-nova-conversa-input,
+    .btn-historico {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: var(--text-primary, #e8e8e8);
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s ease, transform 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .btn-nova-conversa-input:hover,
+    .btn-historico:hover {
+      background: rgba(230, 126, 34, 0.3);
+      transform: scale(1.1);
+    }
+
+    .btn-historico.ativo {
+      background: rgba(230, 126, 34, 0.5);
+    }
+
+    /* Painel de Histórico */
+    .historico-panel {
+      position: absolute;
+      bottom: 70px;
+      left: 0;
+      right: 0;
+      max-height: 300px;
+      background: var(--bg-primary, #1a1a2e);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      animation: slideUp 0.3s ease;
+      z-index: 10;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .historico-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .historico-header h3 {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--text-primary, #e8e8e8);
+    }
+
+    .btn-fechar-historico {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary, #888);
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 0.25rem;
+    }
+
+    .btn-fechar-historico:hover {
+      color: var(--text-primary, #e8e8e8);
+    }
+
+    .historico-lista {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.5rem;
+    }
+
+    .historico-vazio {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      color: var(--text-secondary, #888);
+    }
+
+    .historico-vazio span {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .historico-vazio p {
+      margin: 0;
+      font-size: 0.85rem;
+    }
+
+    .historico-item {
+      position: relative;
+      background: var(--bg-secondary, #16213e);
+      border-radius: 8px;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .historico-item:hover {
+      background: var(--bg-tertiary, #1f2b47);
+      transform: translateX(4px);
+    }
+
+    .historico-item-titulo {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-primary, #e8e8e8);
+      margin-bottom: 0.25rem;
+      padding-right: 2rem;
+    }
+
+    .historico-item-preview {
+      font-size: 0.75rem;
+      color: var(--text-secondary, #aaa);
+      margin-bottom: 0.25rem;
+    }
+
+    .historico-item-data {
+      font-size: 0.7rem;
+      color: var(--text-secondary, #888);
+    }
+
+    .btn-remover-conversa {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background: transparent;
+      border: none;
+      font-size: 0.85rem;
+      cursor: pointer;
+      opacity: 0.5;
+      transition: opacity 0.2s ease;
+    }
+
+    .btn-remover-conversa:hover {
+      opacity: 1;
+    }
+
     /* Mobile optimizations */
     @media (max-width: 768px) {
       .chat-ia-header {
@@ -716,6 +906,17 @@ import { MensagemChat, ProdutoDestacado } from '../composables/use-chat-ia';
         padding: 0.3rem 0.6rem;
         font-size: 0.7rem;
       }
+
+      .btn-nova-conversa-input,
+      .btn-historico {
+        width: 34px;
+        height: 34px;
+        font-size: 0.9rem;
+      }
+
+      .historico-panel {
+        max-height: 250px;
+      }
     }
   `]
 })
@@ -732,6 +933,10 @@ export class ChatIAFullscreenComponent implements AfterViewChecked {
     readonly quantidadeItensCarrinho = input<number>(0);
     /** Flag para disparar animação no carrinho (quando item é adicionado) */
     readonly animarCarrinho = input<boolean>(false);
+    /** Lista de conversas anteriores */
+    readonly historicoConversas = input<ConversaSalva[]>([]);
+    /** Se deve mostrar o painel de histórico */
+    readonly mostrarHistorico = input<boolean>(false);
 
     // Outputs
     readonly onClose = output<void>();
@@ -742,9 +947,15 @@ export class ChatIAFullscreenComponent implements AfterViewChecked {
     readonly onAdicionarProduto = output<ProdutoDestacado>();
     /** Emitido quando o usuário clica no carrinho no header */
     readonly onAbrirCarrinho = output<void>();
+    /** Emitido para alternar exibição do histórico */
+    readonly onToggleHistorico = output<void>();
+    /** Emitido quando o usuário seleciona uma conversa do histórico */
+    readonly onCarregarConversa = output<string>();
+    /** Emitido quando o usuário remove uma conversa do histórico */
+    readonly onRemoverConversa = output<string>();
 
-    @ViewChild('messagesContainer') private messagesContainer?: ElementRef<HTMLDivElement>;
-    @ViewChild('chatInput') private chatInput?: ElementRef<HTMLInputElement>;
+    @ViewChild('messagesContainer') private readonly messagesContainer?: ElementRef<HTMLDivElement>;
+    @ViewChild('chatInput') private readonly chatInput?: ElementRef<HTMLInputElement>;
 
     private shouldScrollToBottom = true;
 
@@ -772,6 +983,20 @@ export class ChatIAFullscreenComponent implements AfterViewChecked {
 
     formatTime(date: Date): string {
         return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    formatDate(date: Date): string {
+        const hoje = new Date();
+        const ontem = new Date(hoje);
+        ontem.setDate(ontem.getDate() - 1);
+
+        if (date.toDateString() === hoje.toDateString()) {
+            return `Hoje às ${this.formatTime(date)}`;
+        } else if (date.toDateString() === ontem.toDateString()) {
+            return `Ontem às ${this.formatTime(date)}`;
+        } else {
+            return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ` às ${this.formatTime(date)}`;
+        }
     }
 
     enviar(): void {

@@ -1329,12 +1329,17 @@
         [mensagens]="chatIA.mensagens()"
         [quantidadeItensCarrinho]="carrinho.totalItens()"
         [animarCarrinho]="animarCarrinhoChat()"
+        [historicoConversas]="chatIA.historicoConversas()"
+        [mostrarHistorico]="chatIA.mostrarHistorico()"
         (onClose)="chatIA.fecharChat()"
         (onSend)="chatIA.enviarMensagem()"
         (onInputChange)="chatIA.setInputText($event)"
         (onNovaConversa)="chatIA.novaConversa()"
         (onAdicionarProduto)="adicionarProdutoChatAoCarrinho($event)"
-        (onAbrirCarrinho)="abrirCarrinhoNoChat()" />
+        (onAbrirCarrinho)="abrirCarrinhoNoChat()"
+        (onToggleHistorico)="chatIA.toggleHistorico()"
+        (onCarregarConversa)="chatIA.carregarConversaDoHistorico($event)"
+        (onRemoverConversa)="chatIA.removerDoHistorico($event)" />
 
     <!-- ========== MODAIS - Renderizados por último para ficar acima do chat ========== -->
     <!-- Modal de detalhes do produto -->

@@ -32,12 +32,13 @@ cd /app
 echo "📂 Diretório atual: $(pwd)"
 
 # Primeiro, instalar todos os módulos no repositório local Maven
+# ⚠️ SKIP FRONTEND BUILD: frontend já roda em container separado com hot reload
 echo "📦 Instalando módulos no repositório Maven local..."
-echo "📋 Executando: mvn clean install -DskipTests -B -q"
+echo "📋 Executando: mvn clean install -DskipTests -Dskip.frontend.build=true -B -q"
 
-if ! mvn clean install -DskipTests -B -q; then
+if ! mvn clean install -DskipTests -Dskip.frontend.build=true -B -q; then
     echo "❌ Erro no build inicial. Mostrando detalhes..."
-    mvn clean install -DskipTests -B 2>&1 | tail -50
+    mvn clean install -DskipTests -Dskip.frontend.build=true -B 2>&1 | tail -50
     exit 1
 fi
 
@@ -93,7 +94,8 @@ monitor_and_recompile() {
             echo "🔄 ============================================"
             
             cd /app
-            if mvn compile -DskipTests -B -q -T 2C 2>&1; then
+            # ⚠️ SKIP FRONTEND BUILD: frontend já roda em container separado
+            if mvn compile -DskipTests -Dskip.frontend.build=true -B -q -T 2C 2>&1; then
                 echo "✅ Recompilação concluída!"
                 echo "🔄 Spring DevTools vai reiniciar a aplicação..."
                 LAST_CHECKSUM=$CURRENT_CHECKSUM
@@ -113,7 +115,9 @@ echo "✅ Monitor de recompilação iniciado (PID: $MONITOR_PID)"
 echo ""
 
 # Executar Spring Boot com DevTools habilitado
+# ⚠️ SKIP FRONTEND BUILD: frontend já roda em container separado com hot reload
 exec mvn spring-boot:run \
+    -Dskip.frontend.build=true \
     -Dspring-boot.run.jvmArguments="-Xmx512m -Xms256m -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 -Dspring.datasource.url=${DB_URL} -Dspring.datasource.username=${DB_USERNAME} -Dspring.datasource.password=${DB_PASSWORD} -Dserver.port=${SERVER_PORT:-8080} -Djwt.secret=${JWT_SECRET} -Djwt.expiration=${JWT_EXPIRATION:-86400} -Dlogging.level.com.snackbar=${LOG_LEVEL:-DEBUG} -Dspring.devtools.restart.enabled=true -Dspring.devtools.restart.poll-interval=1000 -Dspring.devtools.restart.quiet-period=400" \
     -Dspring.profiles.active=${SPRING_PROFILES_ACTIVE:-dev} \
     -B
