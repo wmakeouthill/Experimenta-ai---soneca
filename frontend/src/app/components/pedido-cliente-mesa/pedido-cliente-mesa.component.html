@@ -1322,16 +1322,19 @@
 
     <app-chat-ia-fullscreen
         [isOpen]="chatIA.isOpen()"
-        [isHidden]="carrinho.mostrarDetalhes()"
+        [isHidden]="carrinho.mostrarDetalhes() || carrinhoAbertoPeloChat()"
         [isLoading]="chatIA.isLoading()"
         [inputText]="chatIA.inputText()"
         [canSend]="chatIA.canSend()"
         [mensagens]="chatIA.mensagens()"
+        [quantidadeItensCarrinho]="carrinho.totalItens()"
+        [animarCarrinho]="animarCarrinhoChat()"
         (onClose)="chatIA.fecharChat()"
         (onSend)="chatIA.enviarMensagem()"
         (onInputChange)="chatIA.setInputText($event)"
         (onNovaConversa)="chatIA.novaConversa()"
-        (onAdicionarProduto)="adicionarProdutoChatAoCarrinho($event)" />
+        (onAdicionarProduto)="adicionarProdutoChatAoCarrinho($event)"
+        (onAbrirCarrinho)="abrirCarrinhoNoChat()" />
 
     <!-- ========== MODAIS - Renderizados por último para ficar acima do chat ========== -->
     <!-- Modal de detalhes do produto -->

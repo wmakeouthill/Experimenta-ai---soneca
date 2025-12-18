@@ -20,7 +20,7 @@ export interface ProdutoDestacado {
 }
 
 /** Tipos de ação que o chat pode executar */
-export type TipoAcao = 'ADICIONAR_CARRINHO' | 'REMOVER_CARRINHO' | 'VER_DETALHES' | 'FINALIZAR_PEDIDO' | 'NENHUMA';
+export type TipoAcao = 'ADICIONAR_CARRINHO' | 'REMOVER_CARRINHO' | 'LIMPAR_CARRINHO' | 'VER_CARRINHO' | 'VER_DETALHES' | 'FINALIZAR_PEDIDO' | 'NENHUMA';
 
 /** Ação executável retornada pelo chat */
 export interface AcaoChat {

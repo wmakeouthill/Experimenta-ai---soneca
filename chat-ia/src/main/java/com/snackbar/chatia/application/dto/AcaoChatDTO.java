@@ -22,6 +22,12 @@ public record AcaoChatDTO(
         /** Remove um produto do carrinho */
         REMOVER_CARRINHO,
         
+        /** Limpa todo o carrinho */
+        LIMPAR_CARRINHO,
+        
+        /** Mostra o conteúdo do carrinho */
+        VER_CARRINHO,
+        
         /** Abre os detalhes de um produto */
         VER_DETALHES,
         
@@ -38,6 +44,18 @@ public record AcaoChatDTO(
     
     public static AcaoChatDTO adicionarCarrinho(String produtoId, String produtoNome) {
         return new AcaoChatDTO(TipoAcao.ADICIONAR_CARRINHO, produtoId, produtoNome, 1, null);
+    }
+    
+    public static AcaoChatDTO removerCarrinho(String produtoId, String produtoNome) {
+        return new AcaoChatDTO(TipoAcao.REMOVER_CARRINHO, produtoId, produtoNome, null, null);
+    }
+    
+    public static AcaoChatDTO limparCarrinho() {
+        return new AcaoChatDTO(TipoAcao.LIMPAR_CARRINHO, null, null, null, null);
+    }
+    
+    public static AcaoChatDTO verCarrinho() {
+        return new AcaoChatDTO(TipoAcao.VER_CARRINHO, null, null, null, null);
     }
     
     public static AcaoChatDTO nenhuma() {

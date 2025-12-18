@@ -26,6 +26,31 @@ public class DetectorComandoService {
         "quero", "vou querer", "me vê", "me ve", "me da", "me dá", "manda", "pede", "pedido",
         "inclui", "inclua", "põe", "poe", "pode adicionar", "pode colocar", "pode ser"
     );
+    
+    // Padrões para detectar comandos de REMOVER do carrinho
+    private static final List<String> VERBOS_REMOVER = List.of(
+        "remove", "remova", "tira", "tire", "retira", "retire", "cancela", "cancele",
+        "exclui", "exclua", "apaga", "apague", "deleta", "delete", "descarta"
+    );
+    
+    // Padrões para detectar comando de LIMPAR carrinho
+    private static final List<String> VERBOS_LIMPAR = List.of(
+        "limpa", "limpe", "limpar", "esvazia", "esvazie", "esvaziar", 
+        "zera", "zere", "zerar", "cancela tudo", "cancele tudo", "remove tudo", 
+        "tira tudo", "apaga tudo", "exclui tudo"
+    );
+    
+    // Padrões para detectar comando de VER carrinho
+    private static final List<String> PADROES_VER_CARRINHO = List.of(
+        "ver carrinho", "ve carrinho", "vê carrinho", "ver meu carrinho",
+        "o que tem no carrinho", "que tem no carrinho", "tem no carrinho",
+        "meu carrinho", "meu pedido", "ver pedido", "ver meu pedido",
+        "quanto ta", "quanto tá", "quanto está", "quanto esta", "quanto ficou",
+        "total do pedido", "total do carrinho", "valor do pedido", "valor do carrinho",
+        "resumo do pedido", "resumo do carrinho", "revisar pedido", "revisar carrinho",
+        "o que eu pedi", "que eu pedi", "itens do carrinho", "itens do pedido",
+        "mostra o carrinho", "mostra o pedido", "mostrar carrinho", "mostrar pedido"
+    );
 
     // Padrão PRIORITÁRIO: "numero X" ou "número X" (mais comum em menus)
     // Captura o número do produto quando mencionado explicitamente
@@ -52,6 +77,115 @@ public class DetectorComandoService {
         "^\\s*(\\d+)\\s+(?!numero|número|n°|nº)",
         Pattern.CASE_INSENSITIVE
     );
+    
+    /**
+     * Detecta qualquer comando de ação na mensagem.
+     * Prioriza: VER_CARRINHO > LIMPAR > REMOVER > ADICIONAR
+     */
+    public AcaoChatDTO detectarComando(String mensagem, CardapioContextDTO cardapio) {
+        if (mensagem == null) {
+            return AcaoChatDTO.nenhuma();
+        }
+        
+        String mensagemNormalizada = normalizar(mensagem);
+        
+        // 1. Verifica se é comando de VER carrinho (maior prioridade)
+        AcaoChatDTO acaoVerCarrinho = detectarComandoVerCarrinho(mensagemNormalizada);
+        if (acaoVerCarrinho.temAcao()) {
+            return acaoVerCarrinho;
+        }
+        
+        // 2. Verifica se é comando de LIMPAR carrinho
+        AcaoChatDTO acaoLimpar = detectarComandoLimpar(mensagemNormalizada);
+        if (acaoLimpar.temAcao()) {
+            return acaoLimpar;
+        }
+        
+        // 3. Verifica se é comando de REMOVER do carrinho
+        AcaoChatDTO acaoRemover = detectarComandoRemover(mensagem, mensagemNormalizada, cardapio);
+        if (acaoRemover.temAcao()) {
+            return acaoRemover;
+        }
+        
+        // 4. Verifica se é comando de ADICIONAR ao carrinho
+        return detectarComandoAdicionar(mensagem, cardapio);
+    }
+    
+    /**
+     * Detecta comando de VER carrinho/pedido.
+     * Ex: "o que tem no carrinho?", "quanto está?", "ver meu pedido"
+     */
+    private AcaoChatDTO detectarComandoVerCarrinho(String mensagemNormalizada) {
+        boolean contemPadraoVerCarrinho = PADROES_VER_CARRINHO.stream()
+            .anyMatch(padrao -> mensagemNormalizada.contains(normalizar(padrao)));
+        
+        if (contemPadraoVerCarrinho) {
+            log.info("👀 Comando de VER carrinho detectado");
+            return AcaoChatDTO.verCarrinho();
+        }
+        
+        return AcaoChatDTO.nenhuma();
+    }
+    
+    /**
+     * Detecta comando de LIMPAR/ESVAZIAR carrinho.
+     * Ex: "limpa o carrinho", "cancela tudo", "esvazia o carrinho"
+     */
+    private AcaoChatDTO detectarComandoLimpar(String mensagemNormalizada) {
+        boolean contemVerbosLimpar = VERBOS_LIMPAR.stream()
+            .anyMatch(verbo -> mensagemNormalizada.contains(normalizar(verbo)));
+        
+        // Também detecta padrões como "limpa o carrinho", "esvazia meu pedido"
+        boolean contemContextoCarrinho = mensagemNormalizada.contains("carrinho") ||
+                                         mensagemNormalizada.contains("pedido") ||
+                                         mensagemNormalizada.contains("cesta");
+        
+        if (contemVerbosLimpar && contemContextoCarrinho) {
+            log.info("🗑️ Comando de LIMPAR carrinho detectado");
+            return AcaoChatDTO.limparCarrinho();
+        }
+        
+        // Detecta "cancela tudo", "remove tudo", etc.
+        if (contemVerbosLimpar && mensagemNormalizada.contains("tudo")) {
+            log.info("🗑️ Comando de LIMPAR carrinho detectado (tudo)");
+            return AcaoChatDTO.limparCarrinho();
+        }
+        
+        return AcaoChatDTO.nenhuma();
+    }
+    
+    /**
+     * Detecta comando de REMOVER um produto específico do carrinho.
+     * Ex: "tira o x-tudo", "remove o número 4", "cancela a coca"
+     */
+    private AcaoChatDTO detectarComandoRemover(String mensagemOriginal, String mensagemNormalizada, CardapioContextDTO cardapio) {
+        if (cardapio == null) {
+            return AcaoChatDTO.nenhuma();
+        }
+        
+        boolean contemVerboRemover = VERBOS_REMOVER.stream()
+            .anyMatch(verbo -> mensagemNormalizada.contains(normalizar(verbo)));
+        
+        if (!contemVerboRemover) {
+            return AcaoChatDTO.nenhuma();
+        }
+        
+        log.info("🔄 Comando de remover detectado na mensagem: '{}'", mensagemOriginal);
+        
+        // Tenta identificar qual produto remover
+        Optional<CardapioContextDTO.ProdutoContextDTO> produtoEncontrado = 
+            identificarProduto(mensagemNormalizada, mensagemOriginal, cardapio);
+        
+        if (produtoEncontrado.isEmpty()) {
+            log.warn("⚠️ Verbo de remover detectado, mas produto não identificado");
+            return AcaoChatDTO.nenhuma();
+        }
+        
+        CardapioContextDTO.ProdutoContextDTO produto = produtoEncontrado.get();
+        log.info("🗑️ Comando identificado: remover '{}' do carrinho", produto.nome());
+        
+        return AcaoChatDTO.removerCarrinho(produto.id(), produto.nome());
+    }
 
     /**
      * Detecta se a mensagem contém um comando de adicionar ao carrinho.

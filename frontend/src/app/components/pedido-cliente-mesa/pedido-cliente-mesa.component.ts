@@ -94,6 +94,11 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   readonly celularErro = signal<string | null>(null);
   readonly celularSucesso = signal(false);
 
+  // Estado para animação do carrinho no chat
+  readonly animarCarrinhoChat = signal(false);
+  // Indica se o carrinho foi aberto a partir do chat (para voltar ao chat ao fechar)
+  readonly carrinhoAbertoPeloChat = signal(false);
+
   // ========== Composables ==========
   private readonly mesaToken = () => this.mesa()?.qrCodeToken;
 
@@ -368,6 +373,12 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   fecharCarrinho(): void {
     this.carrinho.fecharCarrinho();
     this.pagamento.resetarEtapa();
+
+    // Se o carrinho foi aberto pelo chat, volta para o chat
+    if (this.carrinhoAbertoPeloChat()) {
+      this.carrinhoAbertoPeloChat.set(false);
+      // Chat já está aberto, só precisa mostrar novamente
+    }
   }
 
   // ========== Google Auth ==========
@@ -467,25 +478,75 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   }
 
   /**
-   * Processa ações do Chat IA (ex: adicionar ao carrinho via comando de texto).
+   * Processa ações do Chat IA (ex: adicionar, remover ou limpar carrinho via comando de texto).
    */
   processarAcaoChat(acao: AcaoChat): void {
-    if (acao.tipo === 'ADICIONAR_CARRINHO' && acao.produtoId) {
-      // Busca o produto no cardápio
-      const produto = this.cardapio.produtos().find(p => p.id === acao.produtoId);
-      if (produto) {
-        const quantidade = acao.quantidade || 1;
-        const observacao = acao.observacao || '';
+    switch (acao.tipo) {
+      case 'ADICIONAR_CARRINHO':
+        if (acao.produtoId) {
+          const produto = this.cardapio.produtos().find(p => p.id === acao.produtoId);
+          if (produto) {
+            const quantidade = acao.quantidade || 1;
+            const observacao = acao.observacao || '';
+            this.carrinho.adicionarComOpcoes(produto, quantidade, observacao);
+            console.log(`✅ Chat IA: Adicionado ${quantidade}x ${produto.nome} ao carrinho`, observacao ? `(${observacao})` : '');
+            // Dispara animação do carrinho no header do chat
+            this.dispararAnimacaoCarrinhoChat();
+          } else {
+            console.warn(`⚠️ Chat IA: Produto não encontrado: ${acao.produtoId}`);
+          }
+        }
+        break;
 
-        // Adiciona ao carrinho usando a nova função com opções
-        this.carrinho.adicionarComOpcoes(produto, quantidade, observacao);
+      case 'REMOVER_CARRINHO':
+        if (acao.produtoId) {
+          this.carrinho.removerDoCarrinho(acao.produtoId);
+          console.log(`🗑️ Chat IA: Removido ${acao.produtoNome} do carrinho`);
+        }
+        break;
 
-        console.log(`✅ Chat IA: Adicionado ${quantidade}x ${produto.nome} ao carrinho`, observacao ? `(${observacao})` : '');
-      } else {
-        console.warn(`⚠️ Chat IA: Produto não encontrado: ${acao.produtoId}`);
+      case 'LIMPAR_CARRINHO':
+        this.carrinho.limparCarrinho();
+        console.log(`🗑️ Chat IA: Carrinho limpo`);
+        break;
+
+      case 'VER_CARRINHO': {
+        // Gera resumo do carrinho e adiciona como mensagem da IA
+        const resumo = this.gerarResumoCarrinho();
+        this.chatIA.adicionarMensagemLocal(resumo);
+        console.log(`👀 Chat IA: Exibindo carrinho`);
+        break;
       }
+
+      default:
+        console.log(`ℹ️ Chat IA: Ação não processada: ${acao.tipo}`);
     }
-    // Outros tipos de ação podem ser adicionados aqui no futuro
+  }
+
+  /**
+   * Gera um resumo do carrinho para exibir no chat.
+   */
+  private gerarResumoCarrinho(): string {
+    const itens = this.carrinho.itens();
+
+    if (itens.length === 0) {
+      return "Seu carrinho está vazio! 🛒\n\nQue tal dar uma olhada no cardápio? Posso te ajudar a escolher! 😊";
+    }
+
+    let resumo = "**Seu carrinho:** 🛒\n\n";
+
+    itens.forEach((item, index) => {
+      resumo += `${index + 1}. **${item.produto.nome}** x${item.quantidade} - R$ ${(item.produto.preco * item.quantidade).toFixed(2)}`;
+      if (item.observacao) {
+        resumo += `\n   📝 _${item.observacao}_`;
+      }
+      resumo += '\n';
+    });
+
+    resumo += `\n**Total: R$ ${this.carrinho.totalValor().toFixed(2)}** 💰`;
+    resumo += `\n\nDeseja finalizar o pedido ou adicionar mais alguma coisa? 😊`;
+
+    return resumo;
   }
 
   async salvarSenha(): Promise<void> {
@@ -640,6 +701,29 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
       };
       this.carrinho.abrirDetalhes(produtoMinimo);
     }
+
+    // Dispara animação do carrinho no header do chat
+    this.dispararAnimacaoCarrinhoChat();
+  }
+
+  /**
+   * Abre a tela de carrinho escondendo temporariamente o chat.
+   * Ao fechar o carrinho, volta para o chat automaticamente.
+   */
+  abrirCarrinhoNoChat(): void {
+    console.log('🛒 Abrindo carrinho via chat');
+    // Marca que o carrinho foi aberto pelo chat (para voltar depois)
+    this.carrinhoAbertoPeloChat.set(true);
+    // Abre o modal do carrinho (o chat fica escondido por baixo)
+    this.carrinho.mostrarCarrinho.set(true);
+  }
+
+  /**
+   * Dispara a animação bounce no ícone do carrinho no header do chat.
+   */
+  private dispararAnimacaoCarrinhoChat(): void {
+    this.animarCarrinhoChat.set(true);
+    setTimeout(() => this.animarCarrinhoChat.set(false), 600);
   }
 
   // ========== Utilitários ==========

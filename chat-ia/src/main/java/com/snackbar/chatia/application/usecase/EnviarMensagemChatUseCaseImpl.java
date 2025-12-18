@@ -60,23 +60,23 @@ public class EnviarMensagemChatUseCaseImpl implements EnviarMensagemChatUseCase 
             // Carrega cardápio (com cache simples)
             CardapioContextDTO cardapio = obterCardapio();
             
-            // 🎯 PRIMEIRO: Verifica se é um comando de adicionar ao carrinho
-            AcaoChatDTO acaoDetectada = detectorComandoService.detectarComandoAdicionar(mensagemUsuario, cardapio);
+            // 🎯 PRIMEIRO: Verifica se é um comando de ação (adicionar, remover, limpar)
+            AcaoChatDTO acaoDetectada = detectorComandoService.detectarComando(mensagemUsuario, cardapio);
             
             if (acaoDetectada.temAcao()) {
-                log.info("🛒 Comando de adicionar ao carrinho detectado: {} x{} | obs: {}", 
-                         acaoDetectada.produtoNome(), acaoDetectada.quantidade(), acaoDetectada.observacao());
-                
                 // Adiciona mensagem do usuário ao histórico
                 MensagemChat msgUsuario = MensagemChat.doUsuario(mensagemUsuario);
                 historicoRepository.adicionarMensagem(sessionId, msgUsuario);
                 
-                // Gera resposta confirmando a adição
-                String resposta = gerarRespostaComandoAdicionar(acaoDetectada);
+                // Gera resposta baseada no tipo de ação
+                String resposta = gerarRespostaComando(acaoDetectada);
                 
                 // Adiciona resposta ao histórico
                 MensagemChat msgAssistente = MensagemChat.doAssistente(resposta);
                 historicoRepository.adicionarMensagem(sessionId, msgAssistente);
+                
+                log.info("🎯 Comando detectado: {} | produto: {} | qtd: {}", 
+                         acaoDetectada.tipo(), acaoDetectada.produtoNome(), acaoDetectada.quantidade());
                 
                 return ChatResponseDTO.comAcao(resposta, acaoDetectada);
             }
@@ -132,6 +132,19 @@ public class EnviarMensagemChatUseCaseImpl implements EnviarMensagemChatUseCase 
     }
     
     /**
+     * Gera uma resposta amigável baseada no tipo de comando detectado.
+     */
+    private String gerarRespostaComando(AcaoChatDTO acao) {
+        return switch (acao.tipo()) {
+            case ADICIONAR_CARRINHO -> gerarRespostaComandoAdicionar(acao);
+            case REMOVER_CARRINHO -> gerarRespostaComandoRemover(acao);
+            case LIMPAR_CARRINHO -> gerarRespostaComandoLimpar();
+            case VER_CARRINHO -> gerarRespostaComandoVerCarrinho();
+            default -> "Entendido! 😊";
+        };
+    }
+    
+    /**
      * Gera uma resposta amigável confirmando a adição ao carrinho.
      */
     private String gerarRespostaComandoAdicionar(AcaoChatDTO acao) {
@@ -151,6 +164,28 @@ public class EnviarMensagemChatUseCaseImpl implements EnviarMensagemChatUseCase 
         sb.append("\n\nDeseja mais alguma coisa? 😊");
         
         return sb.toString();
+    }
+    
+    /**
+     * Gera uma resposta amigável confirmando a remoção do carrinho.
+     */
+    private String gerarRespostaComandoRemover(AcaoChatDTO acao) {
+        return "Pronto! Removi **" + acao.produtoNome() + "** do seu carrinho! 🗑️\n\nPosso ajudar com mais alguma coisa? 😊";
+    }
+    
+    /**
+     * Gera uma resposta amigável confirmando a limpeza do carrinho.
+     */
+    private String gerarRespostaComandoLimpar() {
+        return "Carrinho limpo! 🗑️ Todos os itens foram removidos.\n\nQuer começar um novo pedido? Posso te ajudar a escolher! 😊";
+    }
+    
+    /**
+     * Gera uma resposta para ver o carrinho.
+     * A resposta real com os itens será gerada pelo frontend, pois o carrinho está lá.
+     */
+    private String gerarRespostaComandoVerCarrinho() {
+        return "Aqui está seu carrinho! 🛒";
     }
     
     // ============================================

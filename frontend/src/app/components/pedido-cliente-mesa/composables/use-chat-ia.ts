@@ -227,6 +227,22 @@ export function useChatIA(
         salvarMensagens(mensagens());
     }
 
+    /**
+     * Adiciona uma mensagem do assistente localmente (sem chamar o backend).
+     * Útil para respostas que não precisam de processamento do servidor,
+     * como mostrar o conteúdo do carrinho.
+     */
+    function adicionarMensagemLocal(texto: string): void {
+        const msgAssistente: MensagemChat = {
+            id: crypto.randomUUID(),
+            from: 'assistant',
+            text: texto,
+            timestamp: new Date()
+        };
+        mensagens.update(msgs => [...msgs, msgAssistente]);
+        salvarMensagens(mensagens());
+    }
+
     return {
         // Estado
         isOpen,
@@ -247,7 +263,8 @@ export function useChatIA(
         fecharChat,
         setInputText,
         enviarMensagem,
-        novaConversa
+        novaConversa,
+        adicionarMensagemLocal
     };
 }
 

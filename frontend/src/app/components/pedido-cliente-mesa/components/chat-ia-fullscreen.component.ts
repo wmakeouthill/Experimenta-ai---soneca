@@ -34,6 +34,19 @@ import { MensagemChat, ProdutoDestacado } from '../composables/use-chat-ia';
               <span class="status-online">● Online</span>
             </div>
           </div>
+
+          <!-- Carrinho no centro do header -->
+          @if (quantidadeItensCarrinho() > 0) {
+            <button 
+              class="btn-carrinho-header" 
+              [class.bounce]="animarCarrinho()"
+              (click)="onAbrirCarrinho.emit()"
+              title="Ver carrinho">
+              <span class="carrinho-icon">🛒</span>
+              <span class="carrinho-badge">{{ quantidadeItensCarrinho() }}</span>
+            </button>
+          }
+
           <div class="chat-ia-header-actions">
             <button 
               class="btn-nova-conversa" 
@@ -231,6 +244,73 @@ import { MensagemChat, ProdutoDestacado } from '../composables/use-chat-ia';
     .chat-ia-header-actions {
       display: flex;
       gap: 0.5rem;
+    }
+
+    /* Botão do carrinho no header */
+    .btn-carrinho-header {
+      position: relative;
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s ease, transform 0.2s ease;
+      margin: 0 0.5rem;
+    }
+
+    .btn-carrinho-header:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.1);
+    }
+
+    .btn-carrinho-header:active {
+      transform: scale(0.95);
+    }
+
+    .carrinho-icon {
+      font-size: 1.3rem;
+    }
+
+    .carrinho-badge {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      background: #2ecc71;
+      color: white;
+      font-size: 0.65rem;
+      font-weight: 700;
+      min-width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #e67e22;
+      animation: popIn 0.3s ease;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0); }
+      50% { transform: scale(1.3); }
+      100% { transform: scale(1); }
+    }
+
+    /* Animação de bounce quando adiciona item */
+    .btn-carrinho-header.bounce {
+      animation: cartBounce 0.6s ease;
+    }
+
+    @keyframes cartBounce {
+      0%, 100% { transform: scale(1); }
+      20% { transform: scale(1.2) rotate(-5deg); }
+      40% { transform: scale(1.3) rotate(5deg); }
+      60% { transform: scale(1.2) rotate(-3deg); }
+      80% { transform: scale(1.1) rotate(2deg); }
     }
 
     .btn-nova-conversa,
@@ -648,6 +728,10 @@ export class ChatIAFullscreenComponent implements AfterViewChecked {
     readonly inputText = input<string>('');
     readonly canSend = input<boolean>(false);
     readonly mensagens = input<MensagemChat[]>([]);
+    /** Quantidade de itens no carrinho para exibir badge */
+    readonly quantidadeItensCarrinho = input<number>(0);
+    /** Flag para disparar animação no carrinho (quando item é adicionado) */
+    readonly animarCarrinho = input<boolean>(false);
 
     // Outputs
     readonly onClose = output<void>();
@@ -656,6 +740,8 @@ export class ChatIAFullscreenComponent implements AfterViewChecked {
     readonly onNovaConversa = output<void>();
     /** Emitido quando o usuário clica em "Adicionar" em um card de produto */
     readonly onAdicionarProduto = output<ProdutoDestacado>();
+    /** Emitido quando o usuário clica no carrinho no header */
+    readonly onAbrirCarrinho = output<void>();
 
     @ViewChild('messagesContainer') private messagesContainer?: ElementRef<HTMLDivElement>;
     @ViewChild('chatInput') private chatInput?: ElementRef<HTMLInputElement>;
