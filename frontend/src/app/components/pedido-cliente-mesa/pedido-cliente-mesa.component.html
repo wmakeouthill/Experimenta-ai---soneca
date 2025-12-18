@@ -1005,48 +1005,6 @@
         />
     }
 
-    <!-- ========== MODAL: DETALHES DO PRODUTO ========== -->
-    @if (carrinho.mostrarDetalhes() && carrinho.produtoSelecionado()) {
-        <div class="modal-overlay" (click)="carrinho.fecharDetalhes()">
-            <div class="modal-produto" (click)="$event.stopPropagation()">
-                <button class="btn-fechar-modal" (click)="carrinho.fecharDetalhes()">×</button>
-
-                @if (carrinho.produtoSelecionado()!.foto) {
-                    <div class="modal-produto-imagem">
-                        <img [src]="carrinho.produtoSelecionado()!.foto" [alt]="carrinho.produtoSelecionado()!.nome">
-                    </div>
-                }
-
-                <div class="modal-produto-content">
-                    <h2>{{ carrinho.produtoSelecionado()!.nome }}</h2>
-                    @if (carrinho.produtoSelecionado()!.descricao) {
-                        <p class="modal-descricao">{{ carrinho.produtoSelecionado()!.descricao }}</p>
-                    }
-                    <div class="modal-preco">{{ formatarPreco(carrinho.produtoSelecionado()!.preco) }}</div>
-
-                    <div class="observacao-container">
-                        <label>Alguma observação?</label>
-                        <textarea
-                            [(ngModel)]="observacaoTempValue"
-                            placeholder="Ex: Sem cebola, bem passado..."
-                            rows="2">
-                        </textarea>
-                    </div>
-
-                    <div class="quantidade-controle">
-                        <button class="btn-quantidade" (click)="carrinho.decrementarQuantidade()" [disabled]="carrinho.quantidadeTemp() <= 1">−</button>
-                        <span class="quantidade-valor">{{ carrinho.quantidadeTemp() }}</span>
-                        <button class="btn-quantidade" (click)="carrinho.incrementarQuantidade()">+</button>
-                    </div>
-
-                    <button class="btn-adicionar-carrinho" (click)="carrinho.adicionarAoCarrinho()">
-                        Adicionar • {{ formatarPreco(carrinho.produtoSelecionado()!.preco * carrinho.quantidadeTemp()) }}
-                    </button>
-                </div>
-            </div>
-        </div>
-    }
-
     <!-- ========== MODAL: CARRINHO ========== -->
     @if (carrinho.mostrarCarrinho()) {
         <div class="modal-overlay carrinho-overlay" (click)="fecharCarrinho()">
@@ -1364,6 +1322,7 @@
 
     <app-chat-ia-fullscreen
         [isOpen]="chatIA.isOpen()"
+        [isHidden]="carrinho.mostrarDetalhes()"
         [isLoading]="chatIA.isLoading()"
         [inputText]="chatIA.inputText()"
         [canSend]="chatIA.canSend()"
@@ -1373,4 +1332,47 @@
         (onInputChange)="chatIA.setInputText($event)"
         (onNovaConversa)="chatIA.novaConversa()"
         (onAdicionarProduto)="adicionarProdutoChatAoCarrinho($event)" />
+
+    <!-- ========== MODAIS - Renderizados por último para ficar acima do chat ========== -->
+    <!-- Modal de detalhes do produto -->
+    @if (carrinho.mostrarDetalhes() && carrinho.produtoSelecionado()) {
+        <div class="modal-overlay modal-detalhes" (click)="carrinho.fecharDetalhes()">
+            <div class="modal-produto" (click)="$event.stopPropagation()">
+                <button class="btn-fechar-modal" (click)="carrinho.fecharDetalhes()">×</button>
+
+                @if (carrinho.produtoSelecionado()!.foto) {
+                    <div class="modal-produto-imagem">
+                        <img [src]="carrinho.produtoSelecionado()!.foto" [alt]="carrinho.produtoSelecionado()!.nome">
+                    </div>
+                }
+
+                <div class="modal-produto-content">
+                    <h2>{{ carrinho.produtoSelecionado()!.nome }}</h2>
+                    @if (carrinho.produtoSelecionado()!.descricao) {
+                        <p class="modal-descricao">{{ carrinho.produtoSelecionado()!.descricao }}</p>
+                    }
+                    <div class="modal-preco">{{ formatarPreco(carrinho.produtoSelecionado()!.preco) }}</div>
+
+                    <div class="observacao-container">
+                        <label>Alguma observação?</label>
+                        <textarea
+                            [(ngModel)]="observacaoTempValue"
+                            placeholder="Ex: Sem cebola, bem passado..."
+                            rows="2">
+                        </textarea>
+                    </div>
+
+                    <div class="quantidade-controle">
+                        <button class="btn-quantidade" (click)="carrinho.decrementarQuantidade()" [disabled]="carrinho.quantidadeTemp() <= 1">−</button>
+                        <span class="quantidade-valor">{{ carrinho.quantidadeTemp() }}</span>
+                        <button class="btn-quantidade" (click)="carrinho.incrementarQuantidade()">+</button>
+                    </div>
+
+                    <button class="btn-adicionar-carrinho" (click)="carrinho.adicionarAoCarrinho()">
+                        Adicionar • {{ formatarPreco(carrinho.produtoSelecionado()!.preco * carrinho.quantidadeTemp()) }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
 </div>

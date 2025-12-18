@@ -634,7 +634,7 @@
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
-    z-index: 10100;  /* Acima do chat (z-index: 10000) para aparecer por cima */
+    z-index: 99999;  /* Muito alto para garantir que fique acima de tudo */
     display: flex;
     align-items: flex-end;
     animation: fadeIn 0.2s ease;

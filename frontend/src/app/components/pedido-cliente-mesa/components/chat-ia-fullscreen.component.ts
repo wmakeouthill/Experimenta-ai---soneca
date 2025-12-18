@@ -23,7 +23,7 @@ import { MensagemChat, ProdutoDestacado } from '../composables/use-chat-ia';
     imports: [CommonModule, FormsModule, CurrencyPipe],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-    <div class="chat-ia-overlay" [class.aberto]="isOpen()" (click)="fecharAoClicarFora($event)">
+    <div class="chat-ia-overlay" [class.aberto]="isOpen() && !isHidden()" (click)="fecharAoClicarFora($event)">
       <div class="chat-ia-container" (click)="$event.stopPropagation()">
         <!-- Header -->
         <header class="chat-ia-header">
@@ -642,6 +642,8 @@ import { MensagemChat, ProdutoDestacado } from '../composables/use-chat-ia';
 export class ChatIAFullscreenComponent implements AfterViewChecked {
     // Inputs
     readonly isOpen = input.required<boolean>();
+    /** Esconde temporariamente o chat (ex: quando modal de produto abre) */
+    readonly isHidden = input<boolean>(false);
     readonly isLoading = input<boolean>(false);
     readonly inputText = input<string>('');
     readonly canSend = input<boolean>(false);
