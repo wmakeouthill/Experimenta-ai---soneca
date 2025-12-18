@@ -16,7 +16,13 @@ import { CommonModule } from '@angular/common';
       [class.pulse]="pulse()"
       (click)="onClick.emit()"
       [attr.aria-label]="'Abrir chat com Soneca IA'">
-      <img src="/assets/soneca_ai.png" alt="Soneca IA" class="chat-ia-btn-icon">
+      <img 
+        src="/assets/soneca_ai.webp" 
+        alt="Soneca IA" 
+        class="chat-ia-btn-icon"
+        loading="eager"
+        decoding="async"
+        fetchpriority="high">
       <span class="chat-ia-tooltip">Fale comigo! 💬</span>
     </button>
   `,
@@ -25,24 +31,25 @@ import { CommonModule } from '@angular/common';
       position: fixed;
       bottom: 5rem;
       right: 1rem;
-      width: 56px;
-      height: 56px;
+      width: 72px;
+      height: 72px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+      background: transparent;
       border: none;
-      box-shadow: 0 4px 20px rgba(230, 126, 34, 0.4);
+      box-shadow: none;
       cursor: pointer;
       z-index: 9990;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      transition: transform 0.3s ease, filter 0.3s ease;
       overflow: visible;
+      padding: 0;
     }
 
     .chat-ia-btn:hover {
       transform: scale(1.1);
-      box-shadow: 0 6px 25px rgba(230, 126, 34, 0.5);
+      filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
     }
 
     .chat-ia-btn:active {
@@ -55,21 +62,21 @@ import { CommonModule } from '@angular/common';
 
     @keyframes pulse {
       0% {
-        box-shadow: 0 0 0 0 rgba(230, 126, 34, 0.5);
+        filter: drop-shadow(0 0 0 rgba(230, 126, 34, 0.5));
       }
       70% {
-        box-shadow: 0 0 0 15px rgba(230, 126, 34, 0);
+        filter: drop-shadow(0 0 15px rgba(230, 126, 34, 0.6));
       }
       100% {
-        box-shadow: 0 0 0 0 rgba(230, 126, 34, 0);
+        filter: drop-shadow(0 0 0 rgba(230, 126, 34, 0));
       }
     }
 
     .chat-ia-btn-icon {
-      width: 36px;
-      height: 36px;
+      width: 72px;
+      height: 72px;
       border-radius: 50%;
-      object-fit: cover;
+      object-fit: contain;
     }
 
     .chat-ia-tooltip {
@@ -110,13 +117,13 @@ import { CommonModule } from '@angular/common';
       .chat-ia-btn {
         bottom: 5.5rem;
         right: 0.75rem;
-        width: 52px;
-        height: 52px;
+        width: 64px;
+        height: 64px;
       }
 
       .chat-ia-btn-icon {
-        width: 32px;
-        height: 32px;
+        width: 64px;
+        height: 64px;
       }
 
       .chat-ia-tooltip {
@@ -128,13 +135,13 @@ import { CommonModule } from '@angular/common';
       .chat-ia-btn {
         bottom: 5rem;
         right: 0.5rem;
-        width: 48px;
-        height: 48px;
+        width: 60px;
+        height: 60px;
       }
 
       .chat-ia-btn-icon {
-        width: 30px;
-        height: 30px;
+        width: 60px;
+        height: 60px;
       }
     }
   `]

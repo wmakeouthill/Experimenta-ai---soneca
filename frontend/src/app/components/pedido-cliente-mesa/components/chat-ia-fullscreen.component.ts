@@ -28,7 +28,7 @@ import { MensagemChat } from '../composables/use-chat-ia';
         <!-- Header -->
         <header class="chat-ia-header">
           <div class="chat-ia-header-info">
-            <img src="/assets/soneca_ai.png" alt="Soneca IA" class="chat-ia-avatar">
+            <img src="/assets/soneca_ai.webp" alt="Soneca IA" class="chat-ia-avatar">
             <div class="chat-ia-header-text">
               <h2>Soneca</h2>
               <span class="status-online">● Online</span>
@@ -52,7 +52,7 @@ import { MensagemChat } from '../composables/use-chat-ia';
           @for (msg of mensagens(); track msg.id) {
             <div class="chat-ia-message" [class.user]="msg.from === 'user'" [class.assistant]="msg.from === 'assistant'">
               @if (msg.from === 'assistant') {
-                <img src="/assets/soneca_ai.png" alt="Soneca" class="message-avatar">
+                <img src="/assets/soneca_ai.webp" alt="Soneca" class="message-avatar">
               }
               <div class="message-bubble">
                 <p class="message-text">{{ msg.text }}</p>
@@ -63,7 +63,7 @@ import { MensagemChat } from '../composables/use-chat-ia';
           
           @if (isLoading()) {
             <div class="chat-ia-message assistant">
-              <img src="/assets/soneca_ai.png" alt="Soneca" class="message-avatar">
+              <img src="/assets/soneca_ai.webp" alt="Soneca" class="message-avatar">
               <div class="message-bubble typing">
                 <div class="typing-indicator">
                   <span></span>

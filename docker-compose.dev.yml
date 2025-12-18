@@ -96,9 +96,18 @@ services:
       - "4200:4200" # Porta padrão do ng serve
     environment:
       - NODE_ENV=development
+      - DOCKER_ENV=true
+      # ⚠️ POLLING OBRIGATÓRIO no Windows! Eventos de filesystem não propagam para container Linux
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_INTERVAL=1000
+      # Aumenta memória do Node.js para melhor buffering
+      - NODE_OPTIONS=--max-old-space-size=4096
+      # Backend URL para proxy
+      - BACKEND_URL=http://backend-dev:8080
     volumes:
-      # Mapear código fonte para hot-reload (mas não node_modules)
-      - ./frontend:/app/frontend
+      # Mapear código fonte para hot-reload
+      - ./frontend:/app/frontend:cached
       # Volume nomeado para node_modules (evita sobrescrever com volume do código)
       - frontend_node_modules:/app/frontend/node_modules
       # Cache do npm para acelerar instalações
@@ -107,6 +116,11 @@ services:
       backend-dev:
         condition: service_started
     restart: unless-stopped
+    # Rede otimizada para comunicação com backend
+    networks:
+      default:
+        aliases:
+          - frontend
 
 volumes:
   mysql_dev_data:

@@ -1,24 +1,40 @@
-// Proxy dinâmico que funciona tanto dentro do Docker quanto localmente
+// Proxy otimizado com buffering para melhor performance
 const PROXY_CONFIG = {
   "/api": {
-    // Tenta usar o nome do serviço Docker primeiro, depois localhost
-    // O Angular proxy tentará backend-dev primeiro, e se falhar, pode usar localhost
-    // Mas na verdade, precisamos de uma lógica mais inteligente
-    "target": process.env.BACKEND_URL || "http://backend-dev:8080",
+    // Usa backend-dev (Docker) ou localhost (local)
+    "target": process.env.BACKEND_URL || (process.env.DOCKER_ENV ? "http://backend-dev:8080" : "http://localhost:8080"),
     "secure": false,
     "changeOrigin": true,
-    "logLevel": "info",
-    // Permite que o proxy funcione mesmo se o host não for resolvido imediatamente
-    "timeout": 30000
+    "logLevel": "warn",
+    
+    // ========== BUFFERING E PERFORMANCE ==========
+    // Timeout de conexão
+    "timeout": 30000,
+    "proxyTimeout": 30000,
+    
+    // Desabilita streaming para buffering completo (evita byte-a-byte)
+    "selfHandleResponse": false,
+    
+    // Headers para melhor performance
+    "headers": {
+      "Connection": "keep-alive",
+      "Accept-Encoding": "gzip, deflate, br"
+    },
+    
+    // Callback para otimizar response
+    "onProxyRes": function(proxyRes, req, res) {
+      // Remove headers que podem causar streaming lento
+      delete proxyRes.headers['transfer-encoding'];
+      
+      // Adiciona headers de cache para assets estáticos da API
+      if (req.url.includes('/public/')) {
+        proxyRes.headers['cache-control'] = 'public, max-age=300';
+      }
+    },
+    
+    // Configuração de agente HTTP com keep-alive
+    "agent": false
   }
 };
-
-// Se estiver rodando localmente (não dentro do Docker), usa localhost
-// Detecta se está dentro do Docker verificando se o hostname backend-dev é acessível
-// Mas isso é assíncrono, então vamos usar uma variável de ambiente
-if (process.env.NODE_ENV === 'development' && !process.env.DOCKER_ENV) {
-  // Se não estiver no Docker, tenta localhost
-  PROXY_CONFIG["/api"].target = "http://localhost:8080";
-}
 
 module.exports = PROXY_CONFIG;

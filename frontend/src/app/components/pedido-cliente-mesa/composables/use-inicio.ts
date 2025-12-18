@@ -34,6 +34,7 @@ export function useInicio(
 
     /**
      * Carrega os produtos populares da API
+     * Executa todas as chamadas em paralelo para melhor performance
      */
     async function carregar(): Promise<void> {
         const token = getMesaToken();
@@ -43,12 +44,12 @@ export function useInicio(
         erro.set(null);
 
         try {
-            // Carregar mais pedidos (geral)
-            await carregarMaisPedidos(token);
-            // Carregar mais favoritados (geral)
-            await carregarMaisFavoritados(token);
-            // Carregar mais bem avaliados
-            await carregarBemAvaliados(token);
+            // Carregar TODAS as categorias em paralelo (muito mais rápido!)
+            await Promise.all([
+                carregarMaisPedidos(token),
+                carregarMaisFavoritados(token),
+                carregarBemAvaliados(token)
+            ]);
         } catch (e) {
             console.error('Erro ao carregar produtos populares:', e);
             erro.set('Erro ao carregar produtos');

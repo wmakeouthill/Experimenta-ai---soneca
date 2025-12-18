@@ -304,9 +304,14 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   // ========== Navegação ==========
   private irParaCardapio(): void {
     this.etapaAtual.set('cardapio');
-    this.cardapio.carregar();
-    this.favoritos.carregar();
-    this.inicio.carregar();
+
+    // Carrega TUDO em paralelo para máxima velocidade
+    // Cardápio, favoritos e início são independentes
+    Promise.all([
+      this.cardapio.carregar(),
+      this.favoritos.carregar(),
+      this.inicio.carregar()
+    ]).catch(err => console.warn('Erro ao carregar dados:', err));
   }
 
   navegarPara(aba: AbaCliente | 'carrinho'): void {

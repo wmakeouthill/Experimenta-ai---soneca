@@ -1,5 +1,5 @@
-import { ApplicationConfig, APP_INITIALIZER } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { ApplicationConfig, APP_INITIALIZER, EnvironmentProviders, Provider } from '@angular/core';
+import { provideRouter, withPreloading, PreloadAllModules } from '@angular/router';
 import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';
 
 import { routes } from './app.routes';
@@ -11,6 +11,7 @@ import { silent500ConfigInterceptor } from './interceptors/silent-500-config.int
 import { clienteAuthInterceptor } from './interceptors/cliente-auth.interceptor';
 import { clienteAuthErrorInterceptor } from './interceptors/cliente-auth-error.interceptor';
 import { PwaInstallService } from './services/pwa-install.service';
+import { environment } from '../environments/environment';
 
 // Instancia o serviço de PWA o mais cedo possível para não perder o evento beforeinstallprompt.
 const initPwaInstallService = (service: PwaInstallService) => () => {
@@ -18,12 +19,18 @@ const initPwaInstallService = (service: PwaInstallService) => () => {
   return void service;
 };
 
+// Hydration só em produção (quando SSR está ativo)
+// Em desenvolvimento, SSR está desabilitado então hydration causa erro NG0505
+const hydrationProvider: (Provider | EnvironmentProviders)[] = environment.production
+  ? [provideClientHydration(withNoHttpTransferCache())]
+  : [];
+
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideRouter(routes),
-    // withNoHttpTransferCache evita o warning NG0506 de hydration timeout
-    // causado por operações assíncronas como polling, intervals e effects
-    provideClientHydration(withNoHttpTransferCache()),
+    // Preload all modules em background após carregamento inicial (melhora navegação)
+    provideRouter(routes, withPreloading(PreloadAllModules)),
+    // Hydration condicional - só em produção com SSR
+    ...hydrationProvider,
     provideHttpClient(
       withFetch(),
       withInterceptors([

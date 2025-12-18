@@ -18,5 +18,14 @@ echo "🔥 Iniciando Angular Dev Server com hot-reload..."
 echo "🌐 Frontend disponível em: http://localhost:4200"
 echo "📝 Mudanças serão refletidas automaticamente no navegador"
 
-# Executar ng serve
+# ========== OTIMIZAÇÕES DE PERFORMANCE ==========
+# Aumenta buffer de memória do Node.js
+export NODE_OPTIONS="--max-old-space-size=4096"
+
+# ⚠️ WINDOWS + DOCKER: Polling é OBRIGATÓRIO!
+# Eventos de filesystem do Windows não propagam para containers Linux
+export CHOKIDAR_USEPOLLING=true
+export WATCHPACK_POLLING=true
+
+# Executar ng serve COM polling para Windows
 exec npm start
