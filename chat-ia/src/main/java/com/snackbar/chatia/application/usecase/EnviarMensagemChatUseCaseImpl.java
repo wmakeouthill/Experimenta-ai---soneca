@@ -236,24 +236,20 @@ public class EnviarMensagemChatUseCaseImpl implements EnviarMensagemChatUseCase 
         }
         
         StringBuilder sb = new StringBuilder(promptBase);
-        sb.append("\n\n=== PRODUTOS IDENTIFICADOS NA PERGUNTA DO CLIENTE ===\n");
-        sb.append("Os seguintes produtos foram mencionados ou são relevantes para a pergunta:\n\n");
+        sb.append("\n\n=== ⚠️ INSTRUÇÃO IMPORTANTE SOBRE PRODUTOS ===\n");
+        sb.append("Os produtos abaixo serão exibidos automaticamente como CARDS CLICÁVEIS na interface.\n");
+        sb.append("NÃO LISTE os produtos em texto! O cliente já verá os cards com foto, preço e botão de adicionar.\n");
+        sb.append("Sua resposta deve ser APENAS uma frase curta e simpática, por exemplo:\n");
+        sb.append("- 'Aqui estão algumas opções! Clique em qualquer card para adicionar ao carrinho 🛒'\n");
+        sb.append("- 'Ótima escolha! Veja as opções abaixo e clique para pedir 😊'\n");
+        sb.append("- 'Encontrei isso pra você! Toque no card para adicionar 🍔'\n");
+        sb.append("NÃO repita nomes, preços ou descrições dos produtos na sua resposta!\n");
+        sb.append("=== FIM DA INSTRUÇÃO ===\n\n");
         
+        sb.append("Produtos que serão exibidos como cards (apenas para seu contexto interno):\n");
         for (ProdutoContextDTO produto : produtos) {
-            sb.append("📌 ").append(produto.nome().toUpperCase()).append("\n");
-            sb.append("   - ID: ").append(produto.id()).append("\n");
-            sb.append("   - Preço: R$ ").append(String.format("%.2f", produto.preco())).append("\n");
-            if (produto.categoria() != null) {
-                sb.append("   - Categoria: ").append(produto.categoria()).append("\n");
-            }
-            if (produto.descricao() != null && !produto.descricao().isBlank()) {
-                sb.append("   - Descrição: ").append(produto.descricao()).append("\n");
-            }
-            sb.append("\n");
+            sb.append("- ").append(produto.nome()).append(" (R$ ").append(String.format("%.2f", produto.preco())).append(")\n");
         }
-        
-        sb.append("USE ESTES DADOS EXATOS ao responder sobre estes produtos!\n");
-        sb.append("=== FIM DOS PRODUTOS IDENTIFICADOS ===\n");
         
         return sb.toString();
     }

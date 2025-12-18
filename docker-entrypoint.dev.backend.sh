@@ -44,17 +44,18 @@ fi
 echo "✅ Build inicial concluído com sucesso!"
 
 # ========================================================
-# HOT RELOAD COM SPRING BOOT DEVTOOLS
+# HOT RELOAD COM POLLING SIMPLES (FUNCIONA NO WINDOWS!)
 # ========================================================
 echo ""
 echo "🔥 =============================================="
-echo "🔥  INICIANDO COM HOT RELOAD (spring-boot:run)"
+echo "🔥  INICIANDO COM HOT RELOAD (POLLING MODE)"
 echo "🔥 =============================================="
 echo ""
-echo "📝 Como funciona o Hot Reload:"
-echo "   1. Edite arquivos .java no VSCode"
-echo "   2. O Spring DevTools detecta automaticamente"
-echo "   3. A aplicação reinicia em ~2-5 segundos"
+echo "📝 Como usar o Hot Reload:"
+echo "   1. Edite arquivos .java no VSCode/IntelliJ"
+echo "   2. Salve o arquivo (Ctrl+S)"
+echo "   3. O sistema detecta em ~3 segundos"
+echo "   4. Recompila e reinicia automaticamente"
 echo ""
 echo "🌐 Backend: http://localhost:8080"
 echo "🐛 Debug remoto: porta 5005"
@@ -63,51 +64,56 @@ echo ""
 cd /app/sistema-orquestrador
 
 # ========================================================
-# INICIAR PROCESSO DE RECOMPILAÇÃO AUTOMÁTICA EM BACKGROUND
+# MONITOR DE RECOMPILAÇÃO COM POLLING (Windows-compatible)
 # ========================================================
-echo "🔄 Iniciando monitor de recompilação automática..."
 
-# Função para recompilar quando detectar mudanças
-recompile_on_change() {
-    echo "👀 Monitor de mudanças iniciado..."
-    LAST_COMPILE=$(date +%s)
+# Calcular checksum de todos os arquivos .java
+calc_checksum() {
+    find /app -name "*.java" -type f -exec md5sum {} \; 2>/dev/null | sort | md5sum | cut -d' ' -f1
+}
+
+# Salvar checksum inicial
+LAST_CHECKSUM=$(calc_checksum)
+echo "📊 Checksum inicial: $LAST_CHECKSUM"
+
+# Função de monitoramento
+monitor_and_recompile() {
+    echo "👀 Monitor de mudanças iniciado (polling a cada 3s)..."
     
     while true; do
         sleep 3
         
-        # Encontrar arquivos .java modificados nos últimos 5 segundos
-        CHANGED=$(find /app -name "*.java" -newer /tmp/.last_compile 2>/dev/null | head -1)
+        CURRENT_CHECKSUM=$(calc_checksum)
         
-        if [ -n "$CHANGED" ]; then
+        if [ "$CURRENT_CHECKSUM" != "$LAST_CHECKSUM" ]; then
             echo ""
             echo "🔄 ============================================"
-            echo "🔄 Mudança detectada! Recompilando..."
+            echo "🔄 Mudança detectada nos arquivos .java!"
+            echo "🔄 Recompilando projeto..."
             echo "🔄 ============================================"
             
-            # Recompilar apenas os módulos afetados (rápido)
             cd /app
-            if mvn compile -DskipTests -B -q -T 2C 2>/dev/null; then
-                echo "✅ Recompilação concluída! DevTools vai reiniciar automaticamente."
+            if mvn compile -DskipTests -B -q -T 2C 2>&1; then
+                echo "✅ Recompilação concluída!"
+                echo "🔄 Spring DevTools vai reiniciar a aplicação..."
+                LAST_CHECKSUM=$CURRENT_CHECKSUM
             else
-                echo "⚠️ Erro na compilação - verifique o código"
+                echo "❌ Erro na compilação - verifique o código"
+                echo "   (próxima tentativa em 3s após correção)"
             fi
-            
-            # Atualizar timestamp
-            touch /tmp/.last_compile
+            echo ""
         fi
     done
 }
 
-# Criar arquivo de referência para timestamp
-touch /tmp/.last_compile
-
 # Iniciar monitor em background
-recompile_on_change &
+monitor_and_recompile &
 MONITOR_PID=$!
 echo "✅ Monitor de recompilação iniciado (PID: $MONITOR_PID)"
+echo ""
 
 # Executar Spring Boot com DevTools habilitado
 exec mvn spring-boot:run \
-    -Dspring-boot.run.jvmArguments="-Xmx512m -Xms256m -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 -Dspring.datasource.url=${DB_URL} -Dspring.datasource.username=${DB_USERNAME} -Dspring.datasource.password=${DB_PASSWORD} -Dserver.port=${SERVER_PORT:-8080} -Djwt.secret=${JWT_SECRET} -Djwt.expiration=${JWT_EXPIRATION:-86400} -Dlogging.level.com.snackbar=${LOG_LEVEL:-DEBUG} -Dspring.devtools.restart.enabled=true -Dspring.devtools.restart.poll-interval=2000 -Dspring.devtools.restart.quiet-period=1000" \
+    -Dspring-boot.run.jvmArguments="-Xmx512m -Xms256m -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 -Dspring.datasource.url=${DB_URL} -Dspring.datasource.username=${DB_USERNAME} -Dspring.datasource.password=${DB_PASSWORD} -Dserver.port=${SERVER_PORT:-8080} -Djwt.secret=${JWT_SECRET} -Djwt.expiration=${JWT_EXPIRATION:-86400} -Dlogging.level.com.snackbar=${LOG_LEVEL:-DEBUG} -Dspring.devtools.restart.enabled=true -Dspring.devtools.restart.poll-interval=1000 -Dspring.devtools.restart.quiet-period=400" \
     -Dspring.profiles.active=${SPRING_PROFILES_ACTIVE:-dev} \
     -B
