@@ -122,7 +122,7 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
     () => this.identificacao.clienteIdentificado()?.id,
     () => this.meusPedidos.pedidoSelecionado()
   );
-  readonly chatIA = useChatIA();
+  readonly chatIA = useChatIA(() => this.identificacao.clienteIdentificado()?.id);
 
   // ========== ViewChild para botão do Google ==========
   @ViewChild('googleButtonLogin') googleButtonLoginRef?: ElementRef<HTMLDivElement>;
@@ -581,6 +581,35 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
    */
   getFotoUrlComProxy(fotoUrl: string | null | undefined): string | null {
     return ImageProxyUtil.getProxyUrl(fotoUrl);
+  }
+
+  // ========== Chat IA - Integração com Carrinho ==========
+  /**
+   * Adiciona um produto do chat ao carrinho abrindo o modal de detalhes.
+   * Converte ProdutoDestacado para Produto e abre o modal.
+   */
+  adicionarProdutoChatAoCarrinho(produtoDestacado: { id: string; nome: string; descricao: string; categoria: string; preco: number; imagemUrl: string; disponivel: boolean }): void {
+    // Busca o produto completo no cardápio
+    const produtoCompleto = this.cardapio.produtos().find(p => p.id === produtoDestacado.id);
+
+    if (produtoCompleto) {
+      // Usa o produto completo do cardápio
+      this.carrinho.abrirDetalhes(produtoCompleto);
+    } else {
+      // Fallback: cria um objeto Produto mínimo
+      const produtoMinimo: Produto = {
+        id: produtoDestacado.id,
+        nome: produtoDestacado.nome,
+        descricao: produtoDestacado.descricao || '',
+        preco: produtoDestacado.preco,
+        categoria: produtoDestacado.categoria,
+        disponivel: produtoDestacado.disponivel,
+        foto: produtoDestacado.imagemUrl,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      this.carrinho.abrirDetalhes(produtoMinimo);
+    }
   }
 
   // ========== Utilitários ==========

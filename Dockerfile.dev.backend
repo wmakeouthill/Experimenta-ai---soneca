@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     bash \
     netcat-openbsd \
     iputils-ping \
+    default-mysql-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Copiar arquivos de configuração Maven primeiro (para cache)

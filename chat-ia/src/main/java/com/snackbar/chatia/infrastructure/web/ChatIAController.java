@@ -34,12 +34,13 @@ public class ChatIAController {
             @Valid @RequestBody ChatRequestDTO request,
             @RequestHeader(value = "X-Session-ID", required = false) String sessionId) {
         
-        log.info("Recebida mensagem do chat - Session: {}", sessionId);
+        log.info("Recebida mensagem do chat - Session: {}, Cliente: {}", sessionId, request.clienteId());
         
         // Usa sessionId do header se não vier no body
         ChatRequestDTO requestComSession = new ChatRequestDTO(
             request.message(),
-            request.sessionId() != null ? request.sessionId() : sessionId
+            request.sessionId() != null ? request.sessionId() : sessionId,
+            request.clienteId()
         );
         
         ChatResponseDTO response = enviarMensagemUseCase.executar(requestComSession);

@@ -3,24 +3,24 @@ import {
     ChangeDetectionStrategy,
     input,
     output,
-    signal,
     effect,
     ViewChild,
     ElementRef,
     AfterViewChecked
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MensagemChat } from '../composables/use-chat-ia';
+import { MensagemChat, ProdutoDestacado } from '../composables/use-chat-ia';
 
 /**
  * Componente de Chat IA fullscreen responsivo.
  * Otimizado para uso em dispositivos móveis.
+ * Suporta renderização de cards de produtos com opção de adicionar ao carrinho.
  */
 @Component({
     selector: 'app-chat-ia-fullscreen',
     standalone: true,
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, CurrencyPipe],
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
     <div class="chat-ia-overlay" [class.aberto]="isOpen()" (click)="fecharAoClicarFora($event)">
@@ -54,9 +54,46 @@ import { MensagemChat } from '../composables/use-chat-ia';
               @if (msg.from === 'assistant') {
                 <img src="/assets/soneca_ai.webp" alt="Soneca" class="message-avatar">
               }
-              <div class="message-bubble">
-                <p class="message-text">{{ msg.text }}</p>
-                <span class="message-time">{{ formatTime(msg.timestamp) }}</span>
+              <div class="message-content">
+                <div class="message-bubble">
+                  <p class="message-text">{{ msg.text }}</p>
+                  <span class="message-time">{{ formatTime(msg.timestamp) }}</span>
+                </div>
+                
+                <!-- Cards de produtos destacados -->
+                @if (msg.produtosDestacados && msg.produtosDestacados.length > 0) {
+                  <div class="produtos-destacados">
+                    @for (produto of msg.produtosDestacados; track produto.id) {
+                      <div class="produto-card" [class.indisponivel]="!produto.disponivel">
+                        @if (produto.imagemUrl) {
+                          <img [src]="produto.imagemUrl" [alt]="produto.nome" class="produto-imagem">
+                        } @else {
+                          <div class="produto-imagem-placeholder">🍔</div>
+                        }
+                        <div class="produto-info">
+                          <h4 class="produto-nome">{{ produto.nome }}</h4>
+                          <p class="produto-categoria">{{ produto.categoria }}</p>
+                          @if (produto.descricao) {
+                            <p class="produto-descricao">{{ produto.descricao }}</p>
+                          }
+                          <div class="produto-footer">
+                            <span class="produto-preco">{{ produto.preco | currency:'BRL':'symbol':'1.2-2' }}</span>
+                            @if (produto.disponivel) {
+                              <button 
+                                class="btn-adicionar"
+                                (click)="adicionarAoCarrinho(produto)"
+                                title="Adicionar ao carrinho">
+                                + Adicionar
+                              </button>
+                            } @else {
+                              <span class="produto-indisponivel">Indisponível</span>
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
               </div>
             </div>
           }
@@ -397,6 +434,133 @@ import { MensagemChat } from '../composables/use-chat-ia';
       to { transform: rotate(360deg); }
     }
 
+    /* Message content wrapper */
+    .message-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-width: 100%;
+    }
+
+    /* Produtos destacados / Cards */
+    .produtos-destacados {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-top: 0.25rem;
+    }
+
+    .produto-card {
+      display: flex;
+      gap: 0.75rem;
+      background: var(--bg-tertiary, #1f2b47);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 0.75rem;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .produto-card.indisponivel {
+      opacity: 0.6;
+    }
+
+    .produto-imagem {
+      width: 60px;
+      height: 60px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .produto-imagem-placeholder {
+      width: 60px;
+      height: 60px;
+      border-radius: 8px;
+      background: var(--bg-secondary, #16213e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .produto-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.125rem;
+    }
+
+    .produto-nome {
+      margin: 0;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-primary, #e8e8e8);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .produto-categoria {
+      margin: 0;
+      font-size: 0.7rem;
+      color: var(--text-secondary, #888);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .produto-descricao {
+      margin: 0;
+      font-size: 0.75rem;
+      color: var(--text-secondary, #aaa);
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .produto-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 0.25rem;
+    }
+
+    .produto-preco {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #2ecc71;
+    }
+
+    .btn-adicionar {
+      background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+      border: none;
+      color: white;
+      padding: 0.35rem 0.75rem;
+      border-radius: 16px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn-adicionar:hover {
+      transform: scale(1.05);
+      box-shadow: 0 2px 8px rgba(230, 126, 34, 0.4);
+    }
+
+    .btn-adicionar:active {
+      transform: scale(0.98);
+    }
+
+    .produto-indisponivel {
+      font-size: 0.75rem;
+      color: #e74c3c;
+      font-weight: 500;
+    }
+
     /* Mobile optimizations */
     @media (max-width: 768px) {
       .chat-ia-header {
@@ -414,6 +578,25 @@ import { MensagemChat } from '../composables/use-chat-ia';
       .message-text {
         font-size: 0.9rem;
       }
+
+      .produto-card {
+        padding: 0.625rem;
+      }
+
+      .produto-imagem,
+      .produto-imagem-placeholder {
+        width: 50px;
+        height: 50px;
+      }
+
+      .produto-nome {
+        font-size: 0.85rem;
+      }
+
+      .btn-adicionar {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.7rem;
+      }
     }
   `]
 })
@@ -430,6 +613,8 @@ export class ChatIAFullscreenComponent implements AfterViewChecked {
     readonly onSend = output<void>();
     readonly onInputChange = output<string>();
     readonly onNovaConversa = output<void>();
+    /** Emitido quando o usuário clica em "Adicionar" em um card de produto */
+    readonly onAdicionarProduto = output<ProdutoDestacado>();
 
     @ViewChild('messagesContainer') private messagesContainer?: ElementRef<HTMLDivElement>;
     @ViewChild('chatInput') private chatInput?: ElementRef<HTMLInputElement>;
@@ -466,6 +651,13 @@ export class ChatIAFullscreenComponent implements AfterViewChecked {
         if (this.canSend()) {
             this.onSend.emit();
         }
+    }
+
+    /**
+     * Adiciona um produto ao carrinho emitindo evento para o componente pai.
+     */
+    adicionarAoCarrinho(produto: ProdutoDestacado): void {
+        this.onAdicionarProduto.emit(produto);
     }
 
     fecharAoClicarFora(event: Event): void {

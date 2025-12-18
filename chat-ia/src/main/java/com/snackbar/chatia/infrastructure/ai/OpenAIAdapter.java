@@ -158,12 +158,19 @@ public class OpenAIAdapter implements IAClientPort {
             String mensagemAtual) {
         List<Map<String, Object>> mensagens = new ArrayList<>();
         mensagens.add(Map.of("role", "system", KEY_CONTENT, systemPrompt));
+        
+        // Log do system prompt para debug (apenas primeiros 500 chars)
+        log.debug("System prompt enviado ({} chars): {}...", 
+                systemPrompt.length(), 
+                systemPrompt.substring(0, Math.min(500, systemPrompt.length())));
 
         for (MensagemChat msg : historico) {
             mensagens.add(Map.of("role", msg.role(), KEY_CONTENT, msg.content()));
         }
 
         mensagens.add(Map.of("role", "user", KEY_CONTENT, mensagemAtual));
+        log.debug("Total de mensagens construídas: {} (1 system + {} histórico + 1 user)", 
+                mensagens.size(), historico.size());
         return mensagens;
     }
 
@@ -172,7 +179,9 @@ public class OpenAIAdapter implements IAClientPort {
         payload.put("model", modelo);
         payload.put("messages", mensagens);
         payload.put("max_tokens", maxTokens);
-        payload.put("temperature", 0.8);
+        // Temperatura baixa (0.3) = respostas mais determinísticas e fiéis ao contexto
+        // Evita que a IA "invente" informações fora do cardápio fornecido
+        payload.put("temperature", 0.3);
         return payload;
     }
 

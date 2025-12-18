@@ -1,12 +1,16 @@
 import { signal, computed, inject } from '@angular/core';
-import { ChatIAService, ChatIAResponse } from '../../../services/chat-ia.service';
+import { ChatIAService, ChatIAResponse, ProdutoDestacado } from '../../../services/chat-ia.service';
 
 export interface MensagemChat {
     id: string;
     from: 'user' | 'assistant';
     text: string;
     timestamp: Date;
+    /** Produtos destacados na resposta (apenas mensagens do assistente) */
+    produtosDestacados?: ProdutoDestacado[];
 }
+
+export { ProdutoDestacado } from '../../../services/chat-ia.service';
 
 const SESSION_KEY = 'chat-ia-session-id';
 const MENSAGENS_KEY = 'chat-ia-mensagens';
@@ -31,7 +35,8 @@ function salvarMensagens(mensagens: MensagemChat[]): void {
         id: m.id,
         from: m.from,
         text: m.text,
-        timestamp: m.timestamp.toISOString()
+        timestamp: m.timestamp.toISOString(),
+        produtosDestacados: m.produtosDestacados || []
     }));
     sessionStorage.setItem(MENSAGENS_KEY, JSON.stringify(simplificadas));
 }
@@ -45,11 +50,12 @@ function carregarMensagens(): MensagemChat[] {
 
     try {
         const parsed = JSON.parse(saved);
-        return parsed.map((m: { id: string; from: 'user' | 'assistant'; text: string; timestamp: string }) => ({
+        return parsed.map((m: { id: string; from: 'user' | 'assistant'; text: string; timestamp: string; produtosDestacados?: ProdutoDestacado[] }) => ({
             id: m.id,
             from: m.from,
             text: m.text,
-            timestamp: new Date(m.timestamp)
+            timestamp: new Date(m.timestamp),
+            produtosDestacados: m.produtosDestacados || []
         }));
     } catch {
         return [];
@@ -59,8 +65,9 @@ function carregarMensagens(): MensagemChat[] {
 /**
  * Composable para gerenciar o estado do Chat IA.
  * Fornece estado reativo e métodos para interação com o chat.
+ * @param clienteIdGetter função que retorna o ID do cliente logado (opcional)
  */
-export function useChatIA() {
+export function useChatIA(clienteIdGetter?: () => string | null | undefined) {
     const chatService = inject(ChatIAService);
 
     // Estado
@@ -153,14 +160,18 @@ export function useChatIA() {
         // Salva estado
         salvarMensagens(mensagens());
 
+        // Obtém clienteId se disponível
+        const clienteId = clienteIdGetter?.() ?? undefined;
+
         // Envia para o backend
-        chatService.enviarMensagem(text, sessionId).subscribe({
+        chatService.enviarMensagem(text, sessionId, clienteId).subscribe({
             next: (response: ChatIAResponse) => {
                 const msgAssistente: MensagemChat = {
                     id: crypto.randomUUID(),
                     from: 'assistant',
                     text: response.reply,
-                    timestamp: new Date()
+                    timestamp: new Date(),
+                    produtosDestacados: response.produtosDestacados || []
                 };
                 mensagens.update(msgs => [...msgs, msgAssistente]);
                 salvarMensagens(mensagens());

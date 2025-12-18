@@ -75,6 +75,10 @@ public class SecurityConfig {
                         // X-Cliente-Id
                         .requestMatchers(CLIENTE_CONTA_PATTERN).permitAll()
 
+                        // Endpoints do Chat IA - Público para clientes no auto-atendimento
+                        // Usa header X-Cliente-Id para identificação opcional do cliente
+                        .requestMatchers("/api/chat-ia/**").permitAll()
+
                         // Endpoints de autenticação (exigem autenticação)
                         .requestMatchers("/api/auth/**").authenticated()
 

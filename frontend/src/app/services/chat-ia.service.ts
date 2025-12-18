@@ -6,15 +6,28 @@ import { environment } from '../../environments/environment';
 export interface ChatIARequest {
     message: string;
     sessionId?: string;
+    clienteId?: string;
+}
+
+export interface ProdutoDestacado {
+    id: string;
+    nome: string;
+    descricao: string;
+    categoria: string;
+    preco: number;
+    imagemUrl: string;
+    disponivel: boolean;
 }
 
 export interface ChatIAResponse {
     reply: string;
+    produtosDestacados?: ProdutoDestacado[];
 }
 
 /**
  * Service para comunicação com o Chat IA backend.
  * Gerencia envio de mensagens e histórico via sessionId.
+ * Suporta respostas ricas com cards de produtos.
  */
 @Injectable({
     providedIn: 'root'
@@ -28,10 +41,14 @@ export class ChatIAService {
      * 
      * @param mensagem texto da mensagem do usuário
      * @param sessionId identificador opcional da sessão para manter contexto
+     * @param clienteId identificador opcional do cliente para personalização
      * @returns Observable com a resposta do assistente
      */
-    enviarMensagem(mensagem: string, sessionId?: string): Observable<ChatIAResponse> {
-        const body: ChatIARequest = { message: mensagem };
+    enviarMensagem(mensagem: string, sessionId?: string, clienteId?: string): Observable<ChatIAResponse> {
+        const body: ChatIARequest = {
+            message: mensagem,
+            clienteId: clienteId
+        };
 
         let headers = new HttpHeaders();
         if (sessionId) {
@@ -41,7 +58,7 @@ export class ChatIAService {
         return this.http.post<ChatIAResponse>(this.apiUrl, body, { headers }).pipe(
             catchError(error => {
                 console.error('Erro ao enviar mensagem para Chat IA:', error);
-                return of({ reply: 'Desculpe, ocorreu um erro. Tente novamente.' });
+                return of({ reply: 'Desculpe, ocorreu um erro. Tente novamente.', produtosDestacados: [] });
             })
         );
     }

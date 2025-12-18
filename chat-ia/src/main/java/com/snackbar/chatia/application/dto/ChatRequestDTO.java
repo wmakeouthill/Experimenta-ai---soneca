@@ -11,11 +11,21 @@ public record ChatRequestDTO(
     @Size(max = 4000, message = "Mensagem não pode exceder 4000 caracteres")
     String message,
     
-    String sessionId
+    String sessionId,
+    
+    /** ID do cliente logado, para personalização das respostas */
+    String clienteId
 ) {
     public ChatRequestDTO {
         if (message != null) {
             message = message.trim();
         }
+    }
+    
+    /**
+     * Construtor compatível para requests sem clienteId.
+     */
+    public ChatRequestDTO(String message, String sessionId) {
+        this(message, sessionId, null);
     }
 }
