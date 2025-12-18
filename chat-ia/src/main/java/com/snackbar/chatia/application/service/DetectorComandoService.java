@@ -400,7 +400,10 @@ public class DetectorComandoService {
 
     /**
      * Extrai observação completa, incluindo contexto de quantidade parcial.
-     * Ex: "quero 2 do número 4, um deles sem cebola" -> "1 sem cebola"
+     * Ex: "quero 2 do número 4, um deles sem cebola" -> "1x SEM CEBOLA"
+     * 
+     * Formato claro para a cozinha entender quais unidades têm observação
+     * específica.
      */
     private String extrairObservacaoCompleta(String mensagem) {
         StringBuilder observacoes = new StringBuilder();
@@ -428,17 +431,18 @@ public class DetectorComandoService {
                 }
             }
 
-            // Formata: "1 sem cebola" ou "2 sem cebola"
+            // Formata: "1x SEM CEBOLA" - formato claro para cozinha
             if (!observacaoParcial.isBlank()) {
-                if (observacoes.length() > 0) {
-                    observacoes.append("; ");
+                if (!observacoes.isEmpty()) {
+                    observacoes.append(" | ");
                 }
-                observacoes.append(quantidadeParcial).append(" ").append(limparObservacao(observacaoParcial));
+                observacoes.append(quantidadeParcial).append("x ")
+                        .append(limparObservacao(observacaoParcial).toUpperCase());
             }
         }
 
         // 2. Se não encontrou padrão de quantidade parcial, usa extração normal
-        if (observacoes.length() == 0) {
+        if (observacoes.isEmpty()) {
             return extrairObservacao(mensagem);
         }
 
@@ -452,7 +456,7 @@ public class DetectorComandoService {
             for (String parte : partesObs) {
                 String parteLimpa = parte.trim().toLowerCase();
                 if (!obsParciais.contains(parteLimpa)) {
-                    observacoes.append("; todos: ").append(parte.trim());
+                    observacoes.append(" | TODOS: ").append(parte.trim().toUpperCase());
                 }
             }
         }
@@ -498,7 +502,7 @@ public class DetectorComandoService {
                 String obs = matcher.group(0).trim();
                 // Remove palavras que não são observação real
                 if (!obs.isBlank() && !isObservacaoInvalida(obs)) {
-                    if (observacoes.length() > 0) {
+                    if (!observacoes.isEmpty()) {
                         observacoes.append(", ");
                     }
                     observacoes.append(limparObservacao(obs));
