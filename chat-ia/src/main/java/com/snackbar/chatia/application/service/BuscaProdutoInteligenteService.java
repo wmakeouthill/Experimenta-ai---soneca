@@ -2,6 +2,8 @@ package com.snackbar.chatia.application.service;
 
 import com.snackbar.chatia.application.dto.CardapioContextDTO;
 import com.snackbar.chatia.application.dto.CardapioContextDTO.ProdutoContextDTO;
+import com.snackbar.chatia.application.dto.ResultadoBuscaDTO;
+import com.snackbar.chatia.application.dto.ResultadoBuscaDTO.TipoBusca;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -68,11 +70,17 @@ public class BuscaProdutoInteligenteService {
         Map.entry("cheese", "queijo"),
         Map.entry("bacon", "bacon"),
         Map.entry("fritas", "frita"),
-        Map.entry("onion", "cebola"),
-        Map.entry("rings", "ring")
+        Map.entry("onion", "onion"),
+        Map.entry("rings", "ring"),
+        Map.entry("cheddar", "cheddar"),
+        Map.entry("salada", "salada"),
+        Map.entry("molho", "molho"),
+        Map.entry("especial", "especial"),
+        Map.entry("duplo", "duplo"),
+        Map.entry("triplo", "triplo")
     );
 
-    // Sinônimos para busca
+    // Sinônimos para busca por categoria
     private static final Map<String, List<String>> SINONIMOS = Map.of(
         "hamburguer", List.of("burger", "lanche", "sanduiche", "x-"),
         "batata", List.of("frita", "fritas", "chips"),
@@ -81,6 +89,223 @@ public class BuscaProdutoInteligenteService {
         "cerveja", List.of("chopp", "beer", "gelada"),
         "açaí", List.of("acai", "açai")
     );
+
+    // Sinônimos de ingredientes (inglês <-> português)
+    private static final Map<String, List<String>> SINONIMOS_INGREDIENTES = Map.ofEntries(
+        Map.entry("onion", List.of("cebola", "cebolas")),
+        Map.entry("cebola", List.of("onion", "onions")),
+        Map.entry("cheese", List.of("queijo", "queijos")),
+        Map.entry("queijo", List.of("cheese")),
+        Map.entry("bacon", List.of("bacon")),
+        Map.entry("egg", List.of("ovo", "ovos")),
+        Map.entry("ovo", List.of("egg", "eggs")),
+        Map.entry("lettuce", List.of("alface")),
+        Map.entry("alface", List.of("lettuce")),
+        Map.entry("tomato", List.of("tomate", "tomates")),
+        Map.entry("tomate", List.of("tomato")),
+        Map.entry("pickle", List.of("picles", "pepino")),
+        Map.entry("picles", List.of("pickle", "pickles")),
+        Map.entry("ring", List.of("rings", "anel", "aneis")),
+        Map.entry("chicken", List.of("frango", "galinha")),
+        Map.entry("frango", List.of("chicken")),
+        Map.entry("meat", List.of("carne", "carnes")),
+        Map.entry("carne", List.of("meat", "beef")),
+        Map.entry("fries", List.of("fritas", "batata", "batatas")),
+        Map.entry("fritas", List.of("fries", "chips"))
+    );
+
+    /**
+     * Busca produtos relevantes baseado na mensagem do usuário.
+     * Retorna ResultadoBuscaDTO com o TIPO de busca identificado para contexto adequado.
+     * 
+     * @param mensagem mensagem do usuário
+     * @param cardapio cardápio completo
+     * @return resultado da busca com tipo identificado
+     */
+    public ResultadoBuscaDTO buscarComContexto(String mensagem, CardapioContextDTO cardapio) {
+        if (mensagem == null || mensagem.isBlank() || cardapio == null || cardapio.produtos().isEmpty()) {
+            return ResultadoBuscaDTO.semResultado(mensagem);
+        }
+        
+        String mensagemNormalizada = normalizar(mensagem);
+        
+        // 1. Detecta se é pergunta genérica sobre cardápio
+        if (isPerguntaGenericaCardapio(mensagemNormalizada)) {
+            log.info("📋 Tipo: CARDAPIO_GERAL");
+            List<ProdutoContextDTO> destaques = obterProdutosDestaque(cardapio);
+            return ResultadoBuscaDTO.cardapioGeral(destaques);
+        }
+        
+        // 2. Detecta ingredientes específicos na mensagem
+        String ingredienteDetectado = detectarIngrediente(mensagemNormalizada);
+        if (ingredienteDetectado != null) {
+            log.info("🥬 Tipo: INGREDIENTE - '{}'", ingredienteDetectado);
+            List<ProdutoContextDTO> produtos = buscarPorIngrediente(ingredienteDetectado, cardapio);
+            if (!produtos.isEmpty()) {
+                return ResultadoBuscaDTO.porIngrediente(ingredienteDetectado, produtos);
+            }
+        }
+        
+        // 3. Detecta busca por nome específico de produto
+        String nomeDetectado = detectarNomeProduto(mensagemNormalizada, cardapio);
+        if (nomeDetectado != null) {
+            log.info("🍔 Tipo: NOME_PRODUTO - '{}'", nomeDetectado);
+            List<ProdutoContextDTO> produtos = buscarPorNomeExato(nomeDetectado, cardapio);
+            if (!produtos.isEmpty()) {
+                return ResultadoBuscaDTO.porNome(nomeDetectado, produtos);
+            }
+        }
+        
+        // 4. Detecta busca por categoria
+        Optional<String> categoria = identificarCategoriaMencionada(mensagem, cardapio);
+        if (categoria.isPresent()) {
+            log.info("📁 Tipo: CATEGORIA - '{}'", categoria.get());
+            List<ProdutoContextDTO> produtos = buscarPorCategoria(categoria.get(), cardapio);
+            if (!produtos.isEmpty()) {
+                return ResultadoBuscaDTO.porCategoria(categoria.get(), produtos);
+            }
+        }
+        
+        // 5. Fallback: busca geral por relevância
+        List<ProdutoContextDTO> produtosRelevantes = buscarProdutosRelevantes(mensagem, cardapio);
+        if (!produtosRelevantes.isEmpty()) {
+            // Tenta identificar o que foi buscado
+            String termo = extrairTermoPrincipal(mensagemNormalizada);
+            log.info("🔍 Tipo: BUSCA_GERAL - termo principal: '{}'", termo);
+            return ResultadoBuscaDTO.porIngrediente(termo, produtosRelevantes);
+        }
+        
+        return ResultadoBuscaDTO.semResultado(mensagem);
+    }
+    
+    /**
+     * Detecta se há ingredientes específicos mencionados na mensagem.
+     */
+    private String detectarIngrediente(String mensagem) {
+        // Lista de ingredientes conhecidos
+        List<String> ingredientes = List.of(
+            "onion ring", "onion", "cebola", "bacon", "queijo", "cheese", "cheddar",
+            "ovo", "egg", "salada", "alface", "tomate", "picles", "maionese",
+            "ketchup", "mostarda", "molho", "frango", "chicken", "carne", "meat",
+            "calabresa", "catupiry", "mussarela", "provolone", "gorgonzola"
+        );
+        
+        for (String ingrediente : ingredientes) {
+            if (mensagem.contains(ingrediente)) {
+                return ingrediente;
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Detecta se há nome de produto específico na mensagem.
+     */
+    private String detectarNomeProduto(String mensagem, CardapioContextDTO cardapio) {
+        for (ProdutoContextDTO produto : cardapio.produtos()) {
+            String nomeProduto = normalizar(produto.nome());
+            // Verifica match exato ou parcial significativo
+            if (mensagem.contains(nomeProduto) || 
+                calcularSimilaridade(mensagem, nomeProduto) > 0.7) {
+                return produto.nome();
+            }
+            // Verifica partes do nome (ex: "x-tudo" em "X-Tudo do Soneca")
+            String[] partes = nomeProduto.split("\\s+");
+            for (String parte : partes) {
+                if (parte.length() > 3 && mensagem.contains(parte)) {
+                    return produto.nome();
+                }
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Busca produtos que contenham um ingrediente específico na descrição.
+     */
+    private List<ProdutoContextDTO> buscarPorIngrediente(String ingrediente, CardapioContextDTO cardapio) {
+        String ingredienteNorm = normalizar(ingrediente);
+        List<String> sinonimos = new ArrayList<>();
+        sinonimos.add(ingredienteNorm);
+        
+        // Adiciona sinônimos do ingrediente
+        List<String> sins = SINONIMOS_INGREDIENTES.get(ingredienteNorm);
+        if (sins != null) sinonimos.addAll(sins);
+        
+        return cardapio.produtos().stream()
+            .filter(ProdutoContextDTO::disponivel)
+            .filter(p -> {
+                String desc = normalizar(p.descricao() != null ? p.descricao() : "");
+                String nome = normalizar(p.nome());
+                for (String sin : sinonimos) {
+                    if (desc.contains(sin) || nome.contains(sin)) {
+                        return true;
+                    }
+                }
+                return false;
+            })
+            .limit(MAX_RESULTADOS)
+            .collect(Collectors.toList());
+    }
+    
+    /**
+     * Busca produto por nome exato ou muito similar.
+     */
+    private List<ProdutoContextDTO> buscarPorNomeExato(String nome, CardapioContextDTO cardapio) {
+        String nomeNorm = normalizar(nome);
+        
+        return cardapio.produtos().stream()
+            .filter(ProdutoContextDTO::disponivel)
+            .filter(p -> {
+                String nomeProduto = normalizar(p.nome());
+                return nomeProduto.contains(nomeNorm) || 
+                       nomeNorm.contains(nomeProduto) ||
+                       calcularSimilaridade(nomeProduto, nomeNorm) > 0.7;
+            })
+            .limit(MAX_RESULTADOS)
+            .collect(Collectors.toList());
+    }
+    
+    /**
+     * Detecta se a mensagem é uma pergunta genérica sobre o cardápio.
+     */
+    private boolean isPerguntaGenericaCardapio(String mensagem) {
+        List<String> frasesCardapio = List.of(
+            "cardapio", "menu", "o que tem", "o que voce tem", "o que vocês tem",
+            "quais opcoes", "o que posso pedir", "me mostra", "mostra o",
+            "quero ver", "ver opcoes", "sugestao", "recomenda"
+        );
+        return frasesCardapio.stream().anyMatch(mensagem::contains);
+    }
+    
+    /**
+     * Retorna produtos de destaque variados (1 por categoria quando possível).
+     */
+    private List<ProdutoContextDTO> obterProdutosDestaque(CardapioContextDTO cardapio) {
+        List<ProdutoContextDTO> destaques = new ArrayList<>();
+        Set<String> categoriasUsadas = new HashSet<>();
+        
+        for (ProdutoContextDTO produto : cardapio.produtos()) {
+            if (!produto.disponivel()) continue;
+            if (!categoriasUsadas.contains(produto.categoria())) {
+                destaques.add(produto);
+                categoriasUsadas.add(produto.categoria());
+                if (destaques.size() >= MAX_RESULTADOS) break;
+            }
+        }
+        return destaques;
+    }
+    
+    /**
+     * Extrai o termo principal de busca da mensagem.
+     */
+    private String extrairTermoPrincipal(String mensagem) {
+        List<String> palavras = extrairPalavras(mensagem);
+        // Retorna a palavra mais longa (geralmente a mais significativa)
+        return palavras.stream()
+            .max(Comparator.comparingInt(String::length))
+            .orElse(mensagem);
+    }
 
     /**
      * Busca produtos relevantes baseado na mensagem do usuário.
@@ -96,9 +321,12 @@ public class BuscaProdutoInteligenteService {
         }
 
         String mensagemNormalizada = normalizar(mensagem);
-        List<String> palavras = extrairPalavras(mensagemNormalizada);
+        List<String> palavrasOriginais = extrairPalavras(mensagemNormalizada);
         
-        log.info("🔍 Buscando produtos para mensagem: '{}' -> palavras: {}", mensagem, palavras);
+        // Expande palavras com sinônimos de ingredientes
+        List<String> palavras = expandirComSinonimos(palavrasOriginais);
+        
+        log.info("🔍 Buscando produtos para mensagem: '{}' -> palavras: {} (expandidas: {})", mensagem, palavrasOriginais, palavras);
         log.info("📦 Total de produtos disponíveis no cardápio: {}", cardapio.produtos().stream().filter(ProdutoContextDTO::disponivel).count());
 
         // Calcula score de relevância para cada produto
@@ -217,6 +445,32 @@ public class BuscaProdutoInteligenteService {
     // ==================== MÉTODOS AUXILIARES ====================
 
     /**
+     * Expande lista de palavras com seus sinônimos de ingredientes.
+     * Ex: ["onion", "ring"] -> ["onion", "cebola", "ring", "rings"]
+     */
+    private List<String> expandirComSinonimos(List<String> palavras) {
+        Set<String> expandidas = new LinkedHashSet<>(palavras);
+        
+        for (String palavra : palavras) {
+            // Adiciona sinônimos diretos
+            List<String> sinonimos = SINONIMOS_INGREDIENTES.get(palavra);
+            if (sinonimos != null) {
+                expandidas.addAll(sinonimos);
+                log.debug("   🔄 Sinônimos de '{}': {}", palavra, sinonimos);
+            }
+            
+            // Também tenta com stemming aplicado
+            String stemmed = aplicarStemming(palavra);
+            sinonimos = SINONIMOS_INGREDIENTES.get(stemmed);
+            if (sinonimos != null) {
+                expandidas.addAll(sinonimos);
+            }
+        }
+        
+        return new ArrayList<>(expandidas);
+    }
+
+    /**
      * Calcula score de relevância de um produto para as palavras da busca.
      */
     private double calcularScoreRelevancia(ProdutoContextDTO produto, List<String> palavras, String mensagemCompleta) {
@@ -227,6 +481,24 @@ public class BuscaProdutoInteligenteService {
         
         double score = 0.0;
         
+        // === BUSCA POR FRASE COMPLETA NA DESCRIÇÃO (PRIORIDADE MÁXIMA) ===
+        // Isso permite encontrar "onion ring", "cheddar bacon", etc.
+        String mensagemLimpa = normalizar(mensagemCompleta);
+        if (descricaoProduto.contains(mensagemLimpa) || nomeProduto.contains(mensagemLimpa)) {
+            log.debug("      🎯 Match de frase completa '{}' em '{}'!", mensagemLimpa, produto.nome());
+            score += 5.0; // Peso muito alto para match de frase completa
+        }
+        
+        // Busca termos compostos comuns (2 palavras consecutivas da mensagem)
+        String[] palavrasMensagem = mensagemLimpa.split("\\s+");
+        for (int i = 0; i < palavrasMensagem.length - 1; i++) {
+            String termoComposto = palavrasMensagem[i] + " " + palavrasMensagem[i + 1];
+            if (descricaoProduto.contains(termoComposto)) {
+                log.debug("      🎯 Match de termo composto '{}' em '{}'!", termoComposto, produto.nome());
+                score += 4.0;
+            }
+        }
+        
         for (String palavra : palavras) {
             String palavraStemmed = aplicarStemming(palavra);
             
@@ -235,9 +507,10 @@ public class BuscaProdutoInteligenteService {
                 score += 2.0;
             }
             
-            // Match na descrição/ingredientes
+            // Match na descrição/ingredientes (peso aumentado!)
             if (descricaoProduto.contains(palavra) || descricaoProduto.contains(palavraStemmed)) {
-                score += 1.0;
+                log.debug("      ✓ Palavra '{}' encontrada na descrição de '{}'!", palavra, produto.nome());
+                score += 1.5;  // Aumentado de 1.0 para 1.5
             }
             
             // Match na categoria
@@ -245,16 +518,28 @@ public class BuscaProdutoInteligenteService {
                 score += 1.5;
             }
             
-            // Fuzzy match com Levenshtein
+            // Fuzzy match com Levenshtein (tolerância a erros de digitação)
+            // Ex: "hambruge" vai encontrar "hamburguer" com ~70% similaridade
             double melhorSimilaridade = 0.0;
+            String melhorMatch = null;
             for (String palavraProduto : extrairPalavras(textoCompleto)) {
                 double sim = calcularSimilaridade(palavraProduto, palavra);
                 if (sim > melhorSimilaridade) {
                     melhorSimilaridade = sim;
+                    melhorMatch = palavraProduto;
+                }
+                // Também verifica com stemming
+                double simStemmed = calcularSimilaridade(palavraProduto, palavraStemmed);
+                if (simStemmed > melhorSimilaridade) {
+                    melhorSimilaridade = simStemmed;
+                    melhorMatch = palavraProduto;
                 }
             }
-            if (melhorSimilaridade > 0.7) {
-                score += melhorSimilaridade;
+            // Threshold de 0.6 = até 40% de erro é tolerado
+            // "hambruge" vs "hamburguer" = 7/9 = ~0.78 similaridade ✓
+            if (melhorSimilaridade > 0.6) {
+                log.debug("      🔤 Fuzzy match: '{}' ~= '{}' ({}%)", palavra, melhorMatch, (int)(melhorSimilaridade*100));
+                score += melhorSimilaridade * 1.5;  // Peso bom para fuzzy match
             }
         }
         

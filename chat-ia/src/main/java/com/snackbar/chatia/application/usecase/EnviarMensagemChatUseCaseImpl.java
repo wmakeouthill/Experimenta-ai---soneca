@@ -6,6 +6,8 @@ import com.snackbar.chatia.application.dto.ChatRequestDTO;
 import com.snackbar.chatia.application.dto.ChatResponseDTO;
 import com.snackbar.chatia.application.dto.ChatResponseDTO.ProdutoDestacadoDTO;
 import com.snackbar.chatia.application.dto.HistoricoPedidosClienteContextDTO;
+import com.snackbar.chatia.application.dto.ResultadoBuscaDTO;
+import com.snackbar.chatia.application.dto.ResultadoBuscaDTO.TipoBusca;
 import com.snackbar.chatia.application.port.in.EnviarMensagemChatUseCase;
 import com.snackbar.chatia.application.port.out.CardapioContextPort;
 import com.snackbar.chatia.application.port.out.IAClientPort;
@@ -61,11 +63,14 @@ public class EnviarMensagemChatUseCaseImpl implements EnviarMensagemChatUseCase 
             // Constrói o system prompt com contexto completo
             String systemPromptCompleto = construirSystemPromptCompleto(clienteId, cardapio);
             
-            // Busca produtos relevantes na mensagem do usuário usando Levenshtein/stemming
-            List<ProdutoContextDTO> produtosEncontrados = buscarProdutosNaMensagem(mensagemUsuario, cardapio);
+            // Busca produtos COM CONTEXTO (identifica tipo de busca)
+            ResultadoBuscaDTO resultadoBusca = buscaProdutoService.buscarComContexto(mensagemUsuario, cardapio);
+            log.info("🔍 Resultado da busca: tipo={}, termo='{}', produtos={}", 
+                     resultadoBusca.tipo(), resultadoBusca.termoBuscado(), resultadoBusca.produtos().size());
             
-            // Adiciona contexto dos produtos encontrados ao prompt se houver
-            String promptComProdutos = adicionarContextoProdutosEncontrados(systemPromptCompleto, produtosEncontrados);
+            // Adiciona contexto dos produtos encontrados ao prompt COM TIPO DE BUSCA
+            String promptComProdutos = adicionarContextoProdutosEncontrados(
+                systemPromptCompleto, resultadoBusca);
             
             // Adiciona mensagem do usuário ao histórico
             MensagemChat msgUsuario = MensagemChat.doUsuario(mensagemUsuario);
@@ -79,7 +84,7 @@ public class EnviarMensagemChatUseCaseImpl implements EnviarMensagemChatUseCase 
             historicoRepository.adicionarMensagem(sessionId, msgAssistente);
             
             // Converte produtos encontrados para DTOs de destaque
-            List<ProdutoDestacadoDTO> produtosDestacados = produtosEncontrados.stream()
+            List<ProdutoDestacadoDTO> produtosDestacados = resultadoBusca.produtos().stream()
                 .map(this::toProdutoDestacado)
                 .toList();
             
@@ -130,126 +135,72 @@ public class EnviarMensagemChatUseCaseImpl implements EnviarMensagemChatUseCase 
     }
     
     /**
-     * Busca produtos relevantes na mensagem do usuário usando busca inteligente
+     * Adiciona contexto dos produtos encontrados ao prompt para a IA,
+     * adaptando a instrução de acordo com o TIPO DE BUSCA.
      */
-    private List<ProdutoContextDTO> buscarProdutosNaMensagem(String mensagem, CardapioContextDTO cardapio) {
-        if (cardapio == null || cardapio.produtos().isEmpty()) {
-            return List.of();
-        }
-        
-        List<ProdutoContextDTO> produtosEncontrados = new java.util.ArrayList<>();
-        String mensagemLower = mensagem.toLowerCase();
-        
-        // 0. Verifica se é uma pergunta genérica sobre o cardápio
-        if (isPerguntaGenericaCardapio(mensagemLower)) {
-            log.info("📋 Pergunta genérica sobre cardápio detectada - retornando produtos destacados");
-            // Retorna até 5 produtos variados (1 de cada categoria se possível)
-            List<ProdutoContextDTO> produtosDestaque = obterProdutosDestaque(cardapio);
-            produtosEncontrados.addAll(produtosDestaque);
-            return produtosEncontrados;
-        }
-        
-        // 1. Primeiro verifica se é uma busca por categoria
-        Optional<String> categoriaMencionada = buscaProdutoService.identificarCategoriaMencionada(mensagem, cardapio);
-        if (categoriaMencionada.isPresent()) {
-            List<ProdutoContextDTO> produtosCategoria = buscaProdutoService.buscarPorCategoria(categoriaMencionada.get(), cardapio);
-            produtosEncontrados.addAll(produtosCategoria);
-            log.debug("Encontrados {} produtos na categoria '{}'", produtosCategoria.size(), categoriaMencionada.get());
-        }
-        
-        // 2. Busca por produtos específicos mencionados
-        List<ProdutoContextDTO> produtosRelevantes = buscaProdutoService.buscarProdutosRelevantes(mensagem, cardapio);
-        for (ProdutoContextDTO produto : produtosRelevantes) {
-            if (!produtosEncontrados.contains(produto)) {
-                produtosEncontrados.add(produto);
-            }
-        }
-        
-        log.debug("Total de {} produtos encontrados para a mensagem", produtosEncontrados.size());
-        return produtosEncontrados;
-    }
-    
-    /**
-     * Detecta se a mensagem é uma pergunta genérica sobre o cardápio
-     */
-    private boolean isPerguntaGenericaCardapio(String mensagem) {
-        List<String> frasesCardapio = List.of(
-            "cardapio", "cardápio", "menu",
-            "o que tem", "o que voce tem", "o que você tem",
-            "o que vocês tem", "o que vcs tem",
-            "quais opcoes", "quais opções", "quais são as opcoes", "quais são as opções",
-            "o que posso pedir", "o que da pra pedir",
-            "me mostra", "mostra o", "mostra ai", "mostra aí",
-            "quero ver", "ver opcoes", "ver opções",
-            "me fala", "fala o que tem",
-            "sugestao", "sugestão", "sugestoes", "sugestões",
-            "recomenda", "recomendacao", "recomendação",
-            "o que voce recomenda", "o que você recomenda"
-        );
-        
-        return frasesCardapio.stream().anyMatch(mensagem::contains);
-    }
-    
-    /**
-     * Retorna produtos de destaque variados (1 por categoria quando possível)
-     */
-    private List<ProdutoContextDTO> obterProdutosDestaque(CardapioContextDTO cardapio) {
-        List<ProdutoContextDTO> destaques = new java.util.ArrayList<>();
-        java.util.Set<String> categoriasUsadas = new java.util.HashSet<>();
-        
-        // Primeiro, pega 1 produto de cada categoria
-        for (ProdutoContextDTO produto : cardapio.produtos()) {
-            if (!produto.disponivel()) continue;
-            
-            String categoria = produto.categoria();
-            if (!categoriasUsadas.contains(categoria)) {
-                destaques.add(produto);
-                categoriasUsadas.add(categoria);
-            }
-            
-            if (destaques.size() >= 5) break;
-        }
-        
-        // Se não completou 5, adiciona mais produtos disponíveis
-        if (destaques.size() < 5) {
-            for (ProdutoContextDTO produto : cardapio.produtos()) {
-                if (!produto.disponivel()) continue;
-                if (destaques.contains(produto)) continue;
-                
-                destaques.add(produto);
-                if (destaques.size() >= 5) break;
-            }
-        }
-        
-        log.info("📦 Produtos de destaque selecionados: {}", 
-                 destaques.stream().map(ProdutoContextDTO::nome).toList());
-        
-        return destaques;
-    }
-    
-    /**
-     * Adiciona contexto dos produtos encontrados ao prompt para a IA
-     */
-    private String adicionarContextoProdutosEncontrados(String promptBase, List<ProdutoContextDTO> produtos) {
-        if (produtos.isEmpty()) {
+    private String adicionarContextoProdutosEncontrados(String promptBase, ResultadoBuscaDTO resultado) {
+        if (!resultado.temResultados()) {
             return promptBase;
         }
         
         StringBuilder sb = new StringBuilder(promptBase);
-        sb.append("\n\n=== ⚠️ INSTRUÇÃO IMPORTANTE SOBRE PRODUTOS ===\n");
-        sb.append("Os produtos abaixo serão exibidos automaticamente como CARDS CLICÁVEIS na interface.\n");
-        sb.append("NÃO LISTE os produtos em texto! O cliente já verá os cards com foto, preço e botão de adicionar.\n");
-        sb.append("Sua resposta deve ser APENAS uma frase curta e simpática, por exemplo:\n");
-        sb.append("- 'Aqui estão algumas opções! Clique em qualquer card para adicionar ao carrinho 🛒'\n");
-        sb.append("- 'Ótima escolha! Veja as opções abaixo e clique para pedir 😊'\n");
-        sb.append("- 'Encontrei isso pra você! Toque no card para adicionar 🍔'\n");
-        sb.append("NÃO repita nomes, preços ou descrições dos produtos na sua resposta!\n");
-        sb.append("=== FIM DA INSTRUÇÃO ===\n\n");
+        sb.append("\n\n");
+        sb.append("╔══════════════════════════════════════════════════════════════════════════════╗\n");
+        sb.append("║  🚨 PRODUTOS ENCONTRADOS - RESPONDA ADEQUADAMENTE AO CONTEXTO 🚨            ║\n");
+        sb.append("╚══════════════════════════════════════════════════════════════════════════════╝\n\n");
         
-        sb.append("Produtos que serão exibidos como cards (apenas para seu contexto interno):\n");
-        for (ProdutoContextDTO produto : produtos) {
-            sb.append("- ").append(produto.nome()).append(" (R$ ").append(String.format("%.2f", produto.preco())).append(")\n");
+        // Instrução específica por tipo de busca
+        switch (resultado.tipo()) {
+            case INGREDIENTE:
+                sb.append("🥬 TIPO DE BUSCA: INGREDIENTE\n");
+                sb.append("O cliente perguntou sobre produtos com '").append(resultado.termoBuscado()).append("'\n");
+                sb.append("ENCONTRAMOS produtos que contêm este ingrediente!\n\n");
+                sb.append("✅ RESPONDA ASSIM:\n");
+                sb.append("   • 'Sim! Temos produtos com ").append(resultado.termoBuscado()).append("! Veja abaixo 👇'\n");
+                sb.append("   • 'Claro! Encontrei opções com ").append(resultado.termoBuscado()).append(" pra você!'\n");
+                break;
+                
+            case CATEGORIA:
+                sb.append("📁 TIPO DE BUSCA: CATEGORIA\n");
+                sb.append("O cliente perguntou sobre a categoria '").append(resultado.termoBuscado()).append("'\n\n");
+                sb.append("✅ RESPONDA ASSIM:\n");
+                sb.append("   • 'Aqui estão nossos ").append(resultado.termoBuscado()).append("! Clique pra pedir 🍔'\n");
+                sb.append("   • 'Temos ótimas opções de ").append(resultado.termoBuscado()).append("! Veja abaixo!'\n");
+                break;
+                
+            case NOME_PRODUTO:
+                sb.append("🍔 TIPO DE BUSCA: PRODUTO ESPECÍFICO\n");
+                sb.append("O cliente perguntou sobre o produto '").append(resultado.termoBuscado()).append("'\n\n");
+                sb.append("✅ RESPONDA ASSIM:\n");
+                sb.append("   • 'Encontrei! Clique no card para adicionar ao carrinho 🛒'\n");
+                sb.append("   • 'Esse é uma ótima escolha! Veja os detalhes abaixo!'\n");
+                break;
+                
+            case CARDAPIO_GERAL:
+                sb.append("📋 TIPO DE BUSCA: CARDÁPIO GERAL\n");
+                sb.append("O cliente quer ver opções do cardápio\n\n");
+                sb.append("✅ RESPONDA ASSIM:\n");
+                sb.append("   • 'Aqui estão algumas opções do nosso cardápio! 😊'\n");
+                sb.append("   • 'Veja algumas sugestões! Clique para adicionar 🛒'\n");
+                break;
+                
+            default:
+                sb.append("✅ Produtos encontrados! Responda positivamente.\n");
         }
+        
+        sb.append("\n📦 PRODUTOS QUE SERÃO EXIBIDOS (NÃO LISTE, APENAS CONFIRME):\n");
+        for (ProdutoContextDTO produto : resultado.produtos()) {
+            sb.append("   ✅ ").append(produto.nome());
+            if (produto.descricao() != null && !produto.descricao().isBlank()) {
+                sb.append(" → ").append(produto.descricao());
+            }
+            sb.append("\n");
+        }
+        
+        sb.append("\n⛔ NUNCA RESPONDA:\n");
+        sb.append("   • 'Não temos...' ou 'Desculpe...' (ENCONTRAMOS!)\n");
+        sb.append("   • 'Só posso ajudar...' (ESTA É pergunta sobre cardápio!)\n");
+        sb.append("   • Listando preços ou detalhes (o card já mostra!)\n\n");
         
         return sb.toString();
     }
