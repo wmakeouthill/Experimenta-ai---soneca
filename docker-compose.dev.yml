@@ -81,10 +81,28 @@ services:
       - ./pom.xml:/app/pom.xml
       # Cache do Maven para acelerar builds
       - maven_cache:/root/.m2
+      # ✅ OTIMIZAÇÃO: Volumes persistentes para targets compilados (evita recompilar tudo)
+      - backend_target_kernel:/app/kernel-compartilhado/target
+      - backend_target_cardapio:/app/gestao-cardapio/target
+      - backend_target_clientes:/app/gestao-clientes/target
+      - backend_target_pedidos:/app/gestao-pedidos/target
+      - backend_target_auth:/app/autenticacao/target
+      - backend_target_orquestrador:/app/sistema-orquestrador/target
+      - backend_target_impressao:/app/impressao-cupom-fiscal/target
+      - backend_target_chatia:/app/chat-ia/target
     depends_on:
       mysql-dev:
         condition: service_healthy # ✅ Aguarda MySQL estar saudável antes de iniciar backend
     restart: unless-stopped
+    # ✅ RECURSOS: Mais CPU e memória = build/startup MUITO mais rápido
+    deploy:
+      resources:
+        limits:
+          cpus: "4" # Usa até 4 CPUs (ajuste conforme sua máquina)
+          memory: 4G # Até 4GB RAM para JVM + Maven
+        reservations:
+          cpus: "2" # Garante mínimo 2 CPUs
+          memory: 2G # Garante mínimo 2GB RAM
 
   # Frontend Angular com hot-reload
   frontend-dev:
@@ -130,4 +148,21 @@ volumes:
   npm_cache:
     driver: local
   frontend_node_modules:
+    driver: local
+  # ✅ Volumes para preservar compilação entre restarts (MUITO mais rápido!)
+  backend_target_kernel:
+    driver: local
+  backend_target_cardapio:
+    driver: local
+  backend_target_clientes:
+    driver: local
+  backend_target_pedidos:
+    driver: local
+  backend_target_auth:
+    driver: local
+  backend_target_orquestrador:
+    driver: local
+  backend_target_impressao:
+    driver: local
+  backend_target_chatia:
     driver: local

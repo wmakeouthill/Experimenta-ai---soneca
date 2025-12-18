@@ -1,12 +1,12 @@
 import {
-    Component,
-    ChangeDetectionStrategy,
-    input,
-    output,
-    effect,
-    ViewChild,
-    ElementRef,
-    AfterViewChecked
+  Component,
+  ChangeDetectionStrategy,
+  input,
+  output,
+  effect,
+  ViewChild,
+  ElementRef,
+  AfterViewChecked
 } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -18,11 +18,11 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
  * Suporta renderização de cards de produtos com opção de adicionar ao carrinho.
  */
 @Component({
-    selector: 'app-chat-ia-fullscreen',
-    standalone: true,
-    imports: [CommonModule, FormsModule, CurrencyPipe],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    template: `
+  selector: 'app-chat-ia-fullscreen',
+  standalone: true,
+  imports: [CommonModule, FormsModule, CurrencyPipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
     <div class="chat-ia-overlay" [class.aberto]="isOpen() && !isHidden()" (click)="fecharAoClicarFora($event)">
       <div class="chat-ia-container" (click)="$event.stopPropagation()">
         <!-- Header -->
@@ -37,8 +37,8 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
 
           <!-- Carrinho no centro do header -->
           @if (quantidadeItensCarrinho() > 0) {
-            <button 
-              class="btn-carrinho-header" 
+            <button
+              class="btn-carrinho-header"
               [class.bounce]="animarCarrinho()"
               (click)="onAbrirCarrinho.emit()"
               title="Ver carrinho">
@@ -48,8 +48,8 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
           }
 
           <div class="chat-ia-header-actions">
-            <button 
-              class="btn-historico-header" 
+            <button
+              class="btn-historico-header"
               [class.ativo]="mostrarHistorico()"
               (click)="onToggleHistorico.emit()"
               title="Ver conversas anteriores">
@@ -73,7 +73,7 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
                   <p class="message-text">{{ msg.text }}</p>
                   <span class="message-time">{{ formatTime(msg.timestamp) }}</span>
                 </div>
-                
+
                 <!-- Cards de produtos destacados, agrupados por categoria -->
                 @if (msg.produtosDestacados && msg.produtosDestacados.length > 0) {
                   <div class="produtos-destacados">
@@ -81,7 +81,7 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
                       <div class="categoria-grupo">
                         <h5 class="categoria-titulo">📁 {{ categoria.nome }}</h5>
                         @for (produto of categoria.produtos; track produto.id) {
-                          <div class="produto-card" 
+                          <div class="produto-card"
                                [class.indisponivel]="!produto.disponivel"
                                (click)="adicionarAoCarrinho(produto)">
                             @if (produto.imagemUrl) {
@@ -97,7 +97,7 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
                               <div class="produto-footer">
                                 <span class="produto-preco">{{ produto.preco | currency:'BRL':'symbol':'1.2-2' }}</span>
                                 @if (produto.disponivel) {
-                                  <button 
+                                  <button
                                     class="btn-adicionar"
                                     (click)="adicionarAoCarrinho(produto); $event.stopPropagation()"
                                     title="Adicionar ao carrinho">
@@ -117,7 +117,7 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
               </div>
             </div>
           }
-          
+
           @if (isLoading()) {
             <div class="chat-ia-message assistant">
               <img src="/assets/soneca_ai.webp" alt="Soneca" class="message-avatar">
@@ -151,8 +151,8 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
                     <div class="historico-item-titulo">{{ conversa.titulo }}</div>
                     <div class="historico-item-preview">{{ conversa.previewUltimaMensagem }}</div>
                     <div class="historico-item-data">{{ formatDate(conversa.dataUltimaMensagem) }}</div>
-                    <button 
-                      class="btn-remover-conversa" 
+                    <button
+                      class="btn-remover-conversa"
                       (click)="onRemoverConversa.emit(conversa.id); $event.stopPropagation()"
                       title="Remover conversa">
                       🗑️
@@ -167,12 +167,6 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
         <!-- Input -->
         <footer class="chat-ia-input-area">
           <div class="input-wrapper">
-            <button 
-              class="btn-nova-conversa-input" 
-              (click)="onNovaConversa.emit()"
-              title="Nova conversa">
-              ✨
-            </button>
             <input
               #chatInput
               type="text"
@@ -183,8 +177,14 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
               [disabled]="isLoading()"
               class="chat-ia-input"
               autocomplete="off">
-            <button 
-              class="btn-enviar" 
+            <button
+              class="btn-nova-conversa-input"
+              (click)="onNovaConversa.emit()"
+              title="Nova conversa">
+              ✨
+            </button>
+            <button
+              class="btn-enviar"
               [disabled]="!canSend()"
               (click)="enviar()">
               @if (isLoading()) {
@@ -198,7 +198,7 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
       </div>
     </div>
   `,
-    styles: [`
+  styles: [`
     .chat-ia-overlay {
       position: fixed;
       top: 0;
@@ -930,130 +930,130 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
   `]
 })
 export class ChatIAFullscreenComponent implements AfterViewChecked {
-    // Inputs
-    readonly isOpen = input.required<boolean>();
-    /** Esconde temporariamente o chat (ex: quando modal de produto abre) */
-    readonly isHidden = input<boolean>(false);
-    readonly isLoading = input<boolean>(false);
-    readonly inputText = input<string>('');
-    readonly canSend = input<boolean>(false);
-    readonly mensagens = input<MensagemChat[]>([]);
-    /** Quantidade de itens no carrinho para exibir badge */
-    readonly quantidadeItensCarrinho = input<number>(0);
-    /** Flag para disparar animação no carrinho (quando item é adicionado) */
-    readonly animarCarrinho = input<boolean>(false);
-    /** Lista de conversas anteriores */
-    readonly historicoConversas = input<ConversaSalva[]>([]);
-    /** Se deve mostrar o painel de histórico */
-    readonly mostrarHistorico = input<boolean>(false);
+  // Inputs
+  readonly isOpen = input.required<boolean>();
+  /** Esconde temporariamente o chat (ex: quando modal de produto abre) */
+  readonly isHidden = input<boolean>(false);
+  readonly isLoading = input<boolean>(false);
+  readonly inputText = input<string>('');
+  readonly canSend = input<boolean>(false);
+  readonly mensagens = input<MensagemChat[]>([]);
+  /** Quantidade de itens no carrinho para exibir badge */
+  readonly quantidadeItensCarrinho = input<number>(0);
+  /** Flag para disparar animação no carrinho (quando item é adicionado) */
+  readonly animarCarrinho = input<boolean>(false);
+  /** Lista de conversas anteriores */
+  readonly historicoConversas = input<ConversaSalva[]>([]);
+  /** Se deve mostrar o painel de histórico */
+  readonly mostrarHistorico = input<boolean>(false);
 
-    // Outputs
-    readonly onClose = output<void>();
-    readonly onSend = output<void>();
-    readonly onInputChange = output<string>();
-    readonly onNovaConversa = output<void>();
-    /** Emitido quando o usuário clica em "Adicionar" em um card de produto */
-    readonly onAdicionarProduto = output<ProdutoDestacado>();
-    /** Emitido quando o usuário clica no carrinho no header */
-    readonly onAbrirCarrinho = output<void>();
-    /** Emitido para alternar exibição do histórico */
-    readonly onToggleHistorico = output<void>();
-    /** Emitido quando o usuário seleciona uma conversa do histórico */
-    readonly onCarregarConversa = output<string>();
-    /** Emitido quando o usuário remove uma conversa do histórico */
-    readonly onRemoverConversa = output<string>();
+  // Outputs
+  readonly onClose = output<void>();
+  readonly onSend = output<void>();
+  readonly onInputChange = output<string>();
+  readonly onNovaConversa = output<void>();
+  /** Emitido quando o usuário clica em "Adicionar" em um card de produto */
+  readonly onAdicionarProduto = output<ProdutoDestacado>();
+  /** Emitido quando o usuário clica no carrinho no header */
+  readonly onAbrirCarrinho = output<void>();
+  /** Emitido para alternar exibição do histórico */
+  readonly onToggleHistorico = output<void>();
+  /** Emitido quando o usuário seleciona uma conversa do histórico */
+  readonly onCarregarConversa = output<string>();
+  /** Emitido quando o usuário remove uma conversa do histórico */
+  readonly onRemoverConversa = output<string>();
 
-    @ViewChild('messagesContainer') private readonly messagesContainer?: ElementRef<HTMLDivElement>;
-    @ViewChild('chatInput') private readonly chatInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('messagesContainer') private readonly messagesContainer?: ElementRef<HTMLDivElement>;
+  @ViewChild('chatInput') private readonly chatInput?: ElementRef<HTMLInputElement>;
 
-    private shouldScrollToBottom = true;
+  private shouldScrollToBottom = true;
 
-    constructor() {
-        // Auto-scroll quando novas mensagens chegam
-        effect(() => {
-            this.mensagens(); // Track changes
-            this.shouldScrollToBottom = true;
-        });
+  constructor() {
+    // Auto-scroll quando novas mensagens chegam
+    effect(() => {
+      this.mensagens(); // Track changes
+      this.shouldScrollToBottom = true;
+    });
 
-        // Foca no input quando abre
-        effect(() => {
-            if (this.isOpen()) {
-                setTimeout(() => this.focusInput(), 100);
-            }
-        });
+    // Foca no input quando abre
+    effect(() => {
+      if (this.isOpen()) {
+        setTimeout(() => this.focusInput(), 100);
+      }
+    });
+  }
+
+  ngAfterViewChecked(): void {
+    if (this.shouldScrollToBottom) {
+      this.scrollToBottom();
+      this.shouldScrollToBottom = false;
+    }
+  }
+
+  formatTime(date: Date): string {
+    return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  formatDate(date: Date): string {
+    const hoje = new Date();
+    const ontem = new Date(hoje);
+    ontem.setDate(ontem.getDate() - 1);
+
+    if (date.toDateString() === hoje.toDateString()) {
+      return `Hoje às ${this.formatTime(date)}`;
+    } else if (date.toDateString() === ontem.toDateString()) {
+      return `Ontem às ${this.formatTime(date)}`;
+    } else {
+      return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ` às ${this.formatTime(date)}`;
+    }
+  }
+
+  enviar(): void {
+    if (this.canSend()) {
+      this.onSend.emit();
+    }
+  }
+
+  /**
+   * Adiciona um produto ao carrinho emitindo evento para o componente pai.
+   */
+  adicionarAoCarrinho(produto: ProdutoDestacado): void {
+    this.onAdicionarProduto.emit(produto);
+  }
+
+  fecharAoClicarFora(event: Event): void {
+    if ((event.target as HTMLElement).classList.contains('chat-ia-overlay')) {
+      this.onClose.emit();
+    }
+  }
+
+  private scrollToBottom(): void {
+    if (this.messagesContainer?.nativeElement) {
+      const el = this.messagesContainer.nativeElement;
+      el.scrollTop = el.scrollHeight;
+    }
+  }
+
+  private focusInput(): void {
+    if (this.chatInput?.nativeElement) {
+      this.chatInput.nativeElement.focus();
+    }
+  }
+
+  /**
+   * Agrupa produtos por categoria para exibição organizada.
+   */
+  agruparPorCategoria(produtos: ProdutoDestacado[]): { nome: string; produtos: ProdutoDestacado[] }[] {
+    const grupos = new Map<string, ProdutoDestacado[]>();
+
+    for (const produto of produtos) {
+      const categoria = produto.categoria || 'Outros';
+      if (!grupos.has(categoria)) {
+        grupos.set(categoria, []);
+      }
+      grupos.get(categoria)!.push(produto);
     }
 
-    ngAfterViewChecked(): void {
-        if (this.shouldScrollToBottom) {
-            this.scrollToBottom();
-            this.shouldScrollToBottom = false;
-        }
-    }
-
-    formatTime(date: Date): string {
-        return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    }
-
-    formatDate(date: Date): string {
-        const hoje = new Date();
-        const ontem = new Date(hoje);
-        ontem.setDate(ontem.getDate() - 1);
-
-        if (date.toDateString() === hoje.toDateString()) {
-            return `Hoje às ${this.formatTime(date)}`;
-        } else if (date.toDateString() === ontem.toDateString()) {
-            return `Ontem às ${this.formatTime(date)}`;
-        } else {
-            return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ` às ${this.formatTime(date)}`;
-        }
-    }
-
-    enviar(): void {
-        if (this.canSend()) {
-            this.onSend.emit();
-        }
-    }
-
-    /**
-     * Adiciona um produto ao carrinho emitindo evento para o componente pai.
-     */
-    adicionarAoCarrinho(produto: ProdutoDestacado): void {
-        this.onAdicionarProduto.emit(produto);
-    }
-
-    fecharAoClicarFora(event: Event): void {
-        if ((event.target as HTMLElement).classList.contains('chat-ia-overlay')) {
-            this.onClose.emit();
-        }
-    }
-
-    private scrollToBottom(): void {
-        if (this.messagesContainer?.nativeElement) {
-            const el = this.messagesContainer.nativeElement;
-            el.scrollTop = el.scrollHeight;
-        }
-    }
-
-    private focusInput(): void {
-        if (this.chatInput?.nativeElement) {
-            this.chatInput.nativeElement.focus();
-        }
-    }
-
-    /**
-     * Agrupa produtos por categoria para exibição organizada.
-     */
-    agruparPorCategoria(produtos: ProdutoDestacado[]): { nome: string; produtos: ProdutoDestacado[] }[] {
-        const grupos = new Map<string, ProdutoDestacado[]>();
-
-        for (const produto of produtos) {
-            const categoria = produto.categoria || 'Outros';
-            if (!grupos.has(categoria)) {
-                grupos.set(categoria, []);
-            }
-            grupos.get(categoria)!.push(produto);
-        }
-
-        return Array.from(grupos.entries()).map(([nome, produtos]) => ({ nome, produtos }));
-    }
+    return Array.from(grupos.entries()).map(([nome, produtos]) => ({ nome, produtos }));
+  }
 }
