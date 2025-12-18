@@ -19,9 +19,22 @@ export interface ProdutoDestacado {
     disponivel: boolean;
 }
 
+/** Tipos de ação que o chat pode executar */
+export type TipoAcao = 'ADICIONAR_CARRINHO' | 'REMOVER_CARRINHO' | 'VER_DETALHES' | 'FINALIZAR_PEDIDO' | 'NENHUMA';
+
+/** Ação executável retornada pelo chat */
+export interface AcaoChat {
+    tipo: TipoAcao;
+    produtoId: string | null;
+    produtoNome: string | null;
+    quantidade: number | null;
+    observacao: string | null;
+}
+
 export interface ChatIAResponse {
     reply: string;
     produtosDestacados?: ProdutoDestacado[];
+    acao?: AcaoChat;
 }
 
 /**

@@ -148,6 +148,40 @@ export function useCarrinho() {
         }
     }
 
+    /**
+     * Adiciona um produto ao carrinho com quantidade e observação personalizadas.
+     * Usado pelo chat IA para adicionar via comando de texto.
+     */
+    function adicionarComOpcoes(produto: Produto, quantidade: number, observacao: string): void {
+        const itensAtuais = [...itens()];
+        const indexExistente = itensAtuais.findIndex(item => item.produto.id === produto.id);
+
+        if (indexExistente >= 0) {
+            // Se já existe, soma a quantidade e concatena observação
+            const itemExistente = itensAtuais[indexExistente];
+            let novaObservacao = itemExistente.observacao;
+            if (observacao) {
+                novaObservacao = novaObservacao
+                    ? `${novaObservacao}; ${observacao}`
+                    : observacao;
+            }
+            itensAtuais[indexExistente] = {
+                ...itemExistente,
+                quantidade: itemExistente.quantidade + quantidade,
+                observacao: novaObservacao
+            };
+        } else {
+            itensAtuais.push({
+                produto,
+                quantidade,
+                observacao
+            });
+        }
+
+        itens.set(itensAtuais);
+        persistirCarrinho(itensAtuais);
+    }
+
     function removerDoCarrinho(produtoId: string): void {
         itens.update(lista => lista.filter(item => item.produto.id !== produtoId));
     }
@@ -204,6 +238,7 @@ export function useCarrinho() {
         decrementarQuantidade,
         adicionarAoCarrinho,
         adicionarRapido,
+        adicionarComOpcoes,
         removerDoCarrinho,
         alterarQuantidade,
         abrirCarrinho,

@@ -8,6 +8,7 @@ import { Mesa } from '../../services/mesa.service';
 import { Produto } from '../../services/produto.service';
 import { ClienteAuthService } from '../../services/cliente-auth.service';
 import { PwaInstallService } from '../../services/pwa-install.service';
+import { AcaoChat } from '../../services/chat-ia.service';
 import { DraggableScrollDirective } from './directives/draggable-scroll.directive';
 import { ImageProxyUtil } from '../../utils/image-proxy.util';
 
@@ -122,7 +123,10 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
     () => this.identificacao.clienteIdentificado()?.id,
     () => this.meusPedidos.pedidoSelecionado()
   );
-  readonly chatIA = useChatIA(() => this.identificacao.clienteIdentificado()?.id);
+  readonly chatIA = useChatIA(
+    () => this.identificacao.clienteIdentificado()?.id,
+    (acao) => this.processarAcaoChat(acao)
+  );
 
   // ========== ViewChild para botão do Google ==========
   @ViewChild('googleButtonLogin') googleButtonLoginRef?: ElementRef<HTMLDivElement>;
@@ -460,6 +464,28 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   adicionarAoCarrinhoRapido(produto: Produto): void {
     this.carrinho.adicionarRapido(produto);
     // Feedback visual pode ser adicionado aqui
+  }
+
+  /**
+   * Processa ações do Chat IA (ex: adicionar ao carrinho via comando de texto).
+   */
+  processarAcaoChat(acao: AcaoChat): void {
+    if (acao.tipo === 'ADICIONAR_CARRINHO' && acao.produtoId) {
+      // Busca o produto no cardápio
+      const produto = this.cardapio.produtos().find(p => p.id === acao.produtoId);
+      if (produto) {
+        const quantidade = acao.quantidade || 1;
+        const observacao = acao.observacao || '';
+
+        // Adiciona ao carrinho usando a nova função com opções
+        this.carrinho.adicionarComOpcoes(produto, quantidade, observacao);
+
+        console.log(`✅ Chat IA: Adicionado ${quantidade}x ${produto.nome} ao carrinho`, observacao ? `(${observacao})` : '');
+      } else {
+        console.warn(`⚠️ Chat IA: Produto não encontrado: ${acao.produtoId}`);
+      }
+    }
+    // Outros tipos de ação podem ser adicionados aqui no futuro
   }
 
   async salvarSenha(): Promise<void> {

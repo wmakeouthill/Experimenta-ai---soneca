@@ -8,11 +8,13 @@ import com.snackbar.chatia.application.dto.ChatResponseDTO.ProdutoDestacadoDTO;
 import com.snackbar.chatia.application.dto.HistoricoPedidosClienteContextDTO;
 import com.snackbar.chatia.application.dto.ResultadoBuscaDTO;
 import com.snackbar.chatia.application.dto.ResultadoBuscaDTO.TipoBusca;
+import com.snackbar.chatia.application.dto.AcaoChatDTO;
 import com.snackbar.chatia.application.port.in.EnviarMensagemChatUseCase;
 import com.snackbar.chatia.application.port.out.CardapioContextPort;
 import com.snackbar.chatia.application.port.out.IAClientPort;
 import com.snackbar.chatia.application.port.out.PedidosClienteContextPort;
 import com.snackbar.chatia.application.service.BuscaProdutoInteligenteService;
+import com.snackbar.chatia.application.service.DetectorComandoService;
 import com.snackbar.chatia.domain.entity.MensagemChat;
 import com.snackbar.chatia.domain.repository.HistoricoChatRepository;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +40,7 @@ public class EnviarMensagemChatUseCaseImpl implements EnviarMensagemChatUseCase 
     private final CardapioContextPort cardapioContextPort;
     private final PedidosClienteContextPort pedidosClienteContextPort;
     private final BuscaProdutoInteligenteService buscaProdutoService;
+    private final DetectorComandoService detectorComandoService;
     
     @Value("${chat.ia.nome-estabelecimento:Soneca Lanchonete}")
     private String nomeEstabelecimento;
@@ -56,6 +59,27 @@ public class EnviarMensagemChatUseCaseImpl implements EnviarMensagemChatUseCase 
         try {
             // Carrega cardápio (com cache simples)
             CardapioContextDTO cardapio = obterCardapio();
+            
+            // 🎯 PRIMEIRO: Verifica se é um comando de adicionar ao carrinho
+            AcaoChatDTO acaoDetectada = detectorComandoService.detectarComandoAdicionar(mensagemUsuario, cardapio);
+            
+            if (acaoDetectada.temAcao()) {
+                log.info("🛒 Comando de adicionar ao carrinho detectado: {} x{} | obs: {}", 
+                         acaoDetectada.produtoNome(), acaoDetectada.quantidade(), acaoDetectada.observacao());
+                
+                // Adiciona mensagem do usuário ao histórico
+                MensagemChat msgUsuario = MensagemChat.doUsuario(mensagemUsuario);
+                historicoRepository.adicionarMensagem(sessionId, msgUsuario);
+                
+                // Gera resposta confirmando a adição
+                String resposta = gerarRespostaComandoAdicionar(acaoDetectada);
+                
+                // Adiciona resposta ao histórico
+                MensagemChat msgAssistente = MensagemChat.doAssistente(resposta);
+                historicoRepository.adicionarMensagem(sessionId, msgAssistente);
+                
+                return ChatResponseDTO.comAcao(resposta, acaoDetectada);
+            }
             
             // Obtém histórico da sessão
             List<MensagemChat> historico = historicoRepository.obterHistorico(sessionId);
@@ -105,6 +129,28 @@ public class EnviarMensagemChatUseCaseImpl implements EnviarMensagemChatUseCase 
             log.error("Erro ao processar mensagem do chat - Session: {}", sessionId, e);
             return ChatResponseDTO.erro("Desculpe, ocorreu um erro ao processar sua mensagem. Tente novamente.");
         }
+    }
+    
+    /**
+     * Gera uma resposta amigável confirmando a adição ao carrinho.
+     */
+    private String gerarRespostaComandoAdicionar(AcaoChatDTO acao) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Ótimo! Adicionei ");
+        
+        if (acao.quantidade() != null && acao.quantidade() > 1) {
+            sb.append(acao.quantidade()).append("x ");
+        }
+        
+        sb.append("**").append(acao.produtoNome()).append("** ao seu carrinho! 🛒");
+        
+        if (acao.observacao() != null && !acao.observacao().isBlank()) {
+            sb.append("\n\n📝 Observação: *").append(acao.observacao()).append("*");
+        }
+        
+        sb.append("\n\nDeseja mais alguma coisa? 😊");
+        
+        return sb.toString();
     }
     
     // ============================================

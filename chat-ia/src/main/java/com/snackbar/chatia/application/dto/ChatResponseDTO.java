@@ -5,11 +5,12 @@ import java.util.List;
 
 /**
  * DTO para resposta do chat IA.
- * Suporta respostas simples de texto e respostas ricas com cards de produtos.
+ * Suporta respostas simples de texto, cards de produtos e ações executáveis.
  */
 public record ChatResponseDTO(
     String reply,
-    List<ProdutoDestacadoDTO> produtosDestacados
+    List<ProdutoDestacadoDTO> produtosDestacados,
+    AcaoChatDTO acao
 ) {
     
     /**
@@ -29,20 +30,34 @@ public record ChatResponseDTO(
      * Cria resposta simples apenas com texto.
      */
     public static ChatResponseDTO de(String reply) {
-        return new ChatResponseDTO(reply, List.of());
+        return new ChatResponseDTO(reply, List.of(), AcaoChatDTO.nenhuma());
     }
     
     /**
      * Cria resposta com texto e produtos destacados.
      */
     public static ChatResponseDTO comProdutos(String reply, List<ProdutoDestacadoDTO> produtos) {
-        return new ChatResponseDTO(reply, produtos);
+        return new ChatResponseDTO(reply, produtos, AcaoChatDTO.nenhuma());
+    }
+    
+    /**
+     * Cria resposta com ação para adicionar ao carrinho.
+     */
+    public static ChatResponseDTO comAcao(String reply, AcaoChatDTO acao) {
+        return new ChatResponseDTO(reply, List.of(), acao);
+    }
+    
+    /**
+     * Cria resposta com texto, produtos e ação.
+     */
+    public static ChatResponseDTO completa(String reply, List<ProdutoDestacadoDTO> produtos, AcaoChatDTO acao) {
+        return new ChatResponseDTO(reply, produtos, acao);
     }
     
     /**
      * Cria resposta de erro.
      */
     public static ChatResponseDTO erro(String mensagemErro) {
-        return new ChatResponseDTO(mensagemErro, List.of());
+        return new ChatResponseDTO(mensagemErro, List.of(), AcaoChatDTO.nenhuma());
     }
 }

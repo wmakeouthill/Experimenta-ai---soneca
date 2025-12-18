@@ -1,5 +1,5 @@
 import { signal, computed, inject } from '@angular/core';
-import { ChatIAService, ChatIAResponse, ProdutoDestacado } from '../../../services/chat-ia.service';
+import { ChatIAService, ChatIAResponse, ProdutoDestacado, AcaoChat } from '../../../services/chat-ia.service';
 
 export interface MensagemChat {
     id: string;
@@ -8,9 +8,11 @@ export interface MensagemChat {
     timestamp: Date;
     /** Produtos destacados na resposta (apenas mensagens do assistente) */
     produtosDestacados?: ProdutoDestacado[];
+    /** Ação a ser executada (apenas mensagens do assistente) */
+    acao?: AcaoChat;
 }
 
-export { ProdutoDestacado } from '../../../services/chat-ia.service';
+export { ProdutoDestacado, AcaoChat, TipoAcao } from '../../../services/chat-ia.service';
 
 const SESSION_KEY = 'chat-ia-session-id';
 const MENSAGENS_KEY = 'chat-ia-mensagens';
@@ -66,8 +68,12 @@ function carregarMensagens(): MensagemChat[] {
  * Composable para gerenciar o estado do Chat IA.
  * Fornece estado reativo e métodos para interação com o chat.
  * @param clienteIdGetter função que retorna o ID do cliente logado (opcional)
+ * @param onAcaoExecutar callback para quando uma ação deve ser executada (ex: adicionar ao carrinho)
  */
-export function useChatIA(clienteIdGetter?: () => string | null | undefined) {
+export function useChatIA(
+    clienteIdGetter?: () => string | null | undefined,
+    onAcaoExecutar?: (acao: AcaoChat) => void
+) {
     const chatService = inject(ChatIAService);
 
     // Estado
@@ -76,6 +82,7 @@ export function useChatIA(clienteIdGetter?: () => string | null | undefined) {
     const inputText = signal('');
     const mensagens = signal<MensagemChat[]>([]);
     const erro = signal<string | null>(null);
+    const ultimaAcao = signal<AcaoChat | null>(null);
 
     let sessionId = obterOuGerarSessionId();
 
@@ -170,7 +177,8 @@ export function useChatIA(clienteIdGetter?: () => string | null | undefined) {
                 console.log('🤖 Chat IA Response:', {
                     reply: response.reply?.substring(0, 100) + '...',
                     produtosDestacados: response.produtosDestacados,
-                    totalProdutos: response.produtosDestacados?.length || 0
+                    totalProdutos: response.produtosDestacados?.length || 0,
+                    acao: response.acao
                 });
 
                 const msgAssistente: MensagemChat = {
@@ -178,11 +186,19 @@ export function useChatIA(clienteIdGetter?: () => string | null | undefined) {
                     from: 'assistant',
                     text: response.reply,
                     timestamp: new Date(),
-                    produtosDestacados: response.produtosDestacados || []
+                    produtosDestacados: response.produtosDestacados || [],
+                    acao: response.acao
                 };
                 mensagens.update(msgs => [...msgs, msgAssistente]);
                 salvarMensagens(mensagens());
                 isLoading.set(false);
+
+                // Se houver ação, executa o callback
+                if (response.acao && response.acao.tipo !== 'NENHUMA') {
+                    console.log('🛒 Executando ação:', response.acao);
+                    ultimaAcao.set(response.acao);
+                    onAcaoExecutar?.(response.acao);
+                }
             },
             error: () => {
                 erro.set('Erro ao enviar mensagem. Tente novamente.');
@@ -218,6 +234,7 @@ export function useChatIA(clienteIdGetter?: () => string | null | undefined) {
         inputText,
         mensagens,
         erro,
+        ultimaAcao,
 
         // Computed
         canSend,
