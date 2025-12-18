@@ -27,29 +27,34 @@ import { CommonModule } from '@angular/common';
     </button>
   `,
     styles: [`
+    :host {
+      --espacamento: 1rem;
+      --footer-altura: 70px;
+    }
+
     .chat-ia-btn {
       position: fixed;
-      bottom: 5rem;
-      right: 1rem;
-      width: 72px;
-      height: 72px;
+      bottom: calc(var(--footer-altura) + var(--espacamento));
+      right: var(--espacamento);
+      width: 100px;
+      height: 100px;
       border-radius: 50%;
       background: transparent;
       border: none;
-      box-shadow: none;
+      box-shadow: 0 4px 25px rgba(255, 107, 53, 0.5);
       cursor: pointer;
       z-index: 9990;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 0.3s ease, filter 0.3s ease;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
       overflow: visible;
       padding: 0;
     }
 
     .chat-ia-btn:hover {
       transform: scale(1.1);
-      filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+      box-shadow: 0 6px 35px rgba(255, 107, 53, 0.7);
     }
 
     .chat-ia-btn:active {
@@ -57,24 +62,21 @@ import { CommonModule } from '@angular/common';
     }
 
     .chat-ia-btn.pulse {
-      animation: pulse 2s infinite;
+      animation: pulse 2.5s infinite ease-in-out;
     }
 
     @keyframes pulse {
-      0% {
-        filter: drop-shadow(0 0 0 rgba(230, 126, 34, 0.5));
+      0%, 100% {
+        box-shadow: 0 4px 25px rgba(255, 107, 53, 0.5);
       }
-      70% {
-        filter: drop-shadow(0 0 15px rgba(230, 126, 34, 0.6));
-      }
-      100% {
-        filter: drop-shadow(0 0 0 rgba(230, 126, 34, 0));
+      50% {
+        box-shadow: 0 6px 40px rgba(255, 107, 53, 0.8);
       }
     }
 
     .chat-ia-btn-icon {
-      width: 72px;
-      height: 72px;
+      width: 100px;
+      height: 100px;
       border-radius: 50%;
       object-fit: contain;
     }
@@ -84,46 +86,46 @@ import { CommonModule } from '@angular/common';
       right: calc(100% + 0.75rem);
       top: 50%;
       transform: translateY(-50%);
-      background: var(--bg-secondary, #16213e);
-      color: var(--text-primary, #e8e8e8);
-      padding: 0.5rem 0.75rem;
-      border-radius: 8px;
-      font-size: 0.85rem;
+      background: linear-gradient(135deg, #FF6B35 0%, #e85d27 100%);
+      color: white;
+      padding: 0.6rem 1rem;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
       white-space: nowrap;
       opacity: 0;
       visibility: hidden;
-      transition: opacity 0.2s ease, visibility 0.2s ease;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+      box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
       pointer-events: none;
     }
 
     .chat-ia-tooltip::after {
       content: '';
       position: absolute;
-      right: -6px;
+      right: -8px;
       top: 50%;
       transform: translateY(-50%);
-      border: 6px solid transparent;
-      border-left-color: var(--bg-secondary, #16213e);
+      border: 8px solid transparent;
+      border-left-color: #FF6B35;
     }
 
     .chat-ia-btn:hover .chat-ia-tooltip {
       opacity: 1;
       visibility: visible;
+      transform: translateY(-50%) translateX(-5px);
     }
 
-    /* Responsivo */
+    /* Responsivo - tablets */
     @media (max-width: 768px) {
       .chat-ia-btn {
-        bottom: 5.5rem;
-        right: 0.75rem;
-        width: 64px;
-        height: 64px;
+        width: 88px;
+        height: 88px;
       }
 
       .chat-ia-btn-icon {
-        width: 64px;
-        height: 64px;
+        width: 88px;
+        height: 88px;
       }
 
       .chat-ia-tooltip {
@@ -131,17 +133,23 @@ import { CommonModule } from '@angular/common';
       }
     }
 
+    /* Responsivo - mobile */
     @media (max-width: 480px) {
       .chat-ia-btn {
-        bottom: 5rem;
-        right: 0.5rem;
-        width: 60px;
-        height: 60px;
+        width: 80px;
+        height: 80px;
       }
 
       .chat-ia-btn-icon {
-        width: 60px;
-        height: 60px;
+        width: 80px;
+        height: 80px;
+      }
+    }
+
+    /* Safe area para iPhones com notch */
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+      .chat-ia-btn {
+        bottom: calc(var(--footer-altura) + var(--espacamento) + env(safe-area-inset-bottom));
       }
     }
   `]

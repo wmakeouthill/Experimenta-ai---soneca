@@ -4,7 +4,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.snackbar.chatia.application.port.out.IAClientPort;
 import com.snackbar.chatia.domain.entity.MensagemChat;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -19,11 +22,14 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Adapter para integração com a API da OpenAI.
  * Suporta fallback automático entre modelos.
+ * 
+ * Segue as regras de Clean Architecture:
+ * - ObjectMapper e HttpClient injetados via DI (não criados manualmente)
+ * - Configurações via @Value
  */
 @Slf4j
 @Component
@@ -37,37 +43,47 @@ public class OpenAIAdapter implements IAClientPort {
     private static final String KEY_ERROR = "error";
     private static final String KEY_MESSAGE = "message";
 
-    private final HttpClient http;
-    private final ObjectMapper mapper;
-    private final String apiKey;
-    private final List<String> modelosFallback;
-    private final int maxTokens;
+    private final HttpClient httpClient;
+    private final ObjectMapper objectMapper;
+    
+    @Value("${openai.api.key:}")
+    private String openaiApiKey;
+    
+    @Value("${openai.model:" + MODELO_PADRAO + "}")
+    private String modeloPrincipal;
+    
+    @Value("${openai.models.fallback:gpt-4o-mini,gpt-3.5-turbo}")
+    private String modelosFallbackStr;
+    
+    @Value("${openai.max-tokens:" + MAX_TOKENS_PADRAO + "}")
+    private int maxTokens;
+    
+    private String apiKey;
+    private List<String> modelosFallback;
 
+    /**
+     * Construtor com injeção de dependências.
+     * ObjectMapper e HttpClient são beans gerenciados pelo Spring.
+     */
     public OpenAIAdapter(
-            @Value("${openai.api.key:}") String openaiApiKey,
-            @Value("${openai.model:" + MODELO_PADRAO + "}") String modelo,
-            @Value("${openai.models.fallback:gpt-4o-mini,gpt-3.5-turbo}") String modelosFallbackStr,
-            @Value("${openai.max-tokens:" + MAX_TOKENS_PADRAO + "}") int maxTokens) {
-        
-        this.http = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(TIMEOUT_SEGUNDOS))
-                .build();
-        this.mapper = new ObjectMapper();
-        this.maxTokens = maxTokens;
-        
+            @Qualifier("chatIAHttpClient") HttpClient httpClient,
+            @Qualifier("chatIAObjectMapper") ObjectMapper objectMapper) {
+        this.httpClient = httpClient;
+        this.objectMapper = objectMapper;
+    }
+    
+    @PostConstruct
+    void inicializar() {
         // Constrói lista de modelos: modelo principal + fallbacks
-        List<String> modelos = new ArrayList<>();
-        modelos.add(modelo);
+        this.modelosFallback = new ArrayList<>();
+        this.modelosFallback.add(modeloPrincipal);
         
         if (modelosFallbackStr != null && !modelosFallbackStr.isBlank()) {
-            List<String> fallbacks = Arrays.stream(modelosFallbackStr.split(","))
+            Arrays.stream(modelosFallbackStr.split(","))
                     .map(String::trim)
                     .filter(s -> !s.isBlank())
-                    .collect(Collectors.toList());
-            modelos.addAll(fallbacks);
+                    .forEach(this.modelosFallback::add);
         }
-        
-        this.modelosFallback = modelos;
         
         // Obtém API key de propriedade ou variável de ambiente
         if (openaiApiKey != null && !openaiApiKey.isBlank()) {
@@ -107,9 +123,9 @@ public class OpenAIAdapter implements IAClientPort {
                 log.info("Tentando modelo {} ({}/{})", modeloAtual, i + 1, modelosFallback.size());
                 
                 Map<String, Object> payload = criarPayload(mensagens, modeloAtual);
-                String body = mapper.writeValueAsString(payload);
+                String body = objectMapper.writeValueAsString(payload);
                 HttpRequest req = criarRequisicao(body);
-                HttpResponse<String> resp = http.send(req, HttpResponse.BodyHandlers.ofString());
+                HttpResponse<String> resp = httpClient.send(req, HttpResponse.BodyHandlers.ofString());
 
                 if (isErroRecuperavel(resp)) {
                     String erroMsg = extrairMensagemErro(resp.body());
@@ -177,7 +193,7 @@ public class OpenAIAdapter implements IAClientPort {
 
     private String extrairMensagemErro(String body) {
         try {
-            JsonNode root = mapper.readTree(body);
+            JsonNode root = objectMapper.readTree(body);
             if (root.has(KEY_ERROR) && root.get(KEY_ERROR).has(KEY_MESSAGE)) {
                 return root.get(KEY_ERROR).get(KEY_MESSAGE).asText();
             }
@@ -193,7 +209,7 @@ public class OpenAIAdapter implements IAClientPort {
             throw new IOException("API retornou status " + resp.statusCode() + ": " + erro);
         }
         
-        JsonNode root = mapper.readTree(resp.body());
+        JsonNode root = objectMapper.readTree(resp.body());
         JsonNode choices = root.get("choices");
         
         if (choices == null || choices.isEmpty()) {
