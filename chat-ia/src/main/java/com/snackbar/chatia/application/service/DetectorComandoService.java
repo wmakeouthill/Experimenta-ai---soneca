@@ -23,19 +23,27 @@ public class DetectorComandoService {
     // Padrões para detectar comandos de adicionar ao carrinho
     private static final List<String> VERBOS_ADICIONAR = List.of(
         "adiciona", "adicione", "add", "coloca", "coloque", "bota", "boto", "bote",
-        "quero", "vou querer", "me vê", "me da", "me dá", "manda", "pede", "pedido",
-        "inclui", "inclua", "põe", "poe", "pode adicionar", "pode colocar"
+        "quero", "vou querer", "me vê", "me ve", "me da", "me dá", "manda", "pede", "pedido",
+        "inclui", "inclua", "põe", "poe", "pode adicionar", "pode colocar", "pode ser"
     );
 
-    // Padrões para detectar observações
-    private static final Pattern PADRAO_OBSERVACAO = Pattern.compile(
-        "(?:sem|com|extra|mais|menos|pouco|muito|tirar|adicionar|trocar)\\s+(.+?)(?:\\.|,|$)",
+    // Padrões para detectar referência a produto por número/posição
+    // Ex: "o número 4", "o 4", "esse 4", "o item 4"
+    private static final Pattern PADRAO_REFERENCIA_NUMERO = Pattern.compile(
+        "(?:o|a|esse|essa|este|esta|item|numero|número|n°|nº|opcao|opção)?\\s*(?:numero|número|n°|nº)?\\s*(\\d+)(?!\\s*(?:unidade|x|un|reais|real|r\\$))",
         Pattern.CASE_INSENSITIVE
     );
 
-    // Padrões para detectar quantidade
-    private static final Pattern PADRAO_QUANTIDADE = Pattern.compile(
-        "(\\d+)\\s*(?:unidade|x|un)?",
+    // Padrões para detectar quantidade EXPLÍCITA (com indicador de quantidade)
+    // Ex: "2 unidades", "3x", "quero 2"
+    private static final Pattern PADRAO_QUANTIDADE_EXPLICITA = Pattern.compile(
+        "(\\d+)\\s*(?:unidade|unidades|x|un\\.?|vezes)\\b",
+        Pattern.CASE_INSENSITIVE
+    );
+    
+    // Quantidade no início: "2 x-tudo", "3 hamburguer"
+    private static final Pattern PADRAO_QUANTIDADE_INICIO = Pattern.compile(
+        "^\\s*(\\d+)\\s+(?!numero|número|n°|nº)",
         Pattern.CASE_INSENSITIVE
     );
 
@@ -63,8 +71,8 @@ public class DetectorComandoService {
         
         log.info("🎯 Comando de adicionar detectado na mensagem: '{}'", mensagem);
         
-        // Tenta identificar qual produto
-        Optional<ProdutoContextDTO> produtoEncontrado = identificarProduto(mensagemNormalizada, cardapio);
+        // Tenta identificar qual produto (passa a mensagem original também para extrair número)
+        Optional<ProdutoContextDTO> produtoEncontrado = identificarProduto(mensagemNormalizada, mensagem, cardapio);
         
         if (produtoEncontrado.isEmpty()) {
             log.warn("⚠️ Verbo de adicionar detectado, mas produto não identificado");
@@ -73,8 +81,8 @@ public class DetectorComandoService {
         
         ProdutoContextDTO produto = produtoEncontrado.get();
         
-        // Extrai quantidade (default: 1)
-        int quantidade = extrairQuantidade(mensagem);
+        // Extrai quantidade EXPLÍCITA (não confunde com número do produto)
+        int quantidade = extrairQuantidadeExplicita(mensagem);
         
         // Extrai observação (ex: "sem cebola", "com bacon extra")
         String observacao = extrairObservacao(mensagem);
@@ -92,58 +100,146 @@ public class DetectorComandoService {
 
     /**
      * Identifica o produto mencionado na mensagem.
+     * Prioriza: 1) Nome exato, 2) Nome parcial, 3) Produto com número no nome (ex: "Número 4")
      */
-    private Optional<ProdutoContextDTO> identificarProduto(String mensagem, CardapioContextDTO cardapio) {
-        // Primeiro tenta match exato ou parcial no nome
-        for (ProdutoContextDTO produto : cardapio.produtos()) {
-            if (!produto.disponivel()) continue;
-            
+    private Optional<ProdutoContextDTO> identificarProduto(String mensagemNormalizada, String mensagemOriginal, CardapioContextDTO cardapio) {
+        List<ProdutoContextDTO> produtosDisponiveis = cardapio.produtos().stream()
+            .filter(ProdutoContextDTO::disponivel)
+            .toList();
+        
+        // 1. Primeiro tenta match exato ou parcial no nome
+        for (ProdutoContextDTO produto : produtosDisponiveis) {
             String nomeProduto = normalizar(produto.nome());
             
             // Match exato
-            if (mensagem.contains(nomeProduto)) {
+            if (mensagemNormalizada.contains(nomeProduto)) {
+                log.info("📦 Produto identificado por nome exato: {}", produto.nome());
                 return Optional.of(produto);
             }
             
             // Match parcial (ex: "x-tudo" para "X-Tudo do Soneca")
             String[] partes = nomeProduto.split("\\s+");
             for (String parte : partes) {
-                if (parte.length() > 3 && mensagem.contains(parte)) {
+                // Ignora palavras muito curtas ou genéricas
+                if (parte.length() > 3 && !isGenerico(parte) && mensagemNormalizada.contains(parte)) {
+                    log.info("📦 Produto identificado por nome parcial '{}': {}", parte, produto.nome());
                     return Optional.of(produto);
                 }
             }
         }
         
-        // Tenta match por número (ex: "o número 3", "numero 3")
-        Pattern padraoPorNumero = Pattern.compile("(?:numero|número|n°|nº|n)\\s*(\\d+)", Pattern.CASE_INSENSITIVE);
-        Matcher matcherNumero = padraoPorNumero.matcher(mensagem);
+        // 2. Tenta match por número mencionado (ex: "o número 4", "o 4", "esse 4")
+        //    PRIORIZA produtos cujo nome contenha esse número (ex: "Número 4", "Combo 4")
+        Matcher matcherNumero = PADRAO_REFERENCIA_NUMERO.matcher(mensagemOriginal);
         if (matcherNumero.find()) {
-            String numero = matcherNumero.group(1);
-            for (ProdutoContextDTO produto : cardapio.produtos()) {
-                String nomeProduto = normalizar(produto.nome());
-                if (nomeProduto.contains("numero " + numero) || nomeProduto.equals(numero)) {
+            try {
+                int numeroReferencia = Integer.parseInt(matcherNumero.group(1));
+                log.info("🔢 Número mencionado na mensagem: {}", numeroReferencia);
+                
+                // PRIMEIRO: Busca produto cujo nome contenha "número X" ou "X" como parte do nome
+                for (ProdutoContextDTO produto : produtosDisponiveis) {
+                    String nomeProduto = normalizar(produto.nome());
+                    
+                    // Verifica se o nome do produto contém "numero X" ou começa com o número
+                    if (nomeProduto.contains("numero " + numeroReferencia) ||
+                        nomeProduto.contains("número " + numeroReferencia) ||
+                        nomeProduto.matches(".*\\b" + numeroReferencia + "\\b.*") ||
+                        nomeProduto.startsWith(numeroReferencia + " ") ||
+                        nomeProduto.equals(String.valueOf(numeroReferencia))) {
+                        log.info("📦 Produto identificado por número no nome: {}", produto.nome());
+                        return Optional.of(produto);
+                    }
+                }
+                
+                // FALLBACK: Se não achou por nome, usa como índice (1-based)
+                // Só usa índice se o número for pequeno (até 20) para evitar confusões
+                if (numeroReferencia >= 1 && numeroReferencia <= Math.min(20, produtosDisponiveis.size())) {
+                    ProdutoContextDTO produto = produtosDisponiveis.get(numeroReferencia - 1);
+                    log.info("📦 Produto identificado pelo índice {} (fallback): {}", numeroReferencia, produto.nome());
                     return Optional.of(produto);
                 }
+            } catch (NumberFormatException e) {
+                // Ignora
             }
         }
         
         return Optional.empty();
     }
+    
+    /**
+     * Verifica se uma palavra é genérica demais para match
+     */
+    private boolean isGenerico(String palavra) {
+        return List.of("com", "sem", "para", "mais", "menos", "grande", "pequeno", "medio")
+            .contains(palavra);
+    }
 
     /**
-     * Extrai a quantidade da mensagem (default: 1).
+     * Extrai a quantidade EXPLÍCITA da mensagem (default: 1).
+     * Só considera quantidade quando há indicador claro.
+     * NÃO confunde com referência a número de produto.
      */
-    private int extrairQuantidade(String mensagem) {
-        Matcher matcher = PADRAO_QUANTIDADE.matcher(mensagem);
-        if (matcher.find()) {
+    private int extrairQuantidadeExplicita(String mensagem) {
+        String msgLower = mensagem.toLowerCase();
+        
+        // 1. Padrão explícito com unidade: "2 unidades", "3x", "2 un"
+        Matcher matcherExplicito = PADRAO_QUANTIDADE_EXPLICITA.matcher(mensagem);
+        if (matcherExplicito.find()) {
             try {
-                int qtd = Integer.parseInt(matcher.group(1));
-                return Math.min(Math.max(qtd, 1), 10); // Entre 1 e 10
+                int qtd = Integer.parseInt(matcherExplicito.group(1));
+                log.info("🔢 Quantidade explícita com unidade: {}", qtd);
+                return Math.min(Math.max(qtd, 1), 10);
             } catch (NumberFormatException e) {
-                return 1;
+                // Ignora
             }
         }
-        return 1;
+        
+        // 2. Quantidade após verbo de adicionar: "quero 2", "me vê 3", "adiciona 2"
+        //    Mas NÃO "quero o 4" ou "adiciona o número 4" (referência a produto)
+        Pattern padraoAposVerbo = Pattern.compile(
+            "(?:quero|adiciona|coloca|me\\s*v[eê]|me\\s*d[aá]|manda|pede)\\s+(\\d+)(?!\\s*(?:numero|número|n°|nº|o\\s|a\\s|do\\s|da\\s))",
+            Pattern.CASE_INSENSITIVE
+        );
+        Matcher matcherAposVerbo = padraoAposVerbo.matcher(mensagem);
+        if (matcherAposVerbo.find()) {
+            try {
+                int qtd = Integer.parseInt(matcherAposVerbo.group(1));
+                log.info("🔢 Quantidade após verbo: {}", qtd);
+                return Math.min(Math.max(qtd, 1), 10);
+            } catch (NumberFormatException e) {
+                // Ignora
+            }
+        }
+        
+        // 3. Quantidade antes de "do/da/de": "2 do número 4", "3 da coca"
+        Pattern padraoAntesDe = Pattern.compile(
+            "(\\d+)\\s+(?:do|da|de|del)\\s+",
+            Pattern.CASE_INSENSITIVE
+        );
+        Matcher matcherAntesDe = padraoAntesDe.matcher(mensagem);
+        if (matcherAntesDe.find()) {
+            try {
+                int qtd = Integer.parseInt(matcherAntesDe.group(1));
+                log.info("🔢 Quantidade antes de 'do/da': {}", qtd);
+                return Math.min(Math.max(qtd, 1), 10);
+            } catch (NumberFormatException e) {
+                // Ignora
+            }
+        }
+        
+        // 4. Quantidade no início seguida de produto (não número): "2 x-tudo", "3 hamburguer"
+        Matcher matcherInicio = PADRAO_QUANTIDADE_INICIO.matcher(mensagem);
+        if (matcherInicio.find()) {
+            try {
+                int qtd = Integer.parseInt(matcherInicio.group(1));
+                log.info("🔢 Quantidade no início: {}", qtd);
+                return Math.min(Math.max(qtd, 1), 10);
+            } catch (NumberFormatException e) {
+                // Ignora
+            }
+        }
+        
+        return 1; // Default
     }
 
     /**
