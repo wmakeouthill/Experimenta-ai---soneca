@@ -27,10 +27,16 @@ public class DetectorComandoService {
         "inclui", "inclua", "põe", "poe", "pode adicionar", "pode colocar", "pode ser"
     );
 
-    // Padrões para detectar referência a produto por número/posição
-    // Ex: "o número 4", "o 4", "esse 4", "o item 4"
-    private static final Pattern PADRAO_REFERENCIA_NUMERO = Pattern.compile(
-        "(?:o|a|esse|essa|este|esta|item|numero|número|n°|nº|opcao|opção)?\\s*(?:numero|número|n°|nº)?\\s*(\\d+)(?!\\s*(?:unidade|x|un|reais|real|r\\$))",
+    // Padrão PRIORITÁRIO: "numero X" ou "número X" (mais comum em menus)
+    // Captura o número do produto quando mencionado explicitamente
+    private static final Pattern PADRAO_NUMERO_PRODUTO = Pattern.compile(
+        "(?:n[uú]mero|n°|nº)\\s*(\\d+)",
+        Pattern.CASE_INSENSITIVE
+    );
+    
+    // Padrão secundário: referências como "esse 4", "desse 4", "o 4"
+    private static final Pattern PADRAO_REFERENCIA_DEMONSTRATIVO = Pattern.compile(
+        "(?:d?ess[ea]|d?est[ea]|aquel[ea])\\s+(?:n[uú]mero|n°|nº)?\\s*(\\d+)",
         Pattern.CASE_INSENSITIVE
     );
 
@@ -100,14 +106,40 @@ public class DetectorComandoService {
 
     /**
      * Identifica o produto mencionado na mensagem.
-     * Prioriza: 1) Nome exato, 2) Nome parcial, 3) Produto com número no nome (ex: "Número 4")
+     * Prioriza: 1) Número do produto (ex: "numero 4"), 2) Nome exato, 3) Nome parcial
      */
     private Optional<ProdutoContextDTO> identificarProduto(String mensagemNormalizada, String mensagemOriginal, CardapioContextDTO cardapio) {
         List<ProdutoContextDTO> produtosDisponiveis = cardapio.produtos().stream()
             .filter(ProdutoContextDTO::disponivel)
             .toList();
         
-        // 1. Primeiro tenta match exato ou parcial no nome
+        // 1. PRIMEIRO: Tenta match por "numero X" (padrão mais comum em menus)
+        //    Ex: "quero 3 do numero 4" -> deve pegar "Número 4"
+        Matcher matcherNumero = PADRAO_NUMERO_PRODUTO.matcher(mensagemOriginal);
+        if (matcherNumero.find()) {
+            try {
+                int numeroReferencia = Integer.parseInt(matcherNumero.group(1));
+                log.info("🔢 Referência 'numero {}' encontrada na mensagem", numeroReferencia);
+                
+                // Busca produto cujo nome contenha "Número X"
+                for (ProdutoContextDTO produto : produtosDisponiveis) {
+                    String nomeProduto = normalizar(produto.nome());
+                    
+                    if (nomeProduto.equals("numero " + numeroReferencia) ||
+                        nomeProduto.equals("numero" + numeroReferencia) ||
+                        nomeProduto.startsWith("numero " + numeroReferencia + " ") ||
+                        nomeProduto.endsWith(" " + numeroReferencia) ||
+                        nomeProduto.matches(".*\\bnumero\\s*" + numeroReferencia + "\\b.*")) {
+                        log.info("📦 Produto identificado por 'numero {}': {}", numeroReferencia, produto.nome());
+                        return Optional.of(produto);
+                    }
+                }
+            } catch (NumberFormatException e) {
+                // Ignora
+            }
+        }
+        
+        // 2. Tenta match por nome exato ou parcial (mas NÃO a palavra "numero" sozinha)
         for (ProdutoContextDTO produto : produtosDisponiveis) {
             String nomeProduto = normalizar(produto.nome());
             
@@ -120,39 +152,32 @@ public class DetectorComandoService {
             // Match parcial (ex: "x-tudo" para "X-Tudo do Soneca")
             String[] partes = nomeProduto.split("\\s+");
             for (String parte : partes) {
-                // Ignora palavras muito curtas ou genéricas
-                if (parte.length() > 3 && !isGenerico(parte) && mensagemNormalizada.contains(parte)) {
+                // Ignora palavras muito curtas, genéricas, ou "numero" (já tratado acima)
+                if (parte.length() > 3 && !isGenerico(parte) && !parte.equals("numero") && mensagemNormalizada.contains(parte)) {
                     log.info("📦 Produto identificado por nome parcial '{}': {}", parte, produto.nome());
                     return Optional.of(produto);
                 }
             }
         }
         
-        // 2. Tenta match por número mencionado (ex: "o número 4", "o 4", "esse 4")
-        //    PRIORIZA produtos cujo nome contenha esse número (ex: "Número 4", "Combo 4")
-        Matcher matcherNumero = PADRAO_REFERENCIA_NUMERO.matcher(mensagemOriginal);
-        if (matcherNumero.find()) {
+        // 3. Tenta match por demonstrativo (ex: "desse 4", "esse 4")
+        Matcher matcherDemo = PADRAO_REFERENCIA_DEMONSTRATIVO.matcher(mensagemOriginal);
+        if (matcherDemo.find()) {
             try {
-                int numeroReferencia = Integer.parseInt(matcherNumero.group(1));
-                log.info("🔢 Número mencionado na mensagem: {}", numeroReferencia);
+                int numeroReferencia = Integer.parseInt(matcherDemo.group(1));
+                log.info("🔢 Referência demonstrativa '{}' encontrada", numeroReferencia);
                 
-                // PRIMEIRO: Busca produto cujo nome contenha "número X" ou "X" como parte do nome
+                // Primeiro busca por nome
                 for (ProdutoContextDTO produto : produtosDisponiveis) {
                     String nomeProduto = normalizar(produto.nome());
-                    
-                    // Verifica se o nome do produto contém "numero X" ou começa com o número
                     if (nomeProduto.contains("numero " + numeroReferencia) ||
-                        nomeProduto.contains("número " + numeroReferencia) ||
-                        nomeProduto.matches(".*\\b" + numeroReferencia + "\\b.*") ||
-                        nomeProduto.startsWith(numeroReferencia + " ") ||
-                        nomeProduto.equals(String.valueOf(numeroReferencia))) {
-                        log.info("📦 Produto identificado por número no nome: {}", produto.nome());
+                        nomeProduto.endsWith(" " + numeroReferencia)) {
+                        log.info("📦 Produto identificado por demonstrativo: {}", produto.nome());
                         return Optional.of(produto);
                     }
                 }
                 
-                // FALLBACK: Se não achou por nome, usa como índice (1-based)
-                // Só usa índice se o número for pequeno (até 20) para evitar confusões
+                // Fallback: usa como índice
                 if (numeroReferencia >= 1 && numeroReferencia <= Math.min(20, produtosDisponiveis.size())) {
                     ProdutoContextDTO produto = produtosDisponiveis.get(numeroReferencia - 1);
                     log.info("📦 Produto identificado pelo índice {} (fallback): {}", numeroReferencia, produto.nome());
