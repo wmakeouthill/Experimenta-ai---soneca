@@ -38,6 +38,7 @@
         max-height: 80vh;
         border-radius: 24px;
         margin: auto;
+        overflow: hidden;
     }
 
     .footer-nav {
@@ -45,4 +46,38 @@
         left: 50%;
         transform: translateX(-50%);
     }
+
+    /* Carrinho em desktop/tablet */
+    .carrinho-header {
+        padding: 1.5rem;
+    }
+
+    .carrinho-header h2 {
+        font-size: 1.5rem;
+    }
+
+    .carrinho-content {
+        padding: 1.5rem;
+    }
+
+    .carrinho-cliente-info {
+        padding: 1rem;
+    }
+
+    .carrinho-item {
+        padding: 1rem;
+    }
+
+    .btn-qty-mini {
+        width: 40px;
+        height: 40px;
+    }
+
+    .carrinho-footer {
+        padding: 1.5rem;
+    }
+
+    .btn-enviar-pedido {
+        padding: 1.25rem;
+        font-size: 1.1rem;
 }

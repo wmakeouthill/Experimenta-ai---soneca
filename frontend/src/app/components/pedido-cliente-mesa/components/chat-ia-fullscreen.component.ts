@@ -48,6 +48,13 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
           }
 
           <div class="chat-ia-header-actions">
+            <button 
+              class="btn-historico-header" 
+              [class.ativo]="mostrarHistorico()"
+              (click)="onToggleHistorico.emit()"
+              title="Ver conversas anteriores">
+              📜
+            </button>
             <button class="btn-fechar" (click)="onClose.emit()" title="Fechar">
               ✕
             </button>
@@ -165,13 +172,6 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
               (click)="onNovaConversa.emit()"
               title="Nova conversa">
               ✨
-            </button>
-            <button 
-              class="btn-historico" 
-              [class.ativo]="mostrarHistorico()"
-              (click)="onToggleHistorico.emit()"
-              title="Ver conversas anteriores">
-              📜
             </button>
             <input
               #chatInput
@@ -354,7 +354,8 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
     }
 
     .btn-nova-conversa,
-    .btn-fechar {
+    .btn-fechar,
+    .btn-historico-header {
       background: rgba(255, 255, 255, 0.2);
       border: none;
       color: white;
@@ -367,11 +368,17 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
       align-items: center;
       justify-content: center;
       transition: background 0.2s ease;
+      flex-shrink: 0;
     }
 
     .btn-nova-conversa:hover,
-    .btn-fechar:hover {
+    .btn-fechar:hover,
+    .btn-historico-header:hover {
       background: rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-historico-header.ativo {
+      background: rgba(255, 255, 255, 0.4);
     }
 
     /* Messages */
@@ -479,7 +486,7 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
 
     /* Input area */
     .chat-ia-input-area {
-      padding: 0.875rem 1rem;
+      padding: 0.75rem;
       background: var(--bg-primary, #1a1a2e);
       border-top: 1px solid rgba(255, 255, 255, 0.1);
       flex-shrink: 0;
@@ -488,7 +495,7 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
     /* Safe area para iPhone X+ */
     @supports (padding: max(0px)) {
       .chat-ia-input-area {
-        padding-bottom: max(0.875rem, env(safe-area-inset-bottom));
+        padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
       }
     }
 
@@ -496,14 +503,16 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
       display: flex;
       gap: 0.5rem;
       align-items: center;
+      width: 100%;
     }
 
     .chat-ia-input {
       flex: 1;
+      min-width: 0;
       background: var(--bg-secondary, #16213e);
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 24px;
-      padding: 0.75rem 1rem;
+      padding: 0.625rem 0.875rem;
       color: var(--text-primary, #e8e8e8);
       font-size: 1rem;
       outline: none;
@@ -523,13 +532,14 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
     }
 
     .btn-enviar {
-      width: 44px;
-      height: 44px;
+      width: 42px;
+      height: 42px;
+      min-width: 42px;
       border-radius: 50%;
       background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
       border: none;
       color: white;
-      font-size: 1.25rem;
+      font-size: 1.125rem;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -720,17 +730,17 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
       font-weight: 500;
     }
 
-    /* Botões na área de input */
-    .btn-nova-conversa-input,
-    .btn-historico {
+    /* Botão nova conversa na área de input */
+    .btn-nova-conversa-input {
       background: rgba(255, 255, 255, 0.1);
       border: none;
       color: var(--text-primary, #e8e8e8);
-      width: 38px;
-      height: 38px;
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
       border-radius: 50%;
       cursor: pointer;
-      font-size: 1rem;
+      font-size: 0.9rem;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -738,14 +748,13 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
       flex-shrink: 0;
     }
 
-    .btn-nova-conversa-input:hover,
-    .btn-historico:hover {
+    .btn-nova-conversa-input:hover {
       background: rgba(230, 126, 34, 0.3);
       transform: scale(1.1);
     }
 
-    .btn-historico.ativo {
-      background: rgba(230, 126, 34, 0.5);
+    .btn-nova-conversa-input:active {
+      transform: scale(0.95);
     }
 
     /* Painel de Histórico */
