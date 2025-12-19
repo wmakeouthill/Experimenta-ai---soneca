@@ -134,7 +134,8 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
                     "WHERE " + DATA_BASE_EXPR + " >= :inicio " +
                     "AND " + DATA_BASE_EXPR + " < :fim " +
                     "AND p.status <> 'CANCELADO' " +
-                    "GROUP BY DATE(CONCAT(YEAR(" + DATA_BASE_EXPR + "), '-', ((QUARTER(" + DATA_BASE_EXPR + ") - 1) * 3 + 1), '-01')) " +
+                    "GROUP BY DATE(CONCAT(YEAR(" + DATA_BASE_EXPR + "), '-', ((QUARTER(" + DATA_BASE_EXPR
+                    + ") - 1) * 3 + 1), '-01')) " +
                     "ORDER BY data_base";
             case SEMESTRE -> SELECT_DATE_CONCAT_YEAR + DATA_BASE_EXPR + "), '-', IF(MONTH(" + DATA_BASE_EXPR
                     + ") <= 6, 1, 7), '-01')) AS data_base, " +
@@ -145,7 +146,8 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
                     "WHERE " + DATA_BASE_EXPR + " >= :inicio " +
                     "AND " + DATA_BASE_EXPR + " < :fim " +
                     "AND p.status <> 'CANCELADO' " +
-                    "GROUP BY DATE(CONCAT(YEAR(" + DATA_BASE_EXPR + "), '-', IF(MONTH(" + DATA_BASE_EXPR + ") <= 6, 1, 7), '-01')) " +
+                    "GROUP BY DATE(CONCAT(YEAR(" + DATA_BASE_EXPR + "), '-', IF(MONTH(" + DATA_BASE_EXPR
+                    + ") <= 6, 1, 7), '-01')) " +
                     "ORDER BY data_base";
             case ANO -> SELECT_DATE_CONCAT_YEAR + DATA_BASE_EXPR + "), '-01-01')) AS data_base, " +
                     "SUM(p.valor_total) AS total_vendas, " +
@@ -179,13 +181,18 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
     @Override
     @Transactional(readOnly = true)
     public List<CategoriaVendasResumoDTO> obterCategorias(FiltroRelatorioTemporalDTO filtro) {
+        // Calcula o valor total do item incluindo adicionais:
+        // (preco_unitario + soma_adicionais_por_unidade) * quantidade
         String sql = "SELECT COALESCE(prod.categoria, 'Sem categoria') AS categoria_nome, " +
-                "SUM(item.preco_unitario * item.quantidade) AS valor_total, " +
+                "SUM((item.preco_unitario + COALESCE(ad_sum.total_adicionais, 0)) * item.quantidade) AS valor_total, " +
                 "COUNT(DISTINCT p.id) AS total_pedidos " +
                 "FROM pedidos p " +
                 "JOIN itens_pedido item ON item.pedido_id = p.id " +
                 "LEFT JOIN produtos prod ON prod.id = item.produto_id " +
                 "LEFT JOIN sessoes_trabalho st ON st.id = p.sessao_id " +
+                "LEFT JOIN (SELECT ad.item_pedido_id, SUM(ad.preco_unitario * ad.quantidade) AS total_adicionais " +
+                "           FROM adicionais_item_pedido ad GROUP BY ad.item_pedido_id) ad_sum ON ad_sum.item_pedido_id = item.id "
+                +
                 "WHERE " + DATA_BASE_EXPR + " >= :inicio " +
                 "AND " + DATA_BASE_EXPR + " < :fim " +
                 "AND p.status <> 'CANCELADO' " +
@@ -219,13 +226,18 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
     @Override
     @Transactional(readOnly = true)
     public List<ProdutoMaisVendidoDTO> obterTopProdutos(FiltroRelatorioTemporalDTO filtro, int limite) {
+        // Calcula o valor total do item incluindo adicionais:
+        // (preco_unitario + soma_adicionais_por_unidade) * quantidade
         String sql = "SELECT item.produto_id, " +
                 "item.produto_nome, " +
                 "SUM(item.quantidade) AS quantidade, " +
-                "SUM(item.preco_unitario * item.quantidade) AS valor_total " +
+                "SUM((item.preco_unitario + COALESCE(ad_sum.total_adicionais, 0)) * item.quantidade) AS valor_total " +
                 "FROM pedidos p " +
                 "JOIN itens_pedido item ON item.pedido_id = p.id " +
                 "LEFT JOIN sessoes_trabalho st ON st.id = p.sessao_id " +
+                "LEFT JOIN (SELECT ad.item_pedido_id, SUM(ad.preco_unitario * ad.quantidade) AS total_adicionais " +
+                "           FROM adicionais_item_pedido ad GROUP BY ad.item_pedido_id) ad_sum ON ad_sum.item_pedido_id = item.id "
+                +
                 "WHERE " + DATA_BASE_EXPR + " >= :inicio " +
                 "AND " + DATA_BASE_EXPR + " < :fim " +
                 "AND p.status <> 'CANCELADO' " +

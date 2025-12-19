@@ -249,7 +249,7 @@
                             @if (item.adicionais && item.adicionais.length > 0) {
                               <div class="item-adicionais">
                                 @for (ad of item.adicionais; track ad.adicionalId) {
-                                  <span class="adicional-badge">+{{ ad.quantidade }}x {{ ad.nome }}</span>
+                                  <span class="adicional-badge">+{{ ad.quantidade }}x {{ ad.adicionalNome }}</span>
                                 }
                               </div>
                             }
