@@ -594,9 +594,16 @@
 
 .pedido-itens {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem 0.5rem;
+    flex-direction: column;
+    gap: 0.25rem;
     margin-bottom: 0.5rem;
+}
+
+.pedido-item-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem;
 }
 
 .pedido-item {
@@ -605,6 +612,12 @@
     background: #f9f9f9;
     padding: 0.15rem 0.5rem;
     border-radius: 4px;
+}
+
+.pedido-adicionais-resumo {
+    font-size: 0.7rem;
+    color: #1565c0;
+    font-style: italic;
 }
 
 .pedido-footer {
@@ -1048,10 +1061,16 @@
 
 .detalhe-item {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
     padding: 0.5rem 0;
     border-bottom: 1px solid #f0f0f0;
+    gap: 0.25rem;
+}
+
+.detalhe-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .detalhe-item:last-child {
@@ -1080,6 +1099,21 @@
     font-size: 0.9rem;
     color: #333;
     font-weight: 500;
+}
+
+.item-adicionais-detalhe {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    padding-left: 2rem;
+}
+
+.adicional-detalhe {
+    font-size: 0.75rem;
+    color: #1565c0;
+    background: #e3f2fd;
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
 }
 
 .detalhes-total {

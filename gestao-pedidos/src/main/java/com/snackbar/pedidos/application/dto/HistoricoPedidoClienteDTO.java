@@ -37,5 +37,18 @@ public class HistoricoPedidoClienteDTO {
         private Integer quantidade;
         private BigDecimal precoUnitario;
         private BigDecimal subtotal;
+        private List<AdicionalHistoricoDTO> adicionais;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AdicionalHistoricoDTO {
+        private String adicionalId;
+        private String nome;
+        private Integer quantidade;
+        private BigDecimal precoUnitario;
+        private BigDecimal subtotal;
     }
 }

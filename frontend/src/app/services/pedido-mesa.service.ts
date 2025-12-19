@@ -78,12 +78,21 @@ export interface StatusPedidoCliente {
     motivoCancelamento?: string;
 }
 
+export interface AdicionalHistoricoPedido {
+    adicionalId: string;
+    nome: string;
+    quantidade: number;
+    precoUnitario: number;
+    subtotal: number;
+}
+
 export interface ItemHistoricoPedido {
     produtoId: string;
     nomeProduto: string;
     quantidade: number;
     precoUnitario: number;
     subtotal: number;
+    adicionais?: AdicionalHistoricoPedido[];
 }
 
 export interface HistoricoPedidoCliente {

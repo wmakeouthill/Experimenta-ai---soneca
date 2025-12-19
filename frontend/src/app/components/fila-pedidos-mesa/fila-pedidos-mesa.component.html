@@ -60,6 +60,13 @@
                     <span class="item-nome">{{ item.nomeProduto }}</span>
                   </div>
                   <span class="item-preco">{{ formatarPreco(item.subtotal) }}</span>
+                  @if (item.adicionais && item.adicionais.length > 0) {
+                    <div class="item-adicionais">
+                      @for (ad of item.adicionais; track ad.adicionalId) {
+                        <span class="adicional-badge">+{{ ad.quantidade }}x {{ ad.nome }} ({{ formatarPreco(ad.subtotal) }})</span>
+                      }
+                    </div>
+                  }
                   @if (item.observacoes) {
                     <div class="item-obs">📝 {{ item.observacoes }}</div>
                   }

@@ -3,6 +3,14 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, interval, switchMap, startWith, tap, catchError, of } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 
+export interface AdicionalPedidoPendente {
+    adicionalId: string;
+    nome: string;
+    quantidade: number;
+    precoUnitario: number;
+    subtotal: number;
+}
+
 export interface ItemPedidoPendente {
     produtoId: string;
     nomeProduto: string;
@@ -10,6 +18,7 @@ export interface ItemPedidoPendente {
     precoUnitario: number;
     subtotal: number;
     observacoes?: string;
+    adicionais?: AdicionalPedidoPendente[];
 }
 
 export interface PedidoPendente {

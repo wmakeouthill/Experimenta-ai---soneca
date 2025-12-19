@@ -632,7 +632,16 @@
                                         </div>
                                         <div class="pedido-itens">
                                             @for (item of pedido.itens; track item.produtoId) {
-                                                <span class="pedido-item">{{ item.quantidade }}x {{ item.nomeProduto }}</span>
+                                                <div class="pedido-item-container">
+                                                    <span class="pedido-item">{{ item.quantidade }}x {{ item.nomeProduto }}</span>
+                                                    @if (item.adicionais && item.adicionais.length > 0) {
+                                                        <span class="pedido-adicionais-resumo">
+                                                            (+ @for (ad of item.adicionais; track ad.adicionalId; let isLast = $last) {
+                                                                {{ ad.quantidade }}x {{ ad.nome }}{{ isLast ? '' : ', ' }}
+                                                            })
+                                                        </span>
+                                                    }
+                                                </div>
                                             }
                                         </div>
                                         <div class="pedido-footer">
@@ -694,11 +703,20 @@
                                             <h4>Itens do Pedido</h4>
                                             @for (item of meusPedidos.pedidoSelecionado()?.itens; track item.produtoId) {
                                                 <div class="detalhe-item">
-                                                    <div class="item-info">
-                                                        <span class="item-qtd">{{ item.quantidade }}x</span>
-                                                        <span class="item-nome">{{ item.nomeProduto }}</span>
+                                                    <div class="detalhe-item-header">
+                                                        <div class="item-info">
+                                                            <span class="item-qtd">{{ item.quantidade }}x</span>
+                                                            <span class="item-nome">{{ item.nomeProduto }}</span>
+                                                        </div>
+                                                        <span class="item-preco">{{ item.subtotal | currency:'BRL' }}</span>
                                                     </div>
-                                                    <span class="item-preco">{{ item.subtotal | currency:'BRL' }}</span>
+                                                    @if (item.adicionais && item.adicionais.length > 0) {
+                                                        <div class="item-adicionais-detalhe">
+                                                            @for (ad of item.adicionais; track ad.adicionalId) {
+                                                                <span class="adicional-detalhe">+{{ ad.quantidade }}x {{ ad.nome }} ({{ ad.subtotal | currency:'BRL' }})</span>
+                                                            }
+                                                        </div>
+                                                    }
                                                 </div>
                                             }
                                         </div>

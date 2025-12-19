@@ -259,6 +259,25 @@
   padding-left: 2rem;
 }
 
+.item-adicionais {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding-left: 2rem;
+  margin-top: 0.25rem;
+}
+
+.adicional-badge {
+  display: inline-block;
+  background: #e3f2fd;
+  color: #1565c0;
+  padding: 0.15rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
 .observacoes {
   background: #fff8e1;
   padding: 0.8rem;

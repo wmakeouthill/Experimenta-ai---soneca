@@ -200,9 +200,18 @@
                 <ul class="itens-lista">
                   @for (item of pedido.itens; track item.produtoId) {
                   <li class="item-lista">
-                    <span class="item-quantidade">{{ item.quantidade }}x</span>
-                    <span class="item-nome">{{ item.nomeProduto }}</span>
-                    <span class="item-preco">{{ formatarPreco(item.subtotal) }}</span>
+                    <div class="item-linha-principal">
+                      <span class="item-quantidade">{{ item.quantidade }}x</span>
+                      <span class="item-nome">{{ item.nomeProduto }}</span>
+                      <span class="item-preco">{{ formatarPreco(item.subtotal) }}</span>
+                    </div>
+                    @if (item.adicionais && item.adicionais.length > 0) {
+                      <div class="item-adicionais">
+                        @for (ad of item.adicionais; track ad.adicionalId) {
+                          <span class="adicional-badge">+{{ ad.quantidade }}x {{ ad.nome }}</span>
+                        }
+                      </div>
+                    }
                   </li>
                   }
                 </ul>
@@ -270,9 +279,18 @@
             <ul class="itens-lista">
               @for (item of pedido.itens; track item.produtoId) {
               <li class="item-lista">
-                <span class="item-quantidade">{{ item.quantidade }}x</span>
-                <span class="item-nome">{{ item.produtoNome }}</span>
-                <span class="item-preco">{{ formatarPreco(item.subtotal) }}</span>
+                <div class="item-linha-principal">
+                  <span class="item-quantidade">{{ item.quantidade }}x</span>
+                  <span class="item-nome">{{ item.produtoNome }}</span>
+                  <span class="item-preco">{{ formatarPreco(item.subtotal) }}</span>
+                </div>
+                @if (item.adicionais && item.adicionais.length > 0) {
+                  <div class="item-adicionais">
+                    @for (ad of item.adicionais; track ad.adicionalId) {
+                      <span class="adicional-badge">+{{ ad.quantidade }}x {{ ad.adicionalNome }}</span>
+                    }
+                  </div>
+                }
               </li>
               }
             </ul>
