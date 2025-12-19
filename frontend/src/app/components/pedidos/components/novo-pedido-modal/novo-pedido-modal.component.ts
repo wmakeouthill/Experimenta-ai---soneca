@@ -5,9 +5,15 @@ import { SelecaoClienteComponent } from '../selecao-cliente/selecao-cliente.comp
 import { SelecaoProdutosComponent } from '../selecao-produtos/selecao-produtos.component';
 import { ItensPedidoComponent } from '../itens-pedido/itens-pedido.component';
 import { MeiosPagamentoComponent } from '../meios-pagamento/meios-pagamento.component';
+import { ProdutoDetalhesModalComponent, ProdutoComAdicionais } from '../produto-detalhes-modal/produto-detalhes-modal.component';
 import { Cliente } from '../../../../services/cliente.service';
 import { Produto } from '../../../../services/produto.service';
-import { ItemPedidoRequest, MeioPagamentoPedido } from '../../../../services/pedido.service';
+import { ItemPedidoRequest, MeioPagamentoPedido, ItemPedidoAdicionalRequest } from '../../../../services/pedido.service';
+
+export interface ItemPedidoComAdicionais extends ItemPedidoRequest {
+  itemId?: string;
+  adicionaisInfo?: { nome: string; quantidade: number; preco: number }[];
+}
 
 @Component({
   selector: 'app-novo-pedido-modal',
@@ -19,7 +25,8 @@ import { ItemPedidoRequest, MeioPagamentoPedido } from '../../../../services/ped
     SelecaoClienteComponent,
     SelecaoProdutosComponent,
     ItensPedidoComponent,
-    MeiosPagamentoComponent
+    MeiosPagamentoComponent,
+    ProdutoDetalhesModalComponent
   ],
   templateUrl: './novo-pedido-modal.component.html',
   styleUrl: './novo-pedido-modal.component.css',
@@ -43,8 +50,12 @@ export class NovoPedidoModalComponent implements OnDestroy {
   }>();
 
   readonly clienteSelecionado = signal<Cliente | null>(null);
-  readonly itensSelecionados = signal<ItemPedidoRequest[]>([]);
+  readonly itensSelecionados = signal<ItemPedidoComAdicionais[]>([]);
   readonly meiosPagamento = signal<MeioPagamentoPedido[]>([]);
+
+  // Modal de detalhes do produto
+  readonly modalDetalhesAberto = signal(false);
+  readonly produtoParaDetalhe = signal<Produto | null>(null);
 
   readonly pedidoForm: FormGroup;
 
@@ -52,7 +63,15 @@ export class NovoPedidoModalComponent implements OnDestroy {
     return this.itensSelecionados().reduce((total, item) => {
       const produto = this.produtos().find(p => p.id === item.produtoId);
       if (produto) {
-        return total + (produto.preco * item.quantidade);
+        // Soma preço do produto
+        let subtotal = produto.preco * item.quantidade;
+        // Soma adicionais
+        if (item.adicionaisInfo && item.adicionaisInfo.length > 0) {
+          const totalAdicionais = item.adicionaisInfo.reduce((acc, ad) =>
+            acc + (ad.preco * ad.quantidade), 0);
+          subtotal += totalAdicionais * item.quantidade;
+        }
+        return total + subtotal;
       }
       return total;
     }, 0);
@@ -89,10 +108,10 @@ export class NovoPedidoModalComponent implements OnDestroy {
 
   private bloquearScroll(): void {
     if (!this.isBrowser) return;
-    
+
     // Salva a posição atual do scroll
     this.scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
-    
+
     // Aplica estilos para bloquear o scroll
     document.body.style.overflow = 'hidden';
     document.body.style.position = 'fixed';
@@ -102,13 +121,13 @@ export class NovoPedidoModalComponent implements OnDestroy {
 
   private liberarScroll(): void {
     if (!this.isBrowser) return;
-    
+
     // Remove os estilos de bloqueio
     document.body.style.overflow = '';
     document.body.style.position = '';
     document.body.style.top = '';
     document.body.style.width = '';
-    
+
     // Restaura a posição do scroll
     window.scrollTo(0, this.scrollPosition);
   }
@@ -126,20 +145,34 @@ export class NovoPedidoModalComponent implements OnDestroy {
   }
 
   onProdutoSelecionado(produto: Produto): void {
-    const itemExistente = this.itensSelecionados().find(i => i.produtoId === produto.id);
-    
-    if (itemExistente) {
-      itemExistente.quantidade += 1;
-      this.itensSelecionados.update(lista => [...lista]);
-    } else {
-      const novoItem: ItemPedidoRequest = {
-        produtoId: produto.id,
-        quantidade: 1,
-        observacoes: ''
-      };
-      (novoItem as any).itemId = `${produto.id}-${Date.now()}-${Math.random()}`;
-      this.itensSelecionados.update(lista => [...lista, novoItem]);
-    }
+    // Abre o modal de detalhes para selecionar quantidade e adicionais
+    this.produtoParaDetalhe.set(produto);
+    this.modalDetalhesAberto.set(true);
+  }
+
+  onFecharModalDetalhes(): void {
+    this.modalDetalhesAberto.set(false);
+    this.produtoParaDetalhe.set(null);
+  }
+
+  onConfirmarProduto(dados: ProdutoComAdicionais): void {
+    const novoItem: ItemPedidoComAdicionais = {
+      produtoId: dados.produto.id,
+      quantidade: dados.quantidade,
+      observacoes: dados.observacoes || '',
+      itemId: `${dados.produto.id}-${Date.now()}-${Math.random()}`,
+      adicionais: dados.adicionais.map(ad => ({
+        adicionalId: ad.adicional.id,
+        quantidade: ad.quantidade
+      })),
+      adicionaisInfo: dados.adicionais.map(ad => ({
+        nome: ad.adicional.nome,
+        quantidade: ad.quantidade,
+        preco: ad.adicional.preco
+      }))
+    };
+    this.itensSelecionados.update(lista => [...lista, novoItem]);
+    this.onFecharModalDetalhes();
   }
 
   onQuantidadeAlterada(event: { index: number; quantidade: number }): void {
@@ -205,10 +238,10 @@ export class NovoPedidoModalComponent implements OnDestroy {
   }
 
   podeCriarPedido(): boolean {
-    return !!this.clienteSelecionado() && 
-           this.itensSelecionados().length > 0 && 
-           this.meiosPagamento().length > 0 && 
-           this.valorRestante() <= 0.01;
+    return !!this.clienteSelecionado() &&
+      this.itensSelecionados().length > 0 &&
+      this.meiosPagamento().length > 0 &&
+      this.valorRestante() <= 0.01;
   }
 }
 

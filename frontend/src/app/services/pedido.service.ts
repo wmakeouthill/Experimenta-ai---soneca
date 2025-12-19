@@ -10,6 +10,14 @@ export enum StatusPedido {
   CANCELADO = 'CANCELADO'
 }
 
+export interface ItemPedidoAdicional {
+  adicionalId: string;
+  adicionalNome: string;
+  quantidade: number;
+  precoUnitario: number;
+  subtotal: number;
+}
+
 export interface ItemPedido {
   produtoId: string;
   produtoNome: string;
@@ -17,6 +25,7 @@ export interface ItemPedido {
   precoUnitario: number;
   subtotal: number;
   observacoes?: string;
+  adicionais?: ItemPedidoAdicional[];
 }
 
 export interface MeioPagamentoDTO {
@@ -66,10 +75,16 @@ export interface CriarPedidoRequest {
   usuarioId: string; // Obrigatório - deve ser enviado sempre
 }
 
+export interface ItemPedidoAdicionalRequest {
+  adicionalId: string;
+  quantidade: number;
+}
+
 export interface ItemPedidoRequest {
   produtoId: string;
   quantidade: number;
   observacoes?: string;
+  adicionais?: ItemPedidoAdicionalRequest[];
 }
 
 export interface AtualizarStatusPedidoRequest {

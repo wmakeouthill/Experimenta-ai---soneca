@@ -63,9 +63,9 @@
             </form>
 
             <div class="formulario-acoes">
-              <button 
-                class="btn-primary btn-criar" 
-                (click)="criarPedido()" 
+              <button
+                class="btn-primary btn-criar"
+                (click)="criarPedido()"
                 [disabled]="!podeCriarPedido()"
               >
                 Criar Pedido
@@ -76,5 +76,13 @@
       </div>
     </div>
   </div>
+
+  <!-- Modal de detalhes do produto com adicionais -->
+  <app-produto-detalhes-modal
+    [aberto]="modalDetalhesAberto()"
+    [produto]="produtoParaDetalhe()"
+    (onFechar)="onFecharModalDetalhes()"
+    (onConfirmar)="onConfirmarProduto($event)"
+  />
 }
 

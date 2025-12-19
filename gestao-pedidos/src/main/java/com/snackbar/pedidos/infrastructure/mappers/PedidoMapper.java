@@ -2,9 +2,11 @@ package com.snackbar.pedidos.infrastructure.mappers;
 
 import com.snackbar.cardapio.domain.valueobjects.Preco;
 import com.snackbar.pedidos.domain.entities.ItemPedido;
+import com.snackbar.pedidos.domain.entities.ItemPedidoAdicional;
 import com.snackbar.pedidos.domain.entities.MeioPagamentoPedido;
 import com.snackbar.pedidos.domain.entities.Pedido;
 import com.snackbar.pedidos.domain.valueobjects.NumeroPedido;
+import com.snackbar.pedidos.infrastructure.persistence.ItemPedidoAdicionalEntity;
 import com.snackbar.pedidos.infrastructure.persistence.ItemPedidoEntity;
 import com.snackbar.pedidos.infrastructure.persistence.MeioPagamentoPedidoEntity;
 import com.snackbar.pedidos.infrastructure.persistence.PedidoEntity;
@@ -55,6 +57,19 @@ public class PedidoMapper {
                     .precoUnitario(item.getPrecoUnitario().getAmount())
                     .observacoes(item.getObservacoes())
                     .build();
+
+            // Mapeia adicionais do item
+            if (item.getAdicionais() != null && !item.getAdicionais().isEmpty()) {
+                for (ItemPedidoAdicional adicional : item.getAdicionais()) {
+                    ItemPedidoAdicionalEntity adicionalEntity = ItemPedidoAdicionalEntity.builder()
+                            .adicionalId(adicional.getAdicionalId())
+                            .adicionalNome(adicional.getAdicionalNome())
+                            .quantidade(adicional.getQuantidade())
+                            .precoUnitario(adicional.getPrecoUnitario().getAmount())
+                            .build();
+                    itemEntity.adicionarAdicional(adicionalEntity);
+                }
+            }
             itensEntity.add(itemEntity);
         }
         entity.setItens(itensEntity);
@@ -92,12 +107,28 @@ public class PedidoMapper {
         List<ItemPedido> itensRestaurados = new ArrayList<>();
         for (ItemPedidoEntity itemEntity : entity.getItens()) {
             Preco precoUnitario = Preco.of(itemEntity.getPrecoUnitario());
+
+            // Restaurar adicionais do item
+            List<ItemPedidoAdicional> adicionaisRestaurados = new ArrayList<>();
+            if (itemEntity.getAdicionais() != null) {
+                for (ItemPedidoAdicionalEntity adicionalEntity : itemEntity.getAdicionais()) {
+                    Preco precoAdicional = Preco.of(adicionalEntity.getPrecoUnitario());
+                    ItemPedidoAdicional adicional = ItemPedidoAdicional.criar(
+                            adicionalEntity.getAdicionalId(),
+                            adicionalEntity.getAdicionalNome(),
+                            adicionalEntity.getQuantidade(),
+                            precoAdicional);
+                    adicionaisRestaurados.add(adicional);
+                }
+            }
+
             ItemPedido item = ItemPedido.criar(
                     itemEntity.getProdutoId(),
                     itemEntity.getProdutoNome(),
                     itemEntity.getQuantidade(),
                     precoUnitario,
-                    itemEntity.getObservacoes());
+                    itemEntity.getObservacoes(),
+                    adicionaisRestaurados);
             itensRestaurados.add(item);
         }
         pedido.restaurarItensDoBanco(itensRestaurados);

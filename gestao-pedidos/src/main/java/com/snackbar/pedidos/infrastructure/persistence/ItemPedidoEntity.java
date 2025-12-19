@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "itens_pedido")
@@ -41,4 +43,18 @@ public class ItemPedidoEntity {
 
     @Column(columnDefinition = "TEXT")
     private String observacoes;
+
+    @OneToMany(mappedBy = "itemPedido", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @Builder.Default
+    private Set<ItemPedidoAdicionalEntity> adicionais = new HashSet<>();
+
+    public void adicionarAdicional(ItemPedidoAdicionalEntity adicional) {
+        adicionais.add(adicional);
+        adicional.setItemPedido(this);
+    }
+
+    public void removerAdicional(ItemPedidoAdicionalEntity adicional) {
+        adicionais.remove(adicional);
+        adicional.setItemPedido(null);
+    }
 }

@@ -2,6 +2,7 @@ package com.snackbar.pedidos.application.usecases;
 
 import com.snackbar.cardapio.domain.valueobjects.Preco;
 import com.snackbar.pedidos.application.dto.CriarPedidoRequest;
+import com.snackbar.pedidos.application.dto.ItemPedidoAdicionalRequest;
 import com.snackbar.pedidos.application.dto.ItemPedidoRequest;
 import com.snackbar.pedidos.application.dto.MeioPagamentoRequest;
 import com.snackbar.pedidos.application.dto.PedidoDTO;
@@ -10,6 +11,7 @@ import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
 import com.snackbar.pedidos.application.ports.SessaoTrabalhoRepositoryPort;
 import com.snackbar.pedidos.application.services.GeradorNumeroPedidoService;
 import com.snackbar.pedidos.domain.entities.ItemPedido;
+import com.snackbar.pedidos.domain.entities.ItemPedidoAdicional;
 import com.snackbar.pedidos.domain.entities.MeioPagamentoPedido;
 import com.snackbar.pedidos.domain.entities.Pedido;
 import com.snackbar.pedidos.domain.services.PedidoValidator;
@@ -19,6 +21,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Use case para criação de pedidos com tratamento de concorrência.
@@ -84,12 +89,16 @@ public class CriarPedidoUseCase {
             var produtoDTO = cardapioService.buscarProdutoPorId(itemRequest.getProdutoId());
             Preco precoUnitario = Preco.of(produtoDTO.getPreco());
 
+            // Processar adicionais do item
+            List<ItemPedidoAdicional> adicionais = processarAdicionais(itemRequest.getAdicionais());
+
             ItemPedido item = ItemPedido.criar(
                     itemRequest.getProdutoId(),
                     produtoDTO.getNome(),
                     itemRequest.getQuantidade(),
                     precoUnitario,
-                    itemRequest.getObservacoes());
+                    itemRequest.getObservacoes(),
+                    adicionais);
 
             pedido.adicionarItem(item);
         }
@@ -139,6 +148,40 @@ public class CriarPedidoUseCase {
                             "A soma dos meios de pagamento (R$ %.2f) deve ser igual ao valor total do pedido (R$ %.2f)",
                             totalMeiosPagamento.getAmount().doubleValue(),
                             pedido.getValorTotal().getAmount().doubleValue()));
+        }
+    }
+
+    /**
+     * Processa a lista de adicionais do request, validando e buscando informações
+     * completas.
+     */
+    private List<ItemPedidoAdicional> processarAdicionais(List<ItemPedidoAdicionalRequest> adicionaisRequest) {
+        if (adicionaisRequest == null || adicionaisRequest.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<ItemPedidoAdicional> adicionais = new ArrayList<>();
+        for (ItemPedidoAdicionalRequest adicionalRequest : adicionaisRequest) {
+            validarAdicionalDisponivel(adicionalRequest.getAdicionalId());
+
+            var adicionalDTO = cardapioService.buscarAdicionalPorId(adicionalRequest.getAdicionalId());
+            Preco precoUnitario = Preco.of(adicionalDTO.getPreco());
+
+            ItemPedidoAdicional adicional = ItemPedidoAdicional.criar(
+                    adicionalRequest.getAdicionalId(),
+                    adicionalDTO.getNome(),
+                    adicionalRequest.getQuantidade(),
+                    precoUnitario);
+
+            adicionais.add(adicional);
+        }
+        return adicionais;
+    }
+
+    private void validarAdicionalDisponivel(String adicionalId) {
+        if (!cardapioService.adicionalEstaDisponivel(adicionalId)) {
+            throw new com.snackbar.kernel.domain.exceptions.ValidationException(
+                    "Adicional não está disponível: " + adicionalId);
         }
     }
 }

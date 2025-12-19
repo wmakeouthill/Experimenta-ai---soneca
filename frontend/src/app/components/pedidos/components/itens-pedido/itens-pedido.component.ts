@@ -3,6 +3,11 @@ import { CommonModule } from '@angular/common';
 import { ItemPedidoRequest } from '../../../../services/pedido.service';
 import { Produto } from '../../../../services/produto.service';
 
+interface ItemPedidoComAdicionais extends ItemPedidoRequest {
+  itemId?: string;
+  adicionaisInfo?: { nome: string; quantidade: number; preco: number }[];
+}
+
 @Component({
   selector: 'app-itens-pedido',
   standalone: true,
@@ -12,7 +17,7 @@ import { Produto } from '../../../../services/produto.service';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ItensPedidoComponent {
-  readonly itens = input.required<ItemPedidoRequest[]>();
+  readonly itens = input.required<ItemPedidoComAdicionais[]>();
   readonly produtos = input.required<Produto[]>();
   readonly onQuantidadeAlterada = output<{ index: number; quantidade: number }>();
   readonly onItemRemovido = output<number>();
@@ -21,26 +26,33 @@ export class ItensPedidoComponent {
     return this.produtos().find(p => p.id === produtoId);
   }
 
-  calcularSubtotalItem(item: ItemPedidoRequest): number {
+  calcularSubtotalItem(item: ItemPedidoComAdicionais): number {
     const produto = this.buscarProdutoPorId(item.produtoId);
     if (produto) {
-      return produto.preco * item.quantidade;
+      let subtotal = produto.preco * item.quantidade;
+      // Soma adicionais
+      if (item.adicionaisInfo && item.adicionaisInfo.length > 0) {
+        const totalAdicionais = item.adicionaisInfo.reduce((acc, ad) =>
+          acc + (ad.preco * ad.quantidade), 0);
+        subtotal += totalAdicionais * item.quantidade;
+      }
+      return subtotal;
     }
     return 0;
   }
 
   calcularTotal(): number {
     return this.itens().reduce((total, item) => {
-      const produto = this.buscarProdutoPorId(item.produtoId);
-      if (produto) {
-        return total + (produto.preco * item.quantidade);
-      }
-      return total;
+      return total + this.calcularSubtotalItem(item);
     }, 0);
   }
 
-  obterItemId(item: ItemPedidoRequest): string {
-    return (item as any).itemId || item.produtoId;
+  obterItemId(item: ItemPedidoComAdicionais): string {
+    return item.itemId || item.produtoId;
+  }
+
+  obterAdicionaisInfo(item: ItemPedidoComAdicionais): { nome: string; quantidade: number; preco: number }[] {
+    return item.adicionaisInfo || [];
   }
 
   atualizarQuantidade(index: number, quantidade: number): void {
