@@ -24,8 +24,8 @@ if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
     echo "⚠️ Timeout aguardando MySQL, mas continuando mesmo assim..."
 fi
 
-# ✅ OTIMIZAÇÃO: Mais memória para Maven = compilação MUITO mais rápida
-export MAVEN_OPTS="-Xmx2048m -Xms1024m -XX:+UseG1GC -XX:+TieredCompilation -XX:TieredStopAtLevel=1"
+# ✅ OTIMIZAÇÃO: Ryzen 5600X + 8GB container = Maven MUITO rápido
+export MAVEN_OPTS="-Xmx4096m -Xms2048m -XX:+UseG1GC -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -XX:+UseStringDeduplication"
 
 # Garantir que estamos na raiz do projeto
 cd /app
@@ -95,10 +95,10 @@ echo "📊 Monitor otimizado iniciado"
 
 # Função de monitoramento
 monitor_and_recompile() {
-    echo "👀 Monitor de mudanças iniciado (polling a cada 5s - otimizado)..."
+    echo "👀 Monitor de mudanças iniciado (polling a cada 3s - Ryzen 5600X)..."
     
     while true; do
-        sleep 5
+        sleep 3
         
         # Verificar se há arquivos .java modificados recentemente
         MODIFIED_FILES=$(find /app -name "*.java" -type f -newer /tmp/.last_check 2>/dev/null | head -5)
@@ -136,9 +136,9 @@ echo ""
 
 # Executar Spring Boot com DevTools habilitado
 # ⚠️ SKIP FRONTEND BUILD: frontend já roda em container separado com hot reload
-# ✅ JVM otimizada: mais memória + compilação em camadas + classe data sharing
+# ✅ JVM otimizada para 8GB container: hot reload ultra rápido
 exec mvn spring-boot:run \
     -Dskip.frontend.build=true \
-    -Dspring-boot.run.jvmArguments="-Xmx1536m -Xms768m -XX:+UseG1GC -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 -Dspring.datasource.url=${DB_URL} -Dspring.datasource.username=${DB_USERNAME} -Dspring.datasource.password=${DB_PASSWORD} -Dserver.port=${SERVER_PORT:-8080} -Djwt.secret=${JWT_SECRET} -Djwt.expiration=${JWT_EXPIRATION:-86400} -Dlogging.level.com.snackbar=${LOG_LEVEL:-DEBUG} -Dspring.devtools.restart.enabled=true -Dspring.devtools.restart.poll-interval=1000 -Dspring.devtools.restart.quiet-period=400" \
+    -Dspring-boot.run.jvmArguments="-Xmx3072m -Xms1536m -XX:+UseG1GC -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 -Dspring.datasource.url=${DB_URL} -Dspring.datasource.username=${DB_USERNAME} -Dspring.datasource.password=${DB_PASSWORD} -Dserver.port=${SERVER_PORT:-8080} -Djwt.secret=${JWT_SECRET} -Djwt.expiration=${JWT_EXPIRATION:-86400} -Dlogging.level.com.snackbar=${LOG_LEVEL:-DEBUG} -Dspring.devtools.restart.enabled=true -Dspring.devtools.restart.poll-interval=500 -Dspring.devtools.restart.quiet-period=200" \
     -Dspring.profiles.active=${SPRING_PROFILES_ACTIVE:-dev} \
     -B
