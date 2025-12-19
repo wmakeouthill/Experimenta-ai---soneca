@@ -5,6 +5,7 @@ import { BaseModalComponent } from '../base-modal/base-modal.component';
 import { ImageUploadComponent } from '../../components/image-upload/image-upload.component';
 import { ProdutoService } from '../../../../services/produto.service';
 import { CategoriaService } from '../../../../services/categoria.service';
+import { AdicionalService, Adicional } from '../../../../services/adicional.service';
 import { useFormulario } from '../../composables/use-formulario';
 import { FormatoUtil } from '../../../../utils/formato.util';
 import { Validators } from '@angular/forms';
@@ -35,6 +36,7 @@ export interface ProdutoFormData {
 export class ProdutoModalComponent {
   private readonly produtoService = inject(ProdutoService);
   private readonly categoriaService = inject(CategoriaService);
+  private readonly adicionalService = inject(AdicionalService);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -58,6 +60,10 @@ export class ProdutoModalComponent {
   readonly categoriasLista = signal<any[]>([]);
   readonly fotoBase64 = signal<string | null>(null);
 
+  // Adicionais
+  readonly adicionaisDisponiveis = signal<Adicional[]>([]);
+  readonly adicionaisSelecionados = signal<string[]>([]);
+
   readonly ehEdicao = computed(() => !!this.produto());
 
   private ultimoAberto = false;
@@ -66,12 +72,13 @@ export class ProdutoModalComponent {
   constructor() {
     // Effects devem estar no injection context (constructor)
     if (this.isBrowser) {
-      // Effect para carregar categorias quando modal abrir
+      // Effect para carregar categorias e adicionais quando modal abrir
       effect(() => {
         const estaAberto = this.aberto();
         if (estaAberto && !this.ultimoAberto) {
           // Só carregar quando modal abrir (evitar recarregamento desnecessário)
           this.carregarCategorias();
+          this.carregarAdicionais();
         }
         this.ultimoAberto = estaAberto;
       });
@@ -81,7 +88,7 @@ export class ProdutoModalComponent {
         const estaAberto = this.aberto();
         const produtoAtual = this.produto();
         const produtoId = produtoAtual?.id || null;
-        
+
         // Só inicializar se modal abrir ou produto mudar
         if (estaAberto && (produtoId !== this.ultimoProdutoId || !this.ultimoAberto)) {
           // Usar setTimeout para garantir que executa após a renderização
@@ -98,7 +105,7 @@ export class ProdutoModalComponent {
 
   private inicializarFormulario(): void {
     const produtoEdit = this.produto();
-    
+
     if (produtoEdit && produtoEdit.id) {
       // Edição: preencher com dados do produto
       this.formulario.definirValores({
@@ -110,11 +117,60 @@ export class ProdutoModalComponent {
         foto: produtoEdit.foto || ''
       });
       this.fotoBase64.set(produtoEdit.foto || null);
+
+      // Carregar adicionais vinculados ao produto
+      this.carregarAdicionaisDoProduto(produtoEdit.id);
     } else {
       // Criação: resetar formulário
       this.formulario.resetar();
       this.fotoBase64.set(null);
+      this.adicionaisSelecionados.set([]);
     }
+  }
+
+  private carregarAdicionais(): void {
+    this.adicionalService.listar({ disponivel: true }).subscribe({
+      next: (adicionais) => {
+        this.adicionaisDisponiveis.set(adicionais);
+        this.cdr.markForCheck();
+      },
+      error: (error) => {
+        console.error('Erro ao carregar adicionais:', error);
+        this.adicionaisDisponiveis.set([]);
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  private carregarAdicionaisDoProduto(produtoId: string): void {
+    this.adicionalService.listarAdicionaisDoProduto(produtoId).subscribe({
+      next: (adicionais) => {
+        this.adicionaisSelecionados.set(adicionais.map(a => a.id));
+        this.cdr.markForCheck();
+      },
+      error: (error) => {
+        console.error('Erro ao carregar adicionais do produto:', error);
+        this.adicionaisSelecionados.set([]);
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  toggleAdicional(adicionalId: string): void {
+    const selecionados = [...this.adicionaisSelecionados()];
+    const index = selecionados.indexOf(adicionalId);
+
+    if (index > -1) {
+      selecionados.splice(index, 1);
+    } else {
+      selecionados.push(adicionalId);
+    }
+
+    this.adicionaisSelecionados.set(selecionados);
+  }
+
+  isAdicionalSelecionado(adicionalId: string): boolean {
+    return this.adicionaisSelecionados().includes(adicionalId);
   }
 
   private carregarCategorias(): void {
@@ -150,13 +206,13 @@ export class ProdutoModalComponent {
     const input = event.target as HTMLInputElement;
     const valor = input.value;
     const numero = FormatoUtil.moedaParaNumero(valor);
-    
+
     if (numero > 0) {
       input.value = FormatoUtil.numeroParaInputMoeda(numero);
     } else {
       input.value = '';
     }
-    
+
     // Atualizar o FormControl
     this.formulario.form.controls['preco'].setValue(input.value);
   }
@@ -164,14 +220,14 @@ export class ProdutoModalComponent {
   salvar(): void {
     if (!this.formulario.valido()) {
       this.formulario.marcarTodosComoTocados();
-      
+
       // Validação customizada para preço
       const precoStr = this.formulario.form.controls['preco'].value;
       const preco = FormatoUtil.moedaParaNumero(precoStr);
       if (!preco || preco <= 0) {
         this.formulario.adicionarErro('preco', 'Preço deve ser maior que zero');
       }
-      
+
       return;
     }
 
@@ -195,34 +251,48 @@ export class ProdutoModalComponent {
 
     const request$ = produto
       ? this.produtoService.atualizar(produto.id, {
-          ...dados,
-          disponivel: valores.disponivel
-          // foto já está em dados
-        })
+        ...dados,
+        disponivel: valores.disponivel
+        // foto já está em dados
+      })
       : this.produtoService.criar(dados);
 
-      request$
+    request$
       .pipe(
         catchError((error) => {
           const mensagem = error.error?.message || 'Erro ao salvar produto';
           this.formulario.adicionarErro('nome', mensagem);
           this.cdr.markForCheck();
           return of(null);
-        }),
-        finalize(() => {
-          this.formulario.enviando.set(false);
-          this.cdr.markForCheck();
         })
       )
       .subscribe((resultado) => {
         if (resultado) {
-          this.formulario.sucesso.set(true);
+          // Salvar adicionais vinculados
+          const produtoId = resultado.id;
+          this.adicionalService.atualizarAdicionaisDoProduto(produtoId, this.adicionaisSelecionados())
+            .pipe(
+              catchError((error) => {
+                console.error('Erro ao salvar adicionais:', error);
+                return of(null);
+              }),
+              finalize(() => {
+                this.formulario.enviando.set(false);
+                this.cdr.markForCheck();
+              })
+            )
+            .subscribe(() => {
+              this.formulario.sucesso.set(true);
+              this.cdr.markForCheck();
+              // Emitir sucesso ANTES de fechar para garantir que dados sejam recarregados
+              this.onSucesso.emit();
+              setTimeout(() => {
+                this.fechar();
+              }, 300);
+            });
+        } else {
+          this.formulario.enviando.set(false);
           this.cdr.markForCheck();
-          // Emitir sucesso ANTES de fechar para garantir que dados sejam recarregados
-          this.onSucesso.emit();
-          setTimeout(() => {
-            this.fechar();
-          }, 300);
         }
       });
   }

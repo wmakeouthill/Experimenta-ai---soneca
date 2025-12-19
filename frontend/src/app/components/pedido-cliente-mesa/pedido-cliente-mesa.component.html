@@ -1055,10 +1055,19 @@
                                 <div class="carrinho-item">
                                     <div class="item-info">
                                         <h4>{{ item.produto.nome }}</h4>
+                                        @if (item.adicionais && item.adicionais.length > 0) {
+                                            <div class="item-adicionais">
+                                                @for (ad of item.adicionais; track ad.adicional.id) {
+                                                    <span class="item-adicional-tag">
+                                                        +{{ ad.quantidade }}x {{ ad.adicional.nome }}
+                                                    </span>
+                                                }
+                                            </div>
+                                        }
                                         @if (item.observacao) {
                                             <p class="item-obs">{{ item.observacao }}</p>
                                         }
-                                        <span class="item-preco">{{ formatarPreco(item.produto.preco * item.quantidade) }}</span>
+                                        <span class="item-preco">{{ formatarPrecoItemCarrinho(item) }}</span>
                                     </div>
                                     <div class="item-controles">
                                         <button class="btn-qty-mini" (click)="carrinho.alterarQuantidade(item.produto.id, -1)">−</button>
@@ -1361,6 +1370,50 @@
                     }
                     <div class="modal-preco">{{ formatarPreco(carrinho.produtoSelecionado()!.preco) }}</div>
 
+                    <!-- Seção de Adicionais -->
+                    @if (carrinho.carregandoAdicionais()) {
+                        <div class="adicionais-loading">
+                            <span class="spinner-adicionais"></span>
+                            <span>Carregando adicionais...</span>
+                        </div>
+                    } @else if (carrinho.adicionaisDisponiveis().length > 0) {
+                        <div class="adicionais-secao">
+                            <h3 class="adicionais-titulo">🍕 Adicionais</h3>
+                            <div class="adicionais-lista">
+                                @for (adicional of carrinho.adicionaisDisponiveis(); track adicional.id) {
+                                    <div
+                                        class="adicional-item"
+                                        [class.selecionado]="carrinho.isAdicionalSelecionado(adicional.id)"
+                                        (click)="carrinho.toggleAdicional(adicional)"
+                                    >
+                                        <div class="adicional-info">
+                                            <span class="adicional-nome">{{ adicional.nome }}</span>
+                                            <span class="adicional-preco">+ {{ formatarPreco(adicional.preco) }}</span>
+                                        </div>
+                                        @if (carrinho.isAdicionalSelecionado(adicional.id)) {
+                                            <div class="adicional-quantidade" (click)="$event.stopPropagation()">
+                                                <button
+                                                    class="btn-adicional-qtd"
+                                                    (click)="carrinho.decrementarAdicional(adicional.id)"
+                                                >−</button>
+                                                <span class="adicional-qtd-valor">{{ carrinho.getQuantidadeAdicional(adicional.id) }}</span>
+                                                <button
+                                                    class="btn-adicional-qtd"
+                                                    (click)="carrinho.incrementarAdicional(adicional.id)"
+                                                >+</button>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                            @if (carrinho.subtotalAdicionais() > 0) {
+                                <div class="adicionais-subtotal">
+                                    Adicionais: {{ formatarPreco(carrinho.subtotalAdicionais()) }}
+                                </div>
+                            }
+                        </div>
+                    }
+
                     <div class="observacao-container">
                         <label>Alguma observação?</label>
                         <textarea
@@ -1377,7 +1430,7 @@
                     </div>
 
                     <button class="btn-adicionar-carrinho" (click)="carrinho.adicionarAoCarrinho()">
-                        Adicionar • {{ formatarPreco(carrinho.produtoSelecionado()!.preco * carrinho.quantidadeTemp()) }}
+                        Adicionar • {{ formatarPreco(carrinho.precoTotalItemModal()) }}
                     </button>
                 </div>
             </div>

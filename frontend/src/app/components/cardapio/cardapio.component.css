@@ -70,6 +70,38 @@
   transform: translateY(-2px);
 }
 
+/* Abas de navegação */
+.abas-navegacao {
+  display: flex;
+  background: white;
+  padding: 0 2rem;
+  border-bottom: 2px solid #e0e0e0;
+  gap: 0.5rem;
+}
+
+.aba-btn {
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #666;
+}
+
+.aba-btn:hover {
+  color: #FF6B35;
+  background: rgba(255, 107, 53, 0.05);
+}
+
+.aba-btn.active {
+  color: #FF6B35;
+  border-bottom-color: #FF6B35;
+  background: rgba(255, 107, 53, 0.1);
+}
+
 /* Layout Principal */
 .cardapio-layout {
   display: grid;
@@ -904,4 +936,152 @@
     font-size: 0.8rem;
     min-height: 36px;
   }
+
+  .abas-navegacao {
+    padding: 0 1rem;
+  }
+
+  .aba-btn {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .adicionais-container {
+    padding: 1rem;
+  }
+
+  .adicionais-grid {
+    grid-template-columns: 1fr;
+  }
 }
+
+/* ==================== SEÇÃO DE ADICIONAIS ==================== */
+
+.adicionais-container {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.adicionais-info {
+  background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(247, 147, 30, 0.1) 100%);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border-left: 4px solid #FF6B35;
+}
+
+.adicionais-descricao {
+  margin: 0;
+  color: #333;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.adicionais-descricao small {
+  color: #666;
+  font-style: italic;
+}
+
+.adicionais-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.adicional-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 1.25rem;
+  position: relative;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.adicional-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.adicional-card.disponivel {
+  border-color: #4CAF50;
+}
+
+.adicional-card.indisponivel {
+  opacity: 0.7;
+  border-color: #e0e0e0;
+}
+
+.adicional-badge-wrapper {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.adicional-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.adicional-badge.indisponivel {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.adicional-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.adicional-nome {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+  flex: 1;
+}
+
+.adicional-categoria {
+  display: inline-block;
+  background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.adicional-descricao {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0.5rem 0;
+  line-height: 1.4;
+}
+
+.adicional-preco {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #FF6B35;
+  margin: 0.75rem 0;
+}
+
+.adicional-acoes {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f0f0f0;
+}
+
+.adicional-acoes .btn-acao {
+  flex: 1;
+}
+

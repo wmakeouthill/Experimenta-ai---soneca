@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit, OnDestroy, ChangeDetectionStrategy, PLATFORM_ID, AfterViewInit, AfterViewChecked, ViewChild, ElementRef } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, OnDestroy, ChangeDetectionStrategy, PLATFORM_ID, AfterViewInit, AfterViewChecked, ViewChild, ElementRef, effect } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -9,6 +9,7 @@ import { Produto } from '../../services/produto.service';
 import { ClienteAuthService } from '../../services/cliente-auth.service';
 import { PwaInstallService } from '../../services/pwa-install.service';
 import { AcaoChat } from '../../services/chat-ia.service';
+import { AdicionalService } from '../../services/adicional.service';
 import { DraggableScrollDirective } from './directives/draggable-scroll.directive';
 import { ImageProxyUtil } from '../../utils/image-proxy.util';
 
@@ -74,6 +75,7 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   private readonly isBrowser = isPlatformBrowser(this.platformId);
   private readonly clienteAuthService = inject(ClienteAuthService);
   private readonly pwaInstallService = inject(PwaInstallService);
+  private readonly adicionalService = inject(AdicionalService);
 
   protected readonly Math = Math;
 
@@ -187,6 +189,37 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   // Handler para back button do navegador
   private readonly boundHandlePopState = this.handlePopState.bind(this);
   private readonly destroy$ = new Subject<void>();
+
+  constructor() {
+    // Effect para carregar adicionais quando o modal de detalhes é aberto
+    effect(() => {
+      const produtoSelecionado = this.carrinho.produtoSelecionado();
+      if (produtoSelecionado && this.carrinho.mostrarDetalhes()) {
+        this.carregarAdicionaisDoProduto(produtoSelecionado.id);
+      }
+    });
+  }
+
+  /**
+   * Carrega os adicionais disponíveis para um produto.
+   */
+  private carregarAdicionaisDoProduto(produtoId: string): void {
+    this.carrinho.setCarregandoAdicionais(true);
+    this.adicionalService.listarAdicionaisDoProduto(produtoId)
+      .subscribe({
+        next: (adicionais) => {
+          // Filtra apenas os disponíveis
+          const disponíveis = adicionais.filter(a => a.disponivel);
+          this.carrinho.setAdicionaisDisponiveis(disponíveis);
+          this.carrinho.setCarregandoAdicionais(false);
+        },
+        error: (err) => {
+          console.error('Erro ao carregar adicionais:', err);
+          this.carrinho.setAdicionaisDisponiveis([]);
+          this.carrinho.setCarregandoAdicionais(false);
+        }
+      });
+  }
 
   // ========== Lifecycle ==========
   ngOnInit(): void {
@@ -657,6 +690,21 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   // ========== Formatação ==========
   formatarPreco(valor: number): string {
     return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  /**
+   * Calcula e formata o preço total de um item do carrinho, incluindo adicionais.
+   */
+  formatarPrecoItemCarrinho(item: import('./composables').ItemCarrinho): string {
+    let total = item.produto.preco * item.quantidade;
+    if (item.adicionais && item.adicionais.length > 0) {
+      const totalAdicionais = item.adicionais.reduce(
+        (acc, ad) => acc + (ad.adicional.preco * ad.quantidade * item.quantidade),
+        0
+      );
+      total += totalAdicionais;
+    }
+    return this.formatarPreco(total);
   }
 
   formatarTelefone(telefone: string): string {

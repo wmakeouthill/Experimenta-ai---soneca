@@ -4,7 +4,9 @@ import { RouterModule } from '@angular/router';
 import { useProdutos } from './composables/use-produtos';
 import { ProdutoModalComponent } from './modals/produto-modal/produto-modal.component';
 import { CategoriaModalComponent } from './modals/categoria-modal/categoria-modal.component';
+import { AdicionalModalComponent } from './modals/adicional-modal/adicional-modal.component';
 import { ProdutoService } from '../../services/produto.service';
+import { AdicionalService, Adicional } from '../../services/adicional.service';
 
 @Component({
   selector: 'app-cardapio',
@@ -13,7 +15,8 @@ import { ProdutoService } from '../../services/produto.service';
     CommonModule,
     RouterModule,
     ProdutoModalComponent,
-    CategoriaModalComponent
+    CategoriaModalComponent,
+    AdicionalModalComponent
   ],
   templateUrl: './cardapio.component.html',
   styleUrl: './cardapio.component.css'
@@ -22,6 +25,7 @@ export class CardapioComponent implements OnInit {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
   private readonly produtoService = inject(ProdutoService);
+  private readonly adicionalService = inject(AdicionalService);
 
   // Composable com toda a lógica de produtos
   readonly produtosComposable = useProdutos();
@@ -39,7 +43,16 @@ export class CardapioComponent implements OnInit {
   // Modal states
   readonly mostrarModalProduto = signal(false);
   readonly mostrarModalCategoria = signal(false);
+  readonly mostrarModalAdicional = signal(false);
   readonly produtoEditando = signal<any>(null);
+  readonly adicionalEditando = signal<Adicional | null>(null);
+
+  // Abas: 'produtos' ou 'adicionais'
+  readonly abaAtiva = signal<'produtos' | 'adicionais'>('produtos');
+
+  // Lista de adicionais
+  readonly adicionais = signal<Adicional[]>([]);
+  readonly carregandoAdicionais = signal(false);
 
   @ViewChild('produtosSection', { static: false }) produtosSectionRef?: ElementRef<HTMLElement>;
 
@@ -52,6 +65,27 @@ export class CardapioComponent implements OnInit {
   private carregarDados(): void {
     this.produtosComposable.carregarProdutos();
     this.produtosComposable.carregarCategorias();
+  }
+
+  carregarAdicionais(): void {
+    this.carregandoAdicionais.set(true);
+    this.adicionalService.listar().subscribe({
+      next: (adicionais) => {
+        this.adicionais.set(adicionais);
+        this.carregandoAdicionais.set(false);
+      },
+      error: (error) => {
+        console.error('Erro ao carregar adicionais:', error);
+        this.carregandoAdicionais.set(false);
+      }
+    });
+  }
+
+  mudarAba(aba: 'produtos' | 'adicionais'): void {
+    this.abaAtiva.set(aba);
+    if (aba === 'adicionais' && this.adicionais().length === 0) {
+      this.carregarAdicionais();
+    }
   }
 
   filtrarPorCategoria(categoriaId: string | null): void {
@@ -103,6 +137,67 @@ export class CardapioComponent implements OnInit {
 
   fecharModalCategoria(): void {
     this.mostrarModalCategoria.set(false);
+  }
+
+  // === Adicionais ===
+  abrirModalAdicional(adicional?: Adicional): void {
+    this.adicionalEditando.set(adicional || null);
+    this.mostrarModalAdicional.set(true);
+  }
+
+  fecharModalAdicional(): void {
+    this.mostrarModalAdicional.set(false);
+    this.adicionalEditando.set(null);
+  }
+
+  editarAdicional(adicional: Adicional): void {
+    this.abrirModalAdicional(adicional);
+  }
+
+  excluirAdicional(id: string): void {
+    if (!this.isBrowser) {
+      return;
+    }
+
+    if (!confirm('Tem certeza que deseja excluir este adicional?')) {
+      return;
+    }
+
+    this.adicionalService.excluir(id).subscribe({
+      next: () => {
+        this.carregarAdicionais();
+      },
+      error: (error) => {
+        console.error('Erro ao excluir adicional:', error);
+        if (this.isBrowser) {
+          alert('Erro ao excluir adicional. Tente novamente.');
+        }
+      }
+    });
+  }
+
+  alternarDisponibilidadeAdicional(adicional: Adicional): void {
+    if (!this.isBrowser) {
+      return;
+    }
+
+    const novaDisponibilidade = !adicional.disponivel;
+
+    this.adicionalService.alternarDisponibilidade(adicional.id, novaDisponibilidade).subscribe({
+      next: () => {
+        this.carregarAdicionais();
+      },
+      error: (error) => {
+        console.error('Erro ao alterar disponibilidade do adicional:', error);
+        if (this.isBrowser) {
+          alert('Erro ao alterar disponibilidade do adicional. Tente novamente.');
+        }
+      }
+    });
+  }
+
+  onAdicionalSalvo(): void {
+    this.carregarAdicionais();
   }
 
   editarProduto(produto: any): void {

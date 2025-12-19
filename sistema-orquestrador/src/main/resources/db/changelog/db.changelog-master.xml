@@ -108,6 +108,9 @@
     <include file="changes/032-create-historico-conversas-chat-table.sql"
         relativeToChangelogFile="true" />
 
+    <!-- Migration: Criação das tabelas de adicionais (carne extra, bacon, etc.) -->
+    <include file="changes/033-create-adicionais-tables.sql" relativeToChangelogFile="true" />
+
     <!-- 
     NOTA: O usuário administrador inicial é criado automaticamente via CommandLineRunner
     (UsuarioInicialConfig) na primeira execução da aplicação.

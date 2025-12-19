@@ -114,6 +114,39 @@
         </label>
       </div>
     }
+
+    <!-- Seção de Adicionais -->
+    @if (adicionaisDisponiveis().length > 0) {
+      <div class="formulario-grupo adicionais-secao">
+        <label class="formulario-label">
+          🍕 Adicionais Disponíveis
+        </label>
+        <p class="formulario-hint">
+          Selecione os adicionais que podem ser escolhidos para este produto
+        </p>
+        <div class="adicionais-lista">
+          @for (adicional of adicionaisDisponiveis(); track adicional.id) {
+            <label
+              class="adicional-item"
+              [class.selecionado]="isAdicionalSelecionado(adicional.id)"
+            >
+              <input
+                type="checkbox"
+                [checked]="isAdicionalSelecionado(adicional.id)"
+                (change)="toggleAdicional(adicional.id)"
+              />
+              <span class="adicional-info">
+                <span class="adicional-nome">{{ adicional.nome }}</span>
+                @if (adicional.categoria) {
+                  <span class="adicional-categoria">{{ adicional.categoria }}</span>
+                }
+              </span>
+              <span class="adicional-preco">+ R$ {{ adicional.preco | number:'1.2-2' }}</span>
+            </label>
+          }
+        </div>
+      </div>
+    }
   </form>
 
   <div footer class="modal-footer-acoes">

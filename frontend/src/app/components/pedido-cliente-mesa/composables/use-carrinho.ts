@@ -1,13 +1,20 @@
 import { signal, computed, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Produto } from '../../../services/produto.service';
+import { Adicional } from '../../../services/adicional.service';
 
 const CARRINHO_STORAGE_KEY = 'pedido-mesa-carrinho';
+
+export interface ItemAdicionalCarrinho {
+    adicional: Adicional;
+    quantidade: number;
+}
 
 export interface ItemCarrinho {
     produto: Produto;
     quantidade: number;
     observacao: string;
+    adicionais: ItemAdicionalCarrinho[];
 }
 
 /**
@@ -51,14 +58,42 @@ export function useCarrinho() {
     const mostrarDetalhes = signal(false);
     const mostrarCarrinho = signal(false);
 
+    // Estado para adicionais
+    const adicionaisDisponiveis = signal<Adicional[]>([]);
+    const adicionaisSelecionados = signal<ItemAdicionalCarrinho[]>([]);
+    const carregandoAdicionais = signal(false);
+
     // Computed
     const totalItens = computed(() =>
         itens().reduce((total, item) => total + item.quantidade, 0)
     );
 
     const totalValor = computed(() =>
-        itens().reduce((total, item) => total + (item.produto.preco * item.quantidade), 0)
+        itens().reduce((total, item) => {
+            // Preço do produto * quantidade
+            let subtotal = item.produto.preco * item.quantidade;
+            // Soma adicionais (preço adicional * quantidade adicional * quantidade do item)
+            if (item.adicionais && item.adicionais.length > 0) {
+                subtotal += item.adicionais.reduce((acc, ad) =>
+                    acc + (ad.adicional.preco * ad.quantidade * item.quantidade), 0);
+            }
+            return total + subtotal;
+        }, 0)
     );
+
+    // Calcula o subtotal dos adicionais selecionados no modal (para preview)
+    const subtotalAdicionais = computed(() => {
+        return adicionaisSelecionados().reduce((acc, ad) =>
+            acc + (ad.adicional.preco * ad.quantidade), 0);
+    });
+
+    // Calcula o preço total do item no modal (produto + adicionais) * quantidade
+    const precoTotalItemModal = computed(() => {
+        const produto = produtoSelecionado();
+        if (!produto) return 0;
+        const precoBase = produto.preco + subtotalAdicionais();
+        return precoBase * quantidadeTemp();
+    });
 
     const carrinhoVazio = computed(() => itens().length === 0);
 
@@ -80,11 +115,16 @@ export function useCarrinho() {
         produtoSelecionado.set(produto);
         quantidadeTemp.set(1);
         _observacaoTemp.set('');
+        adicionaisSelecionados.set([]);
 
         const itemExistente = itens().find(item => item.produto.id === produto.id);
         if (itemExistente) {
             quantidadeTemp.set(itemExistente.quantidade);
             _observacaoTemp.set(itemExistente.observacao);
+            // Restaura adicionais selecionados anteriormente
+            if (itemExistente.adicionais) {
+                adicionaisSelecionados.set([...itemExistente.adicionais]);
+            }
         }
 
         mostrarDetalhes.set(true);
@@ -93,6 +133,64 @@ export function useCarrinho() {
     function fecharDetalhes(): void {
         mostrarDetalhes.set(false);
         produtoSelecionado.set(null);
+        adicionaisDisponiveis.set([]);
+        adicionaisSelecionados.set([]);
+    }
+
+    // Funções para gerenciar adicionais disponíveis
+    function setAdicionaisDisponiveis(adicionais: Adicional[]): void {
+        adicionaisDisponiveis.set(adicionais);
+    }
+
+    function setCarregandoAdicionais(value: boolean): void {
+        carregandoAdicionais.set(value);
+    }
+
+    // Funções para gerenciar adicionais selecionados
+    function toggleAdicional(adicional: Adicional): void {
+        const atuais = adicionaisSelecionados();
+        const existente = atuais.find(a => a.adicional.id === adicional.id);
+
+        if (existente) {
+            // Remove se já existe
+            adicionaisSelecionados.set(atuais.filter(a => a.adicional.id !== adicional.id));
+        } else {
+            // Adiciona com quantidade 1
+            adicionaisSelecionados.set([...atuais, { adicional, quantidade: 1 }]);
+        }
+    }
+
+    function isAdicionalSelecionado(adicionalId: string): boolean {
+        return adicionaisSelecionados().some(a => a.adicional.id === adicionalId);
+    }
+
+    function getQuantidadeAdicional(adicionalId: string): number {
+        const item = adicionaisSelecionados().find(a => a.adicional.id === adicionalId);
+        return item ? item.quantidade : 0;
+    }
+
+    function incrementarAdicional(adicionalId: string): void {
+        adicionaisSelecionados.update(lista =>
+            lista.map(item =>
+                item.adicional.id === adicionalId
+                    ? { ...item, quantidade: item.quantidade + 1 }
+                    : item
+            )
+        );
+    }
+
+    function decrementarAdicional(adicionalId: string): void {
+        adicionaisSelecionados.update(lista => {
+            return lista.map(item => {
+                if (item.adicional.id === adicionalId) {
+                    if (item.quantidade <= 1) {
+                        return null; // Marca para remover
+                    }
+                    return { ...item, quantidade: item.quantidade - 1 };
+                }
+                return item;
+            }).filter((item): item is ItemAdicionalCarrinho => item !== null);
+        });
     }
 
     function incrementarQuantidade(): void {
@@ -116,17 +214,20 @@ export function useCarrinho() {
             itensAtuais[indexExistente] = {
                 ...itensAtuais[indexExistente],
                 quantidade: quantidadeTemp(),
-                observacao: _observacaoTemp()
+                observacao: _observacaoTemp(),
+                adicionais: [...adicionaisSelecionados()]
             };
         } else {
             itensAtuais.push({
                 produto,
                 quantidade: quantidadeTemp(),
-                observacao: _observacaoTemp()
+                observacao: _observacaoTemp(),
+                adicionais: [...adicionaisSelecionados()]
             });
         }
 
         itens.set(itensAtuais);
+        persistirCarrinho(itensAtuais);
         fecharDetalhes();
     }
 
@@ -142,9 +243,11 @@ export function useCarrinho() {
             const novoItem: ItemCarrinho = {
                 produto,
                 quantidade: 1,
-                observacao: ''
+                observacao: '',
+                adicionais: []
             };
             itens.update(lista => [...lista, novoItem]);
+            persistirCarrinho(itens());
         }
     }
 
@@ -174,7 +277,8 @@ export function useCarrinho() {
             itensAtuais.push({
                 produto,
                 quantidade,
-                observacao
+                observacao,
+                adicionais: []
             });
         }
 
@@ -183,22 +287,25 @@ export function useCarrinho() {
     }
 
     function removerDoCarrinho(produtoId: string): void {
-        itens.update(lista => lista.filter(item => item.produto.id !== produtoId));
+        const novosItens = itens().filter(item => item.produto.id !== produtoId);
+        itens.set(novosItens);
+        persistirCarrinho(novosItens);
     }
 
     function alterarQuantidade(produtoId: string, delta: number): void {
-        itens.update(lista => {
-            return lista
-                .map(item => {
-                    if (item.produto.id === produtoId) {
-                        const novaQuantidade = item.quantidade + delta;
-                        if (novaQuantidade <= 0) return null;
-                        return { ...item, quantidade: novaQuantidade };
-                    }
-                    return item;
-                })
-                .filter((item): item is ItemCarrinho => item !== null);
-        });
+        const novosItens = itens()
+            .map(item => {
+                if (item.produto.id === produtoId) {
+                    const novaQuantidade = item.quantidade + delta;
+                    if (novaQuantidade <= 0) return null;
+                    return { ...item, quantidade: novaQuantidade };
+                }
+                return item;
+            })
+            .filter((item): item is ItemCarrinho => item !== null);
+
+        itens.set(novosItens);
+        persistirCarrinho(novosItens);
     }
 
     function abrirCarrinho(): void {
@@ -211,6 +318,7 @@ export function useCarrinho() {
 
     function limparCarrinho(): void {
         itens.set([]);
+        persistirCarrinho([]);
     }
 
     return {
@@ -221,11 +329,18 @@ export function useCarrinho() {
         mostrarDetalhes: mostrarDetalhes.asReadonly(),
         mostrarCarrinho,
 
+        // Estado de adicionais
+        adicionaisDisponiveis: adicionaisDisponiveis.asReadonly(),
+        adicionaisSelecionados: adicionaisSelecionados.asReadonly(),
+        carregandoAdicionais: carregandoAdicionais.asReadonly(),
+
         // Computed
         totalItens,
         totalValor,
         carrinhoVazio,
         podeEnviarPedido,
+        subtotalAdicionais,
+        precoTotalItemModal,
 
         // Getters/Setters
         getObservacao,
@@ -243,6 +358,15 @@ export function useCarrinho() {
         alterarQuantidade,
         abrirCarrinho,
         fecharCarrinho,
-        limparCarrinho
+        limparCarrinho,
+
+        // Ações de adicionais
+        setAdicionaisDisponiveis,
+        setCarregandoAdicionais,
+        toggleAdicional,
+        isAdicionalSelecionado,
+        getQuantidadeAdicional,
+        incrementarAdicional,
+        decrementarAdicional
     };
 }

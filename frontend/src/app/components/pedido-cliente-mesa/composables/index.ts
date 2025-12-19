@@ -4,7 +4,7 @@
  */
 
 export { useIdentificacaoCliente, type ClienteIdentificado } from './use-identificacao-cliente';
-export { useCarrinho, type ItemCarrinho } from './use-carrinho';
+export { useCarrinho, type ItemCarrinho, type ItemAdicionalCarrinho } from './use-carrinho';
 export { usePagamento, type MeioPagamentoSelecionado, type MeioPagamentoTipo, type EtapaCarrinho } from './use-pagamento';
 export { useCardapio, type GrupoCategoria } from './use-cardapio';
 export { useFavoritos } from './use-favoritos';

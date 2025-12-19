@@ -6,12 +6,18 @@
         Gestão de Cardápio
       </h1>
       <div class="header-actions">
-        <button class="btn-header btn-primary" (click)="abrirModalCategoria()">
-          ➕ Nova Categoria
-        </button>
-        <button class="btn-header btn-primary" (click)="abrirModalProduto()">
-          ➕ Novo Produto
-        </button>
+        @if (abaAtiva() === 'produtos') {
+          <button class="btn-header btn-primary" (click)="abrirModalCategoria()">
+            ➕ Nova Categoria
+          </button>
+          <button class="btn-header btn-primary" (click)="abrirModalProduto()">
+            ➕ Novo Produto
+          </button>
+        } @else {
+          <button class="btn-header btn-primary" (click)="abrirModalAdicional()">
+            ➕ Novo Adicional
+          </button>
+        }
         <button class="btn-voltar" routerLink="/" aria-label="Voltar para home">
           ← Voltar
         </button>
@@ -19,6 +25,26 @@
     </div>
   </header>
 
+  <!-- Abas de navegação -->
+  <div class="abas-navegacao">
+    <button
+      class="aba-btn"
+      [class.active]="abaAtiva() === 'produtos'"
+      (click)="mudarAba('produtos')"
+    >
+      🍔 Produtos
+    </button>
+    <button
+      class="aba-btn"
+      [class.active]="abaAtiva() === 'adicionais'"
+      (click)="mudarAba('adicionais')"
+    >
+      🥓 Adicionais
+    </button>
+  </div>
+
+  <!-- Conteúdo da aba Produtos -->
+  @if (abaAtiva() === 'produtos') {
   <div class="cardapio-layout">
     <!-- Sidebar de Filtros -->
     <aside class="sidebar-filtros">
@@ -215,6 +241,78 @@
       }
     </main>
   </div>
+  }
+
+  <!-- Conteúdo da aba Adicionais -->
+  @if (abaAtiva() === 'adicionais') {
+  <div class="adicionais-container">
+    <div class="adicionais-info">
+      <p class="adicionais-descricao">
+        🥓 Gerencie os itens adicionais que podem ser vinculados aos produtos do cardápio.
+        <br />
+        <small>Ex: Carne extra, Bacon, Onion Rings, etc.</small>
+      </p>
+    </div>
+
+    @if (carregandoAdicionais()) {
+      <div class="estado-carregando">
+        <div class="spinner"></div>
+        <p>Carregando adicionais...</p>
+      </div>
+    } @else if (adicionais().length === 0) {
+      <div class="estado-vazio">
+        <p class="vazio-mensagem">Nenhum adicional cadastrado.</p>
+        <button class="btn-primary" (click)="abrirModalAdicional()">
+          ➕ Criar Adicional
+        </button>
+      </div>
+    } @else {
+      <div class="adicionais-grid">
+        @for (adicional of adicionais(); track adicional.id) {
+          <article class="adicional-card" [class.disponivel]="adicional.disponivel" [class.indisponivel]="!adicional.disponivel">
+            @if (!adicional.disponivel) {
+              <div class="adicional-badge-wrapper">
+                <span class="adicional-badge indisponivel">Indisponível</span>
+              </div>
+            }
+
+            <div class="adicional-header">
+              <h3 class="adicional-nome">{{ adicional.nome }}</h3>
+              <button
+                class="btn-toggle-disponibilidade"
+                [class.ativo]="adicional.disponivel"
+                [class.inativo]="!adicional.disponivel"
+                [title]="adicional.disponivel ? 'Desativar adicional' : 'Ativar adicional'"
+                (click)="alternarDisponibilidadeAdicional(adicional)"
+              >
+                {{ adicional.disponivel ? '🟢' : '⚫' }}
+              </button>
+            </div>
+
+            @if (adicional.categoria) {
+              <span class="adicional-categoria">{{ adicional.categoria }}</span>
+            }
+
+            @if (adicional.descricao) {
+              <p class="adicional-descricao">{{ adicional.descricao }}</p>
+            }
+
+            <p class="adicional-preco">R$ {{ adicional.preco.toFixed(2).replace('.', ',') }}</p>
+
+            <div class="adicional-acoes">
+              <button class="btn-acao btn-editar" (click)="editarAdicional(adicional)">
+                ✏️ Editar
+              </button>
+              <button class="btn-acao btn-excluir" (click)="excluirAdicional(adicional.id)">
+                🗑️ Excluir
+              </button>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </div>
+  }
 
   <!-- Modais -->
   <app-produto-modal
@@ -228,5 +326,12 @@
     [aberto]="mostrarModalCategoria()"
     (onFechar)="fecharModalCategoria()"
     (onSucesso)="onCategoriaSalva()"
+  />
+
+  <app-adicional-modal
+    [aberto]="mostrarModalAdicional()"
+    [adicional]="adicionalEditando()"
+    (onFechar)="fecharModalAdicional()"
+    (onSucesso)="onAdicionalSalvo()"
   />
 </div>
