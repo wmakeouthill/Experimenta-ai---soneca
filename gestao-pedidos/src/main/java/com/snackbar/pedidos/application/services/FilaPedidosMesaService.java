@@ -60,7 +60,33 @@ public class FilaPedidosMesaService {
         for (ItemPedidoRequest itemReq : request.getItens()) {
             var produto = cardapioService.buscarProdutoPorId(itemReq.getProdutoId());
             BigDecimal precoUnitario = produto.getPreco();
-            BigDecimal subtotal = precoUnitario.multiply(BigDecimal.valueOf(itemReq.getQuantidade()));
+
+            // Processa adicionais do item
+            List<AdicionalPedidoPendenteDTO> adicionaisDTO = new ArrayList<>();
+            BigDecimal subtotalAdicionais = BigDecimal.ZERO;
+
+            if (itemReq.getAdicionais() != null && !itemReq.getAdicionais().isEmpty()) {
+                for (ItemPedidoAdicionalRequest adicionalReq : itemReq.getAdicionais()) {
+                    var adicional = cardapioService.buscarAdicionalPorId(adicionalReq.getAdicionalId());
+                    BigDecimal precoAdicional = adicional.getPreco();
+                    BigDecimal subtotalAdicional = precoAdicional
+                            .multiply(BigDecimal.valueOf(adicionalReq.getQuantidade()));
+
+                    adicionaisDTO.add(AdicionalPedidoPendenteDTO.builder()
+                            .adicionalId(adicionalReq.getAdicionalId())
+                            .nome(adicional.getNome())
+                            .quantidade(adicionalReq.getQuantidade())
+                            .precoUnitario(precoAdicional)
+                            .subtotal(subtotalAdicional)
+                            .build());
+
+                    subtotalAdicionais = subtotalAdicionais.add(subtotalAdicional);
+                }
+            }
+
+            // Subtotal = (preço unitário + adicionais) * quantidade
+            BigDecimal precoComAdicionais = precoUnitario.add(subtotalAdicionais);
+            BigDecimal subtotal = precoComAdicionais.multiply(BigDecimal.valueOf(itemReq.getQuantidade()));
 
             itens.add(ItemPedidoPendenteDTO.builder()
                     .produtoId(itemReq.getProdutoId())
@@ -69,6 +95,7 @@ public class FilaPedidosMesaService {
                     .precoUnitario(precoUnitario)
                     .subtotal(subtotal)
                     .observacoes(itemReq.getObservacoes())
+                    .adicionais(adicionaisDTO.isEmpty() ? null : adicionaisDTO)
                     .build());
 
             valorTotal = valorTotal.add(subtotal);

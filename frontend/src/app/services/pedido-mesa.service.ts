@@ -9,6 +9,7 @@ export interface ItemPedidoMesaRequest {
     produtoId: string;
     quantidade: number;
     observacoes?: string;
+    adicionais?: { adicionalId: string; quantidade: number }[];
 }
 
 export interface MeioPagamentoMesaRequest {

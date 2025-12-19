@@ -38,6 +38,7 @@ export class ProdutoDetalhesModalComponent {
     readonly adicionaisDisponiveis = signal<Adicional[]>([]);
     readonly adicionaisSelecionados = signal<ItemAdicionalSelecionado[]>([]);
     readonly carregandoAdicionais = signal(false);
+    readonly adicionaisExpandido = signal(false);
 
     constructor() {
         // Carrega adicionais quando o modal abre com um produto
@@ -47,13 +48,21 @@ export class ProdutoDetalhesModalComponent {
                 this.carregarAdicionais(prod.id);
                 this.resetar();
             }
-        });
+        }, { allowSignalWrites: true });
     }
 
     readonly subtotalAdicionais = computed(() => {
         return this.adicionaisSelecionados().reduce((acc, item) =>
             acc + (item.adicional.preco * item.quantidade), 0);
     });
+
+    readonly totalAdicionaisSelecionados = computed(() => {
+        return this.adicionaisSelecionados().reduce((acc, item) => acc + item.quantidade, 0);
+    });
+
+    toggleAdicionaisExpandido(): void {
+        this.adicionaisExpandido.update(v => !v);
+    }
 
     readonly precoTotal = computed(() => {
         const prod = this.produto();
@@ -152,6 +161,7 @@ export class ProdutoDetalhesModalComponent {
         this.quantidade.set(1);
         this.observacoes.set('');
         this.adicionaisSelecionados.set([]);
+        this.adicionaisExpandido.set(false);
     }
 
     formatarPreco(preco: number): string {

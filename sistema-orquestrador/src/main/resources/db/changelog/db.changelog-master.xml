@@ -111,6 +111,9 @@
     <!-- Migration: Criação das tabelas de adicionais (carne extra, bacon, etc.) -->
     <include file="changes/033-create-adicionais-tables.sql" relativeToChangelogFile="true" />
 
+    <!-- Migration: Criação da tabela de adicionais para itens de pedidos pendentes de mesa -->
+    <include file="changes/034-create-adicionais-item-pedido-pendente-mesa-table.sql" relativeToChangelogFile="true" />
+
     <!-- 
     NOTA: O usuário administrador inicial é criado automaticamente via CommandLineRunner
     (UsuarioInicialConfig) na primeira execução da aplicação.

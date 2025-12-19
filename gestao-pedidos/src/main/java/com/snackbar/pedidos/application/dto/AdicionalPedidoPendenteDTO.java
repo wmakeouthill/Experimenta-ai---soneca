@@ -6,22 +6,19 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 /**
- * DTO para item de pedido pendente.
+ * DTO para adicional de item de pedido pendente.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ItemPedidoPendenteDTO {
+public class AdicionalPedidoPendenteDTO {
 
-    private String produtoId;
-    private String nomeProduto;
+    private String adicionalId;
+    private String nome;
     private int quantidade;
     private BigDecimal precoUnitario;
     private BigDecimal subtotal;
-    private String observacoes;
-    private List<AdicionalPedidoPendenteDTO> adicionais;
 }

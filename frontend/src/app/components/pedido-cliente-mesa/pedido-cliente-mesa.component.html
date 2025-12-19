@@ -1370,7 +1370,7 @@
                     }
                     <div class="modal-preco">{{ formatarPreco(carrinho.produtoSelecionado()!.preco) }}</div>
 
-                    <!-- Seção de Adicionais -->
+                    <!-- Seção de Adicionais - Colapsável -->
                     @if (carrinho.carregandoAdicionais()) {
                         <div class="adicionais-loading">
                             <span class="spinner-adicionais"></span>
@@ -1378,34 +1378,47 @@
                         </div>
                     } @else if (carrinho.adicionaisDisponiveis().length > 0) {
                         <div class="adicionais-secao">
-                            <h3 class="adicionais-titulo">🍕 Adicionais</h3>
-                            <div class="adicionais-lista">
-                                @for (adicional of carrinho.adicionaisDisponiveis(); track adicional.id) {
-                                    <div
-                                        class="adicional-item"
-                                        [class.selecionado]="carrinho.isAdicionalSelecionado(adicional.id)"
-                                        (click)="carrinho.toggleAdicional(adicional)"
-                                    >
-                                        <div class="adicional-info">
-                                            <span class="adicional-nome">{{ adicional.nome }}</span>
-                                            <span class="adicional-preco">+ {{ formatarPreco(adicional.preco) }}</span>
-                                        </div>
-                                        @if (carrinho.isAdicionalSelecionado(adicional.id)) {
-                                            <div class="adicional-quantidade" (click)="$event.stopPropagation()">
-                                                <button
-                                                    class="btn-adicional-qtd"
-                                                    (click)="carrinho.decrementarAdicional(adicional.id)"
-                                                >−</button>
-                                                <span class="adicional-qtd-valor">{{ carrinho.getQuantidadeAdicional(adicional.id) }}</span>
-                                                <button
-                                                    class="btn-adicional-qtd"
-                                                    (click)="carrinho.incrementarAdicional(adicional.id)"
-                                                >+</button>
-                                            </div>
-                                        }
-                                    </div>
+                            <button
+                                class="btn-expandir-adicionais"
+                                [class.expandido]="carrinho.adicionaisExpandido()"
+                                (click)="carrinho.toggleAdicionaisExpandido()"
+                            >
+                                <span class="adicionais-titulo">🍕 Adicionais ({{ carrinho.adicionaisDisponiveis().length }})</span>
+                                @if (carrinho.adicionaisSelecionados().length > 0) {
+                                    <span class="adicionais-badge">{{ carrinho.adicionaisSelecionados().length }} selecionado(s)</span>
                                 }
-                            </div>
+                                <span class="expandir-icone">{{ carrinho.adicionaisExpandido() ? '▲' : '▼' }}</span>
+                            </button>
+
+                            @if (carrinho.adicionaisExpandido()) {
+                                <div class="adicionais-lista">
+                                    @for (adicional of carrinho.adicionaisDisponiveis(); track adicional.id) {
+                                        <div
+                                            class="adicional-item"
+                                            [class.selecionado]="carrinho.isAdicionalSelecionado(adicional.id)"
+                                            (click)="carrinho.toggleAdicional(adicional)"
+                                        >
+                                            <div class="adicional-info">
+                                                <span class="adicional-nome">{{ adicional.nome }}</span>
+                                                <span class="adicional-preco">+ {{ formatarPreco(adicional.preco) }}</span>
+                                            </div>
+                                            @if (carrinho.isAdicionalSelecionado(adicional.id)) {
+                                                <div class="adicional-quantidade" (click)="$event.stopPropagation()">
+                                                    <button
+                                                        class="btn-adicional-qtd"
+                                                        (click)="carrinho.decrementarAdicional(adicional.id)"
+                                                    >−</button>
+                                                    <span class="adicional-qtd-valor">{{ carrinho.getQuantidadeAdicional(adicional.id) }}</span>
+                                                    <button
+                                                        class="btn-adicional-qtd"
+                                                        (click)="carrinho.incrementarAdicional(adicional.id)"
+                                                    >+</button>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
                             @if (carrinho.subtotalAdicionais() > 0) {
                                 <div class="adicionais-subtotal">
                                     Adicionais: {{ formatarPreco(carrinho.subtotalAdicionais()) }}

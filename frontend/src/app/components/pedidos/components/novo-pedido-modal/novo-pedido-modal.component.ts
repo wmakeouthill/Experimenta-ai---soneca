@@ -217,6 +217,10 @@ export class NovoPedidoModalComponent implements OnDestroy {
         if (item.observacoes?.trim()) {
           itemRequest.observacoes = item.observacoes.trim();
         }
+        // Inclui adicionais se houver
+        if (item.adicionais && item.adicionais.length > 0) {
+          itemRequest.adicionais = item.adicionais;
+        }
         return itemRequest;
       }),
       meiosPagamento: this.meiosPagamento()

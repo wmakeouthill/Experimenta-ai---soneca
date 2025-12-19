@@ -1,5 +1,6 @@
 package com.snackbar.pedidos.infrastructure.persistence;
 
+import com.snackbar.pedidos.application.dto.AdicionalPedidoPendenteDTO;
 import com.snackbar.pedidos.application.dto.ItemPedidoPendenteDTO;
 import com.snackbar.pedidos.application.dto.MeioPagamentoRequest;
 import com.snackbar.pedidos.application.dto.PedidoPendenteDTO;
@@ -131,6 +132,21 @@ public class PedidoPendenteRepositoryAdapter implements PedidoPendenteRepository
                         .subtotal(itemDTO.getSubtotal())
                         .observacoes(itemDTO.getObservacoes())
                         .build();
+
+                // Mapear adicionais do item
+                if (itemDTO.getAdicionais() != null) {
+                    for (AdicionalPedidoPendenteDTO adicionalDTO : itemDTO.getAdicionais()) {
+                        AdicionalItemPedidoPendenteEntity adicionalEntity = AdicionalItemPedidoPendenteEntity.builder()
+                                .adicionalId(adicionalDTO.getAdicionalId())
+                                .nome(adicionalDTO.getNome())
+                                .quantidade(adicionalDTO.getQuantidade())
+                                .precoUnitario(adicionalDTO.getPrecoUnitario())
+                                .subtotal(adicionalDTO.getSubtotal())
+                                .build();
+                        itemEntity.adicionarAdicional(adicionalEntity);
+                    }
+                }
+
                 entity.adicionarItem(itemEntity);
             }
         }
@@ -151,14 +167,31 @@ public class PedidoPendenteRepositoryAdapter implements PedidoPendenteRepository
 
     private PedidoPendenteDTO toDTO(PedidoPendenteEntity entity) {
         List<ItemPedidoPendenteDTO> itensDTO = entity.getItens().stream()
-                .map(item -> ItemPedidoPendenteDTO.builder()
-                        .produtoId(item.getProdutoId())
-                        .nomeProduto(item.getNomeProduto())
-                        .quantidade(item.getQuantidade())
-                        .precoUnitario(item.getPrecoUnitario())
-                        .subtotal(item.getSubtotal())
-                        .observacoes(item.getObservacoes())
-                        .build())
+                .map(item -> {
+                    // Mapear adicionais do item
+                    List<AdicionalPedidoPendenteDTO> adicionaisDTO = null;
+                    if (item.getAdicionais() != null && !item.getAdicionais().isEmpty()) {
+                        adicionaisDTO = item.getAdicionais().stream()
+                                .map(ad -> AdicionalPedidoPendenteDTO.builder()
+                                        .adicionalId(ad.getAdicionalId())
+                                        .nome(ad.getNome())
+                                        .quantidade(ad.getQuantidade())
+                                        .precoUnitario(ad.getPrecoUnitario())
+                                        .subtotal(ad.getSubtotal())
+                                        .build())
+                                .collect(Collectors.toList());
+                    }
+
+                    return ItemPedidoPendenteDTO.builder()
+                            .produtoId(item.getProdutoId())
+                            .nomeProduto(item.getNomeProduto())
+                            .quantidade(item.getQuantidade())
+                            .precoUnitario(item.getPrecoUnitario())
+                            .subtotal(item.getSubtotal())
+                            .observacoes(item.getObservacoes())
+                            .adicionais(adicionaisDTO)
+                            .build();
+                })
                 .collect(Collectors.toList());
 
         // Mapear meios de pagamento

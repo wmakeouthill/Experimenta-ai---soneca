@@ -197,7 +197,7 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
       if (produtoSelecionado && this.carrinho.mostrarDetalhes()) {
         this.carregarAdicionaisDoProduto(produtoSelecionado.id);
       }
-    });
+    }, { allowSignalWrites: true });
   }
 
   /**
@@ -644,7 +644,10 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
     const itens: ItemPedidoMesaRequest[] = this.carrinho.itens().map(item => ({
       produtoId: item.produto.id,
       quantidade: item.quantidade,
-      observacoes: item.observacao || undefined
+      observacoes: item.observacao || undefined,
+      adicionais: item.adicionais && item.adicionais.length > 0
+        ? item.adicionais.map(ad => ({ adicionalId: ad.adicional.id, quantidade: ad.quantidade }))
+        : undefined
     }));
 
     const meiosPagamento = this.pagamento.meiosSelecionados().map(m => ({

@@ -2,6 +2,7 @@ package com.snackbar.pedidos.application.usecases;
 
 import com.snackbar.cardapio.domain.valueobjects.Preco;
 import com.snackbar.kernel.domain.exceptions.ValidationException;
+import com.snackbar.pedidos.application.dto.AdicionalPedidoPendenteDTO;
 import com.snackbar.pedidos.application.dto.ItemPedidoPendenteDTO;
 import com.snackbar.pedidos.application.dto.MeioPagamentoRequest;
 import com.snackbar.pedidos.application.dto.PedidoDTO;
@@ -11,6 +12,7 @@ import com.snackbar.pedidos.application.ports.SessaoTrabalhoRepositoryPort;
 import com.snackbar.pedidos.application.services.FilaPedidosMesaService;
 import com.snackbar.pedidos.application.services.GeradorNumeroPedidoService;
 import com.snackbar.pedidos.domain.entities.ItemPedido;
+import com.snackbar.pedidos.domain.entities.ItemPedidoAdicional;
 import com.snackbar.pedidos.domain.entities.MeioPagamentoPedido;
 import com.snackbar.pedidos.domain.entities.Pedido;
 import com.snackbar.pedidos.domain.valueobjects.NumeroPedido;
@@ -117,6 +119,18 @@ public class AceitarPedidoMesaUseCase {
                     itemPendente.getQuantidade(),
                     precoUnitario,
                     itemPendente.getObservacoes());
+
+            // Adiciona os adicionais ao item
+            if (itemPendente.getAdicionais() != null && !itemPendente.getAdicionais().isEmpty()) {
+                for (AdicionalPedidoPendenteDTO adicionalPendente : itemPendente.getAdicionais()) {
+                    ItemPedidoAdicional adicional = ItemPedidoAdicional.criar(
+                            adicionalPendente.getAdicionalId(),
+                            adicionalPendente.getNome(),
+                            adicionalPendente.getQuantidade(),
+                            Preco.of(adicionalPendente.getPrecoUnitario()));
+                    item.adicionarAdicional(adicional);
+                }
+            }
 
             pedido.adicionarItem(item);
         }

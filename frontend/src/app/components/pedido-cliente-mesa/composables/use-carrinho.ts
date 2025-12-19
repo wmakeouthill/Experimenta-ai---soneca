@@ -62,6 +62,7 @@ export function useCarrinho() {
     const adicionaisDisponiveis = signal<Adicional[]>([]);
     const adicionaisSelecionados = signal<ItemAdicionalCarrinho[]>([]);
     const carregandoAdicionais = signal(false);
+    const adicionaisExpandido = signal(false);
 
     // Computed
     const totalItens = computed(() =>
@@ -116,6 +117,7 @@ export function useCarrinho() {
         quantidadeTemp.set(1);
         _observacaoTemp.set('');
         adicionaisSelecionados.set([]);
+        adicionaisExpandido.set(false); // Começa recolhido
 
         const itemExistente = itens().find(item => item.produto.id === produto.id);
         if (itemExistente) {
@@ -124,6 +126,10 @@ export function useCarrinho() {
             // Restaura adicionais selecionados anteriormente
             if (itemExistente.adicionais) {
                 adicionaisSelecionados.set([...itemExistente.adicionais]);
+                // Se já tem adicionais, expande automaticamente
+                if (itemExistente.adicionais.length > 0) {
+                    adicionaisExpandido.set(true);
+                }
             }
         }
 
@@ -135,6 +141,7 @@ export function useCarrinho() {
         produtoSelecionado.set(null);
         adicionaisDisponiveis.set([]);
         adicionaisSelecionados.set([]);
+        adicionaisExpandido.set(false);
     }
 
     // Funções para gerenciar adicionais disponíveis
@@ -144,6 +151,10 @@ export function useCarrinho() {
 
     function setCarregandoAdicionais(value: boolean): void {
         carregandoAdicionais.set(value);
+    }
+
+    function toggleAdicionaisExpandido(): void {
+        adicionaisExpandido.update(v => !v);
     }
 
     // Funções para gerenciar adicionais selecionados
@@ -333,6 +344,7 @@ export function useCarrinho() {
         adicionaisDisponiveis: adicionaisDisponiveis.asReadonly(),
         adicionaisSelecionados: adicionaisSelecionados.asReadonly(),
         carregandoAdicionais: carregandoAdicionais.asReadonly(),
+        adicionaisExpandido: adicionaisExpandido.asReadonly(),
 
         // Computed
         totalItens,
@@ -367,6 +379,7 @@ export function useCarrinho() {
         isAdicionalSelecionado,
         getQuantidadeAdicional,
         incrementarAdicional,
-        decrementarAdicional
+        decrementarAdicional,
+        toggleAdicionaisExpandido
     };
 }

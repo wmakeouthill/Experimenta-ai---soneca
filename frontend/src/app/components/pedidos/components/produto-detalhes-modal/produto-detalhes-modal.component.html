@@ -30,31 +30,52 @@
           </div>
         } @else if (adicionaisDisponiveis().length > 0) {
           <div class="adicionais-secao">
-            <h3>🍕 Adicionais</h3>
-            <div class="adicionais-lista">
-              @for (adicional of adicionaisDisponiveis(); track adicional.id) {
-                <div
-                  class="adicional-item"
-                  [class.selecionado]="isAdicionalSelecionado(adicional.id)"
-                  (click)="toggleAdicional(adicional)"
-                >
-                  <div class="adicional-info">
-                    <span class="adicional-nome">{{ adicional.nome }}</span>
-                    <span class="adicional-preco">+ {{ formatarPreco(adicional.preco) }}</span>
-                  </div>
-                  @if (isAdicionalSelecionado(adicional.id)) {
-                    <div class="adicional-quantidade" (click)="$event.stopPropagation()">
-                      <button class="btn-qtd" (click)="decrementarAdicional(adicional.id, $event)">−</button>
-                      <span class="qtd-valor">{{ getQuantidadeAdicional(adicional.id) }}</span>
-                      <button class="btn-qtd" (click)="incrementarAdicional(adicional.id, $event)">+</button>
+            <button
+              class="btn-expandir-adicionais"
+              [class.expandido]="adicionaisExpandido()"
+              (click)="toggleAdicionaisExpandido()"
+            >
+              <span>
+                🍕 Adicionais ({{ adicionaisDisponiveis().length }})
+                @if (totalAdicionaisSelecionados() > 0) {
+                  <span class="adicionais-badge">{{ totalAdicionaisSelecionados() }}</span>
+                }
+              </span>
+              <span class="expandir-icone">▼</span>
+            </button>
+
+            @if (adicionaisExpandido()) {
+              <div class="adicionais-lista-container">
+                <div class="adicionais-lista">
+                  @for (adicional of adicionaisDisponiveis(); track adicional.id) {
+                    <div
+                      class="adicional-item"
+                      [class.selecionado]="isAdicionalSelecionado(adicional.id)"
+                      (click)="toggleAdicional(adicional)"
+                    >
+                      <div class="adicional-info">
+                        <span class="adicional-nome">{{ adicional.nome }}</span>
+                        <span class="adicional-preco">+ {{ formatarPreco(adicional.preco) }}</span>
+                      </div>
+                      @if (isAdicionalSelecionado(adicional.id)) {
+                        <div class="adicional-quantidade" (click)="$event.stopPropagation()">
+                          <button class="btn-qtd" (click)="decrementarAdicional(adicional.id, $event)">−</button>
+                          <span class="qtd-valor">{{ getQuantidadeAdicional(adicional.id) }}</span>
+                          <button class="btn-qtd" (click)="incrementarAdicional(adicional.id, $event)">+</button>
+                        </div>
+                      }
                     </div>
                   }
                 </div>
-              }
-            </div>
-            @if (subtotalAdicionais() > 0) {
-              <div class="adicionais-subtotal">
-                Adicionais: {{ formatarPreco(subtotalAdicionais()) }}
+                @if (subtotalAdicionais() > 0) {
+                  <div class="adicionais-subtotal">
+                    Adicionais: {{ formatarPreco(subtotalAdicionais()) }}
+                  </div>
+                }
+              </div>
+            } @else if (totalAdicionaisSelecionados() > 0) {
+              <div class="adicionais-resumo">
+                {{ totalAdicionaisSelecionados() }} adicional(is) selecionado(s) • {{ formatarPreco(subtotalAdicionais()) }}
               </div>
             }
           </div>
