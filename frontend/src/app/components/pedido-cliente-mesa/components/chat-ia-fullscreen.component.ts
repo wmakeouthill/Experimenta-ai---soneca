@@ -165,7 +165,7 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
         }
 
         <!-- Input -->
-        <footer class="chat-ia-input-area">
+        <footer class="chat-ia-input-area" #inputArea>
           <div class="input-wrapper">
             <input
               #chatInput
@@ -173,10 +173,12 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
               [ngModel]="inputText()"
               (ngModelChange)="onInputChange.emit($event)"
               (keydown.enter)="enviar()"
+              (focus)="onInputFocus()"
               placeholder="Digite sua mensagem..."
               [disabled]="isLoading()"
               class="chat-ia-input"
-              autocomplete="off">
+              autocomplete="off"
+              enterkeyhint="send">
             <button
               class="btn-nova-conversa-input"
               (click)="onNovaConversa.emit()"
@@ -213,6 +215,18 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
       opacity: 0;
       visibility: hidden;
       transition: opacity 0.3s ease, visibility 0.3s ease;
+      /* Fonts otimizadas para mobile */
+      font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        'Segoe UI',
+        'Roboto',
+        'Noto Sans',
+        'Helvetica Neue', Arial,
+        sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
     .chat-ia-overlay.aberto {
@@ -223,13 +237,21 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
     .chat-ia-container {
       position: relative;
       width: 100%;
-      height: 100%;
+      /* Usa altura visual do viewport que se ajusta ao teclado no mobile */
+      height: 100dvh;
+      height: 100svh; /* Fallback para small viewport height */
       max-width: 100dvw;
-      max-height: 100dvh;
       background: var(--bg-primary, #1a1a2e);
       display: flex;
       flex-direction: column;
       overflow: hidden;
+    }
+
+    /* Mobile: ajuste quando teclado abre */
+    @supports (height: 100dvh) {
+      .chat-ia-container {
+        height: 100dvh;
+      }
     }
 
     /* Desktop: chat como modal */
@@ -392,6 +414,10 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
       background: var(--bg-secondary, #16213e);
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
+      /* Garante que o container de mensagens ocupe o espaço disponível */
+      min-height: 0;
+      /* Suporte para scroll suave */
+      scroll-behavior: smooth;
     }
 
     .chat-ia-message {
@@ -490,11 +516,22 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
       background: var(--bg-primary, #1a1a2e);
       border-top: 1px solid rgba(255, 255, 255, 0.1);
       flex-shrink: 0;
+      /* Garante que a área de input fique sempre visível */
+      position: relative;
+      z-index: 10;
     }
 
     /* Safe area para iPhone X+ */
     @supports (padding: max(0px)) {
       .chat-ia-input-area {
+        padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+      }
+    }
+
+    /* Quando o teclado está aberto no mobile, garante visibilidade */
+    @media (max-width: 768px) {
+      .chat-ia-input-area {
+        /* Padding extra no bottom para compensar keyboards virtuais */
         padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
       }
     }
@@ -514,9 +551,15 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
       border-radius: 24px;
       padding: 0.625rem 0.875rem;
       color: var(--text-primary, #e8e8e8);
+      /* Font size 16px mínimo previne zoom automático no iOS */
       font-size: 1rem;
+      font-size: max(1rem, 16px);
+      font-family: inherit;
       outline: none;
       transition: border-color 0.2s ease;
+      /* Melhora a experiência de digitação no mobile */
+      -webkit-appearance: none;
+      appearance: none;
     }
 
     .chat-ia-input:focus {
@@ -965,6 +1008,7 @@ export class ChatIAFullscreenComponent implements AfterViewChecked {
 
   @ViewChild('messagesContainer') private readonly messagesContainer?: ElementRef<HTMLDivElement>;
   @ViewChild('chatInput') private readonly chatInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('inputArea') private readonly inputArea?: ElementRef<HTMLElement>;
 
   private shouldScrollToBottom = true;
 
@@ -1038,6 +1082,37 @@ export class ChatIAFullscreenComponent implements AfterViewChecked {
     if (this.chatInput?.nativeElement) {
       this.chatInput.nativeElement.focus();
     }
+  }
+
+  /**
+   * Chamado quando o input recebe foco.
+   * Garante que a área de input fique visível quando o teclado virtual abre no mobile.
+   */
+  onInputFocus(): void {
+    // Pequeno delay para aguardar o teclado virtual aparecer
+    setTimeout(() => {
+      // Scroll das mensagens para o final
+      this.scrollToBottom();
+
+      // Garante que a área de input esteja visível usando scrollIntoView
+      if (this.inputArea?.nativeElement) {
+        this.inputArea.nativeElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'end'
+        });
+      }
+
+      // Fallback: usa window.scrollTo se necessário (para alguns navegadores mobile)
+      if (typeof globalThis !== 'undefined' && 'visualViewport' in globalThis) {
+        const visualViewport = globalThis.visualViewport;
+        if (visualViewport) {
+          // Força reflow do layout quando teclado abre
+          setTimeout(() => {
+            this.scrollToBottom();
+          }, 100);
+        }
+      }
+    }, 150);
   }
 
   /**

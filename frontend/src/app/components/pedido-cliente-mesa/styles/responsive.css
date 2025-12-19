@@ -1,3 +1,34 @@
+/* Otimizações específicas para mobile (telas pequenas) */
+@media (max-width: 767px) {
+    /* Tamanhos de fonte otimizados para legibilidade mobile */
+    .produto-nome {
+        font-size: 0.95rem;
+        line-height: 1.3;
+    }
+
+    .produto-descricao {
+        font-size: 0.8rem;
+        line-height: 1.4;
+    }
+
+    .produto-preco {
+        font-size: 0.95rem;
+    }
+
+    .categoria-titulo {
+        font-size: 1rem;
+    }
+
+    .cliente-nome {
+        font-size: 1rem;
+    }
+
+    /* Input fields com tamanho mínimo para evitar zoom no iOS */
+    input, select, textarea {
+        font-size: max(1rem, 16px);
+    }
+}
+
 /* Responsivo para tablets e desktop */
 @media (min-width: 768px) {
     .pedido-cliente-container {

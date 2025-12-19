@@ -80,7 +80,9 @@
 .input-nome {
     width: 100%;
     padding: 1rem 1.25rem;
-    font-size: 1.25rem;
+    /* Font size 16px ou maior previne zoom automático no iOS */
+    font-size: 1rem;
+    font-size: max(1rem, 16px);
     border: 2px solid #e0e0e0;
     border-radius: 12px;
     background: #fafafa;
@@ -88,12 +90,13 @@
     text-align: center;
     letter-spacing: 1px;
     box-sizing: border-box;
+    /* Herda a fonte do container para consistência */
+    font-family: inherit;
 }
 
 .input-nome {
     text-align: left;
     letter-spacing: normal;
-    font-size: 1.1rem;
 }
 
 .input-telefone:focus,

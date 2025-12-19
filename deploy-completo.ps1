@@ -27,10 +27,12 @@ try {
         Write-Host "ERRO: Voce nao esta autenticado." -ForegroundColor Red
         Write-Host "Execute: gcloud auth login" -ForegroundColor Yellow
         exit 1
-    } else {
+    }
+    else {
         Write-Host "OK: Autenticado como: $activeAccount" -ForegroundColor Green
     }
-} catch {
+}
+catch {
     Write-Host "ERRO: Nao foi possivel verificar autenticacao" -ForegroundColor Red
     exit 1
 }
@@ -42,7 +44,8 @@ if ($args.Count -eq 0) {
     gcloud projects list --format="table(projectId,name)" 2>&1 | Out-Host
     Write-Host ""
     $PROJECT_ID = Read-Host "Digite o PROJECT_ID"
-} else {
+}
+else {
     $PROJECT_ID = $args[0]
 }
 
@@ -61,10 +64,12 @@ try {
             Write-Host "ERRO: Nao foi possivel configurar projeto" -ForegroundColor Red
             exit 1
         }
-    } else {
+    }
+    else {
         Write-Host "   OK: Projeto ja esta configurado" -ForegroundColor Green
     }
-} catch {
+}
+catch {
     Write-Host "ERRO: Nao foi possivel configurar projeto" -ForegroundColor Red
     exit 1
 }
@@ -165,7 +170,7 @@ if ($deploy -eq "S" -or $deploy -eq "s" -or $deploy -eq "Y" -or $deploy -eq "y")
         --port 8080 `
         --add-cloudsql-instances $CLOUD_SQL_CONNECTION `
         --set-secrets="DB_PASSWORD=db-password:latest,JWT_SECRET=jwt-secret:latest,GOOGLE_CLIENT_ID=GOOGLE_CLIENT_ID:latest,OPENAI_API_KEY=openai-api-key:latest" `
-        --set-env-vars="DB_URL=$DB_URL,DB_USERNAME=root,SERVER_PORT=8080,SPRING_PROFILES_ACTIVE=prod,SHOW_SQL=false,JWT_EXPIRATION=86400,LOG_LEVEL=INFO,OPENAI_MODEL=gpt-4o-mini,OPENAI_MAX_TOKENS=4000,OPENAI_MODELS_FALLBACK=gpt-4o-mini,gpt-3.5-turbo" `
+        --set-env-vars="DB_URL=$DB_URL,DB_USERNAME=root,SERVER_PORT=8080,SPRING_PROFILES_ACTIVE=prod,SHOW_SQL=false,JWT_EXPIRATION=86400,LOG_LEVEL=INFO,OPENAI_MODEL=gpt-4o-mini,OPENAI_MAX_TOKENS=4000,OPENAI_MODELS_FALLBACK=gpt-4o-mini\,gpt-3.5-turbo" `
         --project=$PROJECT_ID
     
     if ($LASTEXITCODE -eq 0) {
@@ -173,7 +178,8 @@ if ($deploy -eq "S" -or $deploy -eq "s" -or $deploy -eq "Y" -or $deploy -eq "y")
         Write-Host "OK: Deploy concluido com sucesso!" -ForegroundColor Green
         $SERVICE_URL = gcloud run services describe experimenta-ai-soneca --region $REGION --format="value(status.url)" --project=$PROJECT_ID
         Write-Host "URL do servico: $SERVICE_URL" -ForegroundColor Cyan
-    } else {
+    }
+    else {
         Write-Host "ERRO: Falha no deploy" -ForegroundColor Red
         exit 1
     }

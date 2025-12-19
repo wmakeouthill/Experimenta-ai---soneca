@@ -192,6 +192,8 @@
     font-weight: 600;
     margin: 0 0 0.25rem;
     color: #333;
+    /* Melhora legibilidade em mobile */
+    line-height: 1.3;
 }
 
 .produto-descricao {
