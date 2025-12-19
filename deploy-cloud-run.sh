@@ -95,6 +95,25 @@ else
     echo -e "${GREEN}✅ Secret 'jwt-secret' já existe${NC}"
 fi
 
+# OpenAI API Key (para módulo chat-ia)
+if ! gcloud secrets describe openai-api-key --project="$PROJECT_ID" &> /dev/null; then
+    echo -e "${YELLOW}⚠️  Secret 'openai-api-key' não existe. Criando...${NC}"
+    read -sp "Digite a API Key da OpenAI (sk-...): " OPENAI_KEY
+    echo ""
+    if [ -z "$OPENAI_KEY" ]; then
+        echo -e "${YELLOW}⚠️  OpenAI API Key vazia. O módulo de chat IA não funcionará.${NC}"
+        echo -e "${YELLOW}   Você pode adicionar depois com: gcloud secrets create openai-api-key --data-file=-${NC}"
+    else
+        echo -n "$OPENAI_KEY" | gcloud secrets create openai-api-key \
+            --data-file=- \
+            --replication-policy="automatic" \
+            --project="$PROJECT_ID"
+        echo -e "${GREEN}✅ Secret 'openai-api-key' criado${NC}"
+    fi
+else
+    echo -e "${GREEN}✅ Secret 'openai-api-key' já existe${NC}"
+fi
+
 # Obter número do projeto para permissões
 PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format="value(projectNumber)")
 
@@ -115,6 +134,15 @@ gcloud secrets add-iam-policy-binding jwt-secret \
     --role="roles/secretmanager.secretAccessor" \
     --project="$PROJECT_ID" \
     --quiet || echo -e "${YELLOW}⚠️  Permissão já configurada ou erro (continuando...)${NC}"
+
+# Permissão para OpenAI API Key (se existir)
+if gcloud secrets describe openai-api-key --project="$PROJECT_ID" &> /dev/null; then
+    gcloud secrets add-iam-policy-binding openai-api-key \
+        --member="serviceAccount:${CLOUD_RUN_SA}" \
+        --role="roles/secretmanager.secretAccessor" \
+        --project="$PROJECT_ID" \
+        --quiet || echo -e "${YELLOW}⚠️  Permissão já configurada ou erro (continuando...)${NC}"
+fi
 
 # Verificar Cloud SQL Instance
 echo ""

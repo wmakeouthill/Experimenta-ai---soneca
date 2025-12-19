@@ -188,6 +188,9 @@ export function useChatIA(
 
     let sessionId = obterOuGerarSessionId();
 
+    // ID da conversa carregada do histórico (para evitar duplicatas)
+    let conversaHistoricoAtualId: string | null = null;
+
     // Computed
     const canSend = computed(() => inputText().trim().length > 0 && !isLoading());
     const carrinhoVazio = computed(() => mensagens().length <= 1); // Só mensagem inicial
@@ -337,15 +340,29 @@ export function useChatIA(
 
     /**
      * Salva a conversa atual no histórico antes de iniciar uma nova.
+     * Se a conversa foi carregada do histórico, usa o ID existente para evitar duplicatas.
      */
     function salvarConversaAtualNoHistorico(): void {
         const msgs = mensagens();
         // Só salva se tiver mais que a mensagem inicial (houve interação)
         if (msgs.length <= 1) return;
 
+        // Se é uma conversa carregada do histórico e não houve novas mensagens, não precisa salvar novamente
+        if (conversaHistoricoAtualId) {
+            const conversaExistente = historicoConversas().find(c => c.id === conversaHistoricoAtualId);
+            if (conversaExistente && conversaExistente.mensagens.length === msgs.length) {
+                // Não houve novas mensagens, não precisa salvar
+                return;
+            }
+        }
+
         const clienteId = clienteIdGetter?.();
+
+        // Usa o ID existente se for uma conversa do histórico, senão gera um novo
+        const conversaId = conversaHistoricoAtualId || crypto.randomUUID();
+
         const conversaAtual: ConversaSalva = {
-            id: crypto.randomUUID(),
+            id: conversaId,
             sessionId,
             titulo: gerarTituloConversa(msgs),
             dataInicio: msgs[0].timestamp,
@@ -368,14 +385,14 @@ export function useChatIA(
                 },
                 error: () => {
                     // Fallback: salva localmente em caso de erro
-                    const historico = [conversaAtual, ...historicoConversas()].slice(0, MAX_CONVERSAS_HISTORICO);
+                    const historico = [conversaAtual, ...historicoConversas().filter(c => c.id !== conversaId)].slice(0, MAX_CONVERSAS_HISTORICO);
                     historicoConversas.set(historico);
                     salvarHistoricoLocal(clienteId, historico);
                 }
             });
         } else {
-            // Usuário não logado: salva no localStorage
-            const historico = [conversaAtual, ...historicoConversas()].slice(0, MAX_CONVERSAS_HISTORICO);
+            // Usuário não logado: salva no localStorage (remove duplicata se existir)
+            const historico = [conversaAtual, ...historicoConversas().filter(c => c.id !== conversaId)].slice(0, MAX_CONVERSAS_HISTORICO);
             historicoConversas.set(historico);
             salvarHistoricoLocal(clienteId, historico);
         }
@@ -398,6 +415,9 @@ export function useChatIA(
         // Gera novo sessionId
         sessionId = obterOuGerarSessionId();
 
+        // Limpa referência de conversa do histórico (agora é uma nova conversa)
+        conversaHistoricoAtualId = null;
+
         // Limpa backend
         chatService.limparHistorico(sessionIdAntigo).subscribe();
 
@@ -418,6 +438,10 @@ export function useChatIA(
         // Carrega a conversa selecionada
         mensagens.set(conversa.mensagens);
         sessionId = conversa.sessionId;
+
+        // Guarda o ID da conversa carregada para evitar duplicatas
+        conversaHistoricoAtualId = conversa.id;
+
         sessionStorage.setItem(SESSION_KEY, sessionId);
         salvarMensagens(mensagens());
         mostrarHistorico.set(false);
