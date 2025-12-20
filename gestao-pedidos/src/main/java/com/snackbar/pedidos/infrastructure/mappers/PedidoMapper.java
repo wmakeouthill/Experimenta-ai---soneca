@@ -91,7 +91,9 @@ public class PedidoMapper {
     public Pedido paraDomain(PedidoEntity entity) {
         NumeroPedido numeroPedido = NumeroPedido.of(entity.getNumeroPedido());
 
-        Pedido pedido = Pedido.criar(
+        // Usa restaurarPedidoDoBanco para evitar validações em dados já existentes
+        // Isso permite clienteId null (auto-atendimento) e usuarioId null (pedido mesa)
+        Pedido pedido = Pedido.restaurarPedidoDoBanco(
                 numeroPedido,
                 entity.getClienteId(),
                 entity.getClienteNome(),

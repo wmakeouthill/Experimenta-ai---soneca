@@ -1,5 +1,6 @@
 package com.snackbar.pedidos.infrastructure.web;
 
+import com.snackbar.kernel.security.JwtUserDetails;
 import com.snackbar.pedidos.application.dto.CriarPedidoAutoAtendimentoRequest;
 import com.snackbar.pedidos.application.dto.PedidoAutoAtendimentoResponse;
 import com.snackbar.pedidos.application.usecases.CriarPedidoAutoAtendimentoUseCase;
@@ -55,14 +56,28 @@ public class AutoAtendimentoRestController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        // O principal é o email do usuário (String)
-        String usuarioEmail = authentication.getPrincipal().toString();
+        // Obtém email e ID do usuário do JWT
+        String usuarioEmail;
+        String usuarioId;
 
-        log.info("[AUTO-ATENDIMENTO] Criando pedido - Operador: {}, Cliente: {}",
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof JwtUserDetails) {
+            JwtUserDetails userDetails = (JwtUserDetails) principal;
+            usuarioEmail = userDetails.getEmail();
+            usuarioId = userDetails.getId();
+        } else {
+            // Fallback para compatibilidade (não deveria acontecer)
+            usuarioEmail = principal.toString();
+            usuarioId = null;
+            log.warn("[AUTO-ATENDIMENTO] Principal não é JwtUserDetails: {}", principal.getClass().getName());
+        }
+
+        log.info("[AUTO-ATENDIMENTO] Criando pedido - Operador: {} (ID: {}), Cliente: {}",
                 usuarioEmail,
+                usuarioId,
                 request.getNomeCliente());
 
-        PedidoAutoAtendimentoResponse response = criarPedidoUseCase.executar(request, usuarioEmail);
+        PedidoAutoAtendimentoResponse response = criarPedidoUseCase.executar(request, usuarioId);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

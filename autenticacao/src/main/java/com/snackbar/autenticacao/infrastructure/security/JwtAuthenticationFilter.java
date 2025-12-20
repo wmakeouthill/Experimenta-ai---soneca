@@ -40,10 +40,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (token != null && jwtService.validarToken(token)) {
             String email = jwtService.extrairEmail(token);
+            String usuarioId = jwtService.extrairId(token);
             String role = extrairRole(token);
 
             if (requestUri.contains("/autoatendimento")) {
-                log.info("[JWT-FILTER] Token válido - Email: {}, Role: {}", email, role);
+                log.info("[JWT-FILTER] Token válido - Email: {}, ID: {}, Role: {}", email, usuarioId, role);
             }
 
             if (role != null && !role.isBlank()) {
@@ -52,8 +53,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 var authorities = Collections.singletonList(
                         new SimpleGrantedAuthority(roleComPrefixo));
 
+                // Cria um objeto com email e ID para facilitar o acesso
+                var userDetails = new JwtUserDetails(email, usuarioId);
                 var authentication = new UsernamePasswordAuthenticationToken(
-                        email, null, authorities);
+                        userDetails, null, authorities);
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 

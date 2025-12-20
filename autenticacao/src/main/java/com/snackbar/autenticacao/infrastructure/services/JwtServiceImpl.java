@@ -18,30 +18,36 @@ import java.util.Date;
 @Service
 @RequiredArgsConstructor
 public class JwtServiceImpl implements JwtService {
-    
+
     private final JwtProperties jwtProperties;
-    
+
     @Override
     public String gerarToken(Usuario usuario) {
         Instant agora = Instant.now();
         Instant expiracao = agora.plus(jwtProperties.getExpiration(), ChronoUnit.SECONDS);
-        
+
         return Jwts.builder()
-            .subject(usuario.getEmail().getValor())
-            .claim("id", usuario.getId())
-            .claim("nome", usuario.getNome())
-            .claim("role", usuario.getRole().getAuthority())
-            .issuedAt(Date.from(agora))
-            .expiration(Date.from(expiracao))
-            .signWith(getSecretKey())
-            .compact();
+                .subject(usuario.getEmail().getValor())
+                .claim("id", usuario.getId())
+                .claim("nome", usuario.getNome())
+                .claim("role", usuario.getRole().getAuthority())
+                .issuedAt(Date.from(agora))
+                .expiration(Date.from(expiracao))
+                .signWith(getSecretKey())
+                .compact();
     }
-    
+
     @Override
     public String extrairEmail(String token) {
         return extrairClaims(token).getSubject();
     }
-    
+
+    @Override
+    public String extrairId(String token) {
+        Claims claims = extrairClaims(token);
+        return claims.get("id", String.class);
+    }
+
     @Override
     public boolean validarToken(String token) {
         try {
@@ -51,29 +57,28 @@ public class JwtServiceImpl implements JwtService {
             return false;
         }
     }
-    
+
     @Override
     public String extrairSubject(String token) {
         return extrairClaims(token).getSubject();
     }
-    
+
     @Override
     public String extrairRole(String token) {
         Claims claims = extrairClaims(token);
         return claims.get("role", String.class);
     }
-    
+
     public Claims extrairClaims(String token) {
         return Jwts.parser()
-            .verifyWith(getSecretKey())
-            .build()
-            .parseSignedClaims(token)
-            .getPayload();
+                .verifyWith(getSecretKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
-    
+
     private SecretKey getSecretKey() {
         byte[] keyBytes = jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }
-

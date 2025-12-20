@@ -52,6 +52,24 @@ public class Pedido extends BaseEntity {
     }
 
     /**
+     * Cria um pedido via auto-atendimento (totem).
+     * Este tipo de pedido não tem cliente cadastrado, apenas um nome para chamar.
+     * O clienteId é null pois não há cliente cadastrado.
+     */
+    public static Pedido criarPedidoAutoAtendimento(NumeroPedido numeroPedido, String nomeCliente, String usuarioId) {
+        validarDadosAutoAtendimento(numeroPedido, nomeCliente, usuarioId);
+
+        Pedido pedido = new Pedido();
+        pedido.numeroPedido = numeroPedido;
+        pedido.clienteId = null; // Auto-atendimento não tem cliente cadastrado
+        pedido.clienteNome = nomeCliente; // Nome para chamar na tela de espera
+        pedido.usuarioId = usuarioId;
+        pedido.valorTotal = Preco.zero();
+        pedido.touch();
+        return pedido;
+    }
+
+    /**
      * Cria um pedido via mesa (QR code) sem usuário operador.
      * Este tipo de pedido é feito diretamente pelo cliente.
      */
@@ -65,6 +83,26 @@ public class Pedido extends BaseEntity {
         pedido.usuarioId = null; // Pedido de mesa não tem usuário operador
         pedido.valorTotal = Preco.zero();
         pedido.touch();
+        return pedido;
+    }
+
+    /**
+     * Restaura um pedido do banco de dados SEM validações.
+     * Usado pelo mapper para reconstruir pedidos existentes.
+     * Este método não valida os dados pois eles já foram validados na criação
+     * original.
+     */
+    public static Pedido restaurarPedidoDoBanco(
+            NumeroPedido numeroPedido,
+            String clienteId,
+            String clienteNome,
+            String usuarioId) {
+        Pedido pedido = new Pedido();
+        pedido.numeroPedido = numeroPedido;
+        pedido.clienteId = clienteId; // Pode ser null (auto-atendimento)
+        pedido.clienteNome = clienteNome;
+        pedido.usuarioId = usuarioId; // Pode ser null (pedido mesa)
+        pedido.valorTotal = Preco.zero();
         return pedido;
     }
 
@@ -295,6 +333,18 @@ public class Pedido extends BaseEntity {
         }
         if (clienteNome == null || clienteNome.trim().isEmpty()) {
             throw new ValidationException("Nome do cliente não pode ser nulo ou vazio");
+        }
+    }
+
+    private static void validarDadosAutoAtendimento(NumeroPedido numeroPedido, String nomeCliente, String usuarioId) {
+        if (numeroPedido == null) {
+            throw new ValidationException("Número do pedido não pode ser nulo");
+        }
+        if (nomeCliente == null || nomeCliente.trim().isEmpty()) {
+            throw new ValidationException("Nome do cliente não pode ser nulo ou vazio");
+        }
+        if (usuarioId == null || usuarioId.trim().isEmpty()) {
+            throw new ValidationException("ID do usuário é obrigatório");
         }
     }
 }

@@ -224,6 +224,9 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
 
         try {
             const request = this.montarRequestPedido();
+            console.log('[DEBUG] Request pedido:', JSON.stringify(request, null, 2));
+            console.log('[DEBUG] Total carrinho:', this.carrinho.totalValor());
+            console.log('[DEBUG] Total pagamento:', this.pagamento.meiosSelecionados().reduce((s, m) => s + m.valor, 0));
             const response = await firstValueFrom(
                 this.autoAtendimentoService.criarPedido(request)
             );

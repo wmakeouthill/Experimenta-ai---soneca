@@ -46,7 +46,6 @@ public class CriarPedidoAutoAtendimentoUseCase {
     private final GeradorNumeroPedidoService geradorNumeroPedido;
 
     private static final int MAX_TENTATIVAS_CONCORRENCIA = 3;
-    private static final String CLIENTE_AUTOATENDIMENTO_ID = "AUTOATENDIMENTO";
 
     @Transactional
     public PedidoAutoAtendimentoResponse executar(CriarPedidoAutoAtendimentoRequest request, String usuarioId) {
@@ -80,15 +79,16 @@ public class CriarPedidoAutoAtendimentoUseCase {
     private PedidoAutoAtendimentoResponse executarCriacao(CriarPedidoAutoAtendimentoRequest request, String usuarioId) {
         NumeroPedido numeroPedido = geradorNumeroPedido.gerarProximoNumero();
 
-        // Nome do cliente é opcional no auto atendimento
+        // Nome do cliente é opcional no auto atendimento - usado para chamar na tela de
+        // espera
         String nomeCliente = request.getNomeCliente() != null && !request.getNomeCliente().isBlank()
                 ? request.getNomeCliente()
                 : "Cliente Totem";
 
-        // Cria pedido com cliente identificador especial para auto atendimento
-        Pedido pedido = Pedido.criar(
+        // Cria pedido sem cliente cadastrado (clienteId = null)
+        // Apenas o nome para chamar na tela de espera
+        Pedido pedido = Pedido.criarPedidoAutoAtendimento(
                 numeroPedido,
-                CLIENTE_AUTOATENDIMENTO_ID,
                 nomeCliente,
                 usuarioId);
 

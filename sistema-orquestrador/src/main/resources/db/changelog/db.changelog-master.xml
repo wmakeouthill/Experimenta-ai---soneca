@@ -114,6 +114,9 @@
     <!-- Migration: Criação da tabela de adicionais para itens de pedidos pendentes de mesa -->
     <include file="changes/034-create-adicionais-item-pedido-pendente-mesa-table.sql" relativeToChangelogFile="true" />
 
+    <!-- Migration: Permite cliente_id nulo para pedidos de auto-atendimento (totem) -->
+    <include file="changes/035-allow-null-cliente-id-pedidos.sql" relativeToChangelogFile="true" />
+
     <!-- 
     NOTA: O usuário administrador inicial é criado automaticamente via CommandLineRunner
     (UsuarioInicialConfig) na primeira execução da aplicação.
