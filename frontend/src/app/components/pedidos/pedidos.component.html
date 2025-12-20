@@ -263,6 +263,9 @@
                 @if (pedido.mesaId) {
                   <span class="pedido-mesa-badge">🍽️ Mesa {{ pedido.numeroMesa }}</span>
                   <span class="pedido-cliente" [title]="pedido.nomeClienteMesa || 'Cliente da mesa'">{{ pedido.nomeClienteMesa || 'Cliente' }}</span>
+                } @else if (!pedido.clienteId) {
+                  <span class="pedido-totem-badge">🖥️ Totem</span>
+                  <span class="pedido-cliente" [title]="pedido.clienteNome">{{ truncarNomeCliente(pedido.clienteNome) }}</span>
                 } @else {
                   <span class="pedido-cliente" [title]="pedido.clienteNome">{{ truncarNomeCliente(pedido.clienteNome) }}</span>
                 }

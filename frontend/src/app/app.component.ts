@@ -32,6 +32,10 @@ export class AppComponent implements OnInit {
   // Rotas públicas que não devem iniciar serviços autenticados
   private readonly rotasPublicas = ['/mesa/', '/pedido-mesa/'];
 
+  // Rotas onde a notificação de novo pedido deve ser suprimida
+  // (ex: auto-atendimento cria o pedido na própria tela, não precisa notificar)
+  private readonly rotasSemNotificacao = ['/autoatendimento', '/mesa/', '/pedido-mesa/'];
+
   ngOnInit(): void {
     if (this.isBrowser) {
       // Verifica se a rota atual é pública usando window.location
@@ -83,8 +87,11 @@ export class AppComponent implements OnInit {
       .subscribe(pedido => {
         console.log('🖨️ Detectado novo pedido no AppComponent. Iniciando impressão...', pedido.numeroPedido);
 
-        // Notificação Global
-        this.notificationService.sucesso(`🔔 Novo pedido recebido: ${pedido.numeroPedido}`);
+        // Notificação Global - suprimida em certas rotas (autoatendimento, mesa)
+        const rotaAtual = this.router.url;
+        if (!this.rotasSemNotificacao.some(r => rotaAtual.includes(r))) {
+          this.notificationService.sucesso(`🔔 Novo pedido recebido: ${pedido.numeroPedido}`);
+        }
 
         this.imprimirCupomAutomatico(pedido.id);
       });
