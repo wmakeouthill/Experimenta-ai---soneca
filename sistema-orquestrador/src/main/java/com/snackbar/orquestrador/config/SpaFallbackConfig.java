@@ -45,7 +45,8 @@ public class SpaFallbackConfig implements ErrorController {
             "/gestao-estoque",
             "/administracao",
             "/gestao-mesas",
-            "/lobby-pedidos"
+            "/lobby-pedidos",
+            "/autoatendimento"
     })
     public String forwardToAngular() {
         return "forward:/index.html";

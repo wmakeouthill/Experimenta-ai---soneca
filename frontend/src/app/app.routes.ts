@@ -83,6 +83,11 @@ export const routes: Routes = [
     canActivate: [operadorGuard]
   },
   {
+    path: 'autoatendimento',
+    loadComponent: () => import('./components/autoatendimento/autoatendimento.component').then(m => m.AutoatendimentoComponent),
+    canActivate: [operadorGuard]
+  },
+  {
     path: '**',
     redirectTo: ''
   }

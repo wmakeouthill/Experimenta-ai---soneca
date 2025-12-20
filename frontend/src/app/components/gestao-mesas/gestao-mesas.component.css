@@ -101,6 +101,68 @@
   margin-top: 0.25rem;
 }
 
+/* Seção Totem Auto-Atendimento */
+.totem-section {
+  padding: 1rem 2rem 0;
+}
+
+.totem-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 10px;
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
+}
+
+.totem-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.totem-info h3 {
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.totem-url {
+  display: flex;
+  gap: 0.5rem;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.totem-url .url-input {
+  max-width: 280px;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.95);
+  color: #333;
+}
+
+.totem-url .btn-copy {
+  padding: 0.5rem 1rem;
+  background: white;
+  color: #667eea;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.totem-url .btn-copy:hover {
+  background: #f0f0f0;
+}
+
 /* Tabela */
 .btn-primary {
   padding: 12px 24px;
