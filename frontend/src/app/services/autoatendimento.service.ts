@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 export interface ItemPedidoAutoAtendimentoRequest {
     produtoId: string;
     quantidade: number;
-    observacao?: string;
+    observacoes?: string;
     adicionais?: AdicionalPedidoAutoAtendimentoRequest[];
 }
 
@@ -15,7 +15,7 @@ export interface AdicionalPedidoAutoAtendimentoRequest {
 }
 
 export interface MeioPagamentoAutoAtendimentoRequest {
-    tipo: 'PIX' | 'CARTAO_CREDITO' | 'CARTAO_DEBITO' | 'DINHEIRO';
+    meioPagamento: 'PIX' | 'CARTAO_CREDITO' | 'CARTAO_DEBITO' | 'VALE_REFEICAO' | 'DINHEIRO';
     valor: number;
 }
 

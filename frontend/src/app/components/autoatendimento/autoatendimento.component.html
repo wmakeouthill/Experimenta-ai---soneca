@@ -364,47 +364,157 @@
         </header>
 
         <div class="pagamento-container">
+            <!-- Toggle Dividir Pagamento -->
+            <div class="pagamento-toggle-dividir">
+                <label class="toggle-dividir">
+                    <input type="checkbox"
+                           [checked]="pagamento.dividido()"
+                           (change)="pagamento.toggleDividido()">
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-label">Dividir pagamento</span>
+                </label>
+            </div>
+
             <p class="pagamento-instrucao">Como você vai pagar?</p>
 
             <div class="pagamento-opcoes">
+                <!-- PIX -->
                 <button
                     class="pagamento-opcao"
                     [class.selecionado]="pagamento.isMeioSelecionado('PIX')"
                     (click)="selecionarMeioPagamento('PIX')">
                     <span class="pagamento-icone">📱</span>
                     <span class="pagamento-nome">PIX</span>
+                    @if (pagamento.dividido() && pagamento.isMeioSelecionado('PIX')) {
+                        <div class="pagamento-valor-input" (click)="$event.stopPropagation()">
+                            <span>R$</span>
+                            <input type="number"
+                                   [value]="pagamento.getValorMeio('PIX')"
+                                   (input)="pagamento.atualizarValorMeio('PIX', $any($event.target).valueAsNumber || 0)"
+                                   min="0"
+                                   step="0.01">
+                        </div>
+                    }
+                    @if (!pagamento.dividido() && pagamento.isMeioSelecionado('PIX')) {
+                        <span class="pagamento-check">✓</span>
+                    }
                 </button>
 
+                <!-- Cartão de Crédito -->
                 <button
                     class="pagamento-opcao"
                     [class.selecionado]="pagamento.isMeioSelecionado('CARTAO_CREDITO')"
                     (click)="selecionarMeioPagamento('CARTAO_CREDITO')">
                     <span class="pagamento-icone">💳</span>
                     <span class="pagamento-nome">Crédito</span>
+                    @if (pagamento.dividido() && pagamento.isMeioSelecionado('CARTAO_CREDITO')) {
+                        <div class="pagamento-valor-input" (click)="$event.stopPropagation()">
+                            <span>R$</span>
+                            <input type="number"
+                                   [value]="pagamento.getValorMeio('CARTAO_CREDITO')"
+                                   (input)="pagamento.atualizarValorMeio('CARTAO_CREDITO', $any($event.target).valueAsNumber || 0)"
+                                   min="0"
+                                   step="0.01">
+                        </div>
+                    }
+                    @if (!pagamento.dividido() && pagamento.isMeioSelecionado('CARTAO_CREDITO')) {
+                        <span class="pagamento-check">✓</span>
+                    }
                 </button>
 
+                <!-- Cartão de Débito -->
                 <button
                     class="pagamento-opcao"
                     [class.selecionado]="pagamento.isMeioSelecionado('CARTAO_DEBITO')"
                     (click)="selecionarMeioPagamento('CARTAO_DEBITO')">
                     <span class="pagamento-icone">💳</span>
                     <span class="pagamento-nome">Débito</span>
+                    @if (pagamento.dividido() && pagamento.isMeioSelecionado('CARTAO_DEBITO')) {
+                        <div class="pagamento-valor-input" (click)="$event.stopPropagation()">
+                            <span>R$</span>
+                            <input type="number"
+                                   [value]="pagamento.getValorMeio('CARTAO_DEBITO')"
+                                   (input)="pagamento.atualizarValorMeio('CARTAO_DEBITO', $any($event.target).valueAsNumber || 0)"
+                                   min="0"
+                                   step="0.01">
+                        </div>
+                    }
+                    @if (!pagamento.dividido() && pagamento.isMeioSelecionado('CARTAO_DEBITO')) {
+                        <span class="pagamento-check">✓</span>
+                    }
                 </button>
 
+                <!-- Voucher (Vale Refeição) -->
                 <button
                     class="pagamento-opcao"
+                    [class.selecionado]="pagamento.isMeioSelecionado('VALE_REFEICAO')"
+                    (click)="selecionarMeioPagamento('VALE_REFEICAO')">
+                    <span class="pagamento-icone">🎫</span>
+                    <span class="pagamento-nome">Voucher</span>
+                    @if (pagamento.dividido() && pagamento.isMeioSelecionado('VALE_REFEICAO')) {
+                        <div class="pagamento-valor-input" (click)="$event.stopPropagation()">
+                            <span>R$</span>
+                            <input type="number"
+                                   [value]="pagamento.getValorMeio('VALE_REFEICAO')"
+                                   (input)="pagamento.atualizarValorMeio('VALE_REFEICAO', $any($event.target).valueAsNumber || 0)"
+                                   min="0"
+                                   step="0.01">
+                        </div>
+                    }
+                    @if (!pagamento.dividido() && pagamento.isMeioSelecionado('VALE_REFEICAO')) {
+                        <span class="pagamento-check">✓</span>
+                    }
+                </button>
+
+                <!-- Dinheiro -->
+                <button
+                    class="pagamento-opcao pagamento-opcao-full"
                     [class.selecionado]="pagamento.isMeioSelecionado('DINHEIRO')"
                     (click)="selecionarMeioPagamento('DINHEIRO')">
                     <span class="pagamento-icone">💵</span>
                     <span class="pagamento-nome">Dinheiro</span>
+                    @if (pagamento.dividido() && pagamento.isMeioSelecionado('DINHEIRO')) {
+                        <div class="pagamento-valor-input" (click)="$event.stopPropagation()">
+                            <span>R$</span>
+                            <input type="number"
+                                   [value]="pagamento.getValorMeio('DINHEIRO')"
+                                   (input)="pagamento.atualizarValorMeio('DINHEIRO', $any($event.target).valueAsNumber || 0)"
+                                   min="0"
+                                   step="0.01">
+                        </div>
+                    }
+                    @if (!pagamento.dividido() && pagamento.isMeioSelecionado('DINHEIRO')) {
+                        <span class="pagamento-check">✓</span>
+                    }
                 </button>
             </div>
 
+            <!-- Resumo do pagamento -->
             <div class="pagamento-resumo">
                 <div class="resumo-linha total">
                     <span>Total a Pagar</span>
                     <span>{{ formatarPreco(carrinho.totalValor()) }}</span>
                 </div>
+                @if (pagamento.dividido() && pagamento.meiosSelecionados().length > 0) {
+                    <div class="resumo-linha">
+                        <span>Total alocado</span>
+                        <span [class.valor-ok]="pagamento.pagamentoValido()" [class.valor-erro]="!pagamento.pagamentoValido()">
+                            {{ formatarPreco(pagamento.totalAlocado()) }}
+                        </span>
+                    </div>
+                    @if (pagamento.valorRestante() > 0.01) {
+                        <div class="resumo-linha restante">
+                            <span>Falta alocar</span>
+                            <span class="valor-erro">{{ formatarPreco(pagamento.valorRestante()) }}</span>
+                        </div>
+                    }
+                    @if (pagamento.valorRestante() < -0.01) {
+                        <div class="resumo-linha excedente">
+                            <span>Valor excedente</span>
+                            <span class="valor-erro">{{ formatarPreco(Math.abs(pagamento.valorRestante())) }}</span>
+                        </div>
+                    }
+                }
             </div>
 
             <button

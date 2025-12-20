@@ -13,7 +13,7 @@ export interface ItemPedidoMesaRequest {
 }
 
 export interface MeioPagamentoMesaRequest {
-    meioPagamento: 'PIX' | 'CARTAO_CREDITO' | 'CARTAO_DEBITO' | 'DINHEIRO';
+    meioPagamento: 'PIX' | 'CARTAO_CREDITO' | 'CARTAO_DEBITO' | 'VALE_REFEICAO' | 'DINHEIRO';
     valor: number;
 }
 

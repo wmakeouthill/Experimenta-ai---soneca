@@ -5,17 +5,30 @@ import { HttpInterceptorFn } from '@angular/common/http';
  * O token é obtido do localStorage e adicionado no header Authorization
  * O ID do usuário é adicionado no header X-Usuario-Id
  *
- * NOTA: Não adiciona token em requisições para localhost (servidor local do Electron)
+ * NOTA: Não adiciona token em requisições para servidor local do Electron (portas específicas)
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  // Não adiciona token em requisições locais (servidor Electron)
-  // O servidor local não precisa de autenticação
-  if (req.url.startsWith('http://localhost:') || req.url.startsWith('http://127.0.0.1:')) {
+  // Não adiciona token em requisições para servidor local do Electron
+  // Portas típicas do servidor Electron: 3847, 3000 (diferente da 4200 do Angular dev server)
+  // Requisições para /api/* devem sempre ter o token (mesmo via proxy em localhost:4200)
+  const isServidorElectronLocal =
+    (req.url.startsWith('http://localhost:') || req.url.startsWith('http://127.0.0.1:')) &&
+    !req.url.includes('/api/') && // Requisições para API devem ter token
+    (req.url.includes(':3847') || req.url.includes(':3000')); // Portas do Electron
+
+  if (isServidorElectronLocal) {
     return next(req);
   }
 
-  const token = localStorage.getItem('token');
-  const usuarioStr = localStorage.getItem('usuario');
+  const token = typeof localStorage !== 'undefined' ? localStorage.getItem('token') : null;
+  const usuarioStr = typeof localStorage !== 'undefined' ? localStorage.getItem('usuario') : null;
+
+  // Debug para autoatendimento
+  if (req.url.includes('/api/autoatendimento/')) {
+    console.log('[AUTH-INTERCEPTOR] Requisição autoatendimento:', req.url);
+    console.log('[AUTH-INTERCEPTOR] Token encontrado:', token ? `${token.substring(0, 20)}...` : 'NENHUM');
+    console.log('[AUTH-INTERCEPTOR] Usuario:', usuarioStr ? 'presente' : 'ausente');
+  }
 
   if (token) {
     // Remove espaços e quebras de linha do token (caso tenha sido salvo incorretamente)

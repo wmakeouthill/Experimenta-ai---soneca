@@ -10,8 +10,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -38,21 +38,31 @@ public class AutoAtendimentoRestController {
      * Cria um pedido via auto atendimento (totem).
      * O pedido é criado diretamente no status PENDENTE.
      * 
-     * @param request     Dados do pedido
-     * @param userDetails Usuário autenticado (operador do totem)
+     * @param request Dados do pedido
      * @return PedidoAutoAtendimentoResponse com dados do pedido criado
      */
     @PostMapping("/pedido")
     public ResponseEntity<PedidoAutoAtendimentoResponse> criarPedido(
-            @Valid @RequestBody CriarPedidoAutoAtendimentoRequest request,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            @Valid @RequestBody CriarPedidoAutoAtendimentoRequest request) {
+
+        // Obtém a autenticação do contexto de segurança
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        // Verifica se usuário está autenticado
+        if (authentication == null || authentication.getPrincipal() == null
+                || "anonymousUser".equals(authentication.getPrincipal())) {
+            log.error("[AUTO-ATENDIMENTO] Tentativa de criar pedido sem autenticação");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        // O principal é o email do usuário (String)
+        String usuarioEmail = authentication.getPrincipal().toString();
 
         log.info("[AUTO-ATENDIMENTO] Criando pedido - Operador: {}, Cliente: {}",
-                userDetails.getUsername(),
+                usuarioEmail,
                 request.getNomeCliente());
 
-        String usuarioId = userDetails.getUsername();
-        PedidoAutoAtendimentoResponse response = criarPedidoUseCase.executar(request, usuarioId);
+        PedidoAutoAtendimentoResponse response = criarPedidoUseCase.executar(request, usuarioEmail);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

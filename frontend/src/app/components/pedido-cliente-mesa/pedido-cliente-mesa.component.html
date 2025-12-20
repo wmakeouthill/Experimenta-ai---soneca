@@ -1226,6 +1226,29 @@
                                 <span class="opcao-check">✓</span>
                             }
                         </div>
+
+                        <!-- Voucher (Vale Refeição) -->
+                        <div class="pagamento-opcao"
+                             [class.selecionado]="pagamento.meioPagamentoSelecionado('VALE_REFEICAO')"
+                             (click)="pagamento.selecionarMeio('VALE_REFEICAO')">
+                            <div class="opcao-info">
+                                <span class="opcao-icone">🎫</span>
+                                <span class="opcao-nome">Voucher</span>
+                            </div>
+                            @if (pagamento.dividido() && pagamento.meioPagamentoSelecionado('VALE_REFEICAO')) {
+                                <div class="opcao-valor" (click)="$event.stopPropagation()">
+                                    <span>R$</span>
+                                    <input type="number"
+                                           [value]="pagamento.getValorMeio('VALE_REFEICAO')"
+                                           (input)="pagamento.atualizarValorMeio('VALE_REFEICAO', $any($event.target).valueAsNumber || 0)"
+                                           min="0"
+                                           step="0.01">
+                                </div>
+                            }
+                            @if (!pagamento.dividido() && pagamento.meioPagamentoSelecionado('VALE_REFEICAO')) {
+                                <span class="opcao-check">✓</span>
+                            }
+                        </div>
                     </div>
 
                     <!-- Resumo do pagamento dividido -->

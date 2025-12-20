@@ -186,58 +186,151 @@
 
 /* ========== HEADER ========== */
 .header-totem {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    justify-content: space-between;
-    padding: 1rem 1.5rem;
-    background: var(--surface);
-    box-shadow: var(--shadow-sm);
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+    box-shadow: var(--shadow-md);
     position: sticky;
     top: 0;
     z-index: 100;
+    min-height: 56px;
 }
 
 .header-totem h1 {
-    font-size: 1.3rem;
+    font-size: 1.1rem;
     margin: 0;
-    color: var(--text-primary);
+    color: white;
+    text-align: center;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-.btn-voltar-header,
-.btn-carrinho-header,
+.btn-voltar-header {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0.5rem 0.75rem;
+    color: white;
+    border-radius: var(--radius-md);
+    transition: var(--transition);
+    justify-self: start;
+}
+
+.btn-voltar-header:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.btn-voltar-header:active {
+    background: rgba(255, 255, 255, 0.4);
+    transform: scale(0.95);
+}
+
+.btn-carrinho-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    color: white;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    transition: var(--transition);
+    position: relative;
+    justify-self: end;
+}
+
+.btn-carrinho-header:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.btn-carrinho-header:active {
+    background: rgba(255, 255, 255, 0.4);
+    transform: scale(0.95);
+}
+
+.btn-carrinho-header:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 .btn-cancelar-header {
-    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.2);
     border: none;
     font-size: 1.1rem;
     cursor: pointer;
     padding: 0.5rem;
-    color: var(--text-primary);
+    color: white;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
     transition: var(--transition);
+    justify-self: end;
 }
 
-.btn-voltar-header:hover,
-.btn-carrinho-header:hover {
-    color: var(--primary-color);
+.btn-cancelar-header:hover {
+    background: rgba(255, 100, 100, 0.4);
 }
 
-.btn-cancelar-header {
-    color: var(--error-color);
+.btn-cancelar-header:active {
+    transform: scale(0.95);
 }
 
-.btn-carrinho-header {
-    position: relative;
+/* Espaçador vazio para manter grid equilibrado */
+.header-totem > div:empty {
+    justify-self: end;
 }
 
 .badge-carrinho {
     position: absolute;
     top: -4px;
     right: -4px;
-    background: var(--primary-color);
-    color: white;
-    font-size: 0.75rem;
+    background: white;
+    color: var(--primary-color);
+    font-size: 0.7rem;
     padding: 2px 6px;
     border-radius: 10px;
-    font-weight: 600;
+    font-weight: 700;
+    min-width: 18px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Tablets e Desktop */
+@media (min-width: 768px) {
+    .header-totem {
+        padding: 1rem 1.5rem;
+        min-height: 64px;
+    }
+
+    .header-totem h1 {
+        font-size: 1.3rem;
+    }
+
+    .btn-voltar-header {
+        font-size: 1rem;
+        padding: 0.6rem 1rem;
+    }
+
+    .btn-carrinho-header,
+    .btn-cancelar-header {
+        width: 44px;
+        height: 44px;
+        font-size: 1.3rem;
+    }
 }
 
 /* ========== MODAL INATIVIDADE ========== */

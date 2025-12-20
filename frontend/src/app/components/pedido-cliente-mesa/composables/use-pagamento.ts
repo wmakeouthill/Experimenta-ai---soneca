@@ -1,6 +1,6 @@
 import { signal, computed } from '@angular/core';
 
-export type MeioPagamentoTipo = 'PIX' | 'CARTAO_CREDITO' | 'CARTAO_DEBITO' | 'DINHEIRO';
+export type MeioPagamentoTipo = 'PIX' | 'CARTAO_CREDITO' | 'CARTAO_DEBITO' | 'VALE_REFEICAO' | 'DINHEIRO';
 
 export interface MeioPagamentoSelecionado {
     tipo: MeioPagamentoTipo;
@@ -13,6 +13,7 @@ const NOMES_PAGAMENTO: Record<MeioPagamentoTipo, string> = {
     'PIX': 'PIX',
     'CARTAO_CREDITO': 'Cartão de Crédito',
     'CARTAO_DEBITO': 'Cartão de Débito',
+    'VALE_REFEICAO': 'Voucher',
     'DINHEIRO': 'Dinheiro'
 };
 
@@ -20,6 +21,7 @@ const ICONES_PAGAMENTO: Record<MeioPagamentoTipo, string> = {
     'PIX': '📱',
     'CARTAO_CREDITO': '💳',
     'CARTAO_DEBITO': '💳',
+    'VALE_REFEICAO': '🎫',
     'DINHEIRO': '💵'
 };
 

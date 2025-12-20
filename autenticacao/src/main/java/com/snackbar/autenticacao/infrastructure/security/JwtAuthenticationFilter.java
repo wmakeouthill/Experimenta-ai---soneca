@@ -6,6 +6,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -18,37 +19,55 @@ import java.util.Collections;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    
+
     private final JwtService jwtService;
     private static final String BEARER_PREFIX = "Bearer ";
-    
+
     @Override
-    protected void doFilterInternal(@NonNull HttpServletRequest request, 
-                                   @NonNull HttpServletResponse response, 
-                                   @NonNull FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain) throws ServletException, IOException {
+
+        String requestUri = request.getRequestURI();
         String token = extrairToken(request);
-        
+
+        // Log apenas para autoatendimento (debug)
+        if (requestUri.contains("/autoatendimento")) {
+            log.info("[JWT-FILTER] URI: {}, Token presente: {}", requestUri, token != null);
+        }
+
         if (token != null && jwtService.validarToken(token)) {
             String email = jwtService.extrairEmail(token);
             String role = extrairRole(token);
-            
-            if (role != null && !role.isBlank()) {
-                var authorities = Collections.singletonList(
-                    new SimpleGrantedAuthority(role)
-                );
-                
-                var authentication = new UsernamePasswordAuthenticationToken(
-                    email, null, authorities
-                );
-                
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            if (requestUri.contains("/autoatendimento")) {
+                log.info("[JWT-FILTER] Token válido - Email: {}, Role: {}", email, role);
             }
+
+            if (role != null && !role.isBlank()) {
+                // O Spring Security espera o prefixo "ROLE_" para hasRole/hasAnyRole
+                String roleComPrefixo = role.startsWith("ROLE_") ? role : "ROLE_" + role;
+                var authorities = Collections.singletonList(
+                        new SimpleGrantedAuthority(roleComPrefixo));
+
+                var authentication = new UsernamePasswordAuthenticationToken(
+                        email, null, authorities);
+
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                if (requestUri.contains("/autoatendimento")) {
+                    log.info("[JWT-FILTER] Autenticação configurada - Authorities: {}", authorities);
+                }
+            }
+        } else if (token != null && requestUri.contains("/autoatendimento")) {
+            log.warn("[JWT-FILTER] Token inválido para: {}", requestUri);
         }
-        
+
         filterChain.doFilter(request, response);
     }
-    
+
     private String extrairToken(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (bearerToken != null && bearerToken.startsWith(BEARER_PREFIX)) {
@@ -56,7 +75,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         return null;
     }
-    
+
     private String extrairRole(String token) {
         try {
             String role = jwtService.extrairRole(token);
@@ -69,4 +88,3 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 }
-

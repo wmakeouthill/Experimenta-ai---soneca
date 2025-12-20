@@ -9,13 +9,13 @@ import {
     PLATFORM_ID,
     effect
 } from '@angular/core';
-import { CommonModule, isPlatformBrowser, CurrencyPipe } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { AuthService } from '../../services/auth.service';
-import { AdicionalService, Adicional } from '../../services/adicional.service';
+import { AdicionalService } from '../../services/adicional.service';
 import {
     AutoAtendimentoService,
     CriarPedidoAutoAtendimentoRequest,
@@ -33,7 +33,7 @@ import {
 } from './composables';
 
 type EtapaTotem = 'inicio' | 'cardapio' | 'carrinho' | 'pagamento' | 'confirmacao' | 'sucesso';
-type MeioPagamentoTipo = 'PIX' | 'CARTAO_CREDITO' | 'CARTAO_DEBITO' | 'DINHEIRO';
+type MeioPagamentoTipo = 'PIX' | 'CARTAO_CREDITO' | 'CARTAO_DEBITO' | 'VALE_REFEICAO' | 'DINHEIRO';
 
 /**
  * Componente de auto atendimento para totem.
@@ -101,9 +101,9 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
         // Effect para carregar adicionais quando abre detalhes de produto
         effect(() => {
             const produto = this.carrinho.produtoSelecionado();
-            if (produto && this.isBrowser) {
+            if (produto && this.isBrowser && this.carrinho.mostrarDetalhes()) {
                 // Usa setTimeout para evitar erro de signal write dentro de effect
-                setTimeout(() => this.carregarAdicionaisProduto(produto), 0);
+                setTimeout(() => this.carregarAdicionaisProduto(produto.id), 0);
             }
         });
     }
@@ -142,19 +142,22 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
         }
     }
 
-    private async carregarAdicionaisProduto(produto: Produto): Promise<void> {
+    private carregarAdicionaisProduto(produtoId: string): void {
         this.carrinho.setCarregandoAdicionais(true);
-        try {
-            const adicionais = await firstValueFrom(
-                this.adicionalService.listar({ categoria: produto.categoria, disponivel: true })
-            );
-            this.carrinho.setAdicionaisDisponiveis(adicionais);
-        } catch (e) {
-            console.error('Erro ao carregar adicionais:', e);
-            this.carrinho.setAdicionaisDisponiveis([]);
-        } finally {
-            this.carrinho.setCarregandoAdicionais(false);
-        }
+        this.adicionalService.listarAdicionaisDoProduto(produtoId)
+            .subscribe({
+                next: (adicionais) => {
+                    // Filtra apenas os disponíveis
+                    const disponiveis = adicionais.filter(a => a.disponivel);
+                    this.carrinho.setAdicionaisDisponiveis(disponiveis);
+                    this.carrinho.setCarregandoAdicionais(false);
+                },
+                error: (err) => {
+                    console.error('Erro ao carregar adicionais:', err);
+                    this.carrinho.setAdicionaisDisponiveis([]);
+                    this.carrinho.setCarregandoAdicionais(false);
+                }
+            });
     }
 
     // ========== Navegação ==========
@@ -249,7 +252,7 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
         const itens: ItemPedidoAutoAtendimentoRequest[] = this.carrinho.itens().map(item => ({
             produtoId: item.produto.id,
             quantidade: item.quantidade,
-            observacao: item.observacao || undefined,
+            observacoes: item.observacao || undefined,
             adicionais: item.adicionais?.map(ad => ({
                 adicionalId: ad.adicional.id,
                 quantidade: ad.quantidade
@@ -257,8 +260,8 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
         }));
 
         const meiosPagamento: MeioPagamentoAutoAtendimentoRequest[] =
-            this.pagamento.meiosSelecionados().map(m => ({
-                tipo: m.tipo,
+            this.pagamento.meiosSelecionados().map((m: { tipo: string; valor: number }) => ({
+                meioPagamento: m.tipo as MeioPagamentoAutoAtendimentoRequest['meioPagamento'],
                 valor: m.valor
             }));
 

@@ -162,6 +162,10 @@ public class SecurityConfig {
                         .requestMatchers(HTTP_METHOD_DELETE, CONFIG_ANIMACAO_PATH, CONFIG_ANIMACAO_PATTERN)
                         .hasRole(ROLE_ADMINISTRADOR)
 
+                        // Endpoints de auto atendimento (totem) - ADMINISTRADOR e OPERADOR
+                        .requestMatchers("/api/autoatendimento/**")
+                        .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
+
                         // Endpoints de impressão - Configuração apenas ADMINISTRADOR, impressão
                         // ADMINISTRADOR e OPERADOR
                         .requestMatchers("GET", "/api/impressao/configuracao")
