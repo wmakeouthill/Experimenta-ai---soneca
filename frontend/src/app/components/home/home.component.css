@@ -40,29 +40,37 @@
 .home-header {
   margin-bottom: 25px;
   flex-shrink: 0;
-  position: relative;
-  z-index: 2;
   width: 100%;
-  overflow: hidden;
-  box-sizing: border-box;
 }
 
 .home-header-top {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 20px;
-  flex-wrap: nowrap;
+  align-items: center;
+  gap: 1.5rem;
   width: 100%;
-  position: relative;
 }
 
 .home-header-top > div:first-child {
-  text-align: left;
   flex: 1 1 auto;
   min-width: 0;
-  overflow: hidden;
-  box-sizing: border-box;
+  overflow: visible;
+}
+
+@media (max-width: 900px) {
+  .home-header-top {
+    flex-wrap: wrap;
+  }
+
+  .home-header-top > div:first-child:not(:only-child) {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .home-user-info {
+    width: 100%;
+    margin-top: 12px;
+  }
 }
 
 .home-user-info {
@@ -79,8 +87,9 @@
   margin-top: 0;
   flex-shrink: 0;
   min-width: fit-content;
-  z-index: 10;
+  z-index: 20;
   position: relative;
+  isolation: isolate;
 }
 
 .home-user-info:hover {
@@ -151,16 +160,9 @@
 }
 
 .home-titulo {
-  margin-bottom: 8px;
-  margin-top: 0;
+  margin: 0;
   width: 100%;
-  max-width: 100%;
-  overflow: hidden;
-  box-sizing: border-box;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
+  overflow: visible;
 }
 
 .home-logo {

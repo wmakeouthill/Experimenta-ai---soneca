@@ -170,7 +170,7 @@ if ($deploy -eq "S" -or $deploy -eq "s" -or $deploy -eq "Y" -or $deploy -eq "y")
         --port 8080 `
         --add-cloudsql-instances $CLOUD_SQL_CONNECTION `
         --set-secrets="DB_PASSWORD=db-password:latest,JWT_SECRET=jwt-secret:latest,GOOGLE_CLIENT_ID=GOOGLE_CLIENT_ID:latest,OPENAI_API_KEY=openai-api-key:latest" `
-        --set-env-vars="DB_URL=$DB_URL,DB_USERNAME=root,SERVER_PORT=8080,SPRING_PROFILES_ACTIVE=prod,SHOW_SQL=false,JWT_EXPIRATION=86400,LOG_LEVEL=INFO,OPENAI_MODEL=gpt-4o-mini,OPENAI_MAX_TOKENS=4000,OPENAI_MODELS_FALLBACK=gpt-4o-mini\,gpt-3.5-turbo" `
+        --set-env-vars="^@^DB_URL=$DB_URL@DB_USERNAME=root@SERVER_PORT=8080@SPRING_PROFILES_ACTIVE=prod@SHOW_SQL=false@JWT_EXPIRATION=86400@LOG_LEVEL=INFO@OPENAI_MODEL=gpt-4o-mini@OPENAI_MAX_TOKENS=4000@OPENAI_MODELS_FALLBACK=gpt-4o-mini,gpt-3.5-turbo" `
         --project=$PROJECT_ID
     
     if ($LASTEXITCODE -eq 0) {
