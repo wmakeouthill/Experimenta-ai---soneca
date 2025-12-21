@@ -335,8 +335,9 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
                 "AND " + DATA_BASE_EXPR + " < :fim " +
                 "AND p.status <> 'CANCELADO'";
         Query query = entityManager.createNativeQuery(sql);
-        query.setParameter(PARAMETRO_INICIO, inicio);
-        query.setParameter(PARAMETRO_FIM, fim);
+        // Converte LocalDate para java.sql.Date para compatibilidade com MySQL DATE
+        query.setParameter(PARAMETRO_INICIO, java.sql.Date.valueOf(inicio));
+        query.setParameter(PARAMETRO_FIM, java.sql.Date.valueOf(fim));
         Object[] resultado = (Object[]) query.getSingleResult();
         BigDecimal total = converterDecimal(resultado[0]);
         long pedidos = converterLong(resultado[1]);
@@ -352,8 +353,9 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
     }
 
     private void configurarIntervalo(Query query, FiltroRelatorioTemporalDTO filtro) {
-        query.setParameter(PARAMETRO_INICIO, filtro.inicio());
-        query.setParameter(PARAMETRO_FIM, filtro.fim());
+        // Converte LocalDate para java.sql.Date para compatibilidade com MySQL DATE
+        query.setParameter(PARAMETRO_INICIO, java.sql.Date.valueOf(filtro.inicio()));
+        query.setParameter(PARAMETRO_FIM, java.sql.Date.valueOf(filtro.fim()));
     }
 
     private LocalDate converterData(Object valor) {

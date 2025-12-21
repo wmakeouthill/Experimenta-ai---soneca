@@ -59,9 +59,17 @@ export class RelatoriosComponent {
     this.filtro().dataReferencia.slice(0, 10)
   );
 
+  readonly dataFimInput = computed(() =>
+    this.filtro().dataFim?.slice(0, 10) ?? ''
+  );
+
+  readonly mostrarDataFim = computed(() =>
+    this.filtro().granularidade === 'DIA'
+  );
+
   readonly granularidades: GranularidadeOption[] = [
-    { id: 'DIA', label: 'Dia', descricao: 'Sessões iniciadas no dia (mesmo cruzando meia-noite)' },
-    { id: 'SEMANA', label: 'Semana', descricao: 'Agrupa por semana iniciando na data base' },
+    { id: 'DIA', label: 'Dia', descricao: 'Dados do dia selecionado (ou intervalo de datas)' },
+    { id: 'SEMANA', label: 'Semana', descricao: 'Agrupa por semana no mês selecionado' },
     { id: 'MES', label: 'Mês', descricao: 'Visão mensal das sessões' },
     { id: 'TRIMESTRE', label: 'Trimestre', descricao: 'Comparação trimestral' },
     { id: 'SEMESTRE', label: 'Semestre', descricao: 'Consolidação semestral' },
@@ -77,6 +85,11 @@ export class RelatoriosComponent {
     if (input?.value) {
       this.store.alterarDataReferencia(input.value);
     }
+  }
+
+  alterarDataFim(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.store.alterarDataFim(input?.value || null);
   }
 
   recarregar(): void {

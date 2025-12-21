@@ -24,8 +24,10 @@ public class FiltroRelatorioTemporalFactory {
     private LocalDate calcularFim(GranularidadeTempo granularidade, LocalDate referencia, String dataFimIso) {
         if (dataFimIso != null && !dataFimIso.isBlank()) {
             LocalDate fimInformado = parseDataObrigatoria(dataFimIso);
-            if (fimInformado.isAfter(referencia)) {
-                return fimInformado;
+            if (fimInformado.isAfter(referencia) || fimInformado.isEqual(referencia)) {
+                // Adiciona 1 dia porque a query usa < (exclusivo)
+                // Se usuário seleciona fim = 21/12, queremos incluir sessões do dia 21
+                return fimInformado.plusDays(1);
             }
         }
         return calcularFimPorGranularidade(granularidade, referencia);
@@ -33,7 +35,8 @@ public class FiltroRelatorioTemporalFactory {
 
     private LocalDate calcularFimPorGranularidade(GranularidadeTempo granularidade, LocalDate referencia) {
         return switch (granularidade) {
-            case DIA -> referencia.withDayOfMonth(referencia.lengthOfMonth()).plusDays(1);
+            // DIA: apenas o dia selecionado (fim = dia seguinte para query exclusiva)
+            case DIA -> referencia.plusDays(1);
             case SEMANA -> referencia.withDayOfMonth(referencia.lengthOfMonth()).plusDays(1);
             case MES -> referencia.withMonth(12).withDayOfMonth(31).plusDays(1);
             case TRIMESTRE -> referencia.withMonth(12).withDayOfMonth(31).plusDays(1);
@@ -51,7 +54,8 @@ public class FiltroRelatorioTemporalFactory {
 
     private LocalDate calcularInicioPorGranularidade(GranularidadeTempo granularidade, LocalDate referencia) {
         return switch (granularidade) {
-            case DIA -> referencia.withDayOfMonth(1);
+            // DIA: apenas o dia selecionado
+            case DIA -> referencia;
             case SEMANA -> referencia.withDayOfMonth(1);
             case MES -> referencia.withMonth(1).withDayOfMonth(1);
             case TRIMESTRE -> referencia.withMonth(1).withDayOfMonth(1);

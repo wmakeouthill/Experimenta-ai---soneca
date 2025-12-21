@@ -120,7 +120,9 @@ export function useRelatorios() {
 
     filtro.update(valor => ({
       ...valor,
-      granularidade
+      granularidade,
+      // Limpa dataFim ao mudar granularidade (só faz sentido no modo DIA)
+      dataFim: undefined
     }));
     carregarRelatorios();
   };
@@ -133,6 +135,14 @@ export function useRelatorios() {
     filtro.update(valor => ({
       ...valor,
       dataReferencia: normalizarData(data)
+    }));
+    carregarRelatorios();
+  };
+
+  const alterarDataFim = (data: string | null) => {
+    filtro.update(valor => ({
+      ...valor,
+      dataFim: data ? normalizarData(data) : undefined
     }));
     carregarRelatorios();
   };
@@ -156,7 +166,8 @@ export function useRelatorios() {
     possuiDados,
     carregarRelatorios,
     alterarGranularidade,
-    alterarDataReferencia
+    alterarDataReferencia,
+    alterarDataFim
   };
 }
 

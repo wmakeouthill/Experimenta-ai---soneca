@@ -19,14 +19,28 @@
 
   <div class="relatorios-content">
     <section class="filtros-compactos">
-      <div class="data-referencia-wrapper">
-        <label for="dataReferencia">Data de referência:</label>
-        <input
-          id="dataReferencia"
-          type="date"
-          [value]="dataReferenciaInput()"
-          (change)="alterarData($event)"
-        />
+      <div class="datas-wrapper">
+        <div class="data-referencia-wrapper">
+          <label for="dataReferencia">{{ mostrarDataFim() ? 'Data início:' : 'Data de referência:' }}</label>
+          <input
+            id="dataReferencia"
+            type="date"
+            [value]="dataReferenciaInput()"
+            (change)="alterarData($event)"
+          />
+        </div>
+        @if (mostrarDataFim()) {
+          <div class="data-fim-wrapper">
+            <label for="dataFim">Data fim (opcional):</label>
+            <input
+              id="dataFim"
+              type="date"
+              [value]="dataFimInput()"
+              [min]="dataReferenciaInput()"
+              (change)="alterarDataFim($event)"
+            />
+          </div>
+        }
       </div>
 
       <div class="granularidades">

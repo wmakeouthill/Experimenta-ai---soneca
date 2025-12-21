@@ -98,7 +98,15 @@
   flex-wrap: wrap;
 }
 
-.data-referencia-wrapper {
+.datas-wrapper {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.data-referencia-wrapper,
+.data-fim-wrapper {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -107,14 +115,16 @@
   white-space: nowrap;
 }
 
-.data-referencia-wrapper label {
+.data-referencia-wrapper label,
+.data-fim-wrapper label {
   font-size: 0.9rem;
   font-weight: 600;
   color: #555;
   margin: 0;
 }
 
-.data-referencia-wrapper input {
+.data-referencia-wrapper input,
+.data-fim-wrapper input {
   background: #f8f9fa;
   border: 1px solid #dee2e6;
   color: #333;
@@ -292,7 +302,14 @@ app-meios-pagamento-chart {
     align-items: stretch;
   }
 
-  .data-referencia-wrapper {
+  .datas-wrapper {
+    flex-direction: column;
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  .data-referencia-wrapper,
+  .data-fim-wrapper {
     width: 100%;
   }
 
