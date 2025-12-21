@@ -56,7 +56,11 @@ public class FiltroRelatorioTemporalFactory {
             case MES -> referencia.withMonth(1).withDayOfMonth(1);
             case TRIMESTRE -> referencia.withMonth(1).withDayOfMonth(1);
             case SEMESTRE -> referencia.withMonth(1).withDayOfMonth(1);
-            case ANO -> LocalDate.of(1, 1, 1);
+            // Para ANO: busca desde 2020 (ou 10 anos atrás, o que for mais recente)
+            case ANO -> {
+                int anoMinimo = Math.max(2020, referencia.getYear() - 10);
+                yield LocalDate.of(anoMinimo, 1, 1);
+            }
         };
     }
 

@@ -57,7 +57,7 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
         List<RelatorioBucketFactory.RelatorioBucket> buckets;
 
         if (filtro.granularidade() == com.snackbar.pedidos.application.dtos.relatorios.GranularidadeTempo.ANO) {
-            buckets = criarBucketsAnoCompleto();
+            buckets = criarBucketsAno(filtro);
         } else {
             buckets = bucketFactory.criarBuckets(filtro);
         }
@@ -68,14 +68,7 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
 
         String sql = construirSqlEvolucao(filtro);
         Query query = entityManager.createNativeQuery(sql);
-
-        if (filtro.granularidade() == com.snackbar.pedidos.application.dtos.relatorios.GranularidadeTempo.ANO) {
-            query.setParameter(PARAMETRO_INICIO, LocalDate.of(1, 1, 1));
-            query.setParameter(PARAMETRO_FIM, LocalDate.now().plusYears(1));
-        } else {
-            query.setParameter(PARAMETRO_INICIO, filtro.inicio());
-            query.setParameter(PARAMETRO_FIM, filtro.fim());
-        }
+        configurarIntervalo(query, filtro);
 
         @SuppressWarnings("unchecked")
         List<Object[]> resultados = query.getResultList();
@@ -154,25 +147,20 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
                     "COUNT(*) AS total_pedidos " +
                     "FROM pedidos p " +
                     "LEFT JOIN sessoes_trabalho st ON st.id = p.sessao_id " +
-                    "WHERE p.status <> 'CANCELADO' " +
+                    "WHERE " + DATA_BASE_EXPR + " >= :inicio " +
+                    "AND " + DATA_BASE_EXPR + " < :fim " +
+                    "AND p.status <> 'CANCELADO' " +
                     "GROUP BY DATE(CONCAT(YEAR(" + DATA_BASE_EXPR + "), '-01-01')) " +
                     "ORDER BY data_base";
         };
     }
 
-    private List<RelatorioBucketFactory.RelatorioBucket> criarBucketsAnoCompleto() {
-        String sql = "SELECT DISTINCT YEAR(" + DATA_BASE_EXPR + ") AS ano " +
-                "FROM pedidos p " +
-                "LEFT JOIN sessoes_trabalho st ON st.id = p.sessao_id " +
-                "WHERE p.status <> 'CANCELADO' " +
-                "ORDER BY ano";
-        Query query = entityManager.createNativeQuery(sql);
-        @SuppressWarnings("unchecked")
-        List<Object> anos = query.getResultList();
-
+    private List<RelatorioBucketFactory.RelatorioBucket> criarBucketsAno(FiltroRelatorioTemporalDTO filtro) {
+        // Cria buckets para cada ano no intervalo definido pelo filtro
         List<RelatorioBucketFactory.RelatorioBucket> buckets = new java.util.ArrayList<>();
-        for (Object anoObj : anos) {
-            int ano = ((Number) anoObj).intValue();
+        int anoInicio = filtro.inicio().getYear();
+        int anoFim = filtro.fim().getYear();
+        for (int ano = anoInicio; ano <= anoFim; ano++) {
             buckets.add(bucketFactory.criarBucketAno(ano));
         }
         return buckets;
@@ -191,7 +179,7 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
                 "LEFT JOIN produtos prod ON prod.id = item.produto_id " +
                 "LEFT JOIN sessoes_trabalho st ON st.id = p.sessao_id " +
                 "LEFT JOIN (SELECT ad.item_pedido_id, SUM(ad.preco_unitario * ad.quantidade) AS total_adicionais " +
-                "           FROM adicionais_item_pedido ad GROUP BY ad.item_pedido_id) ad_sum ON ad_sum.item_pedido_id = item.id "
+                "           FROM itens_pedido_adicionais ad GROUP BY ad.item_pedido_id) ad_sum ON ad_sum.item_pedido_id = item.id "
                 +
                 "WHERE " + DATA_BASE_EXPR + " >= :inicio " +
                 "AND " + DATA_BASE_EXPR + " < :fim " +
@@ -236,7 +224,7 @@ public class RelatoriosVendasRepositoryAdapter implements RelatoriosVendasPort {
                 "JOIN itens_pedido item ON item.pedido_id = p.id " +
                 "LEFT JOIN sessoes_trabalho st ON st.id = p.sessao_id " +
                 "LEFT JOIN (SELECT ad.item_pedido_id, SUM(ad.preco_unitario * ad.quantidade) AS total_adicionais " +
-                "           FROM adicionais_item_pedido ad GROUP BY ad.item_pedido_id) ad_sum ON ad_sum.item_pedido_id = item.id "
+                "           FROM itens_pedido_adicionais ad GROUP BY ad.item_pedido_id) ad_sum ON ad_sum.item_pedido_id = item.id "
                 +
                 "WHERE " + DATA_BASE_EXPR + " >= :inicio " +
                 "AND " + DATA_BASE_EXPR + " < :fim " +
