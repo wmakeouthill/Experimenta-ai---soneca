@@ -1,5 +1,6 @@
 package com.snackbar.pedidos.infrastructure.web;
 
+import com.snackbar.pedidos.infrastructure.idempotency.IdempotencyService;
 import com.snackbar.pedidos.application.dto.AtualizarStatusPedidoRequest;
 import com.snackbar.pedidos.application.dto.CriarPedidoRequest;
 import com.snackbar.pedidos.application.dto.PedidoDTO;
@@ -30,9 +31,27 @@ public class PedidoRestController {
     private final CancelarPedidoUseCase cancelarPedidoUseCase;
     private final ExcluirPedidoUseCase excluirPedidoUseCase;
     private final RegistrarPagamentoPedidoUseCase registrarPagamentoPedidoUseCase;
+    private final IdempotencyService idempotencyService;
 
+    /**
+     * Cria um novo pedido.
+     * 
+     * Suporta idempotência via header X-Idempotency-Key para evitar
+     * criação de pedidos duplicados em caso de retry.
+     */
     @PostMapping
-    public ResponseEntity<PedidoDTO> criar(@Valid @RequestBody CriarPedidoRequest request) {
+    public ResponseEntity<PedidoDTO> criar(
+            @Valid @RequestBody CriarPedidoRequest request,
+            @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey) {
+
+        if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+            return idempotencyService.executeIdempotent(
+                    idempotencyKey,
+                    "POST /api/pedidos",
+                    () -> criarPedidoUseCase.executar(request),
+                    PedidoDTO.class);
+        }
+
         PedidoDTO pedido = criarPedidoUseCase.executar(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(pedido);
     }

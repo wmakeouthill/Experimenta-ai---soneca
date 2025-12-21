@@ -1,9 +1,20 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Mesa } from './mesa.service';
 import { Produto } from './produto.service';
 import { Categoria } from './categoria.service';
+
+/**
+ * Gera uma chave de idempotência única para requisições.
+ */
+function generateIdempotencyKey(): string {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0;
+        const v = c === 'x' ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+    });
+}
 
 export interface ItemPedidoMesaRequest {
     produtoId: string;
@@ -136,8 +147,15 @@ export class PedidoMesaService {
         return this.http.post<ClientePublico>(`${this.publicApiUrl}/${mesaToken}/cliente`, request);
     }
 
+    /**
+     * Cria um pedido via mesa (QR code).
+     * Usa chave de idempotência para evitar duplicação em caso de retry.
+     */
     criarPedido(request: CriarPedidoMesaRequest): Observable<PedidoMesaResponse> {
-        return this.http.post<PedidoMesaResponse>(`${this.publicApiUrl}/pedido`, request);
+        const headers = new HttpHeaders({
+            'X-Idempotency-Key': generateIdempotencyKey()
+        });
+        return this.http.post<PedidoMesaResponse>(`${this.publicApiUrl}/pedido`, request, { headers });
     }
 
     buscarStatusPedido(pedidoId: string): Observable<StatusPedidoCliente> {

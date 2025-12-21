@@ -1,79 +1,58 @@
 package com.snackbar.pedidos.application.services;
 
-import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
 import com.snackbar.pedidos.domain.valueobjects.NumeroPedido;
+import com.snackbar.pedidos.infrastructure.persistence.NumeroPedidoSequenceEntity;
+import com.snackbar.pedidos.infrastructure.persistence.NumeroPedidoSequenceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Serviço para geração de número de pedido com tratamento de concorrência.
+ * Serviço para geração de número de pedido com atomicidade garantida.
  * 
- * PROBLEMA RESOLVIDO:
- * Em cenários de alta concorrência, dois pedidos podem ser criados
- * simultaneamente
- * e ambos lerem o mesmo "último número" do banco, gerando números duplicados.
+ * SOLUÇÃO IMPLEMENTADA:
+ * Utiliza uma tabela com AUTO_INCREMENT para gerar números únicos
+ * de forma atômica no banco de dados. Isso elimina race conditions
+ * que ocorriam com a abordagem anterior (MAX+1).
  * 
- * SOLUÇÃO:
- * - Gera número sequencial baseado no último do banco
- * - Em caso de falha por constraint violation (duplicação), faz retry
- * - Máximo de 3 tentativas antes de falhar
+ * VANTAGENS:
+ * - Atomicidade garantida pelo banco de dados
+ * - Sem necessidade de retry por duplicação
+ * - Performance superior em alta concorrência
+ * - Números sempre sequenciais sem gaps (exceto rollbacks)
  * 
  * @see NumeroPedido
+ * @see NumeroPedidoSequenceEntity
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class GeradorNumeroPedidoService {
 
-    private final PedidoRepositoryPort pedidoRepository;
-
-    private static final int MAX_TENTATIVAS = 3;
+    private final NumeroPedidoSequenceRepository sequenceRepository;
 
     /**
-     * Gera o próximo número de pedido disponível.
+     * Gera o próximo número de pedido usando sequence do banco.
      * 
-     * @return NumeroPedido único
-     * @throws IllegalStateException se não conseguir gerar após MAX_TENTATIVAS
+     * A geração é feita em uma nova transação (REQUIRES_NEW) para garantir
+     * que o número seja commitado imediatamente, independente da transação
+     * principal do pedido.
+     * 
+     * @return NumeroPedido único e sequencial
      */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public NumeroPedido gerarProximoNumero() {
-        int tentativas = 0;
+        NumeroPedidoSequenceEntity sequence = new NumeroPedidoSequenceEntity();
+        NumeroPedidoSequenceEntity saved = sequenceRepository.save(sequence);
 
-        while (tentativas < MAX_TENTATIVAS) {
-            tentativas++;
+        int numeroGerado = saved.getId().intValue();
+        NumeroPedido numeroPedido = NumeroPedido.de(numeroGerado);
 
-            int ultimoNumero = pedidoRepository.buscarUltimoNumeroPedido();
-            NumeroPedido numeroPedido = ultimoNumero == 0
-                    ? NumeroPedido.gerarPrimeiro()
-                    : NumeroPedido.gerarProximo(ultimoNumero);
+        log.debug("[SEQUENCE] Gerado número de pedido: {} (sequence_id={})",
+                numeroPedido.getNumero(), saved.getId());
 
-            log.debug("Gerado número de pedido: {} (tentativa {})",
-                    numeroPedido.getNumero(), tentativas);
-
-            return numeroPedido;
-        }
-
-        throw new IllegalStateException(
-                "Não foi possível gerar número de pedido após " + MAX_TENTATIVAS + " tentativas");
-    }
-
-    /**
-     * Verifica se uma exceção é causada por violação de constraint de número
-     * duplicado.
-     * Útil para implementar retry no nível do use case.
-     * 
-     * @param exception Exceção a ser verificada
-     * @return true se for violação de constraint de duplicação
-     */
-    public boolean isDuplicacaoNumeroPedido(Exception exception) {
-        if (exception instanceof DataIntegrityViolationException) {
-            String message = exception.getMessage();
-            return message != null &&
-                    (message.contains("numero_pedido") ||
-                            message.contains("Duplicate entry") ||
-                            message.contains("UNIQUE"));
-        }
-        return false;
+        return numeroPedido;
     }
 }

@@ -9,6 +9,8 @@ import com.snackbar.pedidos.application.dto.PedidoAutoAtendimentoResponse;
 import com.snackbar.pedidos.application.ports.CardapioServicePort;
 import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
 import com.snackbar.pedidos.application.ports.SessaoTrabalhoRepositoryPort;
+import com.snackbar.pedidos.application.services.AuditoriaPagamentoService;
+import com.snackbar.pedidos.application.services.AuditoriaPagamentoService.ContextoRequisicao;
 import com.snackbar.pedidos.application.services.GeradorNumeroPedidoService;
 import com.snackbar.pedidos.domain.entities.ItemPedido;
 import com.snackbar.pedidos.domain.entities.ItemPedidoAdicional;
@@ -20,6 +22,7 @@ import com.snackbar.kernel.domain.exceptions.ValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,11 +47,20 @@ public class CriarPedidoAutoAtendimentoUseCase {
     private final PedidoValidator pedidoValidator;
     private final SessaoTrabalhoRepositoryPort sessaoTrabalhoRepository;
     private final GeradorNumeroPedidoService geradorNumeroPedido;
+    private final AuditoriaPagamentoService auditoriaPagamentoService;
 
     private static final int MAX_TENTATIVAS_CONCORRENCIA = 3;
 
     @Transactional
-    public PedidoAutoAtendimentoResponse executar(CriarPedidoAutoAtendimentoRequest request, String usuarioId) {
+    public PedidoAutoAtendimentoResponse executar(
+            CriarPedidoAutoAtendimentoRequest request,
+            String usuarioId,
+            @Nullable ContextoRequisicao contexto) {
+
+        if (contexto == null) {
+            contexto = ContextoRequisicao.vazio();
+        }
+
         int tentativas = 0;
         DataIntegrityViolationException ultimaExcecao = null;
 
@@ -56,19 +68,14 @@ public class CriarPedidoAutoAtendimentoUseCase {
             tentativas++;
 
             try {
-                return executarCriacao(request, usuarioId);
+                return executarCriacao(request, usuarioId, contexto);
             } catch (DataIntegrityViolationException e) {
-                if (geradorNumeroPedido.isDuplicacaoNumeroPedido(e)) {
-                    log.warn("Conflito de número de pedido detectado (tentativa {}), tentando novamente...",
-                            tentativas);
-                    ultimaExcecao = e;
-                } else {
-                    throw e;
-                }
+                log.warn("Conflito de integridade detectado (tentativa {}), tentando novamente...", tentativas);
+                ultimaExcecao = e;
             }
         }
 
-        log.error("Falha ao criar pedido de auto atendimento após {} tentativas por conflito de número",
+        log.error("Falha ao criar pedido de auto atendimento após {} tentativas por conflito de integridade",
                 MAX_TENTATIVAS_CONCORRENCIA);
         throw new IllegalStateException(
                 "Não foi possível criar o pedido após " + MAX_TENTATIVAS_CONCORRENCIA +
@@ -76,7 +83,18 @@ public class CriarPedidoAutoAtendimentoUseCase {
                 ultimaExcecao);
     }
 
-    private PedidoAutoAtendimentoResponse executarCriacao(CriarPedidoAutoAtendimentoRequest request, String usuarioId) {
+    /**
+     * Método de compatibilidade para chamadas sem contexto.
+     */
+    @Transactional
+    public PedidoAutoAtendimentoResponse executar(CriarPedidoAutoAtendimentoRequest request, String usuarioId) {
+        return executar(request, usuarioId, null);
+    }
+
+    private PedidoAutoAtendimentoResponse executarCriacao(
+            CriarPedidoAutoAtendimentoRequest request,
+            String usuarioId,
+            ContextoRequisicao contexto) {
         NumeroPedido numeroPedido = geradorNumeroPedido.gerarProximoNumero();
 
         // Nome do cliente é opcional no auto atendimento - usado para chamar na tela de
@@ -128,6 +146,11 @@ public class CriarPedidoAutoAtendimentoUseCase {
         vincularSessaoAtiva(pedido);
 
         Pedido pedidoSalvo = pedidoRepository.salvar(pedido);
+
+        // Registra auditoria do pagamento (assíncrono)
+        if (!pedidoSalvo.getMeiosPagamento().isEmpty()) {
+            auditoriaPagamentoService.registrarPagamentoAutoatendimento(pedidoSalvo, contexto);
+        }
 
         log.info("[AUTO-ATENDIMENTO] Pedido criado - Número: {}, Cliente: {}, Valor: {}",
                 pedidoSalvo.getNumeroPedido().getNumero(),

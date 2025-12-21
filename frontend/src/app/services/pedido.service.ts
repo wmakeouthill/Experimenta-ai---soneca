@@ -1,6 +1,18 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+
+/**
+ * Gera uma chave de idempotência única para requisições.
+ * Formato: UUID v4 simplificado.
+ */
+function generateIdempotencyKey(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
 
 export enum StatusPedido {
   PENDENTE = 'PENDENTE',
@@ -144,8 +156,15 @@ export class PedidoService {
     return this.http.get<Pedido>(`${this.apiUrl}/${id}`);
   }
 
+  /**
+   * Cria um novo pedido.
+   * Usa chave de idempotência para evitar duplicação em caso de retry.
+   */
   criar(pedido: CriarPedidoRequest): Observable<Pedido> {
-    return this.http.post<Pedido>(this.apiUrl, pedido);
+    const headers = new HttpHeaders({
+      'X-Idempotency-Key': generateIdempotencyKey()
+    });
+    return this.http.post<Pedido>(this.apiUrl, pedido, { headers });
   }
 
   atualizarStatus(id: string, status: StatusPedido): Observable<Pedido> {

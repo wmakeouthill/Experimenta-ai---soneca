@@ -1,6 +1,17 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+
+/**
+ * Gera uma chave de idempotência única para requisições.
+ */
+function generateIdempotencyKey(): string {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0;
+        const v = c === 'x' ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+    });
+}
 
 export interface ItemPedidoAutoAtendimentoRequest {
     produtoId: string;
@@ -50,9 +61,14 @@ export class AutoAtendimentoService {
      * Cria um pedido de auto atendimento.
      * O pedido é criado diretamente (sem fila de pendentes) pois
      * o operador já está autenticado no totem.
+     *
+     * Usa chave de idempotência para evitar duplicação em caso de retry.
      */
     criarPedido(request: CriarPedidoAutoAtendimentoRequest): Observable<PedidoAutoAtendimentoResponse> {
-        return this.http.post<PedidoAutoAtendimentoResponse>(`${this.apiUrl}/pedido`, request);
+        const headers = new HttpHeaders({
+            'X-Idempotency-Key': generateIdempotencyKey()
+        });
+        return this.http.post<PedidoAutoAtendimentoResponse>(`${this.apiUrl}/pedido`, request, { headers });
     }
 
     /**

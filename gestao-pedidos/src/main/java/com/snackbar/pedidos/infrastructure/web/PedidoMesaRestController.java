@@ -1,5 +1,6 @@
 package com.snackbar.pedidos.infrastructure.web;
 
+import com.snackbar.pedidos.infrastructure.idempotency.IdempotencyService;
 import com.snackbar.pedidos.application.dto.CriarPedidoMesaRequest;
 import com.snackbar.pedidos.application.dto.MesaDTO;
 import com.snackbar.pedidos.application.dto.PedidoPendenteDTO;
@@ -34,6 +35,9 @@ import java.util.List;
  * 3. Cliente faz pedido → vai para FILA DE PENDENTES
  * 4. Funcionário aceita o pedido → cria pedido real (via
  * FilaPedidosMesaController)
+ * 
+ * Suporta idempotência via header X-Idempotency-Key para evitar
+ * criação de pedidos duplicados.
  */
 @RestController
 @RequestMapping("/api/public/mesa")
@@ -46,6 +50,7 @@ public class PedidoMesaRestController {
     private final BuscarProdutosPopularesUseCase buscarProdutosPopularesUseCase;
     private final BuscarStatusPedidoClienteUseCase buscarStatusPedidoClienteUseCase;
     private final ClienteGatewayPort clienteGateway;
+    private final IdempotencyService idempotencyService;
 
     /**
      * Valida o token da mesa e retorna os dados da mesa.
@@ -112,10 +117,26 @@ public class PedidoMesaRestController {
      * funcionário.
      * Endpoint público que não requer autenticação.
      * 
+     * Suporta idempotência via header X-Idempotency-Key para evitar
+     * criação de pedidos duplicados em caso de retry.
+     * 
+     * @param request        Dados do pedido
+     * @param idempotencyKey Chave de idempotência opcional
      * @return PedidoPendenteDTO com os dados do pedido na fila
      */
     @PostMapping("/pedido")
-    public ResponseEntity<PedidoPendenteDTO> criarPedido(@Valid @RequestBody CriarPedidoMesaRequest request) {
+    public ResponseEntity<PedidoPendenteDTO> criarPedido(
+            @Valid @RequestBody CriarPedidoMesaRequest request,
+            @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey) {
+
+        if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+            return idempotencyService.executeIdempotent(
+                    idempotencyKey,
+                    "POST /api/public/mesa/pedido",
+                    () -> criarPedidoMesaUseCase.executar(request.mesaToken(), request),
+                    PedidoPendenteDTO.class);
+        }
+
         PedidoPendenteDTO pedidoPendente = criarPedidoMesaUseCase.executar(request.mesaToken(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(pedidoPendente);
     }

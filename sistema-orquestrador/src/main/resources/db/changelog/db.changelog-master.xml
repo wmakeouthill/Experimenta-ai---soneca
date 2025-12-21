@@ -117,6 +117,18 @@
     <!-- Migration: Permite cliente_id nulo para pedidos de auto-atendimento (totem) -->
     <include file="changes/035-allow-null-cliente-id-pedidos.sql" relativeToChangelogFile="true" />
 
+    <!-- Migration: Cria tabela para chaves de idempotência (prevenir requisições duplicadas) -->
+    <include file="changes/036-create-idempotency-keys-table.sql" relativeToChangelogFile="true" />
+
+    <!-- Migration: Cria tabela sequence para número de pedido (substituir MAX+1 por atomicidade) -->
+    <include file="changes/037-create-numero-pedido-sequence.sql" relativeToChangelogFile="true" />
+
+    <!-- Migration: Cria tabela de auditoria para operações de pagamento -->
+    <include file="changes/038-create-auditoria-pagamentos-table.sql" relativeToChangelogFile="true" />
+
+    <!-- Migration: Corrige tipo da coluna id na tabela idempotency_keys (VARCHAR -> BIGINT) -->
+    <include file="changes/039-fix-idempotency-keys-id-column.sql" relativeToChangelogFile="true" />
+
     <!-- 
     NOTA: O usuário administrador inicial é criado automaticamente via CommandLineRunner
     (UsuarioInicialConfig) na primeira execução da aplicação.

@@ -9,6 +9,8 @@ import com.snackbar.pedidos.application.dto.PedidoDTO;
 import com.snackbar.pedidos.application.ports.CardapioServicePort;
 import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
 import com.snackbar.pedidos.application.ports.SessaoTrabalhoRepositoryPort;
+import com.snackbar.pedidos.application.services.AuditoriaPagamentoService;
+import com.snackbar.pedidos.application.services.AuditoriaPagamentoService.ContextoRequisicao;
 import com.snackbar.pedidos.application.services.GeradorNumeroPedidoService;
 import com.snackbar.pedidos.domain.entities.ItemPedido;
 import com.snackbar.pedidos.domain.entities.ItemPedidoAdicional;
@@ -19,6 +21,7 @@ import com.snackbar.pedidos.domain.valueobjects.NumeroPedido;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,11 +44,16 @@ public class CriarPedidoUseCase {
     private final PedidoValidator pedidoValidator;
     private final SessaoTrabalhoRepositoryPort sessaoTrabalhoRepository;
     private final GeradorNumeroPedidoService geradorNumeroPedido;
+    private final AuditoriaPagamentoService auditoriaPagamentoService;
 
     private static final int MAX_TENTATIVAS_CONCORRENCIA = 3;
 
     @Transactional
-    public PedidoDTO executar(CriarPedidoRequest request) {
+    public PedidoDTO executar(CriarPedidoRequest request, @Nullable ContextoRequisicao contexto) {
+        if (contexto == null) {
+            contexto = ContextoRequisicao.vazio();
+        }
+
         int tentativas = 0;
         DataIntegrityViolationException ultimaExcecao = null;
 
@@ -53,20 +61,15 @@ public class CriarPedidoUseCase {
             tentativas++;
 
             try {
-                return executarCriacao(request);
+                return executarCriacao(request, contexto);
             } catch (DataIntegrityViolationException e) {
-                if (geradorNumeroPedido.isDuplicacaoNumeroPedido(e)) {
-                    log.warn("Conflito de número de pedido detectado (tentativa {}), tentando novamente...",
-                            tentativas);
-                    ultimaExcecao = e;
-                    // Continua o loop para tentar novamente
-                } else {
-                    throw e; // Outro tipo de violação, propaga
-                }
+                // Com a nova sequence, este cenário é muito improvável
+                log.warn("Conflito de integridade detectado (tentativa {}), tentando novamente...", tentativas);
+                ultimaExcecao = e;
             }
         }
 
-        log.error("Falha ao criar pedido após {} tentativas por conflito de número",
+        log.error("Falha ao criar pedido após {} tentativas por conflito de integridade",
                 MAX_TENTATIVAS_CONCORRENCIA);
         throw new IllegalStateException(
                 "Não foi possível criar o pedido após " + MAX_TENTATIVAS_CONCORRENCIA +
@@ -74,7 +77,15 @@ public class CriarPedidoUseCase {
                 ultimaExcecao);
     }
 
-    private PedidoDTO executarCriacao(CriarPedidoRequest request) {
+    /**
+     * Método de compatibilidade para chamadas sem contexto.
+     */
+    @Transactional
+    public PedidoDTO executar(CriarPedidoRequest request) {
+        return executar(request, null);
+    }
+
+    private PedidoDTO executarCriacao(CriarPedidoRequest request, ContextoRequisicao contexto) {
         NumeroPedido numeroPedido = geradorNumeroPedido.gerarProximoNumero();
 
         Pedido pedido = Pedido.criar(
@@ -119,6 +130,11 @@ public class CriarPedidoUseCase {
         vincularSessaoAtiva(pedido);
 
         Pedido pedidoSalvo = pedidoRepository.salvar(pedido);
+
+        // Registra auditoria do pagamento (assíncrono)
+        if (!pedidoSalvo.getMeiosPagamento().isEmpty()) {
+            auditoriaPagamentoService.registrarPagamentoCriacaoPedido(pedidoSalvo, contexto);
+        }
 
         return PedidoDTO.de(pedidoSalvo);
     }

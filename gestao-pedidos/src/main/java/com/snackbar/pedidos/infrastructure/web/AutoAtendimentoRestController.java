@@ -1,5 +1,6 @@
 package com.snackbar.pedidos.infrastructure.web;
 
+import com.snackbar.pedidos.infrastructure.idempotency.IdempotencyService;
 import com.snackbar.kernel.security.JwtUserDetails;
 import com.snackbar.pedidos.application.dto.CriarPedidoAutoAtendimentoRequest;
 import com.snackbar.pedidos.application.dto.PedidoAutoAtendimentoResponse;
@@ -25,6 +26,9 @@ import org.springframework.web.bind.annotation.*;
  * - Requer autenticação JWT
  * - Cria pedidos diretamente (sem fila de pendentes)
  * - Não exige cliente cadastrado
+ * 
+ * Suporta idempotência via header X-Idempotency-Key para evitar
+ * criação de pedidos duplicados.
  */
 @RestController
 @RequestMapping("/api/autoatendimento")
@@ -34,17 +38,23 @@ public class AutoAtendimentoRestController {
 
     private final CriarPedidoAutoAtendimentoUseCase criarPedidoUseCase;
     private final BuscarPedidoPorIdUseCase buscarPedidoUseCase;
+    private final IdempotencyService idempotencyService;
 
     /**
      * Cria um pedido via auto atendimento (totem).
      * O pedido é criado diretamente no status PENDENTE.
      * 
-     * @param request Dados do pedido
+     * Suporta idempotência via header X-Idempotency-Key para evitar
+     * criação de pedidos duplicados em caso de retry.
+     * 
+     * @param request        Dados do pedido
+     * @param idempotencyKey Chave de idempotência opcional
      * @return PedidoAutoAtendimentoResponse com dados do pedido criado
      */
     @PostMapping("/pedido")
     public ResponseEntity<PedidoAutoAtendimentoResponse> criarPedido(
-            @Valid @RequestBody CriarPedidoAutoAtendimentoRequest request) {
+            @Valid @RequestBody CriarPedidoAutoAtendimentoRequest request,
+            @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey) {
 
         // Obtém a autenticação do contexto de segurança
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -77,8 +87,17 @@ public class AutoAtendimentoRestController {
                 usuarioId,
                 request.getNomeCliente());
 
-        PedidoAutoAtendimentoResponse response = criarPedidoUseCase.executar(request, usuarioId);
+        // Se há chave de idempotência, usa o serviço
+        if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+            final String finalUsuarioId = usuarioId;
+            return idempotencyService.executeIdempotent(
+                    idempotencyKey,
+                    "POST /api/autoatendimento/pedido",
+                    () -> criarPedidoUseCase.executar(request, finalUsuarioId),
+                    PedidoAutoAtendimentoResponse.class);
+        }
 
+        PedidoAutoAtendimentoResponse response = criarPedidoUseCase.executar(request, usuarioId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

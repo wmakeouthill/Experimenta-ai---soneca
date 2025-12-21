@@ -9,6 +9,8 @@ import com.snackbar.pedidos.application.dto.PedidoDTO;
 import com.snackbar.pedidos.application.dto.PedidoPendenteDTO;
 import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
 import com.snackbar.pedidos.application.ports.SessaoTrabalhoRepositoryPort;
+import com.snackbar.pedidos.application.services.AuditoriaPagamentoService;
+import com.snackbar.pedidos.application.services.AuditoriaPagamentoService.ContextoRequisicao;
 import com.snackbar.pedidos.application.services.FilaPedidosMesaService;
 import com.snackbar.pedidos.application.services.GeradorNumeroPedidoService;
 import com.snackbar.pedidos.domain.entities.ItemPedido;
@@ -19,6 +21,7 @@ import com.snackbar.pedidos.domain.valueobjects.NumeroPedido;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,11 +47,16 @@ public class AceitarPedidoMesaUseCase {
     private final PedidoRepositoryPort pedidoRepository;
     private final SessaoTrabalhoRepositoryPort sessaoTrabalhoRepository;
     private final GeradorNumeroPedidoService geradorNumeroPedido;
+    private final AuditoriaPagamentoService auditoriaPagamentoService;
 
     private static final int MAX_TENTATIVAS_CONCORRENCIA = 3;
 
     @Transactional
-    public PedidoDTO executar(String pedidoPendenteId, String usuarioId) {
+    public PedidoDTO executar(String pedidoPendenteId, String usuarioId, @Nullable ContextoRequisicao contexto) {
+        if (contexto == null) {
+            contexto = ContextoRequisicao.vazio();
+        }
+
         // Valida parâmetros
         if (pedidoPendenteId == null || pedidoPendenteId.isBlank()) {
             throw new ValidationException("ID do pedido pendente é obrigatório");
@@ -64,10 +72,22 @@ public class AceitarPedidoMesaUseCase {
                         "Pedido pendente não encontrado ou já foi aceito/expirado: " + pedidoPendenteId));
 
         // Tenta criar o pedido com retry em caso de conflito de número
-        return criarPedidoComRetry(pedidoPendente, usuarioId, pedidoPendenteId);
+        return criarPedidoComRetry(pedidoPendente, usuarioId, pedidoPendenteId, contexto);
     }
 
-    private PedidoDTO criarPedidoComRetry(PedidoPendenteDTO pedidoPendente, String usuarioId, String pedidoPendenteId) {
+    /**
+     * Método de compatibilidade para chamadas sem contexto.
+     */
+    @Transactional
+    public PedidoDTO executar(String pedidoPendenteId, String usuarioId) {
+        return executar(pedidoPendenteId, usuarioId, null);
+    }
+
+    private PedidoDTO criarPedidoComRetry(
+            PedidoPendenteDTO pedidoPendente,
+            String usuarioId,
+            String pedidoPendenteId,
+            ContextoRequisicao contexto) {
         int tentativas = 0;
         DataIntegrityViolationException ultimaExcecao = null;
 
@@ -75,19 +95,14 @@ public class AceitarPedidoMesaUseCase {
             tentativas++;
 
             try {
-                return criarPedidoReal(pedidoPendente, usuarioId, pedidoPendenteId);
+                return criarPedidoReal(pedidoPendente, usuarioId, pedidoPendenteId, contexto);
             } catch (DataIntegrityViolationException e) {
-                if (geradorNumeroPedido.isDuplicacaoNumeroPedido(e)) {
-                    log.warn("Conflito de número de pedido ao aceitar (tentativa {}), tentando novamente...",
-                            tentativas);
-                    ultimaExcecao = e;
-                } else {
-                    throw e;
-                }
+                log.warn("Conflito de integridade ao aceitar (tentativa {}), tentando novamente...", tentativas);
+                ultimaExcecao = e;
             }
         }
 
-        log.error("Falha ao aceitar pedido após {} tentativas por conflito de número",
+        log.error("Falha ao aceitar pedido após {} tentativas por conflito de integridade",
                 MAX_TENTATIVAS_CONCORRENCIA);
         throw new IllegalStateException(
                 "Não foi possível aceitar o pedido após " + MAX_TENTATIVAS_CONCORRENCIA +
@@ -95,7 +110,11 @@ public class AceitarPedidoMesaUseCase {
                 ultimaExcecao);
     }
 
-    private PedidoDTO criarPedidoReal(PedidoPendenteDTO pedidoPendente, String usuarioId, String pedidoPendenteId) {
+    private PedidoDTO criarPedidoReal(
+            PedidoPendenteDTO pedidoPendente,
+            String usuarioId,
+            String pedidoPendenteId,
+            ContextoRequisicao contexto) {
         // Gera número do pedido usando o serviço dedicado
         NumeroPedido numeroPedido = geradorNumeroPedido.gerarProximoNumero();
 
@@ -158,6 +177,11 @@ public class AceitarPedidoMesaUseCase {
 
         // Salva o pedido
         Pedido pedidoSalvo = pedidoRepository.salvar(pedido);
+
+        // Registra auditoria do pagamento (assíncrono)
+        if (!pedidoSalvo.getMeiosPagamento().isEmpty()) {
+            auditoriaPagamentoService.registrarPagamentoMesa(pedidoSalvo, contexto);
+        }
 
         // Nota: A remoção da fila já foi feita atomicamente em
         // buscarERemoverAtomicamente()

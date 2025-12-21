@@ -5,17 +5,22 @@ import com.snackbar.kernel.domain.exceptions.ValidationException;
 import com.snackbar.pedidos.application.dto.MeioPagamentoRequest;
 import com.snackbar.pedidos.application.dto.PedidoDTO;
 import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
+import com.snackbar.pedidos.application.services.AuditoriaPagamentoService;
+import com.snackbar.pedidos.application.services.AuditoriaPagamentoService.ContextoRequisicao;
 import com.snackbar.pedidos.domain.entities.MeioPagamentoPedido;
 import com.snackbar.pedidos.domain.entities.Pedido;
 import com.snackbar.pedidos.domain.entities.StatusPedido;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Use case para registrar pagamento de um pedido existente.
@@ -28,16 +33,43 @@ import java.util.List;
 @Slf4j
 public class RegistrarPagamentoPedidoUseCase {
 
+    /**
+     * Status válidos para registrar pagamento.
+     * PENDENTE: Pedido aguardando preparação
+     * PREPARANDO: Pedido em preparação
+     * PRONTO: Pedido pronto para retirada/entrega
+     */
+    private static final Set<StatusPedido> STATUS_VALIDOS_PARA_PAGAMENTO = EnumSet.of(
+            StatusPedido.PENDENTE,
+            StatusPedido.PREPARANDO,
+            StatusPedido.PRONTO);
+
     private final PedidoRepositoryPort pedidoRepository;
+    private final AuditoriaPagamentoService auditoriaPagamentoService;
 
     @Transactional
-    public PedidoDTO executar(@NonNull String pedidoId, @NonNull List<MeioPagamentoRequest> meiosPagamento) {
+    public PedidoDTO executar(
+            @NonNull String pedidoId,
+            @NonNull List<MeioPagamentoRequest> meiosPagamento,
+            @Nullable ContextoRequisicao contexto) {
+
+        if (contexto == null) {
+            contexto = ContextoRequisicao.vazio();
+        }
+
         Pedido pedido = pedidoRepository.buscarPorId(pedidoId)
                 .orElseThrow(() -> new ValidationException("Pedido não encontrado com ID: " + pedidoId));
 
-        // Valida que o pedido não está cancelado
-        if (pedido.getStatus() == StatusPedido.CANCELADO) {
-            throw new ValidationException("Não é possível registrar pagamento para pedido cancelado");
+        // Valida que o status do pedido permite registro de pagamento
+        StatusPedido statusAtual = pedido.getStatus();
+        if (!STATUS_VALIDOS_PARA_PAGAMENTO.contains(statusAtual)) {
+            throw new ValidationException(
+                    String.format("Não é possível registrar pagamento para pedido com status '%s'. " +
+                            "Status válidos: %s",
+                            statusAtual.getDescricao(),
+                            STATUS_VALIDOS_PARA_PAGAMENTO.stream()
+                                    .map(StatusPedido::getDescricao)
+                                    .toList()));
         }
 
         // Valida que não há pagamento já registrado
@@ -67,10 +99,21 @@ public class RegistrarPagamentoPedidoUseCase {
 
         Pedido pedidoAtualizado = pedidoRepository.salvar(pedido);
 
+        // Registra auditoria do pagamento (assíncrono)
+        auditoriaPagamentoService.registrarPagamentoPosterior(pedidoAtualizado, contexto);
+
         log.info("[PAGAMENTO] Pagamento registrado para pedido {}: R$ {}",
                 pedidoAtualizado.getNumeroPedido().getNumero(),
                 totalPagamento);
 
         return PedidoDTO.de(pedidoAtualizado);
+    }
+
+    /**
+     * Método de compatibilidade para chamadas sem contexto.
+     */
+    @Transactional
+    public PedidoDTO executar(@NonNull String pedidoId, @NonNull List<MeioPagamentoRequest> meiosPagamento) {
+        return executar(pedidoId, meiosPagamento, null);
     }
 }
