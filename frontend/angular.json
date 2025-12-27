@@ -23,7 +23,11 @@
             "assets": [
               "src/favicon.ico",
               "src/assets",
-              { "glob": "pwa-sw.js", "input": "src", "output": "." }
+              {
+                "glob": "pwa-sw.js",
+                "input": "src",
+                "output": "."
+              }
             ],
             "styles": [
               "src/styles.css"
@@ -40,8 +44,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "12kb",
-                  "maximumError": "20kb"
+                  "maximumWarning": "20kb",
+                  "maximumError": "30kb"
                 }
               ],
               "outputHashing": "all",

@@ -36,7 +36,7 @@ import {
 } from './components';
 
 type EtapaPrincipal = 'identificacao' | 'cadastro' | 'cardapio' | 'sucesso';
-type AbaCliente = 'inicio' | 'cardapio' | 'perfil';
+type AbaCliente = 'inicio' | 'cardapio' | 'carrinho' | 'perfil';
 type SecaoPerfil = 'principal' | 'favoritos' | 'pedidos' | 'senha' | 'celular';
 
 /**
@@ -88,7 +88,43 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   readonly enviando = signal(false);
   readonly secaoPerfil = signal<SecaoPerfil>('principal');
   readonly mostrarBannerPwa = signal(false);
-  readonly podeInstalarPwa = computed(() => this.pwaInstallService ? !this.pwaInstallService.isStandalone() : false);
+  readonly isStandalone = signal(false);
+  readonly isSafari = signal(false);
+  readonly isFirefox = signal(false);
+  readonly isIOS = signal(false);
+  readonly pwaPromptDisponivel = signal(false);
+  readonly mostrarInstrucaoManual = signal(false);
+  private deferredPrompt: any = null;
+
+  // Computed: Instrução de instalação baseada no navegador
+  readonly pwaInstrucao = computed(() => {
+    if (this.isIOS() || this.isSafari()) {
+      return 'Toque em 📤 Compartilhar → "Adicionar à Tela Inicial"';
+    }
+    if (this.isFirefox()) {
+      return 'Toque em ⋮ Menu → "Instalar"';
+    }
+    if (this.mostrarInstrucaoManual() && !this.pwaPromptDisponivel()) {
+      return 'Use o menu do navegador → "Adicionar à tela inicial"';
+    }
+    return null;
+  });
+
+  // Computed: Deve mostrar o banner?
+  // Para Safari/iOS/Firefox/Samsung: sempre (com instruções)
+  // Para Chrome/Edge: quando prompt está pronto OU após timeout com instrução manual
+  readonly deveMostrarBannerPwa = computed(() => {
+    if (this.isStandalone()) return false;
+    // Se tem instrução (Safari/iOS/Firefox/Samsung/timeout), mostra o banner
+    if (this.pwaInstrucao()) return this.mostrarBannerPwa();
+    // Se não tem instrução (Chrome/Edge antes do timeout), só mostra se prompt pronto
+    return this.pwaPromptDisponivel() && this.mostrarBannerPwa();
+  });
+
+  readonly podeInstalarPwa = computed(() => {
+    if (this.isStandalone()) return false;
+    return this.pwaPromptDisponivel() || this.pwaInstrucao() !== null;
+  });
 
   // Estado do formulário de celular
   readonly celularInput = signal('');
@@ -235,11 +271,44 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
     // Listener para fechar carrinho no back button do celular
     window.addEventListener('popstate', this.boundHandlePopState);
 
-    // Banner de instalação PWA (apenas web, não standalone)
-    this.mostrarBannerPwa.set(this.pwaInstallService.shouldShow());
-    this.pwaInstallService.onPromptChange
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => this.mostrarBannerPwa.set(this.pwaInstallService.shouldShow()));
+    // PWA: Detecta se está rodando como app instalado (standalone)
+    const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches
+      || (navigator as any).standalone === true;
+    this.isStandalone.set(isStandaloneMode);
+
+    // Detecta navegador para instruções personalizadas
+    const ua = navigator.userAgent;
+    const isIOSDevice = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isSafariBrowser = /^((?!chrome|android).)*safari/i.test(ua);
+    const isChrome = /chrome/i.test(ua) && !/edg/i.test(ua);
+    const isFirefoxBrowser = /firefox/i.test(ua) && !isChrome;
+
+    this.isIOS.set(isIOSDevice);
+    this.isSafari.set(isSafariBrowser);
+    this.isFirefox.set(isFirefoxBrowser);
+
+    // PWA Install Prompt: Mostra banner se não estiver em modo standalone
+    if (!isStandaloneMode) {
+      this.mostrarBannerPwa.set(true);
+
+      // Timeout: Se após 3s o beforeinstallprompt não disparou, mostra instrução manual
+      setTimeout(() => {
+        if (!this.pwaPromptDisponivel() && !this.isStandalone()) {
+          this.mostrarInstrucaoManual.set(true);
+        }
+      }, 3000);
+    }
+
+    // Captura o evento beforeinstallprompt para poder instalar depois
+    window.addEventListener('beforeinstallprompt', (e: any) => {
+      e.preventDefault();
+      this.deferredPrompt = e;
+      this.pwaPromptDisponivel.set(true);
+      this.mostrarInstrucaoManual.set(false);
+      if (!this.isStandalone()) {
+        this.mostrarBannerPwa.set(true);
+      }
+    });
 
     // Inicializa o Chat IA
     this.chatIA.inicializar();
@@ -356,16 +425,11 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
     ]).catch(err => console.warn('Erro ao carregar dados:', err));
   }
 
-  navegarPara(aba: AbaCliente | 'carrinho'): void {
-    if (aba === 'carrinho') {
-      this.carrinho.abrirCarrinho();
-    } else {
-      this.carrinho.fecharCarrinho();
-      this.abaAtual.set(aba);
-      // Reset seção do perfil quando navegar para ele
-      if (aba === 'perfil') {
-        this.secaoPerfil.set('principal');
-      }
+  navegarPara(aba: AbaCliente): void {
+    this.abaAtual.set(aba);
+    // Reset seção do perfil quando navegar para ele
+    if (aba === 'perfil') {
+      this.secaoPerfil.set('principal');
     }
   }
 
@@ -377,8 +441,16 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   // ========== PWA Banner ==========
   async instalarPwa(event?: Event): Promise<void> {
     event?.stopPropagation();
-    await this.pwaInstallService.promptInstall();
-    this.mostrarBannerPwa.set(this.pwaInstallService.shouldShow());
+    if (this.deferredPrompt) {
+      this.deferredPrompt.prompt();
+      const { outcome } = await this.deferredPrompt.userChoice;
+      console.log('[PWA] User response:', outcome);
+      if (outcome === 'accepted') {
+        this.mostrarBannerPwa.set(false);
+        this.pwaPromptDisponivel.set(false);
+      }
+      this.deferredPrompt = null;
+    }
   }
 
   fecharBannerPwa(event?: Event): void {
@@ -712,6 +784,41 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
 
   formatarTelefone(telefone: string): string {
     return this.identificacao.formatarTelefone(telefone);
+  }
+
+  /**
+   * Calcula o total de um item do carrinho incluindo adicionais.
+   */
+  calcularTotalItemCarrinho(item: import('./composables').ItemCarrinho): number {
+    let total = item.produto.preco * item.quantidade;
+    if (item.adicionais && item.adicionais.length > 0) {
+      const totalAdicionais = item.adicionais.reduce(
+        (acc, ad) => acc + (ad.adicional.preco * ad.quantidade * item.quantidade),
+        0
+      );
+      total += totalAdicionais;
+    }
+    return total;
+  }
+
+  /**
+   * Formata a lista de adicionais de um item para exibição.
+   */
+  formatarAdicionais(adicionais?: Array<{ adicional: { nome: string }; quantidade: number }>): string {
+    if (!adicionais || adicionais.length === 0) return '';
+    return adicionais.map(a => `${a.quantidade}x ${a.adicional.nome}`).join(', ');
+  }
+
+  /**
+   * Vai para a etapa de pagamento no carrinho.
+   */
+  irParaEtapaPagamento(): void {
+    this.carrinho.abrirCarrinho();
+    // O carrinho já está aberto, agora vai para etapa de pagamento
+    this.pagamento.resetarEtapa();
+    if (this.isBrowser) {
+      history.pushState({ carrinho: true }, '');
+    }
   }
 
   /**

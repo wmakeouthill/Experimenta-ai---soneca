@@ -22,6 +22,61 @@
     --radius-full: 9999px;
 }
 
+/* ========== Buttons ========== */
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color, #FF6B35) 0%, var(--secondary-color, #F7931E) 100%);
+    color: white;
+    border: none;
+    padding: 0.875rem 1.5rem;
+    border-radius: var(--radius-md, 12px);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
+}
+
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: var(--surface, #FFFFFF);
+    color: var(--text-primary, #333);
+    border: 1px solid var(--border-color, #e0e0e0);
+    padding: 0.875rem 1.5rem;
+    border-radius: var(--radius-md, 12px);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+    background: var(--background, #f5f5f5);
+    border-color: var(--primary-color, #FF6B35);
+}
+
+.btn-large {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.0625rem;
+}
+
+/* CTA de início */
+.inicio-cta {
+    padding: 1rem 0;
+}
+
 /* Reset e Base */
 .pedido-cliente-container {
     /* Usa viewport dinâmica para não cortar em mobile com barras/teclado */
@@ -281,33 +336,45 @@
 
 /* Banner de instalação PWA */
 .pwa-install-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    padding: 0.75rem 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 10000;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.75rem;
-    background: #ffffff;
-    border: 1px solid #f0f0f0;
-    border-radius: 14px;
-    padding: 0.75rem 1rem;
-    margin: 0.75rem 1rem;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    gap: 1rem;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-100%);
+    }
+    to {
+        transform: translateY(0);
+    }
 }
 
 .pwa-install-texto {
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
-    color: #333;
-    font-size: 0.95rem;
+    gap: 2px;
+    flex: 1;
 }
 
 .pwa-install-texto strong {
-    font-size: 1rem;
+    font-size: 0.9rem;
+    color: var(--text-primary);
 }
 
 .pwa-install-texto span {
-    color: #666;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
 }
 
 .pwa-install-botoes {
@@ -316,25 +383,32 @@
     gap: 0.5rem;
 }
 
-.pwa-btn-secundario,
 .pwa-btn-primario {
+    background: var(--primary-color);
+    color: white;
     border: none;
-    border-radius: 10px;
-    padding: 0.55rem 0.85rem;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-full);
+    font-size: 0.85rem;
     font-weight: 600;
-    font-size: 0.9rem;
     cursor: pointer;
 }
 
-.pwa-btn-secundario {
-    background: #f4f4f4;
-    color: #444;
+.pwa-btn-primario:hover {
+    background: var(--primary-hover);
 }
 
-.pwa-btn-primario {
-    background: #FF6B35;
-    color: white;
-    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.35);
+.pwa-btn-secundario {
+    background: transparent;
+    color: var(--text-secondary);
+    border: none;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.pwa-btn-secundario:hover {
+    color: var(--text-primary);
 }
 
 .aguardando-finalizacao small {

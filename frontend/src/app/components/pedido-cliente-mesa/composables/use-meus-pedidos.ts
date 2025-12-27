@@ -213,6 +213,14 @@ export function useMeusPedidos(clienteIdFn: () => string | undefined) {
         return classeMap[status] || '';
     }
 
+    /**
+     * Verifica se o pedido está em andamento (não foi finalizado ou cancelado).
+     */
+    function isPedidoEmAndamento(pedido: HistoricoPedidoCliente): boolean {
+        const statusEmAndamento = ['PENDENTE', 'ACEITO', 'PREPARANDO', 'PRONTO'];
+        return statusEmAndamento.includes(pedido.status);
+    }
+
     return {
         // Estado
         pedidos: pedidos.asReadonly(),
@@ -239,6 +247,7 @@ export function useMeusPedidos(clienteIdFn: () => string | undefined) {
         limpar,
         formatarStatus,
         classeStatus,
+        isPedidoEmAndamento,
         selecionarPedido,
         fecharDetalhes
     };

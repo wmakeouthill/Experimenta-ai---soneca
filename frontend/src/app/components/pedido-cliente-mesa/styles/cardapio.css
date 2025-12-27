@@ -1,10 +1,10 @@
 /* ========== HEADER DO CARDÁPIO ========== */
 .header-cliente {
-    background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
-    padding: 1rem;
     position: sticky;
     top: 0;
     z-index: 100;
+    padding: 1rem;
+    background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
@@ -77,25 +77,25 @@
 .categoria-chip {
     flex-shrink: 0;
     padding: 0.5rem 1rem;
-    background: #f0f0f0;
-    border: 2px solid transparent;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #666;
+    border-radius: var(--radius-full, 9999px);
+    background: var(--background, #f5f5f5);
+    border: 1px solid var(--border-color, #e0e0e0);
+    font-size: 0.875rem;
+    color: var(--text-secondary, #666);
     cursor: pointer;
     transition: all 0.2s;
     white-space: nowrap;
 }
 
-.categoria-chip.ativa {
-    background: #FF6B35;
-    color: white;
-    border-color: #FF6B35;
+.categoria-chip:hover {
+    border-color: var(--primary-color, #FF6B35);
+    color: var(--primary-color, #FF6B35);
 }
 
-.categoria-chip:not(.ativa):active {
-    background: #e0e0e0;
+.categoria-chip.ativa {
+    background: var(--primary-color, #FF6B35);
+    border-color: var(--primary-color, #FF6B35);
+    color: white;
 }
 
 /* Container de Produtos */
@@ -261,7 +261,44 @@
 .sem-produtos {
     text-align: center;
     padding: 3rem 1rem;
-    color: #888;
+    color: var(--text-muted, #888);
+}
+
+/* Layout lateral para botões (empilhados verticalmente) */
+.produto-acoes-lateral {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.btn-favorito-mini {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid #eee;
+    background: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.btn-favorito-mini:active {
+    transform: scale(0.9);
+}
+
+.btn-favorito-mini.ativo {
+    background: #FFF2EB;
+    border-color: var(--primary-color, #FF6B35);
+}
+
+.produto-acoes-lateral .btn-adicionar {
+    width: 36px;
+    height: 36px;
+    font-size: 1.2rem;
 }
 
 /* Botão Carrinho Flutuante */

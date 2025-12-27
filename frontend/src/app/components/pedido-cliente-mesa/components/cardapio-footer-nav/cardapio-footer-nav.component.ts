@@ -1,6 +1,6 @@
 import { Component, input, output, ChangeDetectionStrategy, computed } from '@angular/core';
 
-export type AbaNavegacao = 'inicio' | 'cardapio' | 'perfil';
+export type AbaNavegacao = 'inicio' | 'cardapio' | 'carrinho' | 'perfil';
 
 /**
  * Footer de navegação entre abas do cardápio.

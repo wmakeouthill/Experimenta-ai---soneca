@@ -7,10 +7,10 @@
         <span class="nav-icon">📋</span>
         <span class="nav-label">Cardápio</span>
     </button>
-    <button class="nav-item carrinho-nav" (click)="abrirCarrinho.emit()">
+    <button class="nav-item carrinho-nav" [class.ativo]="abaAtual() === 'carrinho'" (click)="abaMudou.emit('carrinho')">
         <span class="nav-icon">🛒</span>
         @if (temItensCarrinho()) {
-            <span class="carrinho-badge">{{ totalCarrinho() }}</span>
+        <span class="carrinho-badge">{{ totalCarrinho() }}</span>
         }
         <span class="nav-label">Carrinho</span>
     </button>

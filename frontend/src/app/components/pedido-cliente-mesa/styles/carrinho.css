@@ -15,7 +15,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 1rem;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--border-color, #e0e0e0);
     flex-shrink: 0;
     min-height: 56px;
     /* Safe area para notch */
@@ -25,7 +25,7 @@
 .carrinho-header h2 {
     margin: 0;
     font-size: 1.25rem;
-    color: #333;
+    color: var(--text-primary, #333);
     flex: 1;
     text-align: center;
 }
@@ -74,7 +74,7 @@
     align-items: center;
     justify-content: center;
     height: 100%;
-    color: #888;
+    color: var(--text-muted, #888);
     padding: 2rem;
 }
 
@@ -206,7 +206,7 @@
 
 .item-preco {
     font-weight: 600;
-    color: #FF6B35;
+    color: var(--primary-color, #FF6B35);
     font-size: 0.9rem;
 }
 
@@ -347,7 +347,7 @@
 
 .carrinho-total strong {
     font-size: 1.35rem;
-    color: #FF6B35;
+    color: var(--primary-color, #FF6B35);
 }
 
 .carrinho-footer {
