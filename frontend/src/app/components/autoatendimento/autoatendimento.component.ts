@@ -29,7 +29,8 @@ import {
     useAutoAtendimentoCardapio,
     useAutoAtendimentoCarrinho,
     useAutoAtendimentoPagamento,
-    useAutoAtendimentoCliente
+    useAutoAtendimentoCliente,
+    useAutoAtendimentoInicio
 } from './composables';
 import { AutoatendimentoFooterNavComponent, AbaNavegacaoAutoatendimento } from './components';
 
@@ -78,7 +79,7 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
 
     // Timer de inatividade (em segundos)
     private inactivityTimer: ReturnType<typeof setTimeout> | null = null;
-    private readonly INACTIVITY_TIMEOUT = 120; // 2 minutos
+    private readonly INACTIVITY_TIMEOUT = 90; // 1 minuto e meio
     readonly tempoInatividade = signal(0);
     readonly mostrarAvisoInatividade = signal(false);
 
@@ -87,6 +88,7 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
     readonly carrinho = useAutoAtendimentoCarrinho();
     readonly pagamento = useAutoAtendimentoPagamento(() => this.carrinho.totalValor());
     readonly cliente = useAutoAtendimentoCliente();
+    readonly inicio = useAutoAtendimentoInicio();
 
     // ========== Input para nome do cliente ==========
     nomeClienteInput = '';
@@ -123,6 +125,7 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
         }
 
         this.carregarCardapio();
+        this.carregarInicio();
         this.iniciarMonitoramentoInatividade();
     }
 
@@ -142,6 +145,15 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
             console.error('Erro ao carregar cardápio:', e);
         } finally {
             this.carregando.set(false);
+        }
+    }
+
+    private async carregarInicio(): Promise<void> {
+        try {
+            await this.inicio.carregar();
+        } catch (e) {
+            console.error('Erro ao carregar produtos populares:', e);
+            // Não bloqueia a tela se falhar
         }
     }
 
@@ -332,8 +344,13 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
             clearTimeout(this.inactivityTimer);
         }
 
-        // Só monitora inatividade se não estiver na tela inicial ou sucesso
-        if (this.abaAtual() !== 'inicio' && this.etapaAtual() !== 'sucesso') {
+        // Se estiver na aba início, reinicia automaticamente após timeout
+        if (this.abaAtual() === 'inicio') {
+            this.inactivityTimer = setTimeout(() => {
+                this.novoAtendimento();
+            }, this.INACTIVITY_TIMEOUT * 1000);
+        } else if (this.etapaAtual() !== 'sucesso') {
+            // Em outras telas, mostra aviso primeiro
             this.inactivityTimer = setTimeout(() => {
                 this.mostrarAvisoInatividade.set(true);
 

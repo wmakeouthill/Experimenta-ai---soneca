@@ -42,6 +42,115 @@
                 <p>O que você deseja pedir hoje?</p>
             </div>
 
+            <!-- Mais Populares -->
+            <div class="inicio-section">
+                <h2 class="section-titulo">🔥 Mais Populares</h2>
+                @if (inicio.carregando()) {
+                    <div class="carrossel-vazio-container">
+                        <div class="loading-spinner-mini"></div>
+                        <p class="carrossel-vazio">Carregando...</p>
+                    </div>
+                } @else if (inicio.produtosMaisPedidos().length > 0) {
+                    <div class="carrossel-horizontal">
+                        @for (produto of inicio.produtosMaisPedidos(); track produto.id) {
+                            <div class="produto-card-mini" (click)="abrirDetalhesProduto(produto)">
+                                @if (produto.foto) {
+                                    <div class="produto-imagem-mini">
+                                        <img [src]="getImagemProduto(produto)" [alt]="produto.nome">
+                                    </div>
+                                } @else {
+                                    <div class="produto-imagem-mini produto-sem-foto">
+                                        <span>🍽️</span>
+                                    </div>
+                                }
+                                <div class="produto-info-mini">
+                                    <span class="produto-nome-mini">{{ produto.nome }}</span>
+                                    <span class="produto-preco-mini">{{ formatarPreco(produto.preco) }}</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                } @else {
+                    <div class="carrossel-vazio-container">
+                        <span class="vazio-icon">📊</span>
+                        <p class="carrossel-vazio">Ainda não temos dados de pedidos para exibir os mais populares</p>
+                    </div>
+                }
+            </div>
+
+            <!-- Favoritos da Galera -->
+            <div class="inicio-section">
+                <h2 class="section-titulo">❤️ Favoritos da Galera</h2>
+                @if (inicio.produtosMaisFavoritados().length > 0) {
+                    <div class="carrossel-horizontal">
+                        @for (produto of inicio.produtosMaisFavoritados(); track produto.id) {
+                            <div class="produto-card-mini" (click)="abrirDetalhesProduto(produto)">
+                                @if (produto.foto) {
+                                    <div class="produto-imagem-mini">
+                                        <img [src]="getImagemProduto(produto)" [alt]="produto.nome" loading="lazy">
+                                    </div>
+                                } @else {
+                                    <div class="produto-imagem-mini produto-sem-foto">
+                                        <span>🍽️</span>
+                                    </div>
+                                }
+                                <div class="produto-info-mini">
+                                    <span class="produto-nome-mini">{{ produto.nome }}</span>
+                                    @if (produto.quantidadeFavoritos) {
+                                        <span class="produto-pedidos">{{ produto.quantidadeFavoritos }} ❤️</span>
+                                    }
+                                    <span class="produto-preco-mini">{{ formatarPreco(produto.preco) }}</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                } @else {
+                    <div class="carrossel-vazio-container">
+                        <span class="vazio-icon">❤️</span>
+                        <p class="carrossel-vazio">Ainda não há produtos favoritados pela comunidade</p>
+                    </div>
+                }
+            </div>
+
+            <!-- Bem Avaliados -->
+            <div class="inicio-section">
+                <h2 class="section-titulo">⭐ Bem Avaliados</h2>
+                @if (inicio.carregando()) {
+                    <div class="carrossel-vazio-container">
+                        <div class="loading-spinner-mini"></div>
+                        <p class="carrossel-vazio">Carregando...</p>
+                    </div>
+                } @else if (inicio.produtosBemAvaliados().length > 0) {
+                    <div class="carrossel-horizontal">
+                        @for (produto of inicio.produtosBemAvaliados(); track produto.id) {
+                            <div class="produto-card-mini" (click)="abrirDetalhesProduto(produto)">
+                                @if (produto.foto) {
+                                    <div class="produto-imagem-mini">
+                                        <img [src]="getImagemProduto(produto)" [alt]="produto.nome" loading="lazy">
+                                    </div>
+                                } @else {
+                                    <div class="produto-imagem-mini produto-sem-foto">
+                                        <span>🍽️</span>
+                                    </div>
+                                }
+                                <div class="produto-info-mini">
+                                    <span class="produto-nome-mini">{{ produto.nome }}</span>
+                                    @if (produto.mediaAvaliacao) {
+                                        <span class="produto-avaliacao">⭐ {{ produto.mediaAvaliacao.toFixed(1) }}</span>
+                                    }
+                                    <span class="produto-preco-mini">{{ formatarPreco(produto.preco) }}</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                } @else {
+                    <div class="carrossel-vazio-container">
+                        <span class="vazio-icon">⭐</span>
+                        <p class="carrossel-vazio">Ainda não há produtos avaliados</p>
+                    </div>
+                }
+            </div>
+
             <!-- Categorias -->
             <div class="inicio-categorias">
                 <h2 class="section-titulo">📂 Categorias</h2>
@@ -61,11 +170,6 @@
                     📋 Ver Cardápio Completo
                 </button>
             </div>
-
-            <!-- Botão discreto para sair -->
-            <button class="btn-sair-totem" (click)="sairDoTotem()" style="position: fixed; top: 1rem; right: 1rem; background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 48px; height: 48px; font-size: 1.5rem; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 100;">
-                ⚙️
-            </button>
         </div>
     }
 
