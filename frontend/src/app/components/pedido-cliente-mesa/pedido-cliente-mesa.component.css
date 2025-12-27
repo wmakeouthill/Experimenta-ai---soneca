@@ -1304,7 +1304,7 @@
 
 /* ========== ABA PERFIL ========== */
 .aba-perfil {
-    padding: 2rem 1rem;
+    padding: 1rem;
     padding-bottom: 100px;
 }
 
@@ -1404,9 +1404,10 @@
 
 .perfil-info {
     text-align: center;
-    color: #999;
+    color: var(--text-muted);
     font-size: 0.85rem;
-    margin-top: 2rem;
+    margin-top: 1rem;
+    margin-bottom: 0;
 }
 
 /* Step Indicator do Carrinho */
