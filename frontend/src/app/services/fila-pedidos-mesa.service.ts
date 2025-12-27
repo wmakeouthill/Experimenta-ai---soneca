@@ -21,6 +21,8 @@ export interface ItemPedidoPendente {
     adicionais?: AdicionalPedidoPendente[];
 }
 
+export type TipoPedido = 'BALCAO' | 'MESA' | 'DELIVERY' | 'RETIRADA';
+
 export interface PedidoPendente {
     id: string;
     mesaToken: string;
@@ -34,6 +36,7 @@ export interface PedidoPendente {
     valorTotal: number;
     dataHoraSolicitacao: string;
     tempoEsperaSegundos: number;
+    tipoPedido?: TipoPedido;
 }
 
 export interface QuantidadePendentes {

@@ -1,3 +1,27 @@
+/* ========== CSS Variables ========== */
+:host {
+    --primary-color: #FF6B35;
+    --primary-hover: #e85a27;
+    --primary-light: #FFF4F0;
+    --secondary-color: #F7931E;
+    --success-color: #4CAF50;
+    --error-color: #e53935;
+    --warning-color: #F59E0B;
+    --background: #f5f5f5;
+    --surface: #FFFFFF;
+    --border-color: #e0e0e0;
+    --text-primary: #333;
+    --text-secondary: #666;
+    --text-muted: #888;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-full: 9999px;
+}
+
 /* Reset e Base */
 .pedido-cliente-container {
     /* Usa viewport dinâmica para não cortar em mobile com barras/teclado */
@@ -5,13 +29,20 @@
     background: #f5f5f5;
     /* Font stack otimizada para mobile - prioriza fontes do sistema para melhor legibilidade */
     font-family:
-        system-ui,                    /* Moderno - usa fonte nativa do sistema */
-        -apple-system,                /* iOS/macOS Safari */
-        BlinkMacSystemFont,           /* macOS Chrome */
-        'Segoe UI',                   /* Windows */
-        'Roboto',                     /* Android */
-        'Noto Sans',                  /* Linux */
-        'Helvetica Neue', Arial,      /* Fallbacks clássicos */
+        system-ui,
+        /* Moderno - usa fonte nativa do sistema */
+        -apple-system,
+        /* iOS/macOS Safari */
+        BlinkMacSystemFont,
+        /* macOS Chrome */
+        'Segoe UI',
+        /* Windows */
+        'Roboto',
+        /* Android */
+        'Noto Sans',
+        /* Linux */
+        'Helvetica Neue', Arial,
+        /* Fallbacks clássicos */
         sans-serif;
     padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
     /* Melhora renderização de texto em mobile */
@@ -48,7 +79,9 @@
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Error Screen */
@@ -116,7 +149,7 @@
     gap: 1rem;
     margin: 1.5rem 0;
     padding: 1.5rem;
-    background: rgba(255,255,255,0.15);
+    background: rgba(255, 255, 255, 0.15);
     border-radius: 12px;
     width: 100%;
     max-width: 300px;
@@ -149,8 +182,15 @@
 }
 
 @keyframes pulse-step {
-    0%, 100% { background: rgba(255, 255, 255, 0.2); }
-    50% { background: rgba(255, 255, 255, 0.35); }
+
+    0%,
+    100% {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    50% {
+        background: rgba(255, 255, 255, 0.35);
+    }
 }
 
 .success-info {
@@ -166,9 +206,19 @@
 }
 
 @keyframes celebrate {
-    0% { transform: scale(0.9); opacity: 0; }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); opacity: 1; }
+    0% {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 .tempo-espera {
@@ -189,9 +239,19 @@
 }
 
 @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-10px); }
-    75% { transform: translateX(10px); }
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-10px);
+    }
+
+    75% {
+        transform: translateX(10px);
+    }
 }
 
 .btn-novo-pedido {
@@ -415,8 +475,15 @@
 }
 
 @keyframes pulse-circle {
-    0%, 100% { box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.4); }
-    50% { box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.2); }
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.2);
+    }
 }
 
 .step-label {
@@ -520,7 +587,8 @@
 
 .cta-pedido-ativo {
     position: fixed;
-    bottom: 90px; /* acima do footer nav */
+    bottom: 90px;
+    /* acima do footer nav */
     right: 1rem;
     display: flex;
     align-items: center;
@@ -542,6 +610,7 @@
         opacity: 0;
         transform: translateX(50px);
     }
+
     to {
         opacity: 1;
         transform: translateX(0);
@@ -549,8 +618,15 @@
 }
 
 @keyframes pulse-cta {
-    0%, 100% { box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4); }
-    50% { box-shadow: 0 4px 25px rgba(255, 107, 53, 0.6); }
+
+    0%,
+    100% {
+        box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 4px 25px rgba(255, 107, 53, 0.6);
+    }
 }
 
 .cta-pedido-ativo .cta-icon {
@@ -559,8 +635,15 @@
 }
 
 @keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-3px); }
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-3px);
+    }
 }
 
 .cta-pedido-ativo .cta-text {
@@ -600,6 +683,13 @@
 }
 
 @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.3;
+    }
 }

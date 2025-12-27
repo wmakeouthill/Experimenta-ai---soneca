@@ -45,6 +45,13 @@ export interface MeioPagamentoDTO {
   valor: number;
 }
 
+export enum TipoPedido {
+  BALCAO = 'BALCAO',
+  MESA = 'MESA',
+  DELIVERY = 'DELIVERY',
+  RETIRADA = 'RETIRADA'
+}
+
 export interface Pedido {
   id: string;
   numeroPedido: string;
@@ -63,6 +70,7 @@ export interface Pedido {
   dataPedido: string;
   createdAt: string;
   updatedAt: string;
+  tipoPedido?: TipoPedido;
 }
 
 export enum MeioPagamento {

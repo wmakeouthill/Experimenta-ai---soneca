@@ -75,11 +75,11 @@ function createWindow() {
     app.commandLine.appendSwitch('enable-font-subpixel-positioning');
 
     // Abre DevTools automaticamente em desenvolvimento para ver logs
-    if (process.env.NODE_ENV === 'development' || process.argv.includes('--dev')) {
-      mainWindow.webContents.openDevTools();
-    }
+  if (process.env.NODE_ENV === 'development' || process.argv.includes('--dev')) {
+    mainWindow.webContents.openDevTools();
+  }
 
-    // Quando a página carregar, ajusta configurações visuais
+  // Quando a página carregar, ajusta configurações visuais
     mainWindow.webContents.on('did-finish-load', () => {
       try {
         const primaryDisplay = screen.getPrimaryDisplay();
@@ -143,21 +143,21 @@ function createWindow() {
   // Carrega a aplicação Angular
   // Em desenvolvimento, aponta para localhost
   // Em produção, sempre carrega do Google Cloud Run (backend online)
-  const PRODUCTION_URL = 'https://experimenta-ai-soneca-699875180084.southamerica-east1.run.app';
+  const PRODUCTION_URL = 'https://experimentaai-delivery-699875180084.southamerica-east1.run.app';
   const DEV_URL = 'http://localhost:8080';
 
   // Detecta desenvolvimento: NODE_ENV, flag --dev, ou se não estiver buildado (packaged)
-  const isDevelopment = process.env.NODE_ENV === 'development'
-    || process.argv.includes('--dev')
+  const isDevelopment = process.env.NODE_ENV === 'development' 
+    || process.argv.includes('--dev') 
     || !app.isPackaged;
-
+  
   console.log('🔍 Modo:', isDevelopment ? 'DESENVOLVIMENTO' : 'PRODUÇÃO');
   console.log('🌐 URL:', isDevelopment ? DEV_URL : PRODUCTION_URL);
-
+  
   if (isDevelopment) {
     mainWindow.loadURL(DEV_URL);
     mainWindow.webContents.openDevTools();
-
+    
     // Tratamento de erros de conexão em desenvolvimento
     mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
       console.error('❌ Erro ao carregar (dev):', errorCode, errorDescription, validatedURL);
@@ -203,10 +203,10 @@ function createWindow() {
 
 // Função para criar o menu da aplicação
 function criarMenu() {
-  const PRODUCTION_URL = 'https://experimenta-ai-soneca-699875180084.southamerica-east1.run.app/';
+  const PRODUCTION_URL = 'https://experimentaai-delivery-699875180084.southamerica-east1.run.app';
   const DEV_URL = 'http://localhost:8080';
-  const isDevelopment = process.env.NODE_ENV === 'development'
-    || process.argv.includes('--dev')
+  const isDevelopment = process.env.NODE_ENV === 'development' 
+    || process.argv.includes('--dev') 
     || !app.isPackaged;
   const URL_INICIAL = isDevelopment ? DEV_URL : PRODUCTION_URL;
 

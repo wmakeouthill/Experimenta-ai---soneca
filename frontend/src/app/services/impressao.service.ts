@@ -4,8 +4,31 @@ import { Observable, from, switchMap, of, tap } from 'rxjs';
 import { ElectronImpressoraService } from './electron-impressora.service';
 
 export enum TipoImpressora {
+  // Epson (padrão ESC/POS)
   EPSON_TM_T20 = 'EPSON_TM_T20',
+  EPSON_TM_T88 = 'EPSON_TM_T88',
+
+  // Daruma
   DARUMA_800 = 'DARUMA_800',
+  DARUMA_700 = 'DARUMA_700',
+
+  // Diebold Nixdorf
+  DIEBOLD_IM693H = 'DIEBOLD_IM693H',
+
+  // Star
+  STAR_TSP100 = 'STAR_TSP100',
+  STAR_TSP650 = 'STAR_TSP650',
+
+  // Bematech
+  BEMATECH_MP4200 = 'BEMATECH_MP4200',
+
+  // Elgin
+  ELGIN_I9 = 'ELGIN_I9',
+  ELGIN_I7 = 'ELGIN_I7',
+
+  // Genéricas (chinesas/POS-58)
+  POS_58 = 'POS_58',
+  POS_80 = 'POS_80',
   GENERICA_ESCPOS = 'GENERICA_ESCPOS'
 }
 
@@ -31,6 +54,7 @@ export interface FormatarCupomResponse {
   sucesso: boolean;
   mensagem: string;
   dadosEscPosBase64: string; // Dados do cupom formatados em ESC/POS (base64)
+  logoBase64?: string; // Logo em base64 (PNG) para impressão separada pelo Electron
   tipoImpressora: string;
   pedidoId: string;
 }
@@ -81,7 +105,7 @@ export class ImpressaoService {
     if (this.electronImpressoraService.estaRodandoNoElectron()) {
       return this.imprimirViaElectron(request);
     }
-    
+
     // Se não estiver no Electron, usa fluxo normal (backend tenta imprimir)
     return this.http.post<ImprimirCupomResponse>(`${this.apiUrl}/cupom-fiscal`, request);
   }
@@ -106,7 +130,7 @@ export class ImpressaoService {
         })
       );
     }
-    
+
     return this.imprimirViaElectronComDevicePath(request);
   }
 
@@ -154,16 +178,18 @@ export class ImpressaoService {
                 porta,
                 pedidoId: request.pedidoId,
                 devicePath: request.devicePath,
-                dadosCupomLength: formatarResponse.dadosEscPosBase64?.length
+                dadosCupomLength: formatarResponse.dadosEscPosBase64?.length,
+                hasLogo: !!formatarResponse.logoBase64
               });
-              
+
               return this.http.post<ImprimirCupomResponse>(
                 `http://localhost:${porta}/imprimir/cupom-fiscal`,
                 {
                   pedidoId: request.pedidoId,
                   tipoImpressora: formatarResponse.tipoImpressora,
                   devicePath: request.devicePath,
-                  dadosCupom: formatarResponse.dadosEscPosBase64
+                  dadosCupom: formatarResponse.dadosEscPosBase64,
+                  logoBase64: formatarResponse.logoBase64 // Logo PNG para impressão
                 }
               ).pipe(
                 tap({
@@ -213,7 +239,7 @@ export class ImpressaoService {
       telefoneEstabelecimento: configuracao.telefoneEstabelecimento,
       cnpjEstabelecimento: configuracao.cnpjEstabelecimento
     };
-    
+
     return this.imprimirCupom(request);
   }
 
@@ -225,4 +251,3 @@ export class ImpressaoService {
     return this.http.post<ConfiguracaoImpressoraDTO>(`${this.apiUrl}/configuracao`, request);
   }
 }
-
