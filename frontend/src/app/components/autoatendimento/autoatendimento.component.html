@@ -33,45 +33,44 @@
         </div>
     }
 
-    <!-- ========== TELA INICIAL ========== -->
-    @if (!carregando() && !erro() && etapaAtual() === 'inicio') {
-        <div class="tela-inicio">
-            <div class="inicio-content">
-                <img src="/assets/experimenta_ai_banner_circular.webp" alt="Logo" class="logo-grande">
-                <h1>Bem-vindo!</h1>
-                <p class="subtitulo">Faça seu pedido aqui</p>
+    <!-- ========== ABA: INÍCIO ========== -->
+    @if (!carregando() && !erro() && !etapaAtual() && abaAtual() === 'inicio') {
+        <div class="aba-inicio">
+            <!-- Bem-vindo -->
+            <div class="inicio-welcome">
+                <h2>Bem-vindo! 👋</h2>
+                <p>O que você deseja pedir hoje?</p>
+            </div>
 
-                <button class="btn-comecar" (click)="irParaCardapio()">
-                    🍽️ Começar Pedido
+            <!-- Categorias -->
+            <div class="inicio-categorias">
+                <h2 class="section-titulo">📂 Categorias</h2>
+                <div class="categorias-grid">
+                    @for (categoria of cardapio.categorias(); track categoria.id) {
+                        <button class="categoria-card"
+                            (click)="cardapio.selecionarCategoria(categoria.nome); navegarPara('cardapio')">
+                            <span class="categoria-nome">{{ categoria.nome }}</span>
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <!-- Ver Cardápio Completo -->
+            <div class="inicio-cta">
+                <button class="btn-primary btn-large" (click)="navegarPara('cardapio')">
+                    📋 Ver Cardápio Completo
                 </button>
-
-                <p class="operador-info">
-                    Operador: {{ operadorLogado()?.nome }}
-                </p>
             </div>
 
             <!-- Botão discreto para sair -->
-            <button class="btn-sair-totem" (click)="sairDoTotem()">
+            <button class="btn-sair-totem" (click)="sairDoTotem()" style="position: fixed; top: 1rem; right: 1rem; background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 48px; height: 48px; font-size: 1.5rem; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 100;">
                 ⚙️
             </button>
         </div>
     }
 
-    <!-- ========== CARDÁPIO ========== -->
-    @if (!carregando() && !erro() && etapaAtual() === 'cardapio') {
-        <!-- Header -->
-        <header class="header-totem">
-            <button class="btn-voltar-header" (click)="voltarEtapa()">
-                ← Início
-            </button>
-            <h1>Cardápio</h1>
-            <button class="btn-carrinho-header" (click)="irParaCarrinho()" [disabled]="carrinho.carrinhoVazio()">
-                🛒
-                @if (carrinho.totalItens() > 0) {
-                    <span class="badge-carrinho">{{ carrinho.totalItens() }}</span>
-                }
-            </button>
-        </header>
+    <!-- ========== ABA: CARDÁPIO ========== -->
+    @if (!carregando() && !erro() && !etapaAtual() && abaAtual() === 'cardapio') {
 
         <!-- Categorias -->
         <div class="categorias-scroll">
@@ -165,15 +164,80 @@
             }
         </div>
 
-        <!-- Botão flutuante do carrinho -->
-        @if (carrinho.totalItens() > 0) {
-            <div class="carrinho-flutuante" (click)="irParaCarrinho()">
-                <span class="carrinho-info">
-                    🛒 {{ carrinho.totalItens() }} {{ carrinho.totalItens() === 1 ? 'item' : 'itens' }}
-                </span>
-                <span class="carrinho-total">{{ formatarPreco(carrinho.totalValor()) }}</span>
+    }
+
+    <!-- ========== ABA: CARRINHO ========== -->
+    @if (!carregando() && !erro() && !etapaAtual() && abaAtual() === 'carrinho') {
+        <div class="aba-carrinho">
+            <div class="aba-header">
+                <h2>🛒 Seu Carrinho</h2>
             </div>
-        }
+
+            @if (carrinho.carrinhoVazio()) {
+                <div class="carrinho-vazio">
+                    <span class="vazio-icon">🛒</span>
+                    <p>Seu carrinho está vazio</p>
+                    <button class="btn-secondary" (click)="navegarPara('cardapio')">Ver cardápio</button>
+                </div>
+            } @else {
+                <div class="carrinho-items">
+                    @for (item of carrinho.itens(); track item.produto.id) {
+                        <div class="carrinho-item">
+                            <div class="item-info">
+                                <h4>{{ item.produto.nome }}</h4>
+                                @if (item.adicionais && item.adicionais.length > 0) {
+                                    <div class="item-adicionais">
+                                        @for (ad of item.adicionais; track ad.adicional.id) {
+                                            <span>+ {{ ad.quantidade }}x {{ ad.adicional.nome }}</span>
+                                        }
+                                    </div>
+                                }
+                                @if (item.observacao) {
+                                    <p class="item-obs">📝 {{ item.observacao }}</p>
+                                }
+                            </div>
+                            <div class="item-controls">
+                                <div class="quantidade-mini">
+                                    <button (click)="carrinho.atualizarQuantidadeItem(item.produto.id, Math.max(1, item.quantidade - 1))">−</button>
+                                    <span>{{ item.quantidade }}</span>
+                                    <button (click)="carrinho.atualizarQuantidadeItem(item.produto.id, item.quantidade + 1)">+</button>
+                                </div>
+                                <span class="item-preco">{{ formatarPreco(item.produto.preco * item.quantidade) }}</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Identificação do Cliente (opcional) -->
+                <div class="identificacao-cliente">
+                    <label>Seu nome (para chamar na entrega)</label>
+                    <input
+                        type="text"
+                        [(ngModel)]="nomeClienteInput"
+                        placeholder="Digite seu nome (opcional)"
+                        maxlength="50">
+                </div>
+
+                <div class="carrinho-footer">
+                    <div class="carrinho-total-row">
+                        <span>Total</span>
+                        <span class="total-valor">{{ formatarPreco(carrinho.totalValor()) }}</span>
+                    </div>
+                    <button class="btn-primary btn-large" (click)="irParaPagamento()">
+                        Continuar para Pagamento →
+                    </button>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- ========== FOOTER NAVEGAÇÃO ========== -->
+    @if (!carregando() && !erro() && !etapaAtual()) {
+        <app-autoatendimento-footer-nav 
+            [abaAtual]="abaAtual()" 
+            [totalCarrinho]="carrinho.totalItens()"
+            (abaMudou)="navegarPara($event)" 
+            (abrirCarrinho)="navegarPara('carrinho')" />
     }
 
     <!-- ========== MODAL DETALHES PRODUTO ========== -->
@@ -279,79 +343,6 @@
         </div>
     }
 
-    <!-- ========== CARRINHO ========== -->
-    @if (!carregando() && !erro() && etapaAtual() === 'carrinho') {
-        <header class="header-totem">
-            <button class="btn-voltar-header" (click)="voltarEtapa()">
-                ← Cardápio
-            </button>
-            <h1>Seu Pedido</h1>
-            <button class="btn-cancelar-header" (click)="cancelarPedido()">
-                🗑️
-            </button>
-        </header>
-
-        <div class="carrinho-container">
-            @if (carrinho.carrinhoVazio()) {
-                <div class="carrinho-vazio">
-                    <span class="carrinho-vazio-icon">🛒</span>
-                    <p>Seu carrinho está vazio</p>
-                    <button class="btn-ver-cardapio" (click)="irParaCardapio()">
-                        Ver Cardápio
-                    </button>
-                </div>
-            } @else {
-                <div class="carrinho-itens">
-                    @for (item of carrinho.itens(); track item.produto.id) {
-                        <div class="carrinho-item">
-                            <div class="item-info">
-                                <h3>{{ item.produto.nome }}</h3>
-                                @if (item.adicionais && item.adicionais.length > 0) {
-                                    <div class="item-adicionais">
-                                        @for (ad of item.adicionais; track ad.adicional.id) {
-                                            <span class="adicional-tag">+ {{ ad.quantidade }}x {{ ad.adicional.nome }}</span>
-                                        }
-                                    </div>
-                                }
-                                @if (item.observacao) {
-                                    <p class="item-obs">📝 {{ item.observacao }}</p>
-                                }
-                            </div>
-                            <div class="item-controles">
-                                <div class="item-quantidade">
-                                    <button (click)="carrinho.atualizarQuantidadeItem(item.produto.id, item.quantidade - 1)">-</button>
-                                    <span>{{ item.quantidade }}</span>
-                                    <button (click)="carrinho.atualizarQuantidadeItem(item.produto.id, item.quantidade + 1)">+</button>
-                                </div>
-                                <span class="item-preco">{{ formatarPreco(item.produto.preco * item.quantidade) }}</span>
-                            </div>
-                        </div>
-                    }
-                </div>
-
-                <!-- Identificação do Cliente (opcional) -->
-                <div class="identificacao-cliente">
-                    <label>Seu nome (para chamar na entrega)</label>
-                    <input
-                        type="text"
-                        [(ngModel)]="nomeClienteInput"
-                        placeholder="Digite seu nome (opcional)"
-                        maxlength="50">
-                </div>
-
-                <div class="carrinho-resumo">
-                    <div class="resumo-linha total">
-                        <span>Total</span>
-                        <span>{{ formatarPreco(carrinho.totalValor()) }}</span>
-                    </div>
-                </div>
-
-                <button class="btn-continuar-grande" (click)="irParaPagamento()">
-                    Continuar para Pagamento
-                </button>
-            }
-        </div>
-    }
 
     <!-- ========== PAGAMENTO ========== -->
     @if (!carregando() && !erro() && etapaAtual() === 'pagamento') {

@@ -31,8 +31,9 @@ import {
     useAutoAtendimentoPagamento,
     useAutoAtendimentoCliente
 } from './composables';
+import { AutoatendimentoFooterNavComponent, AbaNavegacaoAutoatendimento } from './components';
 
-type EtapaTotem = 'inicio' | 'cardapio' | 'carrinho' | 'pagamento' | 'confirmacao' | 'sucesso';
+type EtapaTotem = 'cardapio' | 'pagamento' | 'confirmacao' | 'sucesso';
 type MeioPagamentoTipo = 'PIX' | 'CARTAO_CREDITO' | 'CARTAO_DEBITO' | 'VALE_REFEICAO' | 'DINHEIRO';
 
 /**
@@ -43,14 +44,15 @@ type MeioPagamentoTipo = 'PIX' | 'CARTAO_CREDITO' | 'CARTAO_DEBITO' | 'VALE_REFE
 @Component({
     selector: 'app-autoatendimento',
     standalone: true,
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, AutoatendimentoFooterNavComponent],
     templateUrl: './autoatendimento.component.html',
     styleUrls: [
         './styles/base.css',
         './styles/cardapio.css',
         './styles/modal.css',
         './styles/carrinho.css',
-        './styles/pagamento.css'
+        './styles/pagamento.css',
+        './styles/abas.css'
     ],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -67,7 +69,8 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
     // ========== Estado Geral ==========
     readonly carregando = signal(true);
     readonly erro = signal<string | null>(null);
-    readonly etapaAtual = signal<EtapaTotem>('inicio');
+    readonly etapaAtual = signal<EtapaTotem | null>(null);
+    readonly abaAtual = signal<AbaNavegacaoAutoatendimento>('inicio');
     readonly enviando = signal(false);
 
     // Estado do pedido criado
@@ -161,14 +164,18 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
     }
 
     // ========== Navegação ==========
-    irParaCardapio(): void {
-        this.etapaAtual.set('cardapio');
+    navegarPara(aba: AbaNavegacaoAutoatendimento): void {
+        this.abaAtual.set(aba);
+        this.etapaAtual.set(null);
         this.resetarInatividade();
     }
 
+    irParaCardapio(): void {
+        this.navegarPara('cardapio');
+    }
+
     irParaCarrinho(): void {
-        this.etapaAtual.set('carrinho');
-        this.resetarInatividade();
+        this.navegarPara('carrinho');
     }
 
     irParaPagamento(): void {
@@ -185,19 +192,19 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
 
     voltarEtapa(): void {
         const etapa = this.etapaAtual();
-        switch (etapa) {
-            case 'cardapio':
-                this.etapaAtual.set('inicio');
-                break;
-            case 'carrinho':
-                this.etapaAtual.set('cardapio');
-                break;
-            case 'pagamento':
-                this.etapaAtual.set('carrinho');
-                break;
-            case 'confirmacao':
-                this.etapaAtual.set('pagamento');
-                break;
+        if (etapa) {
+            switch (etapa) {
+                case 'pagamento':
+                    this.etapaAtual.set(null);
+                    this.abaAtual.set('carrinho');
+                    break;
+                case 'confirmacao':
+                    this.etapaAtual.set('pagamento');
+                    break;
+            }
+        } else {
+            // Se está em uma aba, volta para início
+            this.navegarPara('inicio');
         }
         this.resetarInatividade();
     }
@@ -283,7 +290,8 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
         this.nomeClienteInput = '';
         this.pedidoCriado.set(null);
         this.erro.set(null);
-        this.etapaAtual.set('inicio');
+        this.etapaAtual.set(null);
+        this.abaAtual.set('inicio');
         this.resetarInatividade();
     }
 
@@ -324,8 +332,8 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
             clearTimeout(this.inactivityTimer);
         }
 
-        // Só monitora inatividade se não estiver na tela inicial
-        if (this.etapaAtual() !== 'inicio' && this.etapaAtual() !== 'sucesso') {
+        // Só monitora inatividade se não estiver na tela inicial ou sucesso
+        if (this.abaAtual() !== 'inicio' && this.etapaAtual() !== 'sucesso') {
             this.inactivityTimer = setTimeout(() => {
                 this.mostrarAvisoInatividade.set(true);
 
