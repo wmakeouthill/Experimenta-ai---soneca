@@ -241,13 +241,14 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
         this.enviando.set(true);
         this.resetarInatividade();
 
+        // Gera chave de idempotência UMA VEZ por tentativa de envio.
+        // Se houver double-click, o guard `podeEnviarPedido` (que verifica !enviando()) impede nova execução.
+        const idempotencyKey = this.autoAtendimentoService.gerarChaveIdempotencia();
+
         try {
             const request = this.montarRequestPedido();
-            console.log('[DEBUG] Request pedido:', JSON.stringify(request, null, 2));
-            console.log('[DEBUG] Total carrinho:', this.carrinho.totalValor());
-            console.log('[DEBUG] Total pagamento:', this.pagamento.meiosSelecionados().reduce((s, m) => s + m.valor, 0));
             const response = await firstValueFrom(
-                this.autoAtendimentoService.criarPedido(request)
+                this.autoAtendimentoService.criarPedido(request, idempotencyKey)
             );
 
             this.pedidoCriado.set({

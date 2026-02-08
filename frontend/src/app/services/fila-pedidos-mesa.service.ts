@@ -1,5 +1,5 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, interval, switchMap, startWith, tap, catchError, of } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 
@@ -44,6 +44,17 @@ export interface QuantidadePendentes {
     existemPendentes: boolean;
 }
 
+/**
+ * Gera uma chave de idempotência única para requisições.
+ */
+function generateIdempotencyKey(): string {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0;
+        const v = c === 'x' ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+    });
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -85,10 +96,14 @@ export class FilaPedidosMesaService {
     }
 
     /**
-     * Aceita um pedido pendente - cria o pedido real
+     * Aceita um pedido pendente - cria o pedido real.
+     * Usa chave de idempotência para evitar duplicação em caso de double-click.
      */
-    aceitarPedido(pedidoId: string): Observable<any> {
-        return this.http.post(`${this.API_URL}/${pedidoId}/aceitar`, {});
+    aceitarPedido(pedidoId: string, idempotencyKey: string): Observable<any> {
+        const headers = new HttpHeaders({
+            'X-Idempotency-Key': idempotencyKey
+        });
+        return this.http.post(`${this.API_URL}/${pedidoId}/aceitar`, {}, { headers });
     }
 
     /**

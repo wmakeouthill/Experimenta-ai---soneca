@@ -233,7 +233,8 @@ export class PedidosComponent implements OnInit, OnDestroy {
     }
 
     this.carregandoFilaMesa.set(true);
-    this.filaPedidosMesaService.aceitarPedido(pedidoId).subscribe({
+    const idempotencyKey = crypto.randomUUID();
+    this.filaPedidosMesaService.aceitarPedido(pedidoId, idempotencyKey).subscribe({
       next: (pedidoCriado) => {
         this.notificationService.sucesso('✅ Pedido aceito e criado com sucesso!');
         // Remove da fila local
@@ -318,7 +319,10 @@ export class PedidosComponent implements OnInit, OnDestroy {
       usuarioId: usuario.id
     };
 
-    this.pedidoService.criar(requestComUsuario)
+    // Gera chave de idempotência UMA VEZ para esta operação de criação
+    const idempotencyKey = this.pedidoService.gerarChaveIdempotencia();
+
+    this.pedidoService.criar(requestComUsuario, idempotencyKey)
       .subscribe({
         next: (pedidoCriado) => {
           this.pedidosComposable.atualizarPedidoNoSignal(pedidoCriado);

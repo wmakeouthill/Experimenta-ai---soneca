@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -88,8 +89,18 @@ public class IdempotencyService {
         T result = operation.get();
         HttpStatus status = HttpStatus.CREATED;
 
-        // Salva a resposta para futuras requisições
-        saveIdempotencyKey(idempotencyKey, endpoint, result, status.value());
+        // Salva a resposta para futuras requisições.
+        // Se outra thread inseriu a mesma chave concorrentemente (TOCTOU race),
+        // a constraint UNIQUE no banco garante que apenas uma inserção terá sucesso.
+        // Nesse caso, retornamos o resultado já computado (a operação já executou).
+        try {
+            saveIdempotencyKey(idempotencyKey, endpoint, result, status.value());
+        } catch (DataIntegrityViolationException e) {
+            log.warn("[IDEMPOTENCY] Chave já inserida por thread concorrente - Key: {}, Endpoint: {}. " +
+                    "Operação já foi executada, retornando resultado.", idempotencyKey, endpoint);
+            // A operação já executou nesta thread; retorna o resultado normalmente.
+            // A resposta cached da outra thread será usada em futuros retries.
+        }
 
         log.debug("[IDEMPOTENCY] Nova chave registrada - Key: {}, Endpoint: {}",
                 idempotencyKey, endpoint);

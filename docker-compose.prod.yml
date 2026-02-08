@@ -1,0 +1,204 @@
+version: "3.8"
+
+# ============================================================
+# Docker Compose de Produção - VPS Hostinger
+# Snackbar System (Experimenta aí - Soneca)
+# ============================================================
+# Serviços: MySQL 8.0 + Backend Spring Boot + Frontend Nginx
+# ============================================================
+
+services:
+  # ==================== BANCO DE DADOS ====================
+  mysql:
+    image: mysql:8.0
+    container_name: snackbar-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME:-snackbar_db}
+      MYSQL_USER: ${DB_USERNAME:-snackbar_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./config/mysql/my.cnf:/etc/mysql/conf.d/custom.cnf:ro
+    ports:
+      # NÃO expor MySQL externamente! Apenas rede interna Docker.
+      - "127.0.0.1:3306:3306"
+    networks:
+      - backend-net
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 2G
+        reservations:
+          cpus: "0.25"
+          memory: 512M
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p${DB_ROOT_PASSWORD}",
+          "--silent",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    security_opt:
+      - no-new-privileges:true
+
+  # ==================== BACKEND SPRING BOOT ====================
+  backend:
+    image: ghcr.io/${GHCR_USER:-wmakeouthill}/snackbar-backend:${TAG:-latest}
+    container_name: snackbar-backend
+    restart: always
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=${DB_NAME:-snackbar_db}
+      - DB_USERNAME=${DB_USERNAME:-snackbar_user}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_URL=jdbc:mysql://mysql:3306/${DB_NAME:-snackbar_db}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Sao_Paulo&connectTimeout=10000&socketTimeout=30000
+      - SERVER_PORT=8080
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION=${JWT_EXPIRATION:-86400}
+      - SHOW_SQL=false
+      - LOG_LEVEL=${LOG_LEVEL:-WARN}
+      # JVM otimizada para VPS com pouca RAM
+      - JAVA_OPTS=-Xms512m -Xmx1g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseStringDeduplication -Djava.security.egd=file:/dev/./urandom
+      # Chat IA (opcional)
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
+      - OPENAI_MAX_TOKENS=${OPENAI_MAX_TOKENS:-4000}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - backend-net
+      - frontend-net
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 1536M
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8080/actuator/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:size=100M
+
+  # ==================== FRONTEND NGINX ====================
+  frontend:
+    image: ghcr.io/${GHCR_USER:-wmakeouthill}/snackbar-frontend:${TAG:-latest}
+    container_name: snackbar-frontend
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./config/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./config/certbot/conf:/etc/letsencrypt:ro
+      - ./config/certbot/www:/var/www/certbot:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - frontend-net
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:80/health",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:size=50M
+      - /var/cache/nginx:size=50M
+      - /var/run:size=10M
+
+  # ==================== CERTBOT (SSL Let's Encrypt) ====================
+  certbot:
+    image: certbot/certbot:latest
+    container_name: snackbar-certbot
+    volumes:
+      - ./config/certbot/conf:/etc/letsencrypt
+      - ./config/certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    restart: unless-stopped
+    networks:
+      - frontend-net
+    deploy:
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 64M
+
+networks:
+  backend-net:
+    driver: bridge
+    internal: true # Rede isolada sem acesso externo
+  frontend-net:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local

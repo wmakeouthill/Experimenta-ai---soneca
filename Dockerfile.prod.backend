@@ -1,0 +1,76 @@
+# ============================================================
+# Dockerfile de Produção - Backend Spring Boot
+# Multi-stage build otimizado para VPS com pouca RAM
+# ============================================================
+
+# Stage 1: Build do Maven
+FROM maven:3.9-eclipse-temurin-17 AS maven-build
+
+WORKDIR /app
+
+# Copiar POMs primeiro (cache de dependências)
+COPY pom.xml .
+COPY kernel-compartilhado/pom.xml ./kernel-compartilhado/
+COPY gestao-cardapio/pom.xml ./gestao-cardapio/
+COPY gestao-clientes/pom.xml ./gestao-clientes/
+COPY gestao-pedidos/pom.xml ./gestao-pedidos/
+COPY autenticacao/pom.xml ./autenticacao/
+COPY sistema-orquestrador/pom.xml ./sistema-orquestrador/
+COPY impressao-cupom-fiscal/pom.xml ./impressao-cupom-fiscal/
+COPY chat-ia/pom.xml ./chat-ia/
+
+# Baixar dependências (camada cacheable)
+RUN mvn dependency:go-offline -B -q
+
+# Copiar código fonte
+COPY kernel-compartilhado ./kernel-compartilhado
+COPY gestao-cardapio ./gestao-cardapio
+COPY gestao-clientes ./gestao-clientes
+COPY gestao-pedidos ./gestao-pedidos
+COPY autenticacao ./autenticacao
+COPY sistema-orquestrador ./sistema-orquestrador
+COPY impressao-cupom-fiscal ./impressao-cupom-fiscal
+COPY chat-ia ./chat-ia
+
+# Build do backend
+RUN mvn clean package -DskipTests -B -q
+
+# Stage 2: Imagem de produção mínima
+FROM eclipse-temurin:17-jre-alpine
+
+# Segurança: criar usuário não-root
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -u 1001 -S appuser -G appgroup
+
+# Instalar apenas o necessário
+RUN apk add --no-cache wget tini && \
+    rm -rf /var/cache/apk/*
+
+WORKDIR /app
+
+# Copiar JAR do build
+COPY --from=maven-build /app/sistema-orquestrador/target/sistema-orquestrador-*.jar /app/app.jar
+
+# Ajustar permissões
+RUN chown -R appuser:appgroup /app
+
+# Rodar como usuário não-root
+USER appuser
+
+# Expor apenas porta da aplicação
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 \
+    CMD wget --quiet --tries=1 --spider http://localhost:8080/actuator/health || exit 1
+
+# Usar tini como init + JVM otimizada
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["java", \
+    "-XX:+UseG1GC", \
+    "-XX:MaxGCPauseMillis=200", \
+    "-XX:+UseStringDeduplication", \
+    "-Xms512m", \
+    "-Xmx1g", \
+    "-Djava.security.egd=file:/dev/./urandom", \
+    "-jar", "/app/app.jar"]

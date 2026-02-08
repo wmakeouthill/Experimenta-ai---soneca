@@ -5,6 +5,7 @@ import com.snackbar.pedidos.application.dto.PedidoPendenteDTO;
 import com.snackbar.pedidos.application.services.FilaPedidosMesaService;
 import com.snackbar.pedidos.application.usecases.AceitarPedidoMesaUseCase;
 import com.snackbar.pedidos.application.usecases.RejeitarPedidoMesaUseCase;
+import com.snackbar.pedidos.infrastructure.idempotency.IdempotencyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +29,7 @@ public class FilaPedidosMesaController {
     private final FilaPedidosMesaService filaPedidosMesa;
     private final AceitarPedidoMesaUseCase aceitarPedidoMesaUseCase;
     private final RejeitarPedidoMesaUseCase rejeitarPedidoMesaUseCase;
+    private final IdempotencyService idempotencyService;
 
     /**
      * Lista todos os pedidos pendentes na fila.
@@ -55,15 +57,28 @@ public class FilaPedidosMesaController {
      * Aceita um pedido pendente.
      * O pedido é criado de verdade no sistema, vinculado ao usuário logado.
      * 
-     * @param pedidoId  ID do pedido pendente na fila
-     * @param usuarioId ID do usuário que está aceitando (vem do header
-     *                  X-Usuario-Id)
+     * Suporta idempotência via header X-Idempotency-Key para evitar
+     * que double-clicks do funcionário criem pedidos duplicados.
+     * 
+     * @param pedidoId       ID do pedido pendente na fila
+     * @param usuarioId      ID do usuário que está aceitando (vem do header
+     *                       X-Usuario-Id)
+     * @param idempotencyKey Chave de idempotência opcional
      * @return PedidoDTO do pedido criado
      */
     @PostMapping("/{pedidoId}/aceitar")
     public ResponseEntity<PedidoDTO> aceitarPedido(
             @PathVariable String pedidoId,
-            @RequestHeader("X-Usuario-Id") String usuarioId) {
+            @RequestHeader("X-Usuario-Id") String usuarioId,
+            @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey) {
+
+        if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+            return idempotencyService.executeIdempotent(
+                    idempotencyKey,
+                    "POST /api/pedidos/fila-mesa/" + pedidoId + "/aceitar",
+                    () -> aceitarPedidoMesaUseCase.executar(pedidoId, usuarioId),
+                    PedidoDTO.class);
+        }
 
         PedidoDTO pedido = aceitarPedidoMesaUseCase.executar(pedidoId, usuarioId);
         return ResponseEntity.ok(pedido);

@@ -48,7 +48,8 @@ export class FilaPedidosMesaComponent implements OnInit, OnDestroy {
     aceitarPedido(pedido: PedidoPendente): void {
         this.processando.set(pedido.id);
 
-        this.filaService.aceitarPedido(pedido.id).subscribe({
+        const idempotencyKey = crypto.randomUUID();
+        this.filaService.aceitarPedido(pedido.id, idempotencyKey).subscribe({
             next: (pedidoCriado) => {
                 console.log('Pedido aceito e criado:', pedidoCriado);
                 this.processando.set(null);

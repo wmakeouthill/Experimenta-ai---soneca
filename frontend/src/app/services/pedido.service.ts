@@ -165,12 +165,21 @@ export class PedidoService {
   }
 
   /**
-   * Cria um novo pedido.
-   * Usa chave de idempotência para evitar duplicação em caso de retry.
+   * Gera uma chave de idempotência única.
+   * Deve ser chamado UMA VEZ no componente e reutilizado em caso de retry.
    */
-  criar(pedido: CriarPedidoRequest): Observable<Pedido> {
+  gerarChaveIdempotencia(): string {
+    return generateIdempotencyKey();
+  }
+
+  /**
+   * Cria um novo pedido.
+   * A chave de idempotência deve ser gerada pelo componente chamador
+   * para garantir que retries/double-clicks usem a mesma chave.
+   */
+  criar(pedido: CriarPedidoRequest, idempotencyKey: string): Observable<Pedido> {
     const headers = new HttpHeaders({
-      'X-Idempotency-Key': generateIdempotencyKey()
+      'X-Idempotency-Key': idempotencyKey
     });
     return this.http.post<Pedido>(this.apiUrl, pedido, { headers });
   }

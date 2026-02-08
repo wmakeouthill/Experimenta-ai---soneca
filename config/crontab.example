@@ -1,0 +1,14 @@
+# ============================================================
+# Cron para backup automático e renovação SSL
+# ============================================================
+# Instale com: crontab -e e cole o conteúdo abaixo
+# ============================================================
+
+# Backup diário do banco às 3h da manhã
+0 3 * * * cd /home/$USER/snackbar && ./deploy-vps.sh backup >> /var/log/snackbar-backup.log 2>&1
+
+# Renovar SSL toda segunda-feira às 4h
+0 4 * * 1 cd /home/$USER/snackbar && docker compose -f docker-compose.prod.yml run --rm certbot renew && docker compose -f docker-compose.prod.yml restart frontend >> /var/log/snackbar-ssl.log 2>&1
+
+# Limpar logs Docker semanalmente (domingo 5h)
+0 5 * * 0 docker system prune -f >> /var/log/docker-prune.log 2>&1

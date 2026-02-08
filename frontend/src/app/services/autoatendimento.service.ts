@@ -58,15 +58,24 @@ export class AutoAtendimentoService {
     private readonly apiUrl = '/api/autoatendimento';
 
     /**
+     * Gera uma chave de idempotência única.
+     * Deve ser chamado UMA VEZ no componente e reutilizado em caso de retry.
+     */
+    gerarChaveIdempotencia(): string {
+        return generateIdempotencyKey();
+    }
+
+    /**
      * Cria um pedido de auto atendimento.
      * O pedido é criado diretamente (sem fila de pendentes) pois
      * o operador já está autenticado no totem.
      *
-     * Usa chave de idempotência para evitar duplicação em caso de retry.
+     * A chave de idempotência deve ser gerada pelo componente chamador
+     * para garantir que retries/double-clicks usem a mesma chave.
      */
-    criarPedido(request: CriarPedidoAutoAtendimentoRequest): Observable<PedidoAutoAtendimentoResponse> {
+    criarPedido(request: CriarPedidoAutoAtendimentoRequest, idempotencyKey: string): Observable<PedidoAutoAtendimentoResponse> {
         const headers = new HttpHeaders({
-            'X-Idempotency-Key': generateIdempotencyKey()
+            'X-Idempotency-Key': idempotencyKey
         });
         return this.http.post<PedidoAutoAtendimentoResponse>(`${this.apiUrl}/pedido`, request, { headers });
     }

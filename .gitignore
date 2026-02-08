@@ -9,7 +9,14 @@
 **/.env.*
 # Permitir .env.example para documentação (sem credenciais reais)
 !.env.example
+!.env.prod.example
 !**/.env.example
+
+# Backups locais
+backups/
+
+# Certificados SSL locais
+config/certbot/conf/
 **/secrets/
 **/*secret*
 **/*password*

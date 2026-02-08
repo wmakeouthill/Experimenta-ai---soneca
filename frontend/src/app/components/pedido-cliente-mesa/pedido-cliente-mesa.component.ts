@@ -184,7 +184,9 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
 
   // ========== Computed ==========
   readonly podeEnviarPedido = computed(() =>
-    !this.carrinho.carrinhoVazio() && this.identificacao.clienteIdentificado() !== null
+    !this.carrinho.carrinhoVazio() &&
+    this.identificacao.clienteIdentificado() !== null &&
+    !this.enviando()
   );
 
   // Verifica se há pedidos finalizados não avaliados
@@ -709,9 +711,14 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   enviarPedido(): void {
     const mesa = this.mesa();
     const cliente = this.identificacao.clienteIdentificado();
-    if (!mesa || !cliente || !this.podeEnviarPedido() || !this.pagamento.pagamentoValido()) return;
+    if (!mesa || !cliente || this.enviando() || !this.podeEnviarPedido() || !this.pagamento.pagamentoValido()) return;
 
     this.enviando.set(true);
+
+    // Gera chave de idempotência UMA VEZ por tentativa de envio.
+    // Se houver double-click, o guard `enviando()` impede nova execução.
+    // Se houver retry HTTP, a mesma chave será reutilizada.
+    const idempotencyKey = this.pedidoMesaService.gerarChaveIdempotencia();
 
     const itens: ItemPedidoMesaRequest[] = this.carrinho.itens().map(item => ({
       produtoId: item.produto.id,
@@ -735,7 +742,7 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
       meiosPagamento
     };
 
-    this.pedidoMesaService.criarPedido(request).subscribe({
+    this.pedidoMesaService.criarPedido(request, idempotencyKey).subscribe({
       next: (response) => {
         this.enviando.set(false);
         this.etapaAtual.set('sucesso');

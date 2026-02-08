@@ -148,12 +148,21 @@ export class PedidoMesaService {
     }
 
     /**
-     * Cria um pedido via mesa (QR code).
-     * Usa chave de idempotência para evitar duplicação em caso de retry.
+     * Gera uma chave de idempotência única.
+     * Deve ser chamado UMA VEZ no componente e reutilizado em caso de retry.
      */
-    criarPedido(request: CriarPedidoMesaRequest): Observable<PedidoMesaResponse> {
+    gerarChaveIdempotencia(): string {
+        return generateIdempotencyKey();
+    }
+
+    /**
+     * Cria um pedido via mesa (QR code).
+     * A chave de idempotência deve ser gerada pelo componente chamador
+     * para garantir que retries/double-clicks usem a mesma chave.
+     */
+    criarPedido(request: CriarPedidoMesaRequest, idempotencyKey: string): Observable<PedidoMesaResponse> {
         const headers = new HttpHeaders({
-            'X-Idempotency-Key': generateIdempotencyKey()
+            'X-Idempotency-Key': idempotencyKey
         });
         return this.http.post<PedidoMesaResponse>(`${this.publicApiUrl}/pedido`, request, { headers });
     }
