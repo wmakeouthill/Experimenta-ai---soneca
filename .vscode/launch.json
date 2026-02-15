@@ -1,0 +1,14 @@
+{
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Spring Boot - Sistema Orquestrador",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "com.snackbar.orquestrador.SistemaOrquestradorApplication",
+      "projectName": "sistema-orquestrador",
+      "args": "",
+      "envFile": "${workspaceFolder}/.env"
+    }
+  ]
+}

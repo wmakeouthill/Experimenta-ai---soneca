@@ -64,13 +64,14 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 \
     CMD wget --quiet --tries=1 --spider http://localhost:8080/actuator/health || exit 1
 
-# Usar tini como init + JVM otimizada
+# Usar tini como init + JVM otimizada para VPS 4 GB
 ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["java", \
     "-XX:+UseG1GC", \
     "-XX:MaxGCPauseMillis=200", \
     "-XX:+UseStringDeduplication", \
-    "-Xms512m", \
-    "-Xmx1g", \
+    "-XX:+UseCompressedOops", \
+    "-Xms256m", \
+    "-Xmx768m", \
     "-Djava.security.egd=file:/dev/./urandom", \
     "-jar", "/app/app.jar"]

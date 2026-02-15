@@ -1,7 +1,7 @@
 version: "3.8"
 
 # ============================================================
-# Docker Compose de Produção - VPS Hostinger
+# Docker Compose de Produção - VPS (KingHost / Hostinger)
 # Snackbar System (Experimenta aí - Soneca)
 # ============================================================
 # Serviços: MySQL 8.0 + Backend Spring Boot + Frontend Nginx
@@ -30,10 +30,10 @@ services:
       resources:
         limits:
           cpus: "1.0"
-          memory: 2G
+          memory: 1G
         reservations:
           cpus: "0.25"
-          memory: 512M
+          memory: 256M
     healthcheck:
       test:
         [
@@ -77,8 +77,8 @@ services:
       - JWT_EXPIRATION=${JWT_EXPIRATION:-86400}
       - SHOW_SQL=false
       - LOG_LEVEL=${LOG_LEVEL:-WARN}
-      # JVM otimizada para VPS com pouca RAM
-      - JAVA_OPTS=-Xms512m -Xmx1g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseStringDeduplication -Djava.security.egd=file:/dev/./urandom
+      # JVM otimizada para VPS 4 GB RAM
+      - JAVA_OPTS=-Xms256m -Xmx768m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseStringDeduplication -XX:+UseCompressedOops -Djava.security.egd=file:/dev/./urandom
       # Chat IA (opcional)
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
@@ -93,10 +93,10 @@ services:
       resources:
         limits:
           cpus: "1.5"
-          memory: 1536M
+          memory: 1024M
         reservations:
-          cpus: "0.5"
-          memory: 512M
+          cpus: "0.25"
+          memory: 384M
     healthcheck:
       test:
         [

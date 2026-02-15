@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-# Script de Deploy Completo - VPS Hostinger
+# Script de Deploy Completo - VPS (KingHost / Hostinger / etc.)
 # Snackbar System (Experimenta aí - Soneca)
 # ============================================================
 # Uso: ./deploy-vps.sh [primeiro-deploy|atualizar|ssl]
@@ -338,7 +338,7 @@ case "${1:-}" in
     *)
         echo ""
         echo "============================================"
-        echo "  Deploy VPS Hostinger - Snackbar System"
+        echo "  Deploy VPS - Snackbar System"
         echo "============================================"
         echo ""
         echo "Uso: $0 <comando>"

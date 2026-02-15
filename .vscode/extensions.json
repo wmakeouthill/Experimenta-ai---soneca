@@ -1,0 +1,21 @@
+{
+    "recommendations": [
+        // Java
+        "redhat.java",
+        "vscjava.vscode-java-pack",
+        "vscjava.vscode-maven",
+        "vscjava.vscode-java-dependency",
+        "vscjava.vscode-spring-boot-dashboard",
+        "pivotal.vscode-spring-boot",
+        
+        // Angular/TypeScript
+        "angular.ng-template",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        
+        // Ferramentas gerais
+        "editorconfig.editorconfig",
+        "eamodio.gitlens",
+        "ms-vscode.vscode-typescript-next"
+    ]
+}
