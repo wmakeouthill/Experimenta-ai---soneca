@@ -20,9 +20,10 @@ let printServerPort = null;
 
 function createWindow() {
   // Define o ícone do aplicativo (Windows usa .ico, Linux/Mac usa .png)
-  const iconPath = process.platform === 'win32'
-    ? path.join(__dirname, 'icon.ico')
-    : path.join(__dirname, '../src/assets/experimenta_ai_banner_circular.png');
+  const iconPath =
+    process.platform === 'win32'
+      ? path.join(__dirname, 'icon.ico')
+      : path.join(__dirname, '../src/assets/experimenta_ai_banner_circular.png');
 
   mainWindow = new BrowserWindow({
     width: 1400,
@@ -38,12 +39,12 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'), // Script de ponte
       // Melhora renderização de texto e gráficos
       enableBlinkFeatures: 'CSSColorSchemeUARendering',
-      disableBlinkFeatures: 'Auxclick'
+      disableBlinkFeatures: 'Auxclick',
     },
     // Configurações de DPI para melhorar aparência no Windows 10
     titleBarStyle: 'default',
     autoHideMenuBar: false,
-    show: false // Não mostra até estar pronto (melhor UX)
+    show: false, // Não mostra até estar pronto (melhor UX)
   });
 
   // Configurações de DPI/Scaling para melhorar aparência no Windows 10
@@ -68,11 +69,14 @@ function createWindow() {
     app.commandLine.appendSwitch('enable-native-gpu-memory-buffers');
 
     // Configurações específicas para melhor renderização de emojis
-    app.commandLine.appendSwitch('enable-features', 'VaapiIgnoreDriverChecks,CanvasOopRasterization,UseChromeOSDirectVideoDecoder,SkiaRenderer');
-    app.commandLine.appendSwitch('disable-features', 'VizDisplayCompositor');
-
-    // Força uso de fontes nativas do Windows para emojis
-    app.commandLine.appendSwitch('enable-font-subpixel-positioning');
+    app.commandLine.appendSwitch(
+      'enable-features',
+      'VaapiIgnoreDriverChecks,CanvasOopRasterization,UseChromeOSDirectVideoDecoder,SkiaRenderer'
+    );
+    app.commandLine.appendSwitch(
+      'disable-features',
+      'VizDisplayCompositor,BlockInsecurePrivateNetworkRequests'
+    );
 
     // Abre DevTools automaticamente em desenvolvimento para ver logs
     if (process.env.NODE_ENV === 'development' || process.argv.includes('--dev')) {
@@ -142,14 +146,13 @@ function createWindow() {
 
   // Carrega a aplicação Angular
   // Em desenvolvimento, aponta para localhost
-  // Em produção, sempre carrega do Google Cloud Run (backend online)
-  const PRODUCTION_URL = 'https://experimenta-ai-soneca-699875180084.southamerica-east1.run.app';
+  // Em produção, carrega do servidor VPS (KingHost)
+  const PRODUCTION_URL = 'http://experimenta-ai-soneca.vps-kinghost.net';
   const DEV_URL = 'http://localhost:8080';
 
   // Detecta desenvolvimento: NODE_ENV, flag --dev, ou se não estiver buildado (packaged)
-  const isDevelopment = process.env.NODE_ENV === 'development'
-    || process.argv.includes('--dev')
-    || !app.isPackaged;
+  const isDevelopment =
+    process.env.NODE_ENV === 'development' || process.argv.includes('--dev') || !app.isPackaged;
 
   console.log('🔍 Modo:', isDevelopment ? 'DESENVOLVIMENTO' : 'PRODUÇÃO');
   console.log('🌐 URL:', isDevelopment ? DEV_URL : PRODUCTION_URL);
@@ -159,18 +162,24 @@ function createWindow() {
     mainWindow.webContents.openDevTools();
 
     // Tratamento de erros de conexão em desenvolvimento
-    mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
-      console.error('❌ Erro ao carregar (dev):', errorCode, errorDescription, validatedURL);
-      console.log('💡 Verifique se o servidor está rodando em', DEV_URL);
-    });
+    mainWindow.webContents.on(
+      'did-fail-load',
+      (event, errorCode, errorDescription, validatedURL) => {
+        console.error('❌ Erro ao carregar (dev):', errorCode, errorDescription, validatedURL);
+        console.log('💡 Verifique se o servidor está rodando em', DEV_URL);
+      }
+    );
   } else {
     // SEMPRE carrega da URL online servida pelo backend
     mainWindow.loadURL(PRODUCTION_URL);
 
     // Tratamento de erros de conexão
-    mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
-      console.error('❌ Erro ao carregar (prod):', errorCode, errorDescription, validatedURL);
-    });
+    mainWindow.webContents.on(
+      'did-fail-load',
+      (event, errorCode, errorDescription, validatedURL) => {
+        console.error('❌ Erro ao carregar (prod):', errorCode, errorDescription, validatedURL);
+      }
+    );
 
     // Permite navegação externa em novas janelas (se necessário)
     mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -194,7 +203,7 @@ function createWindow() {
   });
 
   // Previne fechamento prematuro durante operações importantes
-  mainWindow.on('close', (event) => {
+  mainWindow.on('close', event => {
     // Se houver alguma operação crítica em andamento, pode prevenir fechamento aqui
     // Por enquanto, permite fechamento normal
     // Futuramente, pode adicionar lógica para salvar estado ou confirmar fechamento
@@ -203,11 +212,10 @@ function createWindow() {
 
 // Função para criar o menu da aplicação
 function criarMenu() {
-  const PRODUCTION_URL = 'https://experimenta-ai-soneca-699875180084.southamerica-east1.run.app/';
+  const PRODUCTION_URL = 'http://experimenta-ai-soneca.vps-kinghost.net';
   const DEV_URL = 'http://localhost:8080';
-  const isDevelopment = process.env.NODE_ENV === 'development'
-    || process.argv.includes('--dev')
-    || !app.isPackaged;
+  const isDevelopment =
+    process.env.NODE_ENV === 'development' || process.argv.includes('--dev') || !app.isPackaged;
   const URL_INICIAL = isDevelopment ? DEV_URL : PRODUCTION_URL;
 
   const template = [
@@ -221,7 +229,7 @@ function criarMenu() {
             if (mainWindow) {
               mainWindow.loadURL(URL_INICIAL);
             }
-          }
+          },
         },
         { type: 'separator' },
         {
@@ -231,7 +239,7 @@ function criarMenu() {
             if (mainWindow) {
               mainWindow.reload();
             }
-          }
+          },
         },
         {
           label: '🔍 Abrir DevTools',
@@ -240,7 +248,7 @@ function criarMenu() {
             if (mainWindow) {
               mainWindow.webContents.toggleDevTools();
             }
-          }
+          },
         },
         { type: 'separator' },
         {
@@ -248,10 +256,10 @@ function criarMenu() {
           accelerator: process.platform === 'darwin' ? 'Cmd+Q' : 'Ctrl+Q',
           click: () => {
             app.quit();
-          }
-        }
-      ]
-    }
+          },
+        },
+      ],
+    },
   ];
 
   // No macOS, adiciona menu padrão
@@ -267,8 +275,8 @@ function criarMenu() {
         { role: 'hideOthers', label: 'Ocultar Outros' },
         { role: 'unhide', label: 'Mostrar Tudo' },
         { type: 'separator' },
-        { role: 'quit', label: 'Sair' }
-      ]
+        { role: 'quit', label: 'Sair' },
+      ],
     });
   }
 
@@ -282,7 +290,10 @@ app.whenReady().then(async () => {
   if (process.platform === 'win32') {
     // Informa ao Windows que o app está ciente de DPI
     // Isso melhora a renderização especialmente no Windows 10
-    app.commandLine.appendSwitch('disable-features', 'VizDisplayCompositor');
+    app.commandLine.appendSwitch(
+      'disable-features',
+      'VizDisplayCompositor,BlockInsecurePrivateNetworkRequests'
+    );
   }
 
   // Cria o menu da aplicação
@@ -337,7 +348,7 @@ app.on('window-all-closed', async () => {
 });
 
 // Evento antes do app ser encerrado
-app.on('before-quit', async (event) => {
+app.on('before-quit', async event => {
   if (estaLimpando) return;
   estaLimpando = true;
 
@@ -369,7 +380,7 @@ process.on('exit', () => {
 });
 
 // Tratamento de erros não capturados antes do encerramento
-process.on('uncaughtException', (error) => {
+process.on('uncaughtException', error => {
   console.error('Erro não capturado:', error);
   printServer.pararServidor();
   // Em produção, pode querer salvar logs ou notificar o usuário
@@ -419,9 +430,7 @@ ipcMain.handle('obter-impressora-padrao', async () => {
 ipcMain.handle('verificar-impressora', async (event, devicePath) => {
   try {
     const impressoras = await listarImpressorasSistema();
-    const encontrada = impressoras.find(p =>
-      p.devicePath === devicePath || p.name === devicePath
-    );
+    const encontrada = impressoras.find(p => p.devicePath === devicePath || p.name === devicePath);
     return { sucesso: true, disponivel: !!encontrada, impressora: encontrada };
   } catch (error) {
     return { sucesso: false, erro: error.message };
@@ -475,7 +484,7 @@ async function listarImpressorasWindows() {
       devicePath: imp.PortName || `COM${lista.indexOf(imp)}`,
       status: imp.Status || 'Desconhecido',
       padrao: imp.Default || false,
-      tipo: 'windows'
+      tipo: 'windows',
     }));
   } catch (error) {
     console.error('Erro ao listar impressoras Windows:', error);
@@ -512,14 +521,16 @@ async function listarImpressorasLinux() {
           devicePath: `/dev/usb/lp${impressoras.length}`, // Aproximação - pode precisar ajuste
           status: linha.includes('idle') ? 'Disponível' : 'Desconhecido',
           padrao: nome === impressoraPadrao,
-          tipo: 'linux'
+          tipo: 'linux',
         });
       }
     }
 
     // Tenta também listar dispositivos USB diretos
     try {
-      const { stdout: usbOut } = await execPromise('ls -la /dev/usb/lp* 2>/dev/null || true', { timeout: 3000 });
+      const { stdout: usbOut } = await execPromise('ls -la /dev/usb/lp* 2>/dev/null || true', {
+        timeout: 3000,
+      });
       if (usbOut.trim()) {
         const usbDevices = usbOut.trim().split('\n');
         usbDevices.forEach(device => {
@@ -530,7 +541,7 @@ async function listarImpressorasLinux() {
               devicePath: `/dev/usb/lp${match[1]}`,
               status: 'Disponível',
               padrao: false,
-              tipo: 'linux-usb'
+              tipo: 'linux-usb',
             });
           }
         });
@@ -572,7 +583,7 @@ async function listarImpressorasMacOS() {
           devicePath: nome, // No macOS, geralmente usa o nome
           status: 'Disponível',
           padrao: nome === impressoraPadrao,
-          tipo: 'macos'
+          tipo: 'macos',
         });
       }
     }
@@ -585,4 +596,3 @@ async function listarImpressorasMacOS() {
 }
 
 module.exports = { createWindow };
-

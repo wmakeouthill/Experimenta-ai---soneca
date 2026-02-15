@@ -4,11 +4,12 @@
  */
 
 const ORIGINS_PERMITIDAS = [
-  'https://experimentaai-delivery-699875180084.southamerica-east1.run.app',
+  'http://experimenta-ai-soneca.vps-kinghost.net',
+  'http://177.153.39.90',
   'http://localhost:4200',
   'http://127.0.0.1:4200',
   'http://localhost:8080',
-  'http://127.0.0.1:8080'
+  'http://127.0.0.1:8080',
 ];
 
 /**
@@ -55,6 +56,8 @@ function corsMiddleware(req, res, next) {
     res.setHeader('Access-Control-Allow-Origin', origin || '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    // Permite acesso de rede pública para rede privada (Private Network Access)
+    res.setHeader('Access-Control-Allow-Private-Network', 'true');
 
     if (req.method === 'OPTIONS') {
       return res.sendStatus(200);
@@ -68,6 +71,5 @@ function corsMiddleware(req, res, next) {
 }
 
 module.exports = {
-  corsMiddleware
+  corsMiddleware,
 };
-

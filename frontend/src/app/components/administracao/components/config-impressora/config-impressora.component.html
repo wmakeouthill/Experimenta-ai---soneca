@@ -1,8 +1,6 @@
 <div class="config-impressora-container">
   <div class="config-impressora-header" (click)="alternarExpansao()">
-    <h2 class="config-impressora-titulo">
-      🖨️ Configuração de Impressora
-    </h2>
+    <h2 class="config-impressora-titulo">🖨️ Configuração de Impressora</h2>
     <span class="config-impressora-toggle">
       {{ estaExpandido() ? '▼' : '▶' }}
     </span>
@@ -14,14 +12,8 @@
         @if (!estaNoElectron()) {
           <!-- Apenas mostra o tipo quando NÃO está no Electron (modo Web) -->
           <div class="form-row">
-            <label for="tipoImpressora">
-              Tipo de Impressora:
-            </label>
-            <select 
-              id="tipoImpressora" 
-              formControlName="tipoImpressora" 
-              class="form-input-compact"
-            >
+            <label for="tipoImpressora"> Tipo de Impressora: </label>
+            <select id="tipoImpressora" formControlName="tipoImpressora" class="form-input-compact">
               @for (tipo of tiposImpressora; track tipo.value) {
                 <option [value]="tipo.value">{{ tipo.label }}</option>
               }
@@ -40,8 +32,8 @@
           <label for="devicePath">
             @if (estaNoElectron()) {
               Impressora:
-              <button 
-                type="button" 
+              <button
+                type="button"
                 class="btn-ajuda-inline btn-atualizar"
                 (click)="carregarImpressorasDisponiveis()"
                 [disabled]="estaCarregandoImpressoras()"
@@ -55,8 +47,8 @@
               </button>
             } @else {
               Caminho do Dispositivo:
-              <button 
-                type="button" 
+              <button
+                type="button"
                 class="btn-ajuda-inline"
                 (click)="alternarAjudaDevicePath()"
                 title="Como descobrir o caminho da impressora"
@@ -69,7 +61,7 @@
           @if (estaNoElectron()) {
             @if (impressorasDisponiveis().length > 0) {
               <div class="impressoras-lista">
-                <select 
+                <select
                   class="form-input-compact impressora-select"
                   formControlName="devicePath"
                   (change)="onImpressoraSelecionada($event)"
@@ -79,22 +71,22 @@
                   @for (impressora of impressorasDisponiveis(); track impressora.name) {
                     <option [value]="impressora.devicePath">
                       @if (impressora.padrao) {
-                        ⭐ 
+                        ⭐
                       }
                       {{ impressora.name }}
                       @if (impressora.padrao) {
-                         (Padrão)
+                        (Padrão)
                       }
                       - {{ impressora.devicePath }}
                       @if (impressora.status) {
-                         [{{ impressora.status }}]
+                        [{{ impressora.status }}]
                       }
                     </option>
                   }
                 </select>
                 <small class="form-help-text sucesso">
-                  ✅ {{ impressorasDisponiveis().length }} impressora(s) detectada(s). 
-                  Selecione a impressora que deseja usar.
+                  ✅ {{ impressorasDisponiveis().length }} impressora(s) detectada(s). Selecione a
+                  impressora que deseja usar.
                 </small>
               </div>
             } @else if (estaCarregandoImpressoras()) {
@@ -105,10 +97,11 @@
               </div>
             } @else {
               <small class="form-help-text">
-                ⚠️ Nenhuma impressora detectada. Clique em "Atualizar Lista" ou configure manualmente abaixo.
+                ⚠️ Nenhuma impressora detectada. Clique em "Atualizar Lista" ou configure
+                manualmente abaixo.
               </small>
             }
-            
+
             <!-- Campo manual como fallback -->
             <input
               id="devicePath"
@@ -117,10 +110,9 @@
               class="form-input-compact"
               [class.invalid]="erroDevicePath()"
               placeholder="Ou digite manualmente (ex: COM3, /dev/usb/lp0, 192.168.1.100:9100)"
-              style="margin-top: 8px;"
+              style="margin-top: 8px"
             />
           } @else {
-
             <input
               id="devicePath"
               type="text"
@@ -134,19 +126,18 @@
             }
             @if (!erroDevicePath()) {
               <small class="form-help-text">
-                Para rede: IP:PORTA (ex: 127.0.0.1:9100) | 
-                Para Windows: COM3, COM4... | 
-                Para Linux: /dev/usb/lp0, /dev/usb/lp1...
+                Para rede: IP:PORTA (ex: 127.0.0.1:9100) | Para Windows: COM3, COM4... | Para Linux:
+                /dev/usb/lp0, /dev/usb/lp1...
               </small>
             }
           }
-          
+
           @if (!estaNoElectron() && mostrarAjudaDevicePath()) {
             <div class="ajuda-device-path">
               <h4>📖 Como descobrir o caminho da impressora</h4>
-              
+
               <div class="ajuda-tabs">
-                <button 
+                <button
                   type="button"
                   class="ajuda-tab"
                   [class.active]="abaAjudaAtiva() === 'windows'"
@@ -154,7 +145,7 @@
                 >
                   Windows
                 </button>
-                <button 
+                <button
                   type="button"
                   class="ajuda-tab"
                   [class.active]="abaAjudaAtiva() === 'linux'"
@@ -162,7 +153,7 @@
                 >
                   Linux
                 </button>
-                <button 
+                <button
                   type="button"
                   class="ajuda-tab"
                   [class.active]="abaAjudaAtiva() === 'rede'"
@@ -181,9 +172,9 @@
               </div>
 
               <div class="ajuda-nota">
-                <strong>⚠️ Nota:</strong> Aplicações web não podem detectar impressoras automaticamente 
-                por questões de segurança do navegador. Você precisa descobrir o caminho manualmente 
-                seguindo as instruções acima.
+                <strong>⚠️ Nota:</strong> Aplicações web não podem detectar impressoras
+                automaticamente por questões de segurança do navegador. Você precisa descobrir o
+                caminho manualmente seguindo as instruções acima.
               </div>
             </div>
           }
@@ -211,11 +202,7 @@
 
         <div class="form-row">
           <label for="larguraPapel">Tamanho do papel:</label>
-          <select
-            id="larguraPapel"
-            formControlName="larguraPapel"
-            class="form-input-compact"
-          >
+          <select id="larguraPapel" formControlName="larguraPapel" class="form-input-compact">
             @for (tam of tamanhosPapel; track tam.value) {
               <option [value]="tam.value">{{ tam.label }}</option>
             }
@@ -227,11 +214,7 @@
 
         <div class="form-row">
           <label for="tamanhoFonte">Tamanho da fonte:</label>
-          <select
-            id="tamanhoFonte"
-            formControlName="tamanhoFonte"
-            class="form-input-compact"
-          >
+          <select id="tamanhoFonte" formControlName="tamanhoFonte" class="form-input-compact">
             @for (tf of tamanhosFonte; track tf.value) {
               <option [value]="tf.value">{{ tf.label }}</option>
             }
@@ -285,8 +268,8 @@
             type="text"
             formControlName="cnpjEstabelecimento"
             class="form-input-compact"
-            placeholder="Ex: 12345678000190"
-            maxlength="14"
+            placeholder="Ex: 57.497.452/0001-03"
+            maxlength="18"
           />
         </div>
 
@@ -328,4 +311,3 @@
     </div>
   }
 </div>
-
