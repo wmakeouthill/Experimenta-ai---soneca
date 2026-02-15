@@ -1,18 +1,29 @@
-import { Component, inject, PLATFORM_ID, OnInit, OnDestroy, signal, ChangeDetectionStrategy, DestroyRef, NgZone } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  inject,
+  NgZone,
+  OnDestroy,
+  OnInit,
+  PLATFORM_ID,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { usePedidos } from './composables/use-pedidos';
-import { PedidoService, StatusPedido, Pedido } from '../../services/pedido.service';
-import { SessaoTrabalhoService, SessaoTrabalho } from '../../services/sessao-trabalho.service';
+import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
+import { catchError, of, Subscription, switchMap, takeWhile, timer } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
-import { ImpressaoService, TipoImpressora } from '../../services/impressao.service';
-import { NovoPedidoModalComponent } from './components/novo-pedido-modal/novo-pedido-modal.component';
-import { MenuContextoPedidoComponent } from './components/menu-contexto-pedido/menu-contexto-pedido.component';
-import { catchError, of, Subscription, timer, switchMap, takeWhile } from 'rxjs';
-import { NotificationService } from '../../services/notification.service';
 import { FilaPedidosMesaService, PedidoPendente } from '../../services/fila-pedidos-mesa.service';
+import { ImpressaoService } from '../../services/impressao.service';
+import { NotificationService } from '../../services/notification.service';
+import { Pedido, PedidoService, StatusPedido } from '../../services/pedido.service';
+import { SessaoTrabalho, SessaoTrabalhoService } from '../../services/sessao-trabalho.service';
+import { gerarUuid } from '../../shared/utils/uuid';
+import { MenuContextoPedidoComponent } from './components/menu-contexto-pedido/menu-contexto-pedido.component';
+import { NovoPedidoModalComponent } from './components/novo-pedido-modal/novo-pedido-modal.component';
+import { usePedidos } from './composables/use-pedidos';
 
 @Component({
   selector: 'app-pedidos',
@@ -22,11 +33,11 @@ import { FilaPedidosMesaService, PedidoPendente } from '../../services/fila-pedi
     RouterModule,
     FormsModule,
     NovoPedidoModalComponent,
-    MenuContextoPedidoComponent
+    MenuContextoPedidoComponent,
   ],
   templateUrl: './pedidos.component.html',
   styleUrl: './pedidos.component.css',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PedidosComponent implements OnInit, OnDestroy {
   private readonly platformId = inject(PLATFORM_ID);
@@ -117,7 +128,7 @@ export class PedidosComponent implements OnInit, OnDestroy {
         });
 
       document.addEventListener('click', () => this.fecharMenuContexto());
-      document.addEventListener('contextmenu', (e) => {
+      document.addEventListener('contextmenu', e => {
         const target = e.target as HTMLElement;
         if (!target.closest('.pedido-card')) {
           this.fecharMenuContexto();
@@ -142,32 +153,36 @@ export class PedidosComponent implements OnInit, OnDestroy {
 
     // Executa fora da zona Angular para não bloquear hidratação/estabilidade
     this.ngZone.runOutsideAngular(() => {
-      this.filaPollingSubscription = timer(0, 5000).pipe(
-        takeWhile(() => this.filaPollingAtivo),
-        switchMap(() => this.filaPedidosMesaService.listarPedidosPendentes()),
-        catchError(err => {
-          console.error('Erro ao carregar fila de mesa:', err);
-          return of([]);
-        })
-      ).subscribe(pedidos => {
-        // Executa atualizações de estado dentro da zona Angular para trigger change detection
-        this.ngZone.run(() => {
-          const pedidosAnteriores = this.pedidosPendentesMesa();
-          this.pedidosPendentesMesa.set([...pedidos]); // Nova referência de array
+      this.filaPollingSubscription = timer(0, 5000)
+        .pipe(
+          takeWhile(() => this.filaPollingAtivo),
+          switchMap(() => this.filaPedidosMesaService.listarPedidosPendentes()),
+          catchError(err => {
+            console.error('Erro ao carregar fila de mesa:', err);
+            return of([]);
+          })
+        )
+        .subscribe(pedidos => {
+          // Executa atualizações de estado dentro da zona Angular para trigger change detection
+          this.ngZone.run(() => {
+            const pedidosAnteriores = this.pedidosPendentesMesa();
+            this.pedidosPendentesMesa.set([...pedidos]); // Nova referência de array
 
-          // Notificar se há novos pedidos de mesa
-          if (pedidos.length > pedidosAnteriores.length) {
-            const novos = pedidos.length - pedidosAnteriores.length;
-            this.notificationService.info(`🍽️ ${novos} novo(s) pedido(s) de mesa aguardando aceitação!`);
-          }
+            // Notificar se há novos pedidos de mesa
+            if (pedidos.length > pedidosAnteriores.length) {
+              const novos = pedidos.length - pedidosAnteriores.length;
+              this.notificationService.info(
+                `🍽️ ${novos} novo(s) pedido(s) de mesa aguardando aceitação!`
+              );
+            }
+          });
         });
-      });
     });
   }
 
   verificarSessaoAtiva(): void {
     this.sessaoService.buscarAtiva().subscribe({
-      next: (sessao) => {
+      next: sessao => {
         if (sessao) {
           this.temSessaoAtiva.set(true);
           this.sessaoAtiva.set(sessao);
@@ -181,7 +196,7 @@ export class PedidosComponent implements OnInit, OnDestroy {
           this.carregarDados();
         }
       },
-      error: (error) => {
+      error: error => {
         // Apenas erros reais (não 404) chegam aqui
         // 404 é tratado no serviço e retorna null no next, não chega aqui
         // Não logar erro aqui para evitar logs desnecessários
@@ -189,7 +204,7 @@ export class PedidosComponent implements OnInit, OnDestroy {
         this.sessaoAtiva.set(null);
         // Recarrega pedidos sem filtro de sessão em caso de erro
         this.carregarDados();
-      }
+      },
     });
   }
 
@@ -233,9 +248,9 @@ export class PedidosComponent implements OnInit, OnDestroy {
     }
 
     this.carregandoFilaMesa.set(true);
-    const idempotencyKey = crypto.randomUUID();
+    const idempotencyKey = gerarUuid();
     this.filaPedidosMesaService.aceitarPedido(pedidoId, idempotencyKey).subscribe({
-      next: (pedidoCriado) => {
+      next: pedidoCriado => {
         this.notificationService.sucesso('✅ Pedido aceito e criado com sucesso!');
         // Remove da fila local
         this.pedidosPendentesMesa.update(lista => lista.filter(p => p.id !== pedidoId));
@@ -243,11 +258,13 @@ export class PedidosComponent implements OnInit, OnDestroy {
         this.carregarDados();
         this.carregandoFilaMesa.set(false);
       },
-      error: (error) => {
+      error: error => {
         console.error('Erro ao aceitar pedido:', error);
-        this.notificationService.erro('❌ Erro ao aceitar pedido: ' + (error.error?.message || error.message));
+        this.notificationService.erro(
+          '❌ Erro ao aceitar pedido: ' + (error.error?.message || error.message)
+        );
         this.carregandoFilaMesa.set(false);
-      }
+      },
     });
   }
 
@@ -265,11 +282,13 @@ export class PedidosComponent implements OnInit, OnDestroy {
         this.pedidosPendentesMesa.update(lista => lista.filter(p => p.id !== pedidoId));
         this.carregandoFilaMesa.set(false);
       },
-      error: (error) => {
+      error: error => {
         console.error('Erro ao rejeitar pedido:', error);
-        this.notificationService.erro('❌ Erro ao rejeitar pedido: ' + (error.error?.message || error.message));
+        this.notificationService.erro(
+          '❌ Erro ao rejeitar pedido: ' + (error.error?.message || error.message)
+        );
         this.carregandoFilaMesa.set(false);
-      }
+      },
     });
   }
 
@@ -305,7 +324,8 @@ export class PedidosComponent implements OnInit, OnDestroy {
     // Validar se usuário está logado
     const usuario = this.authService.usuarioAtual();
     if (!usuario?.id) {
-      const mensagem = 'É necessário estar logado para criar um pedido. Por favor, faça login novamente.';
+      const mensagem =
+        'É necessário estar logado para criar um pedido. Por favor, faça login novamente.';
       if (this.isBrowser) {
         alert(mensagem);
       }
@@ -316,75 +336,74 @@ export class PedidosComponent implements OnInit, OnDestroy {
     // Adicionar usuarioId do usuário logado (obrigatório)
     const requestComUsuario = {
       ...request,
-      usuarioId: usuario.id
+      usuarioId: usuario.id,
     };
 
     // Gera chave de idempotência UMA VEZ para esta operação de criação
     const idempotencyKey = this.pedidoService.gerarChaveIdempotencia();
 
-    this.pedidoService.criar(requestComUsuario, idempotencyKey)
-      .subscribe({
-        next: (pedidoCriado) => {
-          this.pedidosComposable.atualizarPedidoNoSignal(pedidoCriado);
-          setTimeout(() => {
-            const sessaoId = this.sessaoAtiva()?.id;
-            this.pedidosComposable.carregarPedidos(sessaoId ? { sessaoId } : undefined);
-          }, 0);
-          this.fecharFormulario();
-        },
-        error: (error) => {
-          console.error('Erro ao criar pedido:', error);
-          let mensagem = 'Erro ao criar pedido. Verifique se todos os campos estão preenchidos corretamente.';
+    this.pedidoService.criar(requestComUsuario, idempotencyKey).subscribe({
+      next: pedidoCriado => {
+        this.pedidosComposable.atualizarPedidoNoSignal(pedidoCriado);
+        setTimeout(() => {
+          const sessaoId = this.sessaoAtiva()?.id;
+          this.pedidosComposable.carregarPedidos(sessaoId ? { sessaoId } : undefined);
+        }, 0);
+        this.fecharFormulario();
+      },
+      error: error => {
+        console.error('Erro ao criar pedido:', error);
+        let mensagem =
+          'Erro ao criar pedido. Verifique se todos os campos estão preenchidos corretamente.';
 
-          if (error.error?.message) {
-            mensagem = error.error.message;
-          } else if (error.error?.errors) {
-            const erros = Object.values(error.error.errors).join(', ');
-            mensagem = `Erro de validação: ${erros}`;
-          } else if (error.message) {
-            mensagem = error.message;
-          }
-
-          if (this.isBrowser) {
-            alert(mensagem);
-          }
+        if (error.error?.message) {
+          mensagem = error.error.message;
+        } else if (error.error?.errors) {
+          const erros = Object.values(error.error.errors).join(', ');
+          mensagem = `Erro de validação: ${erros}`;
+        } else if (error.message) {
+          mensagem = error.message;
         }
-      });
+
+        if (this.isBrowser) {
+          alert(mensagem);
+        }
+      },
+    });
   }
 
   atualizarStatus(pedidoId: string, novoStatus: StatusPedido): void {
-    this.pedidoService.atualizarStatus(pedidoId, novoStatus)
-      .subscribe({
-        next: (pedidoAtualizado) => {
-          // Atualiza o pedido no signal imediatamente para atualizar os contadores em tempo real
-          this.pedidosComposable.atualizarPedidoNoSignal(pedidoAtualizado);
-          // Recarrega todos os pedidos de forma assíncrona para garantir sincronização completa
-          // Usa setTimeout para garantir que a atualização imediata seja processada primeiro
-          setTimeout(() => {
-            const sessaoId = this.sessaoAtiva()?.id;
-            this.pedidosComposable.carregarPedidos(sessaoId ? { sessaoId } : undefined);
-          }, 0);
-        },
-        error: (error) => {
-          console.error('Erro ao atualizar status:', error);
-          let mensagem = 'Erro ao atualizar status. Tente novamente.';
+    this.pedidoService.atualizarStatus(pedidoId, novoStatus).subscribe({
+      next: pedidoAtualizado => {
+        // Atualiza o pedido no signal imediatamente para atualizar os contadores em tempo real
+        this.pedidosComposable.atualizarPedidoNoSignal(pedidoAtualizado);
+        // Recarrega todos os pedidos de forma assíncrona para garantir sincronização completa
+        // Usa setTimeout para garantir que a atualização imediata seja processada primeiro
+        setTimeout(() => {
+          const sessaoId = this.sessaoAtiva()?.id;
+          this.pedidosComposable.carregarPedidos(sessaoId ? { sessaoId } : undefined);
+        }, 0);
+      },
+      error: error => {
+        console.error('Erro ao atualizar status:', error);
+        let mensagem = 'Erro ao atualizar status. Tente novamente.';
 
-          if (error.error) {
-            if (error.error.message) {
-              mensagem = error.error.message;
-            } else if (error.error.errors) {
-              const erros = Object.values(error.error.errors).join(', ');
-              mensagem = `Erro de validação: ${erros}`;
-            }
-          } else if (error.message) {
-            mensagem = error.message;
+        if (error.error) {
+          if (error.error.message) {
+            mensagem = error.error.message;
+          } else if (error.error.errors) {
+            const erros = Object.values(error.error.errors).join(', ');
+            mensagem = `Erro de validação: ${erros}`;
           }
-
-          if (this.isBrowser) {
-            alert(mensagem);
-          }
+        } else if (error.message) {
+          mensagem = error.message;
         }
-      });
+
+        if (this.isBrowser) {
+          alert(mensagem);
+        }
+      },
+    });
   }
 
   cancelarPedido(pedidoId: string): void {
@@ -392,26 +411,24 @@ export class PedidosComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.pedidoService.cancelar(pedidoId)
-      .subscribe({
-        next: (pedidoCancelado) => {
-          // Atualiza o signal imediatamente para atualizar contadores em tempo real
-          this.pedidosComposable.atualizarPedidoNoSignal(pedidoCancelado);
-          // Recarrega todos os pedidos de forma assíncrona para garantir sincronização
-          setTimeout(() => {
-            const sessaoId = this.sessaoAtiva()?.id;
-            this.pedidosComposable.carregarPedidos(sessaoId ? { sessaoId } : undefined);
-          }, 0);
-        },
-        error: (error) => {
-          console.error('Erro ao cancelar pedido:', error);
-          if (this.isBrowser) {
-            alert('Erro ao cancelar pedido. Tente novamente.');
-          }
+    this.pedidoService.cancelar(pedidoId).subscribe({
+      next: pedidoCancelado => {
+        // Atualiza o signal imediatamente para atualizar contadores em tempo real
+        this.pedidosComposable.atualizarPedidoNoSignal(pedidoCancelado);
+        // Recarrega todos os pedidos de forma assíncrona para garantir sincronização
+        setTimeout(() => {
+          const sessaoId = this.sessaoAtiva()?.id;
+          this.pedidosComposable.carregarPedidos(sessaoId ? { sessaoId } : undefined);
+        }, 0);
+      },
+      error: error => {
+        console.error('Erro ao cancelar pedido:', error);
+        if (this.isBrowser) {
+          alert('Erro ao cancelar pedido. Tente novamente.');
         }
-      });
+      },
+    });
   }
-
 
   // Menu de contexto
   abrirMenuContexto(event: MouseEvent, pedidoId: string): void {
@@ -421,14 +438,13 @@ export class PedidosComponent implements OnInit, OnDestroy {
     this.menuContexto.set({
       pedidoId,
       x: event.clientX,
-      y: event.clientY
+      y: event.clientY,
     });
   }
 
   fecharMenuContexto(): void {
     this.menuContexto.set(null);
   }
-
 
   onStatusAlteradoViaMenu(event: { pedidoId: string; novoStatus: StatusPedido }): void {
     this.fecharMenuContexto();
@@ -465,7 +481,7 @@ export class PedidosComponent implements OnInit, OnDestroy {
       [StatusPedido.PREPARANDO]: 'Preparando',
       [StatusPedido.PRONTO]: 'Pronto',
       [StatusPedido.FINALIZADO]: 'Finalizado',
-      [StatusPedido.CANCELADO]: 'Cancelado'
+      [StatusPedido.CANCELADO]: 'Cancelado',
     };
     return nomes[status] || status;
   }
@@ -478,49 +494,61 @@ export class PedidosComponent implements OnInit, OnDestroy {
     return palavras.slice(0, 3).join(' ') + '...';
   }
 
-
-
   imprimirSegundaVia(pedidoId: string): void {
-    this.impressaoService.buscarConfiguracao().pipe(
-      catchError(() => {
-        if (this.isBrowser) {
-          alert('Erro ao buscar configuração de impressora. Verifique se a impressora está configurada.');
-        }
-        return of(null);
-      })
-    ).subscribe((config) => {
-      if (!config || !config.ativa) {
-        if (this.isBrowser) {
-          alert('Impressora não configurada ou inativa. Configure a impressora em Administração.');
-        }
-        return;
-      }
-
-      this.impressaoService.imprimirCupom({
-        pedidoId,
-        tipoImpressora: config.tipoImpressora,
-        nomeEstabelecimento: config.nomeEstabelecimento,
-        enderecoEstabelecimento: config.enderecoEstabelecimento,
-        telefoneEstabelecimento: config.telefoneEstabelecimento,
-        cnpjEstabelecimento: config.cnpjEstabelecimento
-      }).pipe(
-        catchError((error) => {
-          console.error('Erro ao imprimir segunda via:', error);
+    this.impressaoService
+      .buscarConfiguracao()
+      .pipe(
+        catchError(() => {
           if (this.isBrowser) {
-            alert('Erro ao imprimir cupom: ' + (error.error?.message || error.message || 'Erro desconhecido'));
+            alert(
+              'Erro ao buscar configuração de impressora. Verifique se a impressora está configurada.'
+            );
           }
-          this.notificationService.erro('Erro ao imprimir cupom: ' + (error.error?.message || error.message || 'Erro desconhecido'));
           return of(null);
         })
-      ).subscribe((response) => {
-        if (response?.sucesso) {
-          this.notificationService.sucesso('✅ Cupom impresso com sucesso!');
-        } else if (response && !response.sucesso) {
-          this.notificationService.erro('❌ Erro ao imprimir: ' + response.mensagem);
+      )
+      .subscribe(config => {
+        if (!config || !config.ativa) {
+          if (this.isBrowser) {
+            alert(
+              'Impressora não configurada ou inativa. Configure a impressora em Administração.'
+            );
+          }
+          return;
         }
+
+        this.impressaoService
+          .imprimirCupom({
+            pedidoId,
+            tipoImpressora: config.tipoImpressora,
+            nomeEstabelecimento: config.nomeEstabelecimento,
+            enderecoEstabelecimento: config.enderecoEstabelecimento,
+            telefoneEstabelecimento: config.telefoneEstabelecimento,
+            cnpjEstabelecimento: config.cnpjEstabelecimento,
+          })
+          .pipe(
+            catchError(error => {
+              console.error('Erro ao imprimir segunda via:', error);
+              if (this.isBrowser) {
+                alert(
+                  'Erro ao imprimir cupom: ' +
+                    (error.error?.message || error.message || 'Erro desconhecido')
+                );
+              }
+              this.notificationService.erro(
+                'Erro ao imprimir cupom: ' +
+                  (error.error?.message || error.message || 'Erro desconhecido')
+              );
+              return of(null);
+            })
+          )
+          .subscribe(response => {
+            if (response?.sucesso) {
+              this.notificationService.sucesso('✅ Cupom impresso com sucesso!');
+            } else if (response && !response.sucesso) {
+              this.notificationService.erro('❌ Erro ao imprimir: ' + response.mensagem);
+            }
+          });
       });
-    });
   }
-
-
 }
