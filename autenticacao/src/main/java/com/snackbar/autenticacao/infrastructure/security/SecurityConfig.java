@@ -1,6 +1,8 @@
 package com.snackbar.autenticacao.infrastructure.security;
 
-import lombok.RequiredArgsConstructor;
+import java.util.Arrays;
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -14,8 +16,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
@@ -65,6 +66,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/api/status").permitAll()
                         .requestMatchers("/api/health").permitAll()
+                        .requestMatchers("/actuator/**").permitAll()
                         // Endpoints públicos de mesas (QR Code) - Permite pedidos de clientes
                         .requestMatchers(PUBLIC_MESA_PATTERN).permitAll()
                         // Endpoints públicos de autenticação de cliente (login, Google OAuth)

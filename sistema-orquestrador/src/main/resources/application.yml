@@ -32,6 +32,16 @@ spring:
   liquibase:
     enabled: false # Desabilitado aqui - usando configuração Java explícita
 
+# Actuator - Health check e monitoramento
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+
 # JWT Configuration
 # Configurado via JwtProperties (@ConfigurationProperties)
 # IMPORTANTE: Defina JWT_SECRET e JWT_EXPIRATION no application-secrets.yml ou variáveis de ambiente
