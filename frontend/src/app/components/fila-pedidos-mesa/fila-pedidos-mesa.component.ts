@@ -3,6 +3,7 @@ import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { FilaPedidosMesaService, PedidoPendente } from '../../services/fila-pedidos-mesa.service';
+import { PedidoPollingService } from '../../services/pedido-polling.service';
 import { gerarUuid } from '../../shared/utils/uuid';
 
 @Component({
@@ -14,6 +15,7 @@ import { gerarUuid } from '../../shared/utils/uuid';
 })
 export class FilaPedidosMesaComponent implements OnInit, OnDestroy {
   private filaService = inject(FilaPedidosMesaService);
+  private pollingGlobal = inject(PedidoPollingService);
   private pollingSubscription?: Subscription;
 
   // Signals
@@ -55,6 +57,9 @@ export class FilaPedidosMesaComponent implements OnInit, OnDestroy {
         console.log('Pedido aceito e criado:', pedidoCriado);
         this.processando.set(null);
         this.filaService.carregarPedidos();
+        // Força recarga imediata do polling global para detectar o novo pedido
+        // e disparar a impressão automática via AppComponent
+        this.pollingGlobal.recarregar();
       },
       error: err => {
         console.error('Erro ao aceitar pedido:', err);
