@@ -269,6 +269,50 @@ atualizar() {
     log "✅ Atualização completa!"
 }
 
+# ==================== ATUALIZAR APENAS BACKEND ====================
+atualizar_backend() {
+    check_env
+    ln -sf .env.prod .env
+    
+    log "🔄 Atualizando apenas o BACKEND..."
+    
+    git pull origin main
+    login_ghcr
+    
+    log "📥 Baixando imagem do backend..."
+    docker compose -f docker-compose.prod.yml pull backend
+    
+    log "🚀 Reiniciando backend (MySQL e Frontend não serão afetados)..."
+    docker compose -f docker-compose.prod.yml up -d --no-deps backend
+    
+    docker image prune -f
+    
+    log "✅ Backend atualizado!"
+    log "📋 Verifique: docker compose -f docker-compose.prod.yml logs -f backend"
+}
+
+# ==================== ATUALIZAR APENAS FRONTEND ====================
+atualizar_frontend() {
+    check_env
+    ln -sf .env.prod .env
+    
+    log "🔄 Atualizando apenas o FRONTEND..."
+    
+    git pull origin main
+    login_ghcr
+    
+    log "📥 Baixando imagem do frontend..."
+    docker compose -f docker-compose.prod.yml pull frontend
+    
+    log "🚀 Reiniciando frontend (MySQL e Backend não serão afetados)..."
+    docker compose -f docker-compose.prod.yml up -d --no-deps frontend
+    
+    docker image prune -f
+    
+    log "✅ Frontend atualizado!"
+    log "📋 Verifique: docker compose -f docker-compose.prod.yml logs -f frontend"
+}
+
 # ==================== BACKUP ====================
 backup() {
     source .env.prod
@@ -318,6 +362,12 @@ case "${1:-}" in
     atualizar)
         atualizar
         ;;
+    atualizar-backend)
+        atualizar_backend
+        ;;
+    atualizar-frontend)
+        atualizar_frontend
+        ;;
     backup)
         backup
         ;;
@@ -344,15 +394,17 @@ case "${1:-}" in
         echo "Uso: $0 <comando>"
         echo ""
         echo "Comandos:"
-        echo "  setup            Configurar VPS (primeira vez)"
-        echo "  primeiro-deploy  Fazer o primeiro deploy"
-        echo "  ssl              Configurar SSL (Let's Encrypt)"
-        echo "  atualizar        Atualizar aplicação"
-        echo "  backup           Fazer backup do banco"
-        echo "  status           Ver status dos containers"
-        echo "  logs             Ver logs em tempo real"
-        echo "  stop             Parar todos os containers"
-        echo "  restart          Reiniciar containers"
+        echo "  setup              Configurar VPS (primeira vez)"
+        echo "  primeiro-deploy    Fazer o primeiro deploy"
+        echo "  ssl                Configurar SSL (Let's Encrypt)"
+        echo "  atualizar          Atualizar backend + frontend"
+        echo "  atualizar-backend  Atualizar APENAS o backend"
+        echo "  atualizar-frontend Atualizar APENAS o frontend"
+        echo "  backup             Fazer backup do banco"
+        echo "  status             Ver status dos containers"
+        echo "  logs               Ver logs em tempo real"
+        echo "  stop               Parar todos os containers"
+        echo "  restart            Reiniciar containers"
         echo ""
         ;;
 esac
