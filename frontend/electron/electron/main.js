@@ -250,6 +250,23 @@ function criarMenu() {
             }
           },
         },
+        {
+          label: '🗑️ Limpar cache',
+          accelerator: 'Ctrl+Shift+Delete',
+          click: async () => {
+            if (mainWindow) {
+              try {
+                const { session } = mainWindow.webContents;
+                await session.clearCache();
+                await session.clearStorageData({ storages: ['cookies', 'localstorage', 'indexdb'] });
+                mainWindow.reload();
+                console.log('✅ Cache limpo e página recarregada');
+              } catch (error) {
+                console.error('Erro ao limpar cache:', error);
+              }
+            }
+          },
+        },
         { type: 'separator' },
         {
           label: 'Sair',
