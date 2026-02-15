@@ -23,6 +23,7 @@
 -- - Movimentações de caixa
 -- - Pedidos pendentes de mesa e respectivos itens
 -- - Dados derivados de clientes (favoritos e avaliações)
+-- - Sequence de número de pedido (para o próximo pedido ser #1)
 --
 -- APÓS A LIMPEZA: o AUTO_INCREMENT de cada tabela é resetado para 1,
 -- ou seja, o próximo registro inserido terá id = 1 (contador “zerado”).
@@ -49,7 +50,8 @@ SELECT
     IFNULL((SELECT COUNT(*) FROM movimentacoes_caixa), 0) AS total_movimentacoes_caixa,
     IFNULL((SELECT COUNT(*) FROM sessoes_trabalho), 0) AS total_sessoes_trabalho,
     IFNULL((SELECT COUNT(*) FROM cliente_favoritos), 0) AS total_cliente_favoritos,
-    IFNULL((SELECT COUNT(*) FROM cliente_avaliacoes), 0) AS total_cliente_avaliacoes;
+    IFNULL((SELECT COUNT(*) FROM cliente_avaliacoes), 0) AS total_cliente_avaliacoes,
+    IFNULL((SELECT COUNT(*) FROM numero_pedido_sequence), 0) AS total_numero_pedido_sequence;
 
 -- Confirmar que outras tabelas serão preservadas
 SELECT 
@@ -143,6 +145,11 @@ DELETE FROM sessoes_trabalho;
 
 DELETE FROM cliente_favoritos;
 
+-- 9. Zerar a sequence de número de pedido (para o próximo pedido ser #1)
+-- Tabela: numero_pedido_sequence
+-- (O número exibido do pedido vem do id desta tabela; sem limpar, continua do número anterior)
+DELETE FROM numero_pedido_sequence;
+
 -- ============================================================
 -- RESETAR AUTO_INCREMENT (contador de ID) para próximo ID = 1
 -- ============================================================
@@ -155,6 +162,7 @@ ALTER TABLE movimentacoes_caixa AUTO_INCREMENT = 1;
 ALTER TABLE pedidos AUTO_INCREMENT = 1;
 ALTER TABLE sessoes_trabalho AUTO_INCREMENT = 1;
 ALTER TABLE cliente_favoritos AUTO_INCREMENT = 1;
+ALTER TABLE numero_pedido_sequence AUTO_INCREMENT = 1;
 
 -- Reabilitar verificação de chaves estrangeiras
 SET FOREIGN_KEY_CHECKS = 1;
@@ -183,7 +191,8 @@ SELECT
     IFNULL((SELECT COUNT(*) FROM movimentacoes_caixa), 0) AS total_movimentacoes_caixa,
     IFNULL((SELECT COUNT(*) FROM sessoes_trabalho), 0) AS total_sessoes_trabalho,
     IFNULL((SELECT COUNT(*) FROM cliente_favoritos), 0) AS total_cliente_favoritos,
-    IFNULL((SELECT COUNT(*) FROM cliente_avaliacoes), 0) AS total_cliente_avaliacoes;
+    IFNULL((SELECT COUNT(*) FROM cliente_avaliacoes), 0) AS total_cliente_avaliacoes,
+    IFNULL((SELECT COUNT(*) FROM numero_pedido_sequence), 0) AS total_numero_pedido_sequence;
 
 -- Confirmar que outras tabelas foram preservadas
 SELECT 
