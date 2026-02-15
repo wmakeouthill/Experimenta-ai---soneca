@@ -233,13 +233,15 @@
                         }
                       </p>
                     </div>
-                    <div class="pedido-status-badge badge-fila-mesa">
-                      <span
-                        class="tempo-espera"
-                        [class]="getClasseTempoEspera(pedido.tempoEsperaSegundos)"
-                      >
-                        ⏱️ {{ formatarTempoEspera(pedido.tempoEsperaSegundos) }}
-                      </span>
+                    <div class="pedido-header-direita">
+                      <div class="pedido-status-badge badge-fila-mesa">
+                        <span
+                          class="tempo-espera"
+                          [class]="getClasseTempoEspera(pedido.tempoEsperaSegundos)"
+                        >
+                          ⏱️ {{ formatarTempoEspera(pedido.tempoEsperaSegundos) }}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -337,15 +339,16 @@
                             pedido.clienteNome
                           }}</span>
                         }
-                        <span class="pedido-separador"> - </span>
-                        <span class="pedido-data">{{ formatarData(pedido.dataPedido) }}</span>
                       </p>
                     </div>
-                    <div
-                      class="pedido-status-badge"
-                      [class]="'badge-' + pedido.status.toLowerCase()"
-                    >
-                      {{ formatarStatus(pedido.status) }}
+                    <div class="pedido-header-direita">
+                      <div
+                        class="pedido-status-badge"
+                        [class]="'badge-' + pedido.status.toLowerCase()"
+                      >
+                        {{ formatarStatus(pedido.status) }}
+                      </div>
+                      <span class="pedido-data">{{ formatarData(pedido.dataPedido) }}</span>
                     </div>
                   </div>
 

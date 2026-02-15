@@ -91,12 +91,11 @@
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  overflow: hidden;
+  min-width: 0;
 }
 
 .pedido-cliente {
   color: #666;
-  flex: 1 1 0;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -139,6 +138,15 @@
   color: #999;
   flex-shrink: 0;
   white-space: nowrap;
+  text-align: right;
+}
+
+.pedido-header-direita {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+  flex-shrink: 0;
 }
 
 .pedido-status-badge {
