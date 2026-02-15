@@ -4,7 +4,7 @@
 # ============================================================
 
 # Stage 1: Build do Maven
-FROM maven:3.9-eclipse-temurin-17 AS maven-build
+FROM maven:3.9-eclipse-temurin-21 AS maven-build
 
 WORKDIR /app
 
@@ -32,11 +32,11 @@ COPY sistema-orquestrador ./sistema-orquestrador
 COPY impressao-cupom-fiscal ./impressao-cupom-fiscal
 COPY chat-ia ./chat-ia
 
-# Build do backend
-RUN mvn clean package -DskipTests -B -q
+# Build do backend (skip frontend - é buildado no Dockerfile.prod.frontend)
+RUN mvn clean package -DskipTests -Dskip.frontend.build=true -B -q
 
 # Stage 2: Imagem de produção mínima
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:21-jre-alpine
 
 # Segurança: criar usuário não-root
 RUN addgroup -g 1001 -S appgroup && \

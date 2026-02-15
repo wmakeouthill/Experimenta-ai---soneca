@@ -35,17 +35,23 @@ Write-Host "  Se nao estiver logado, execute:" -ForegroundColor Gray
 Write-Host "  echo SEU_TOKEN | docker login ghcr.io -u $GhcrUser --password-stdin" -ForegroundColor Gray
 Write-Host ""
 
-# Testar se esta logado
-$loginTest = docker pull ghcr.io/$GhcrUser/test-auth 2>&1
-# Se der "denied" e nao "not found", precisa login
-if ($loginTest -match "denied") {
+# Testar se esta logado verificando o config do Docker
+$dockerConfig = "$env:USERPROFILE\.docker\config.json"
+$loggedIn = $false
+if (Test-Path $dockerConfig) {
+    $configContent = Get-Content $dockerConfig -Raw
+    if ($configContent -match "ghcr\.io") {
+        $loggedIn = $true
+    }
+}
+if (-not $loggedIn) {
     Write-Host "  Nao esta logado! Faca login primeiro:" -ForegroundColor Red
     Write-Host "  1. Crie um Personal Access Token em: https://github.com/settings/tokens" -ForegroundColor Yellow
     Write-Host "     Permissoes: write:packages, read:packages, delete:packages" -ForegroundColor Yellow
     Write-Host "  2. Execute: echo SEU_TOKEN | docker login ghcr.io -u $GhcrUser --password-stdin" -ForegroundColor Yellow
     exit 1
 }
-Write-Host "  Login OK (ou primeiro push)" -ForegroundColor Green
+Write-Host "  Login OK" -ForegroundColor Green
 
 # ==================== BUILD BACKEND ====================
 Write-Host "[3/6] Building Backend (Maven + JRE)..." -ForegroundColor Yellow
