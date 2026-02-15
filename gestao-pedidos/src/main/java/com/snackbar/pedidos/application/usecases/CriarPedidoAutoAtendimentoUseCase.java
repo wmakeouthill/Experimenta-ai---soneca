@@ -1,11 +1,16 @@
 package com.snackbar.pedidos.application.usecases;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.snackbar.cardapio.domain.valueobjects.Preco;
-import com.snackbar.pedidos.application.dto.CriarPedidoAutoAtendimentoRequest;
-import com.snackbar.pedidos.application.dto.ItemPedidoAdicionalRequest;
-import com.snackbar.pedidos.application.dto.ItemPedidoRequest;
-import com.snackbar.pedidos.application.dto.MeioPagamentoRequest;
-import com.snackbar.pedidos.application.dto.PedidoAutoAtendimentoResponse;
+import com.snackbar.kernel.domain.exceptions.ValidationException;
+import com.snackbar.pedidos.application.dto.*;
 import com.snackbar.pedidos.application.ports.CardapioServicePort;
 import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
 import com.snackbar.pedidos.application.ports.SessaoTrabalhoRepositoryPort;
@@ -18,16 +23,9 @@ import com.snackbar.pedidos.domain.entities.MeioPagamentoPedido;
 import com.snackbar.pedidos.domain.entities.Pedido;
 import com.snackbar.pedidos.domain.services.PedidoValidator;
 import com.snackbar.pedidos.domain.valueobjects.NumeroPedido;
-import com.snackbar.kernel.domain.exceptions.ValidationException;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.lang.Nullable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Use case para criação de pedidos via auto atendimento (totem).
@@ -135,9 +133,7 @@ public class CriarPedidoAutoAtendimentoUseCase {
         // Processa meios de pagamento
         for (MeioPagamentoRequest meioPagamentoRequest : request.getMeiosPagamento()) {
             Preco valor = Preco.of(meioPagamentoRequest.getValor());
-            MeioPagamentoPedido meioPagamentoPedido = MeioPagamentoPedido.criar(
-                    meioPagamentoRequest.getMeioPagamento(),
-                    valor);
+            MeioPagamentoPedido meioPagamentoPedido = criarMeioPagamentoComTroco(meioPagamentoRequest, valor);
             pedido.adicionarMeioPagamento(meioPagamentoPedido);
         }
 
@@ -217,5 +213,13 @@ public class CriarPedidoAutoAtendimentoUseCase {
             adicionais.add(adicional);
         }
         return adicionais;
+    }
+
+    private MeioPagamentoPedido criarMeioPagamentoComTroco(MeioPagamentoRequest request, Preco valor) {
+        if (request.getMeioPagamento() == com.snackbar.pedidos.domain.entities.MeioPagamento.DINHEIRO
+                && request.getValorPagoDinheiro() != null) {
+            return MeioPagamentoPedido.criarComTroco(valor, Preco.of(request.getValorPagoDinheiro()));
+        }
+        return MeioPagamentoPedido.criar(request.getMeioPagamento(), valor);
     }
 }

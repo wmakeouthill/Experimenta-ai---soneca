@@ -461,6 +461,76 @@ export class PedidosComponent implements OnInit, OnDestroy {
     this.imprimirSegundaVia(pedidoId);
   }
 
+  onCorrigirTrocoViaMenu(pedidoId: string): void {
+    this.fecharMenuContexto();
+    const pedido = this.pedidosFiltrados().find(p => p.id === pedidoId);
+    if (pedido) {
+      this.corrigirTroco(pedidoId, pedido.valorTotal);
+    }
+  }
+
+  /**
+   * Abre um prompt para o operador informar/corrigir o valor pago em dinheiro.
+   * Calcula e exibe o troco antes de confirmar.
+   */
+  corrigirTroco(pedidoId: string, valorTotal: number): void {
+    if (!this.isBrowser) return;
+
+    const valorStr = prompt(
+      `💵 Informe o valor pago em dinheiro pelo cliente:\n(Valor do pedido: R$ ${valorTotal.toFixed(2).replace('.', ',')})`
+    );
+    if (valorStr === null) return; // Usuário cancelou
+
+    const valorPago = parseFloat(valorStr.replace(',', '.'));
+    if (isNaN(valorPago) || valorPago <= 0) {
+      alert('Valor inválido. Informe um valor numérico maior que zero.');
+      return;
+    }
+
+    if (valorPago < valorTotal) {
+      alert(
+        `O valor pago (R$ ${valorPago.toFixed(2).replace('.', ',')}) não pode ser menor que o valor do pedido (R$ ${valorTotal.toFixed(2).replace('.', ',')}).`
+      );
+      return;
+    }
+
+    const troco = valorPago - valorTotal;
+    const confirmar = confirm(
+      `Confirmar correção de troco?\n\nValor do pedido: R$ ${valorTotal.toFixed(2).replace('.', ',')}\nValor pago: R$ ${valorPago.toFixed(2).replace('.', ',')}\nTroco: R$ ${troco.toFixed(2).replace('.', ',')}`
+    );
+    if (!confirmar) return;
+
+    this.pedidoService.corrigirTroco(pedidoId, valorPago).subscribe({
+      next: pedidoAtualizado => {
+        this.pedidosComposable.atualizarPedidoNoSignal(pedidoAtualizado);
+        this.notificationService.sucesso('✅ Troco corrigido com sucesso!');
+        setTimeout(() => {
+          const sessaoId = this.sessaoAtiva()?.id;
+          this.pedidosComposable.carregarPedidos(sessaoId ? { sessaoId } : undefined);
+        }, 0);
+      },
+      error: error => {
+        console.error('Erro ao corrigir troco:', error);
+        const mensagem =
+          error.error?.message || error.message || 'Erro ao corrigir troco. Tente novamente.';
+        if (this.isBrowser) {
+          alert(mensagem);
+        }
+      },
+    });
+  }
+
+  formatarMeioPagamento(meio: string): string {
+    const nomes: Record<string, string> = {
+      PIX: 'Pix',
+      CARTAO_CREDITO: 'Cartão Crédito',
+      CARTAO_DEBITO: 'Cartão Débito',
+      VALE_REFEICAO: 'Vale Refeição',
+      DINHEIRO: 'Dinheiro',
+    };
+    return nomes[meio] || meio;
+  }
+
   obterPedidoDoMenu(): Pedido | null {
     const menu = this.menuContexto();
     if (!menu) return null;

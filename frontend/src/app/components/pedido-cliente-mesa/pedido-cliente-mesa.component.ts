@@ -822,9 +822,10 @@ export class PedidoClienteMesaComponent
           : undefined,
     }));
 
-    const meiosPagamento = this.pagamento.meiosSelecionados().map(m => ({
+    const meiosPagamento = this.pagamento.getMeiosComTroco().map(m => ({
       meioPagamento: m.tipo,
       valor: m.valor,
+      valorPagoDinheiro: m.valorPagoDinheiro,
     }));
 
     const request: CriarPedidoMesaRequest = {

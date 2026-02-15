@@ -272,6 +272,103 @@
   -moz-appearance: textfield;
 }
 
+/* ========== Troco (Dinheiro) ========== */
+.troco-container {
+  background: linear-gradient(135deg, #fff8e1 0%, #fff3cd 100%);
+  border: 1px solid #ffe082;
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.troco-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.troco-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #6d4c00;
+}
+
+.troco-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: white;
+  border: 1px solid #ffe082;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+}
+
+.troco-cifrao {
+  font-weight: 600;
+  color: #6d4c00;
+  font-size: 1rem;
+}
+
+.input-valor-troco {
+  border: none;
+  outline: none;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  width: 100%;
+  background: transparent;
+}
+
+.input-valor-troco::-webkit-inner-spin-button,
+.input-valor-troco::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.input-valor-troco[type='number'] {
+  -moz-appearance: textfield;
+}
+
+.troco-resultado {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: white;
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+
+.troco-icone {
+  font-size: 1.1rem;
+}
+
+.troco-texto {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2e7d32;
+}
+
+/* Troco no resumo de confirmação */
+.resumo-troco-detalhe {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.25rem 0 0.5rem 0;
+  font-size: 0.85rem;
+}
+
+.troco-detalhe-label {
+  color: #6d4c00;
+  font-weight: 500;
+}
+
+.troco-detalhe-valor {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
 /* Resumo do pagamento dividido */
 .pagamento-resumo {
   background: #f8f9fa;

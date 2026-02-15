@@ -1,5 +1,5 @@
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 /**
@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
  * Formato: UUID v4 simplificado.
  */
 function generateIdempotencyKey(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
     const r = (Math.random() * 16) | 0;
     const v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
@@ -19,7 +19,7 @@ export enum StatusPedido {
   PREPARANDO = 'PREPARANDO',
   PRONTO = 'PRONTO',
   FINALIZADO = 'FINALIZADO',
-  CANCELADO = 'CANCELADO'
+  CANCELADO = 'CANCELADO',
 }
 
 export interface ItemPedidoAdicional {
@@ -43,13 +43,15 @@ export interface ItemPedido {
 export interface MeioPagamentoDTO {
   meioPagamento: MeioPagamento;
   valor: number;
+  valorPagoDinheiro?: number;
+  troco?: number;
 }
 
 export enum TipoPedido {
   BALCAO = 'BALCAO',
   MESA = 'MESA',
   DELIVERY = 'DELIVERY',
-  RETIRADA = 'RETIRADA'
+  RETIRADA = 'RETIRADA',
 }
 
 export interface Pedido {
@@ -78,12 +80,14 @@ export enum MeioPagamento {
   CARTAO_CREDITO = 'CARTAO_CREDITO',
   CARTAO_DEBITO = 'CARTAO_DEBITO',
   VALE_REFEICAO = 'VALE_REFEICAO',
-  DINHEIRO = 'DINHEIRO'
+  DINHEIRO = 'DINHEIRO',
 }
 
 export interface MeioPagamentoPedido {
   meioPagamento: MeioPagamento;
   valor: number;
+  valorPagoDinheiro?: number;
+  troco?: number;
 }
 
 export interface CriarPedidoRequest {
@@ -112,7 +116,7 @@ export interface AtualizarStatusPedidoRequest {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class PedidoService {
   private readonly http = inject(HttpClient);
@@ -179,7 +183,7 @@ export class PedidoService {
    */
   criar(pedido: CriarPedidoRequest, idempotencyKey: string): Observable<Pedido> {
     const headers = new HttpHeaders({
-      'X-Idempotency-Key': idempotencyKey
+      'X-Idempotency-Key': idempotencyKey,
     });
     return this.http.post<Pedido>(this.apiUrl, pedido, { headers });
   }
@@ -195,5 +199,13 @@ export class PedidoService {
   excluir(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
-}
 
+  /**
+   * Corrige o troco de um pedido com pagamento em dinheiro.
+   * Usado pelo operador quando o cliente não informou o valor pago
+   * no momento do pedido e precisa ser corrigido no ato do pagamento.
+   */
+  corrigirTroco(pedidoId: string, valorPagoDinheiro: number): Observable<Pedido> {
+    return this.http.patch<Pedido>(`${this.apiUrl}/${pedidoId}/troco`, { valorPagoDinheiro });
+  }
+}

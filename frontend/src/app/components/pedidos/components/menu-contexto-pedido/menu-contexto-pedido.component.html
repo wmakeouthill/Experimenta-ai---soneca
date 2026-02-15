@@ -1,10 +1,10 @@
 @if (aberto() && posicao() && pedido()) {
-  <div 
+  <div
     class="context-menu-overlay"
     (click)="fechar()"
     (contextmenu)="$event.preventDefault(); fechar()"
   >
-    <div 
+    <div
       class="context-menu"
       [style.left.px]="posicao()!.x"
       [style.top.px]="posicao()!.y"
@@ -18,24 +18,26 @@
           <div class="context-menu-section">
             <div class="context-menu-section-title">Alterar Status</div>
             @for (status of obterStatusDisponiveis(pedidoAtual.status); track status) {
-              <button 
-                class="context-menu-item"
-                (click)="alterarStatus(status)"
-              >
+              <button class="context-menu-item" (click)="alterarStatus(status)">
                 {{ obterNomeStatus(status) }}
               </button>
             }
           </div>
           <div class="context-menu-divider"></div>
           <div class="context-menu-section">
-            <button 
+            <button
               class="context-menu-item context-menu-item-impressao"
               (click)="imprimirSegundaVia()"
             >
               🖨️ Imprimir Segunda Via
             </button>
+            @if (podeCorrigirTroco(pedidoAtual)) {
+              <button class="context-menu-item context-menu-item-troco" (click)="corrigirTroco()">
+                💵 Informar/Corrigir Troco
+              </button>
+            }
             @if (podeCancelar(pedidoAtual.status)) {
-              <button 
+              <button
                 class="context-menu-item context-menu-item-cancelar"
                 (click)="cancelarPedido()"
               >
@@ -48,4 +50,3 @@
     </div>
   </div>
 }
-

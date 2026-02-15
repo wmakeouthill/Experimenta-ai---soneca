@@ -1,5 +1,15 @@
-import { Component, inject, PLATFORM_ID, input, output, signal, computed, effect, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  output,
+  PLATFORM_ID,
+  signal,
+} from '@angular/core';
 import { MeioPagamento, MeioPagamentoPedido } from '../../../../services/pedido.service';
 
 @Component({
@@ -8,7 +18,7 @@ import { MeioPagamento, MeioPagamentoPedido } from '../../../../services/pedido.
   imports: [CommonModule],
   templateUrl: './meios-pagamento.component.html',
   styleUrl: './meios-pagamento.component.css',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MeiosPagamentoComponent {
   private readonly platformId = inject(PLATFORM_ID);
@@ -20,6 +30,7 @@ export class MeiosPagamentoComponent {
 
   readonly meioPagamentoSelecionado = signal<MeioPagamento | null>(null);
   readonly valorMeioPagamento = signal<number>(0);
+  readonly valorPagoDinheiro = signal<number>(0);
   readonly MeioPagamento = MeioPagamento;
 
   // Flag para controlar se o usuário está editando manualmente
@@ -29,29 +40,46 @@ export class MeiosPagamentoComponent {
     return this.valorTotal() - this.calcularTotalMeiosPagamento();
   });
 
+  readonly trocoCalculado = computed(() => {
+    if (this.meioPagamentoSelecionado() !== MeioPagamento.DINHEIRO) return 0;
+    const valorPago = this.valorPagoDinheiro();
+    const valor = this.valorMeioPagamento();
+    if (valorPago > valor && valor > 0) {
+      return valorPago - valor;
+    }
+    return 0;
+  });
+
+  readonly isDinheiro = computed(() => {
+    return this.meioPagamentoSelecionado() === MeioPagamento.DINHEIRO;
+  });
+
   constructor() {
     if (this.isBrowser) {
-      effect(() => {
-        const restante = this.valorRestante();
-        const meioSelecionado = this.meioPagamentoSelecionado();
-        const valorAtual = this.valorMeioPagamento();
+      effect(
+        () => {
+          const restante = this.valorRestante();
+          const meioSelecionado = this.meioPagamentoSelecionado();
+          const valorAtual = this.valorMeioPagamento();
 
-        // Só ajusta automaticamente se o usuário NÃO está editando
-        if (!this.usuarioEditando) {
-          if (meioSelecionado && restante > 0) {
-            // Só ajusta se o valor excede o restante (não quando é 0)
-            if (valorAtual > restante) {
+          // Só ajusta automaticamente se o usuário NÃO está editando
+          if (!this.usuarioEditando) {
+            if (meioSelecionado && restante > 0) {
+              // Só ajusta se o valor excede o restante (não quando é 0)
+              if (valorAtual > restante) {
+                setTimeout(() => {
+                  this.valorMeioPagamento.set(restante);
+                }, 0);
+              }
+            } else if (restante <= 0) {
               setTimeout(() => {
-                this.valorMeioPagamento.set(restante);
+                this.valorMeioPagamento.set(0);
               }, 0);
             }
-          } else if (restante <= 0) {
-            setTimeout(() => {
-              this.valorMeioPagamento.set(0);
-            }, 0);
           }
-        }
-      }, { allowSignalWrites: true });
+        },
+        { allowSignalWrites: true }
+      );
     }
   }
 
@@ -81,6 +109,7 @@ export class MeiosPagamentoComponent {
     } else {
       this.valorMeioPagamento.set(0);
     }
+    this.valorPagoDinheiro.set(0);
   }
 
   adicionarMeioPagamento(): void {
@@ -109,13 +138,20 @@ export class MeiosPagamentoComponent {
 
     const novoMeioPagamento: MeioPagamentoPedido = {
       meioPagamento: meioPagamento,
-      valor: valor
+      valor: valor,
     };
+
+    // Se for dinheiro com valor pago informado, calcula troco
+    if (meioPagamento === MeioPagamento.DINHEIRO && this.valorPagoDinheiro() > valor) {
+      novoMeioPagamento.valorPagoDinheiro = this.valorPagoDinheiro();
+      novoMeioPagamento.troco = this.valorPagoDinheiro() - valor;
+    }
 
     const novosMeiosPagamento = [...this.meiosPagamento(), novoMeioPagamento];
     this.onMeiosPagamentoChange.emit(novosMeiosPagamento);
     this.meioPagamentoSelecionado.set(null);
     this.valorMeioPagamento.set(0);
+    this.valorPagoDinheiro.set(0);
   }
 
   removerMeioPagamento(index: number): void {
@@ -138,9 +174,8 @@ export class MeiosPagamentoComponent {
       [MeioPagamento.CARTAO_CREDITO]: 'Crédito',
       [MeioPagamento.CARTAO_DEBITO]: 'Débito',
       [MeioPagamento.VALE_REFEICAO]: 'Voucher',
-      [MeioPagamento.DINHEIRO]: 'Dinheiro'
+      [MeioPagamento.DINHEIRO]: 'Dinheiro',
     };
     return nomes[meioPagamento] || meioPagamento;
   }
 }
-

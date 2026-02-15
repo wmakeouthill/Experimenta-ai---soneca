@@ -1,15 +1,11 @@
 package com.snackbar.pedidos.infrastructure.persistence;
 
-import com.snackbar.pedidos.domain.entities.MeioPagamento;
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-
 import java.math.BigDecimal;
+
+import com.snackbar.pedidos.domain.entities.MeioPagamento;
+
+import jakarta.persistence.*;
+import lombok.*;
 
 /**
  * Entidade JPA para meios de pagamento de pedido pendente de mesa.
@@ -38,4 +34,10 @@ public class MeioPagamentoPendenteEntity {
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal valor;
+
+    @Column(name = "valor_pago_dinheiro", precision = 10, scale = 2)
+    private BigDecimal valorPagoDinheiro;
+
+    @Column(name = "troco", precision = 10, scale = 2)
+    private BigDecimal troco;
 }

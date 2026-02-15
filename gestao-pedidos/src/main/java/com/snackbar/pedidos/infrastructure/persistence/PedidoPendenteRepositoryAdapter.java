@@ -1,21 +1,23 @@
 package com.snackbar.pedidos.infrastructure.persistence;
 
-import com.snackbar.pedidos.application.dto.AdicionalPedidoPendenteDTO;
-import com.snackbar.pedidos.application.dto.ItemPedidoPendenteDTO;
-import com.snackbar.pedidos.application.dto.MeioPagamentoRequest;
-import com.snackbar.pedidos.application.dto.PedidoPendenteDTO;
-import com.snackbar.pedidos.application.ports.PedidoPendenteRepositoryPort;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.snackbar.pedidos.application.dto.AdicionalPedidoPendenteDTO;
+import com.snackbar.pedidos.application.dto.ItemPedidoPendenteDTO;
+import com.snackbar.pedidos.application.dto.MeioPagamentoRequest;
+import com.snackbar.pedidos.application.dto.PedidoPendenteDTO;
+import com.snackbar.pedidos.application.ports.PedidoPendenteRepositoryPort;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Implementação do repositório de pedidos pendentes usando JPA.
@@ -157,6 +159,7 @@ public class PedidoPendenteRepositoryAdapter implements PedidoPendenteRepository
                 MeioPagamentoPendenteEntity mpEntity = MeioPagamentoPendenteEntity.builder()
                         .meioPagamento(mpRequest.getMeioPagamento())
                         .valor(mpRequest.getValor())
+                        .valorPagoDinheiro(mpRequest.getValorPagoDinheiro())
                         .build();
                 entity.adicionarMeioPagamento(mpEntity);
             }
@@ -198,7 +201,13 @@ public class PedidoPendenteRepositoryAdapter implements PedidoPendenteRepository
         List<MeioPagamentoRequest> meiosPagamentoDTO = new ArrayList<>();
         if (entity.getMeiosPagamento() != null) {
             meiosPagamentoDTO = entity.getMeiosPagamento().stream()
-                    .map(mp -> new MeioPagamentoRequest(mp.getMeioPagamento(), mp.getValor()))
+                    .map(mp -> {
+                        MeioPagamentoRequest req = new MeioPagamentoRequest();
+                        req.setMeioPagamento(mp.getMeioPagamento());
+                        req.setValor(mp.getValor());
+                        req.setValorPagoDinheiro(mp.getValorPagoDinheiro());
+                        return req;
+                    })
                     .collect(Collectors.toList());
         }
 

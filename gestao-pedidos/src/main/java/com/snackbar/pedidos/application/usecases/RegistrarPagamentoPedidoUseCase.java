@@ -1,5 +1,15 @@
 package com.snackbar.pedidos.application.usecases;
 
+import java.math.BigDecimal;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Set;
+
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.snackbar.cardapio.domain.valueobjects.Preco;
 import com.snackbar.kernel.domain.exceptions.ValidationException;
 import com.snackbar.pedidos.application.dto.MeioPagamentoRequest;
@@ -10,17 +20,9 @@ import com.snackbar.pedidos.application.services.AuditoriaPagamentoService.Conte
 import com.snackbar.pedidos.domain.entities.MeioPagamentoPedido;
 import com.snackbar.pedidos.domain.entities.Pedido;
 import com.snackbar.pedidos.domain.entities.StatusPedido;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Use case para registrar pagamento de um pedido existente.
@@ -81,9 +83,7 @@ public class RegistrarPagamentoPedidoUseCase {
         BigDecimal totalPagamento = BigDecimal.ZERO;
         for (MeioPagamentoRequest meioPagamentoRequest : meiosPagamento) {
             Preco valor = Preco.of(meioPagamentoRequest.getValor());
-            MeioPagamentoPedido meioPagamentoPedido = MeioPagamentoPedido.criar(
-                    meioPagamentoRequest.getMeioPagamento(),
-                    valor);
+            MeioPagamentoPedido meioPagamentoPedido = criarMeioPagamentoComTroco(meioPagamentoRequest, valor);
             pedido.adicionarMeioPagamento(meioPagamentoPedido);
             totalPagamento = totalPagamento.add(meioPagamentoRequest.getValor());
         }
@@ -115,5 +115,13 @@ public class RegistrarPagamentoPedidoUseCase {
     @Transactional
     public PedidoDTO executar(@NonNull String pedidoId, @NonNull List<MeioPagamentoRequest> meiosPagamento) {
         return executar(pedidoId, meiosPagamento, null);
+    }
+
+    private MeioPagamentoPedido criarMeioPagamentoComTroco(MeioPagamentoRequest request, Preco valor) {
+        if (request.getMeioPagamento() == com.snackbar.pedidos.domain.entities.MeioPagamento.DINHEIRO
+                && request.getValorPagoDinheiro() != null) {
+            return MeioPagamentoPedido.criarComTroco(valor, Preco.of(request.getValorPagoDinheiro()));
+        }
+        return MeioPagamentoPedido.criar(request.getMeioPagamento(), valor);
     }
 }

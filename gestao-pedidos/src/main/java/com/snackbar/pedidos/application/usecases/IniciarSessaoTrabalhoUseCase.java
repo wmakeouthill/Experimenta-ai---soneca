@@ -2,6 +2,7 @@ package com.snackbar.pedidos.application.usecases;
 
 import com.snackbar.kernel.domain.exceptions.ValidationException;
 import com.snackbar.pedidos.application.dto.SessaoTrabalhoDTO;
+import com.snackbar.pedidos.application.ports.ObterNomeUsuarioPort;
 import com.snackbar.pedidos.application.ports.SessaoTrabalhoRepositoryPort;
 import com.snackbar.pedidos.domain.entities.SessaoTrabalho;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.Optional;
 
 /**
@@ -27,6 +29,7 @@ import java.util.Optional;
 public class IniciarSessaoTrabalhoUseCase {
 
     private final SessaoTrabalhoRepositoryPort repository;
+    private final ObterNomeUsuarioPort obterNomeUsuarioPort;
 
     @Transactional
     public SessaoTrabalhoDTO executar(String usuarioId, BigDecimal valorAbertura) {
@@ -41,7 +44,11 @@ public class IniciarSessaoTrabalhoUseCase {
         log.info("Sessão de trabalho iniciada - Número: {}, Usuário: {}",
                 sessaoSalva.getNumeroSessao(), usuarioId);
 
-        return SessaoTrabalhoDTO.de(sessaoSalva);
+        SessaoTrabalhoDTO dto = SessaoTrabalhoDTO.de(sessaoSalva);
+        String nome = obterNomeUsuarioPort.obterNomesPorIds(Collections.singleton(usuarioId))
+            .getOrDefault(usuarioId, usuarioId);
+        dto.setUsuarioNome(nome);
+        return dto;
     }
 
     private void validarNaoHaSessaoAtiva() {

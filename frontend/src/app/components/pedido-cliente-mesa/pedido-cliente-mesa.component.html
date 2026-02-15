@@ -1649,6 +1649,37 @@
                   }
                 </div>
 
+                <!-- Troco (Dinheiro) -->
+                @if (pagamento.dinheiroSelecionado()) {
+                  <div class="troco-container" (click)="$event.stopPropagation()">
+                    <div class="troco-input-group">
+                      <label class="troco-label">💵 Valor pago em nota</label>
+                      <div class="troco-input-wrapper">
+                        <span class="troco-cifrao">R$</span>
+                        <input
+                          type="number"
+                          class="input-valor-troco"
+                          placeholder="0,00"
+                          [value]="pagamento.valorPagoDinheiro() || null"
+                          (input)="
+                            pagamento.setValorPagoDinheiro($any($event.target).valueAsNumber || 0)
+                          "
+                          min="0"
+                          step="0.01"
+                        />
+                      </div>
+                    </div>
+                    @if (pagamento.trocoCalculado() > 0) {
+                      <div class="troco-resultado">
+                        <span class="troco-icone">🔄</span>
+                        <span class="troco-texto"
+                          >Troco: {{ formatarPreco(pagamento.trocoCalculado()) }}</span
+                        >
+                      </div>
+                    }
+                  </div>
+                }
+
                 <!-- Voucher (Vale Refeição) -->
                 <div
                   class="pagamento-opcao"
@@ -1771,7 +1802,7 @@
                 <!-- Pagamento -->
                 <div class="resumo-secao">
                   <span class="resumo-secao-titulo">Pagamento</span>
-                  @for (pag of pagamento.meiosSelecionados(); track pag.tipo) {
+                  @for (pag of pagamento.getMeiosComTroco(); track pag.tipo) {
                     <div class="resumo-pagamento-item">
                       <span class="pagamento-metodo">
                         <span>{{ pagamento.getIconeMeio(pag.tipo) }}</span>
@@ -1779,6 +1810,16 @@
                       </span>
                       <span class="pagamento-valor-resumo">{{ formatarPreco(pag.valor) }}</span>
                     </div>
+                    @if (pag.troco && pag.troco > 0) {
+                      <div class="resumo-troco-detalhe">
+                        <span class="troco-detalhe-label"
+                          >💵 Pago: {{ formatarPreco(pag.valorPagoDinheiro!) }}</span
+                        >
+                        <span class="troco-detalhe-valor"
+                          >🔄 Troco: {{ formatarPreco(pag.troco) }}</span
+                        >
+                      </div>
+                    }
                   }
                 </div>
 

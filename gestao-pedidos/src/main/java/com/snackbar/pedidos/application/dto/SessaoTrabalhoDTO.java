@@ -23,6 +23,8 @@ public class SessaoTrabalhoDTO {
     private LocalDateTime dataFim;
     private StatusSessao status;
     private String usuarioId;
+    /** Nome do usuário que abriu a sessão (preenchido pelo backend para exibição nos cards). */
+    private String usuarioNome;
     private String nome;
     private BigDecimal valorAbertura;
     private BigDecimal valorFechamento;
@@ -38,6 +40,7 @@ public class SessaoTrabalhoDTO {
             .dataFim(sessao.getDataFim())
             .status(sessao.getStatus())
             .usuarioId(sessao.getUsuarioId())
+            .usuarioNome(null) // preenchido pelo use case quando houver port disponível
             .nome(sessao.obterNome())
             .valorAbertura(sessao.getValorAbertura())
             .valorFechamento(sessao.getValorFechamento())

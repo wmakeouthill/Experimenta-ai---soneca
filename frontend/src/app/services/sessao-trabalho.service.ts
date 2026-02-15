@@ -17,6 +17,8 @@ export interface SessaoTrabalho {
   dataFim?: string;
   status: StatusSessao;
   usuarioId: string;
+  /** Nome do usuário que abriu a sessão (vindo do backend quando disponível). */
+  usuarioNome?: string;
   nome: string;
   valorAbertura?: number;
   valorFechamento?: number;

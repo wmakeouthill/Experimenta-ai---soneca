@@ -1,14 +1,15 @@
 package com.snackbar.pedidos.domain.entities;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.snackbar.cardapio.domain.valueobjects.Preco;
 import com.snackbar.kernel.domain.entities.BaseEntity;
 import com.snackbar.kernel.domain.exceptions.ValidationException;
 import com.snackbar.pedidos.domain.valueobjects.NumeroPedido;
-import lombok.Getter;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import lombok.Getter;
 
 @Getter
 public class Pedido extends BaseEntity {
@@ -186,6 +187,31 @@ public class Pedido extends BaseEntity {
             total = total.add(meioPagamento.getValor());
         }
         return total;
+    }
+
+    /**
+     * Corrige o valor pago em dinheiro e recalcula o troco para
+     * o meio de pagamento DINHEIRO deste pedido.
+     * Usado pelo operador quando o cliente não informou o valor no CTA.
+     *
+     * @param novoValorPago o valor real entregue pelo cliente em nota
+     */
+    public void corrigirTrocoDinheiro(Preco novoValorPago) {
+        if (status == StatusPedido.CANCELADO) {
+            throw new ValidationException("Não é possível corrigir troco de um pedido cancelado");
+        }
+        if (meiosPagamento == null || meiosPagamento.isEmpty()) {
+            throw new ValidationException("Pedido não possui meios de pagamento registrados");
+        }
+
+        MeioPagamentoPedido meioDinheiro = meiosPagamento.stream()
+                .filter(m -> m.getMeioPagamento() == MeioPagamento.DINHEIRO)
+                .findFirst()
+                .orElseThrow(() -> new ValidationException(
+                        "Pedido não possui pagamento em dinheiro para corrigir troco"));
+
+        meioDinheiro.corrigirTroco(novoValorPago);
+        touch();
     }
 
     public void cancelar() {

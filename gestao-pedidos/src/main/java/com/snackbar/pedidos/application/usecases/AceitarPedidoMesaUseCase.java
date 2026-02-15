@@ -1,12 +1,13 @@
 package com.snackbar.pedidos.application.usecases;
 
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.snackbar.cardapio.domain.valueobjects.Preco;
 import com.snackbar.kernel.domain.exceptions.ValidationException;
-import com.snackbar.pedidos.application.dto.AdicionalPedidoPendenteDTO;
-import com.snackbar.pedidos.application.dto.ItemPedidoPendenteDTO;
-import com.snackbar.pedidos.application.dto.MeioPagamentoRequest;
-import com.snackbar.pedidos.application.dto.PedidoDTO;
-import com.snackbar.pedidos.application.dto.PedidoPendenteDTO;
+import com.snackbar.pedidos.application.dto.*;
 import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
 import com.snackbar.pedidos.application.ports.SessaoTrabalhoRepositoryPort;
 import com.snackbar.pedidos.application.services.AuditoriaPagamentoService;
@@ -18,12 +19,9 @@ import com.snackbar.pedidos.domain.entities.ItemPedidoAdicional;
 import com.snackbar.pedidos.domain.entities.MeioPagamentoPedido;
 import com.snackbar.pedidos.domain.entities.Pedido;
 import com.snackbar.pedidos.domain.valueobjects.NumeroPedido;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.lang.Nullable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Use case para funcionário aceitar um pedido pendente de mesa.
@@ -162,9 +160,8 @@ public class AceitarPedidoMesaUseCase {
         // Adiciona meios de pagamento do pedido pendente
         if (pedidoPendente.getMeiosPagamento() != null) {
             for (MeioPagamentoRequest mpRequest : pedidoPendente.getMeiosPagamento()) {
-                MeioPagamentoPedido meioPagamento = MeioPagamentoPedido.criar(
-                        mpRequest.getMeioPagamento(),
-                        Preco.of(mpRequest.getValor()));
+                Preco valor = Preco.of(mpRequest.getValor());
+                MeioPagamentoPedido meioPagamento = criarMeioPagamentoComTroco(mpRequest, valor);
                 pedido.adicionarMeioPagamento(meioPagamento);
             }
             log.debug("Adicionados {} meios de pagamento ao pedido",
@@ -196,5 +193,13 @@ public class AceitarPedidoMesaUseCase {
                 pedidoPendente.getNomeCliente());
 
         return PedidoDTO.de(pedidoSalvo);
+    }
+
+    private MeioPagamentoPedido criarMeioPagamentoComTroco(MeioPagamentoRequest request, Preco valor) {
+        if (request.getMeioPagamento() == com.snackbar.pedidos.domain.entities.MeioPagamento.DINHEIRO
+                && request.getValorPagoDinheiro() != null) {
+            return MeioPagamentoPedido.criarComTroco(valor, Preco.of(request.getValorPagoDinheiro()));
+        }
+        return MeioPagamentoPedido.criar(request.getMeioPagamento(), valor);
     }
 }

@@ -1,5 +1,12 @@
 package com.snackbar.pedidos.infrastructure.mappers;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.springframework.stereotype.Component;
+
 import com.snackbar.cardapio.domain.valueobjects.Preco;
 import com.snackbar.pedidos.domain.entities.ItemPedido;
 import com.snackbar.pedidos.domain.entities.ItemPedidoAdicional;
@@ -10,12 +17,6 @@ import com.snackbar.pedidos.infrastructure.persistence.ItemPedidoAdicionalEntity
 import com.snackbar.pedidos.infrastructure.persistence.ItemPedidoEntity;
 import com.snackbar.pedidos.infrastructure.persistence.MeioPagamentoPedidoEntity;
 import com.snackbar.pedidos.infrastructure.persistence.PedidoEntity;
-import org.springframework.stereotype.Component;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 @Component
 public class PedidoMapper {
@@ -76,12 +77,19 @@ public class PedidoMapper {
 
         Set<MeioPagamentoPedidoEntity> meiosPagamentoEntity = new HashSet<>();
         for (MeioPagamentoPedido meioPagamentoPedido : pedido.getMeiosPagamento()) {
-            MeioPagamentoPedidoEntity meioPagamentoEntity = MeioPagamentoPedidoEntity.builder()
+            MeioPagamentoPedidoEntity.MeioPagamentoPedidoEntityBuilder mpBuilder = MeioPagamentoPedidoEntity.builder()
                     .pedido(entity)
                     .meioPagamento(meioPagamentoPedido.getMeioPagamento())
-                    .valor(meioPagamentoPedido.getValor().getAmount())
-                    .build();
-            meiosPagamentoEntity.add(meioPagamentoEntity);
+                    .valor(meioPagamentoPedido.getValor().getAmount());
+
+            if (meioPagamentoPedido.getValorPagoDinheiro() != null) {
+                mpBuilder.valorPagoDinheiro(meioPagamentoPedido.getValorPagoDinheiro().getAmount());
+            }
+            if (meioPagamentoPedido.getTroco() != null) {
+                mpBuilder.troco(meioPagamentoPedido.getTroco().getAmount());
+            }
+
+            meiosPagamentoEntity.add(mpBuilder.build());
         }
         entity.setMeiosPagamento(meiosPagamentoEntity);
 
@@ -139,9 +147,21 @@ public class PedidoMapper {
         List<MeioPagamentoPedido> meiosPagamentoRestaurados = new ArrayList<>();
         for (MeioPagamentoPedidoEntity meioPagamentoEntity : entity.getMeiosPagamento()) {
             Preco valor = Preco.of(meioPagamentoEntity.getValor());
-            MeioPagamentoPedido meioPagamentoPedido = MeioPagamentoPedido.criar(
-                    meioPagamentoEntity.getMeioPagamento(),
-                    valor);
+            MeioPagamentoPedido meioPagamentoPedido;
+
+            if (meioPagamentoEntity.getValorPagoDinheiro() != null || meioPagamentoEntity.getTroco() != null) {
+                Preco valorPago = meioPagamentoEntity.getValorPagoDinheiro() != null
+                        ? Preco.of(meioPagamentoEntity.getValorPagoDinheiro())
+                        : null;
+                Preco troco = meioPagamentoEntity.getTroco() != null
+                        ? Preco.of(meioPagamentoEntity.getTroco())
+                        : null;
+                meioPagamentoPedido = MeioPagamentoPedido.restaurarComTroco(
+                        meioPagamentoEntity.getMeioPagamento(), valor, valorPago, troco);
+            } else {
+                meioPagamentoPedido = MeioPagamentoPedido.criar(
+                        meioPagamentoEntity.getMeioPagamento(), valor);
+            }
             meiosPagamentoRestaurados.add(meioPagamentoPedido);
         }
         pedido.restaurarMeiosPagamentoDoBanco(meiosPagamentoRestaurados);

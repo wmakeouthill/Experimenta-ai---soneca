@@ -100,3 +100,12 @@
   color: #1565c0;
 }
 
+.context-menu-item-troco {
+  color: #2e7d32;
+  font-weight: 500;
+}
+
+.context-menu-item-troco:hover {
+  background: #e8f5e9;
+  color: #1b5e20;
+}

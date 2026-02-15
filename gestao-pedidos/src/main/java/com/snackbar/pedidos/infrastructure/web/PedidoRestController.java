@@ -1,23 +1,22 @@
 package com.snackbar.pedidos.infrastructure.web;
 
-import com.snackbar.pedidos.infrastructure.idempotency.IdempotencyService;
-import com.snackbar.pedidos.application.dto.AtualizarStatusPedidoRequest;
-import com.snackbar.pedidos.application.dto.CriarPedidoRequest;
-import com.snackbar.pedidos.application.dto.PedidoDTO;
-import com.snackbar.pedidos.application.dto.RegistrarPagamentoPedidoRequest;
-import com.snackbar.pedidos.application.usecases.*;
-import com.snackbar.pedidos.domain.entities.StatusPedido;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
+import com.snackbar.pedidos.application.dto.*;
+import com.snackbar.pedidos.application.usecases.*;
+import com.snackbar.pedidos.domain.entities.StatusPedido;
+import com.snackbar.pedidos.infrastructure.idempotency.IdempotencyService;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/pedidos")
@@ -31,6 +30,7 @@ public class PedidoRestController {
     private final CancelarPedidoUseCase cancelarPedidoUseCase;
     private final ExcluirPedidoUseCase excluirPedidoUseCase;
     private final RegistrarPagamentoPedidoUseCase registrarPagamentoPedidoUseCase;
+    private final CorrigirTrocoPedidoUseCase corrigirTrocoPedidoUseCase;
     private final IdempotencyService idempotencyService;
 
     /**
@@ -120,6 +120,19 @@ public class PedidoRestController {
             @NonNull @PathVariable String id,
             @Valid @RequestBody RegistrarPagamentoPedidoRequest request) {
         PedidoDTO pedido = registrarPagamentoPedidoUseCase.executar(id, request.getMeiosPagamento());
+        return ResponseEntity.ok(pedido);
+    }
+
+    /**
+     * Corrige o troco de um pedido com pagamento em dinheiro.
+     * Utilizado pelo operador quando o cliente não informou o valor pago
+     * no momento do pedido e precisa ser corrigido no ato do pagamento.
+     */
+    @PatchMapping("/{id}/troco")
+    public ResponseEntity<PedidoDTO> corrigirTroco(
+            @NonNull @PathVariable String id,
+            @Valid @RequestBody CorrigirTrocoRequest request) {
+        PedidoDTO pedido = corrigirTrocoPedidoUseCase.executar(id, request.getValorPagoDinheiro());
         return ResponseEntity.ok(pedido);
     }
 }

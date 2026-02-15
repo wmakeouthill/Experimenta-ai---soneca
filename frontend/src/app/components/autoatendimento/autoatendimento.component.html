@@ -704,6 +704,35 @@
               <span class="pagamento-check">✓</span>
             }
           </button>
+
+          <!-- Troco (Dinheiro) -->
+          @if (pagamento.dinheiroSelecionado()) {
+            <div class="troco-container" (click)="$event.stopPropagation()">
+              <div class="troco-input-group">
+                <label class="troco-label">💵 Valor pago em nota</label>
+                <div class="troco-input-wrapper">
+                  <span class="troco-cifrao">R$</span>
+                  <input
+                    type="number"
+                    class="input-valor-troco"
+                    placeholder="0,00"
+                    [value]="pagamento.valorPagoDinheiro() || null"
+                    (input)="pagamento.setValorPagoDinheiro($any($event.target).valueAsNumber || 0)"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+              @if (pagamento.trocoCalculado() > 0) {
+                <div class="troco-resultado">
+                  <span class="troco-icone">🔄</span>
+                  <span class="troco-texto"
+                    >Troco: {{ formatarPreco(pagamento.trocoCalculado()) }}</span
+                  >
+                </div>
+              }
+            </div>
+          }
         </div>
 
         <!-- Resumo do pagamento -->
@@ -776,10 +805,17 @@
 
           <div class="confirmacao-pagamento">
             <h3>Forma de Pagamento</h3>
-            @for (meio of pagamento.meiosSelecionados(); track meio.tipo) {
+            @for (meio of pagamento.getMeiosComTroco(); track meio.tipo) {
               <p>
                 {{ pagamento.getIconePagamento(meio.tipo) }}
                 {{ pagamento.getNomePagamento(meio.tipo) }}
+                @if (meio.troco && meio.troco > 0) {
+                  <br />
+                  <span class="confirmacao-troco-info">
+                    💵 Pago: {{ formatarPreco(meio.valorPagoDinheiro!) }} · 🔄 Troco:
+                    {{ formatarPreco(meio.troco) }}
+                  </span>
+                }
               </p>
             }
           </div>

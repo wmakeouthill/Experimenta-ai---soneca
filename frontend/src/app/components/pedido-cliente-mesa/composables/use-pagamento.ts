@@ -1,28 +1,35 @@
-import { signal, computed } from '@angular/core';
+import { computed, signal } from '@angular/core';
 
-export type MeioPagamentoTipo = 'PIX' | 'CARTAO_CREDITO' | 'CARTAO_DEBITO' | 'VALE_REFEICAO' | 'DINHEIRO';
+export type MeioPagamentoTipo =
+  | 'PIX'
+  | 'CARTAO_CREDITO'
+  | 'CARTAO_DEBITO'
+  | 'VALE_REFEICAO'
+  | 'DINHEIRO';
 
 export interface MeioPagamentoSelecionado {
-    tipo: MeioPagamentoTipo;
-    valor: number;
+  tipo: MeioPagamentoTipo;
+  valor: number;
+  valorPagoDinheiro?: number;
+  troco?: number;
 }
 
 export type EtapaCarrinho = 'itens' | 'pagamento' | 'confirmacao';
 
 const NOMES_PAGAMENTO: Record<MeioPagamentoTipo, string> = {
-    'PIX': 'PIX',
-    'CARTAO_CREDITO': 'Cartão de Crédito',
-    'CARTAO_DEBITO': 'Cartão de Débito',
-    'VALE_REFEICAO': 'Voucher',
-    'DINHEIRO': 'Dinheiro'
+  PIX: 'PIX',
+  CARTAO_CREDITO: 'Cartão de Crédito',
+  CARTAO_DEBITO: 'Cartão de Débito',
+  VALE_REFEICAO: 'Voucher',
+  DINHEIRO: 'Dinheiro',
 };
 
 const ICONES_PAGAMENTO: Record<MeioPagamentoTipo, string> = {
-    'PIX': '📱',
-    'CARTAO_CREDITO': '💳',
-    'CARTAO_DEBITO': '💳',
-    'VALE_REFEICAO': '🎫',
-    'DINHEIRO': '💵'
+  PIX: '📱',
+  CARTAO_CREDITO: '💳',
+  CARTAO_DEBITO: '💳',
+  VALE_REFEICAO: '🎫',
+  DINHEIRO: '💵',
 };
 
 /**
@@ -30,137 +37,175 @@ const ICONES_PAGAMENTO: Record<MeioPagamentoTipo, string> = {
  * Responsabilidade única: controlar meios de pagamento e validação.
  */
 export function usePagamento(totalCarrinho: () => number) {
+  // Estado
+  const etapa = signal<EtapaCarrinho>('itens');
+  const meiosSelecionados = signal<MeioPagamentoSelecionado[]>([]);
+  const dividido = signal(false);
+  const valorPagoDinheiro = signal<number>(0);
+
+  // Computed
+  const totalAlocado = computed(() => meiosSelecionados().reduce((sum, m) => sum + m.valor, 0));
+
+  const valorRestante = computed(() => totalCarrinho() - totalAlocado());
+
+  const trocoCalculado = computed(() => {
+    const meios = meiosSelecionados();
+    const dinheiro = meios.find(m => m.tipo === 'DINHEIRO');
+    if (!dinheiro) return 0;
+    const pago = valorPagoDinheiro();
+    if (pago > dinheiro.valor && dinheiro.valor > 0) {
+      return pago - dinheiro.valor;
+    }
+    return 0;
+  });
+
+  const dinheiroSelecionado = computed(() => meiosSelecionados().some(m => m.tipo === 'DINHEIRO'));
+
+  const pagamentoValido = computed(() => {
+    if (meiosSelecionados().length === 0) return false;
+    if (dividido()) {
+      return Math.abs(totalAlocado() - totalCarrinho()) < 0.01;
+    }
+    return true;
+  });
+
+  // Ações de navegação
+  function avancarParaPagamento(): void {
+    etapa.set('pagamento');
+  }
+
+  function voltarParaItens(): void {
+    etapa.set('itens');
+  }
+
+  function irParaConfirmacao(): void {
+    if (pagamentoValido()) {
+      etapa.set('confirmacao');
+    }
+  }
+
+  function voltarParaPagamento(): void {
+    etapa.set('pagamento');
+  }
+
+  function resetarEtapa(): void {
+    etapa.set('itens');
+  }
+
+  // Ações de pagamento
+  function toggleDividido(): void {
+    dividido.update(v => !v);
+    if (!dividido()) {
+      meiosSelecionados.set([]);
+    }
+  }
+
+  function selecionarMeio(tipo: MeioPagamentoTipo): void {
+    if (dividido()) {
+      const meios = [...meiosSelecionados()];
+      const index = meios.findIndex(m => m.tipo === tipo);
+      if (index >= 0) {
+        meios.splice(index, 1);
+        if (tipo === 'DINHEIRO') valorPagoDinheiro.set(0);
+      } else {
+        const totalJaAlocado = meios.reduce((sum, m) => sum + m.valor, 0);
+        const restante = totalCarrinho() - totalJaAlocado;
+        meios.push({ tipo, valor: restante > 0 ? restante : 0 });
+      }
+      meiosSelecionados.set(meios);
+    } else {
+      if (tipo !== 'DINHEIRO') valorPagoDinheiro.set(0);
+      meiosSelecionados.set([{ tipo, valor: totalCarrinho() }]);
+    }
+  }
+
+  function atualizarValorMeio(tipo: MeioPagamentoTipo, valor: number): void {
+    const meios = [...meiosSelecionados()];
+    const index = meios.findIndex(m => m.tipo === tipo);
+    if (index >= 0) {
+      meios[index].valor = valor;
+      meiosSelecionados.set(meios);
+    }
+  }
+
+  function meioPagamentoSelecionado(tipo: string): boolean {
+    return meiosSelecionados().some(m => m.tipo === tipo);
+  }
+
+  function getValorMeio(tipo: string): number {
+    const meio = meiosSelecionados().find(m => m.tipo === tipo);
+    return meio?.valor ?? 0;
+  }
+
+  function limparPagamentos(): void {
+    meiosSelecionados.set([]);
+    dividido.set(false);
+    valorPagoDinheiro.set(0);
+    etapa.set('itens');
+  }
+
+  function setValorPagoDinheiro(valor: number): void {
+    valorPagoDinheiro.set(valor);
+  }
+
+  /**
+   * Retorna os meios selecionados com dados de troco incorporados.
+   */
+  function getMeiosComTroco(): MeioPagamentoSelecionado[] {
+    return meiosSelecionados().map(m => {
+      if (m.tipo === 'DINHEIRO' && valorPagoDinheiro() > m.valor) {
+        return {
+          ...m,
+          valorPagoDinheiro: valorPagoDinheiro(),
+          troco: valorPagoDinheiro() - m.valor,
+        };
+      }
+      return m;
+    });
+  }
+
+  // Utilitários
+  function getNomeMeio(tipo: string): string {
+    return NOMES_PAGAMENTO[tipo as MeioPagamentoTipo] || tipo;
+  }
+
+  function getIconeMeio(tipo: string): string {
+    return ICONES_PAGAMENTO[tipo as MeioPagamentoTipo] || '💰';
+  }
+
+  return {
     // Estado
-    const etapa = signal<EtapaCarrinho>('itens');
-    const meiosSelecionados = signal<MeioPagamentoSelecionado[]>([]);
-    const dividido = signal(false);
+    etapa: etapa.asReadonly(),
+    meiosSelecionados: meiosSelecionados.asReadonly(),
+    dividido: dividido.asReadonly(),
+    valorPagoDinheiro: valorPagoDinheiro.asReadonly(),
 
     // Computed
-    const totalAlocado = computed(() =>
-        meiosSelecionados().reduce((sum, m) => sum + m.valor, 0)
-    );
+    totalAlocado,
+    valorRestante,
+    pagamentoValido,
+    trocoCalculado,
+    dinheiroSelecionado,
 
-    const valorRestante = computed(() =>
-        totalCarrinho() - totalAlocado()
-    );
-
-    const pagamentoValido = computed(() => {
-        if (meiosSelecionados().length === 0) return false;
-        if (dividido()) {
-            return Math.abs(totalAlocado() - totalCarrinho()) < 0.01;
-        }
-        return true;
-    });
-
-    // Ações de navegação
-    function avancarParaPagamento(): void {
-        etapa.set('pagamento');
-    }
-
-    function voltarParaItens(): void {
-        etapa.set('itens');
-    }
-
-    function irParaConfirmacao(): void {
-        if (pagamentoValido()) {
-            etapa.set('confirmacao');
-        }
-    }
-
-    function voltarParaPagamento(): void {
-        etapa.set('pagamento');
-    }
-
-    function resetarEtapa(): void {
-        etapa.set('itens');
-    }
+    // Navegação
+    avancarParaPagamento,
+    voltarParaItens,
+    irParaConfirmacao,
+    voltarParaPagamento,
+    resetarEtapa,
 
     // Ações de pagamento
-    function toggleDividido(): void {
-        dividido.update(v => !v);
-        if (!dividido()) {
-            meiosSelecionados.set([]);
-        }
-    }
-
-    function selecionarMeio(tipo: MeioPagamentoTipo): void {
-        if (dividido()) {
-            const meios = [...meiosSelecionados()];
-            const index = meios.findIndex(m => m.tipo === tipo);
-            if (index >= 0) {
-                meios.splice(index, 1);
-            } else {
-                const totalJaAlocado = meios.reduce((sum, m) => sum + m.valor, 0);
-                const restante = totalCarrinho() - totalJaAlocado;
-                meios.push({ tipo, valor: restante > 0 ? restante : 0 });
-            }
-            meiosSelecionados.set(meios);
-        } else {
-            meiosSelecionados.set([{ tipo, valor: totalCarrinho() }]);
-        }
-    }
-
-    function atualizarValorMeio(tipo: MeioPagamentoTipo, valor: number): void {
-        const meios = [...meiosSelecionados()];
-        const index = meios.findIndex(m => m.tipo === tipo);
-        if (index >= 0) {
-            meios[index].valor = valor;
-            meiosSelecionados.set(meios);
-        }
-    }
-
-    function meioPagamentoSelecionado(tipo: string): boolean {
-        return meiosSelecionados().some(m => m.tipo === tipo);
-    }
-
-    function getValorMeio(tipo: string): number {
-        const meio = meiosSelecionados().find(m => m.tipo === tipo);
-        return meio?.valor ?? 0;
-    }
-
-    function limparPagamentos(): void {
-        meiosSelecionados.set([]);
-        dividido.set(false);
-        etapa.set('itens');
-    }
+    toggleDividido,
+    selecionarMeio,
+    atualizarValorMeio,
+    meioPagamentoSelecionado,
+    getValorMeio,
+    limparPagamentos,
+    setValorPagoDinheiro,
+    getMeiosComTroco,
 
     // Utilitários
-    function getNomeMeio(tipo: string): string {
-        return NOMES_PAGAMENTO[tipo as MeioPagamentoTipo] || tipo;
-    }
-
-    function getIconeMeio(tipo: string): string {
-        return ICONES_PAGAMENTO[tipo as MeioPagamentoTipo] || '💰';
-    }
-
-    return {
-        // Estado
-        etapa: etapa.asReadonly(),
-        meiosSelecionados: meiosSelecionados.asReadonly(),
-        dividido: dividido.asReadonly(),
-
-        // Computed
-        totalAlocado,
-        valorRestante,
-        pagamentoValido,
-
-        // Navegação
-        avancarParaPagamento,
-        voltarParaItens,
-        irParaConfirmacao,
-        voltarParaPagamento,
-        resetarEtapa,
-
-        // Ações de pagamento
-        toggleDividido,
-        selecionarMeio,
-        atualizarValorMeio,
-        meioPagamentoSelecionado,
-        getValorMeio,
-        limparPagamentos,
-
-        // Utilitários
-        getNomeMeio,
-        getIconeMeio
-    };
+    getNomeMeio,
+    getIconeMeio,
+  };
 }

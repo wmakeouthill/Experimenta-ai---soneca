@@ -1,14 +1,9 @@
 package com.snackbar.pedidos.infrastructure.persistence;
 
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-
 import java.math.BigDecimal;
+
+import jakarta.persistence.*;
+import lombok.*;
 
 @Entity
 @Table(name = "meios_pagamento_pedido")
@@ -33,4 +28,10 @@ public class MeioPagamentoPedidoEntity {
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal valor;
+
+    @Column(name = "valor_pago_dinheiro", precision = 10, scale = 2)
+    private BigDecimal valorPagoDinheiro;
+
+    @Column(name = "troco", precision = 10, scale = 2)
+    private BigDecimal troco;
 }

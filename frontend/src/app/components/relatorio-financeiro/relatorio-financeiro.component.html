@@ -2,7 +2,11 @@
   <header class="relatorio-financeiro-header">
     <div class="relatorio-financeiro-header-content">
       <h1 class="relatorio-financeiro-titulo">
-        <img src="/assets/experimenta_ai_banner_circular.webp" alt="Experimenta aí" class="relatorio-financeiro-logo" />
+        <img
+          src="/assets/experimenta_ai_banner_circular.webp"
+          alt="Experimenta aí"
+          class="relatorio-financeiro-logo"
+        />
         Relatório Financeiro
       </h1>
       <div class="header-actions">
@@ -36,20 +40,22 @@
     }
 
     @if (!estaCarregando() && !erro() && !possuiDados()) {
-      <div class="estado estado--vazio">
-        Nenhum pedido encontrado para a data selecionada.
-      </div>
+      <div class="estado estado--vazio">Nenhum pedido encontrado para a data selecionada.</div>
     }
 
     @if (!estaCarregando() && !erro() && possuiDados()) {
       <section class="cards-metricas">
         <article class="card-metrica card-metrica--principal">
           <p class="card-metrica-label">Total de Vendas</p>
-          <strong class="card-metrica-valor">{{ formatarMoeda(resumoFinanceiro().totalVendas) }}</strong>
+          <strong class="card-metrica-valor">{{
+            formatarMoeda(resumoFinanceiro().totalVendas)
+          }}</strong>
         </article>
         <article class="card-metrica card-metrica--caixa">
           <p class="card-metrica-label">Dinheiro no Caixa</p>
-          <strong class="card-metrica-valor">{{ formatarMoeda(resumoFinanceiro().dinheiroNoCaixa) }}</strong>
+          <strong class="card-metrica-valor">{{
+            formatarMoeda(resumoFinanceiro().dinheiroNoCaixa)
+          }}</strong>
         </article>
         <article class="card-metrica">
           <p class="card-metrica-label">Total de Pedidos</p>
@@ -57,15 +63,21 @@
         </article>
         <article class="card-metrica">
           <p class="card-metrica-label">Ticket Médio</p>
-          <strong class="card-metrica-valor">{{ formatarMoeda(resumoFinanceiro().ticketMedio) }}</strong>
+          <strong class="card-metrica-valor">{{
+            formatarMoeda(resumoFinanceiro().ticketMedio)
+          }}</strong>
         </article>
         <article class="card-metrica">
           <p class="card-metrica-label">Total PIX</p>
-          <strong class="card-metrica-valor">{{ formatarMoeda(resumoFinanceiro().totalPix) }}</strong>
+          <strong class="card-metrica-valor">{{
+            formatarMoeda(resumoFinanceiro().totalPix)
+          }}</strong>
         </article>
         <article class="card-metrica">
           <p class="card-metrica-label">Total Cartão</p>
-          <strong class="card-metrica-valor">{{ formatarMoeda(resumoFinanceiro().totalCartao) }}</strong>
+          <strong class="card-metrica-valor">{{
+            formatarMoeda(resumoFinanceiro().totalCartao)
+          }}</strong>
         </article>
       </section>
 
@@ -87,16 +99,22 @@
                 <tr>
                   <td class="linha-indicador"><strong>Valor Total</strong></td>
                   @for (meio of metodosPagamentoOrdenados; track meio) {
-                    <td class="text-right">{{ formatarMoeda(obterValorPorMeioPagamento(meio)) }}</td>
+                    <td class="text-right">
+                      {{ formatarMoeda(obterValorPorMeioPagamento(meio)) }}
+                    </td>
                   }
-                  <td class="text-right coluna-total"><strong>{{ formatarMoeda(resumoFinanceiro().totalVendas) }}</strong></td>
+                  <td class="text-right coluna-total">
+                    <strong>{{ formatarMoeda(resumoFinanceiro().totalVendas) }}</strong>
+                  </td>
                 </tr>
                 <tr>
                   <td class="linha-indicador"><strong>Quantidade de Pedidos</strong></td>
                   @for (meio of metodosPagamentoOrdenados; track meio) {
                     <td class="text-right">{{ obterQuantidadePorMeioPagamento(meio) }}</td>
                   }
-                  <td class="text-right coluna-total"><strong>{{ resumoFinanceiro().totalPedidos }}</strong></td>
+                  <td class="text-right coluna-total">
+                    <strong>{{ resumoFinanceiro().totalPedidos }}</strong>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -139,11 +157,24 @@
                     @if (pedido.meiosPagamento && pedido.meiosPagamento.length > 0) {
                       @if (pedido.meiosPagamento.length === 1) {
                         <div class="meio-pagamento-item">
-                          <span class="meio-pagamento-nome">{{ formatarMeioPagamento(pedido.meiosPagamento[0].meioPagamento) }}</span>
-                          <span class="meio-pagamento-valor">{{ formatarMoeda(pedido.meiosPagamento[0].valor) }}</span>
+                          <span class="meio-pagamento-nome">{{
+                            formatarMeioPagamento(pedido.meiosPagamento[0].meioPagamento)
+                          }}</span>
+                          <span class="meio-pagamento-valor">{{
+                            formatarMoeda(pedido.meiosPagamento[0].valor)
+                          }}</span>
                         </div>
+                        @if (pedido.meiosPagamento[0].troco && pedido.meiosPagamento[0].troco > 0) {
+                          <div class="meio-pagamento-troco">
+                            💵 Pago:
+                            {{ formatarMoeda(pedido.meiosPagamento[0].valorPagoDinheiro!) }} · 🔄
+                            Troco: {{ formatarMoeda(pedido.meiosPagamento[0].troco) }}
+                          </div>
+                        }
                       } @else {
-                        <app-tooltip-meios-pagamento [meiosPagamento]="pedido.meiosPagamento"></app-tooltip-meios-pagamento>
+                        <app-tooltip-meios-pagamento
+                          [meiosPagamento]="pedido.meiosPagamento"
+                        ></app-tooltip-meios-pagamento>
                       }
                     } @else {
                       <span class="sem-meio-pagamento">-</span>
@@ -158,7 +189,9 @@
             <tfoot>
               <tr class="tabela-total">
                 <td colspan="7"><strong>Total Geral</strong></td>
-                <td class="text-right"><strong>{{ formatarMoeda(resumoFinanceiro().totalVendas) }}</strong></td>
+                <td class="text-right">
+                  <strong>{{ formatarMoeda(resumoFinanceiro().totalVendas) }}</strong>
+                </td>
               </tr>
             </tfoot>
           </table>
@@ -201,4 +234,3 @@
     }
   </div>
 </div>
-

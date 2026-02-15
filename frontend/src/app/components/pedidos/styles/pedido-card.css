@@ -293,6 +293,66 @@
   min-width: 0;
 }
 
+/* Informações de Pagamento no Card */
+.pedido-pagamento-info {
+  margin: 0 0 0.3rem 0;
+  padding: 0.4rem 0.5rem;
+  background: #f1f8e9;
+  border-left: 3px solid #4caf50;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.pagamento-linha {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pagamento-tipo {
+  font-weight: 600;
+  color: #2e7d32;
+}
+
+.pagamento-valor {
+  color: #333;
+  font-weight: 500;
+}
+
+.pagamento-troco-detalhe {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.2rem 0 0 0.5rem;
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.pagamento-troco-detalhe .troco-valor {
+  color: #e65100;
+  font-weight: 600;
+}
+
+.btn-informar-troco {
+  display: inline-block;
+  margin-top: 0.3rem;
+  padding: 0.25rem 0.5rem;
+  background: #fff3e0;
+  border: 1px solid #ff9800;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #e65100;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-informar-troco:hover {
+  background: #ffe0b2;
+  border-color: #f57c00;
+}
+
 .pedido-footer {
   display: flex;
   justify-content: space-between;

@@ -1,6 +1,6 @@
-import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { StatusPedido, Pedido } from '../../../../services/pedido.service';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { MeioPagamento, Pedido, StatusPedido } from '../../../../services/pedido.service';
 
 @Component({
   selector: 'app-menu-contexto-pedido',
@@ -8,7 +8,7 @@ import { StatusPedido, Pedido } from '../../../../services/pedido.service';
   imports: [CommonModule],
   templateUrl: './menu-contexto-pedido.component.html',
   styleUrl: './menu-contexto-pedido.component.css',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MenuContextoPedidoComponent {
   readonly aberto = input.required<boolean>();
@@ -18,6 +18,7 @@ export class MenuContextoPedidoComponent {
   readonly onStatusAlterado = output<{ pedidoId: string; novoStatus: StatusPedido }>();
   readonly onCancelar = output<string>();
   readonly onImprimirSegundaVia = output<string>();
+  readonly onCorrigirTroco = output<string>();
 
   readonly StatusPedido = StatusPedido;
 
@@ -26,7 +27,7 @@ export class MenuContextoPedidoComponent {
       StatusPedido.PENDENTE,
       StatusPedido.PREPARANDO,
       StatusPedido.PRONTO,
-      StatusPedido.FINALIZADO
+      StatusPedido.FINALIZADO,
     ];
     // CANCELADO não pode ser alterado (regra de negócio)
     // FINALIZADO não pode ser alterado para outros status, mas pode ser cancelado
@@ -59,7 +60,7 @@ export class MenuContextoPedidoComponent {
       [StatusPedido.PREPARANDO]: 'Preparando',
       [StatusPedido.PRONTO]: 'Pronto',
       [StatusPedido.FINALIZADO]: 'Finalizado',
-      [StatusPedido.CANCELADO]: 'Cancelado'
+      [StatusPedido.CANCELADO]: 'Cancelado',
     };
     return nomes[status] || status;
   }
@@ -83,5 +84,21 @@ export class MenuContextoPedidoComponent {
     }
     this.fechar();
   }
-}
 
+  /**
+   * Verifica se o pedido possui pagamento em dinheiro e pode ter o troco corrigido.
+   * Disponível para pedidos que não estejam cancelados.
+   */
+  podeCorrigirTroco(pedido: Pedido): boolean {
+    if (pedido.status === StatusPedido.CANCELADO) return false;
+    return !!pedido.meiosPagamento?.some(m => m.meioPagamento === MeioPagamento.DINHEIRO);
+  }
+
+  corrigirTroco(): void {
+    const pedido = this.pedido();
+    if (pedido) {
+      this.onCorrigirTroco.emit(pedido.id);
+    }
+    this.fechar();
+  }
+}

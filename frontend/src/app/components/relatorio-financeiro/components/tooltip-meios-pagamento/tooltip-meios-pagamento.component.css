@@ -4,7 +4,7 @@
 }
 
 .ver-meios-pagamento-link {
-  color: #7C3AED;
+  color: #7c3aed;
   cursor: pointer;
   text-decoration: underline;
   text-decoration-style: dotted;
@@ -18,11 +18,11 @@
 }
 
 .ver-meios-pagamento-link:hover {
-  color: #6D28D9;
+  color: #6d28d9;
 }
 
 .ver-meios-pagamento-link.ativo {
-  color: #6D28D9;
+  color: #6d28d9;
   font-weight: 600;
 }
 
@@ -62,6 +62,16 @@
   border-bottom: none;
 }
 
+.tooltip-troco {
+  font-size: 0.78rem;
+  padding: 0.1rem 0 0.1rem 0.5rem;
+  border-bottom: none;
+}
+
+.troco-valor {
+  color: #4ade80;
+}
+
 .tooltip-nome {
   flex: 1;
   color: white;
@@ -71,4 +81,3 @@
   color: #a7f3d0;
   font-weight: 500;
 }
-

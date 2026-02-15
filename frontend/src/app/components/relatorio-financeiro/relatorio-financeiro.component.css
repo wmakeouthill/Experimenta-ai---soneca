@@ -12,7 +12,7 @@
 
 /* Header */
 .relatorio-financeiro-header {
-  background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%);
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
   color: white;
   padding: 0.75rem 2rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -50,7 +50,8 @@
   flex-wrap: wrap;
 }
 
-.btn-header, .btn-voltar {
+.btn-header,
+.btn-voltar {
   background: rgba(255, 255, 255, 0.2);
   color: white;
   border: 2px solid rgba(255, 255, 255, 0.3);
@@ -64,7 +65,8 @@
   display: inline-block;
 }
 
-.btn-header:hover, .btn-voltar:hover {
+.btn-header:hover,
+.btn-voltar:hover {
   background: rgba(255, 255, 255, 0.35);
   border-color: rgba(255, 255, 255, 0.5);
   transform: translateY(-2px);
@@ -144,7 +146,9 @@
   padding: 0.75rem;
   border: 1px solid rgba(0, 0, 0, 0.1);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .card-metrica:hover {
@@ -153,12 +157,12 @@
 }
 
 .card-metrica--principal {
-  border-left: 4px solid #7C3AED;
+  border-left: 4px solid #7c3aed;
   background: linear-gradient(135deg, #ffffff 0%, #f8f5ff 100%);
 }
 
 .card-metrica--caixa {
-  border-left: 4px solid #10B981;
+  border-left: 4px solid #10b981;
   background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
 }
 
@@ -180,11 +184,11 @@
 }
 
 .card-metrica--principal .card-metrica-valor {
-  color: #7C3AED;
+  color: #7c3aed;
 }
 
 .card-metrica--caixa .card-metrica-valor {
-  color: #10B981;
+  color: #10b981;
 }
 
 /* Tabelas */
@@ -325,7 +329,7 @@
 
 .numero-pedido {
   font-weight: 600;
-  color: #7C3AED;
+  color: #7c3aed;
 }
 
 .meios-pagamento-lista {
@@ -352,13 +356,20 @@
 }
 
 .meio-pagamento-valor {
-  color: #10B981;
+  color: #10b981;
   font-weight: 600;
 }
 
 .sem-meio-pagamento {
   color: #999;
   font-style: italic;
+}
+
+.meio-pagamento-troco {
+  font-size: 0.75rem;
+  color: #6d4c00;
+  font-weight: 500;
+  margin-top: 0.15rem;
 }
 
 .valor-total-pedido {
@@ -377,28 +388,28 @@
 }
 
 .status-pendente {
-  background: #FEF3C7;
-  color: #92400E;
+  background: #fef3c7;
+  color: #92400e;
 }
 
 .status-preparando {
-  background: #DBEAFE;
-  color: #1E40AF;
+  background: #dbeafe;
+  color: #1e40af;
 }
 
 .status-pronto {
-  background: #D1FAE5;
-  color: #065F46;
+  background: #d1fae5;
+  color: #065f46;
 }
 
 .status-finalizado {
-  background: #D1FAE5;
-  color: #065F46;
+  background: #d1fae5;
+  color: #065f46;
 }
 
 .status-cancelado {
-  background: #FEE2E2;
-  color: #991B1B;
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 /* Responsividade */
@@ -483,9 +494,9 @@
 }
 
 .btn-paginacao:hover:not(:disabled) {
-  background: #7C3AED;
+  background: #7c3aed;
   color: white;
-  border-color: #7C3AED;
+  border-color: #7c3aed;
 }
 
 .btn-paginacao:disabled {
@@ -513,13 +524,13 @@
 
 .btn-pagina:hover:not(.disabled):not(.active) {
   background: #f5f5f5;
-  border-color: #7C3AED;
+  border-color: #7c3aed;
 }
 
 .btn-pagina.active {
-  background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%);
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
   color: white;
-  border-color: #7C3AED;
+  border-color: #7c3aed;
 }
 
 .btn-pagina.disabled {
@@ -552,4 +563,3 @@
     font-size: 0.85rem;
   }
 }
-

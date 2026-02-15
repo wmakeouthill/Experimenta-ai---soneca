@@ -325,10 +325,11 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
     }));
 
     const meiosPagamento: MeioPagamentoAutoAtendimentoRequest[] = this.pagamento
-      .meiosSelecionados()
-      .map((m: { tipo: string; valor: number }) => ({
+      .getMeiosComTroco()
+      .map(m => ({
         meioPagamento: m.tipo as MeioPagamentoAutoAtendimentoRequest['meioPagamento'],
         valor: m.valor,
+        valorPagoDinheiro: m.valorPagoDinheiro,
       }));
 
     return {

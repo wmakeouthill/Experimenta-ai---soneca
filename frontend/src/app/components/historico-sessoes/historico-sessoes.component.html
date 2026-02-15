@@ -2,13 +2,15 @@
   <header class="historico-header">
     <div class="historico-header-content">
       <h1 class="historico-titulo">
-        <img src="/assets/experimenta_ai_banner_circular.png" alt="Experimenta aí" class="historico-logo" />
+        <img
+          src="/assets/experimenta_ai_banner_circular.png"
+          alt="Experimenta aí"
+          class="historico-logo"
+        />
         Histórico de Sessões
       </h1>
       <div class="header-actions">
-        <button class="btn-voltar" routerLink="/" aria-label="Voltar para home">
-          ← Voltar
-        </button>
+        <button class="btn-voltar" routerLink="/" aria-label="Voltar para home">← Voltar</button>
       </div>
     </div>
   </header>
@@ -40,9 +42,7 @@
         @if (estado() === 'erro' && sessoes().length === 0) {
           <div class="estado-erro">
             <p class="erro-mensagem">{{ erro() }}</p>
-            <button class="btn-recarregar" (click)="recarregar()">
-              Tentar novamente
-            </button>
+            <button class="btn-recarregar" (click)="recarregar()">Tentar novamente</button>
           </div>
         }
 
@@ -62,7 +62,10 @@
               >
                 <div class="sessao-item-header">
                   <h3 class="sessao-item-nome">{{ sessao.nome }}</h3>
-                  <span class="sessao-item-status" [class]="'status-' + sessao.status.toLowerCase()">
+                  <span
+                    class="sessao-item-status"
+                    [class]="'status-' + sessao.status.toLowerCase()"
+                  >
                     {{ sessao.status }}
                   </span>
                 </div>
@@ -109,9 +112,7 @@
         }
 
         @if (temSessaoSelecionada()) {
-          <button class="btn-limpar-selecao" (click)="limparSelecao()">
-            🗑️ Limpar Seleção
-          </button>
+          <button class="btn-limpar-selecao" (click)="limparSelecao()">🗑️ Limpar Seleção</button>
         }
       </div>
     </aside>
@@ -122,7 +123,10 @@
         <div class="estado-selecao">
           <div class="selecao-mensagem">
             <h2>📊 Selecione uma Sessão</h2>
-            <p>Escolha uma sessão no painel lateral para visualizar o histórico de pedidos e relatórios.</p>
+            <p>
+              Escolha uma sessão no painel lateral para visualizar o histórico de pedidos e
+              relatórios.
+            </p>
           </div>
         </div>
       }
@@ -138,9 +142,7 @@
         @if (estado() === 'erro') {
           <div class="estado-erro">
             <p class="erro-mensagem">{{ erro() }}</p>
-            <button class="btn-recarregar" (click)="recarregar()">
-              Tentar novamente
-            </button>
+            <button class="btn-recarregar" (click)="recarregar()">Tentar novamente</button>
           </div>
         }
 
@@ -151,7 +153,10 @@
             <div class="sessao-info-detalhes">
               <div class="info-item">
                 <span class="info-label">Status:</span>
-                <span class="info-value status-badge" [class]="'status-' + sessaoSelecionada()!.status.toLowerCase()">
+                <span
+                  class="info-value status-badge"
+                  [class]="'status-' + sessaoSelecionada()!.status.toLowerCase()"
+                >
                   {{ sessaoSelecionada()!.status }}
                 </span>
               </div>
@@ -227,12 +232,17 @@
                       <div class="pedido-info-principal">
                         <h4 class="pedido-numero">Pedido #{{ pedido.numeroPedido }}</h4>
                         <p class="pedido-cliente-data">
-                          <span class="pedido-cliente" [title]="pedido.clienteNome">{{ truncarNomeCliente(pedido.clienteNome) }}</span>
+                          <span class="pedido-cliente" [title]="pedido.clienteNome">{{
+                            truncarNomeCliente(pedido.clienteNome)
+                          }}</span>
                           <span class="pedido-separador"> - </span>
                           <span class="pedido-data">{{ formatarDataHora(pedido.dataPedido) }}</span>
                         </p>
                       </div>
-                      <div class="pedido-status-badge" [class]="'badge-' + pedido.status.toLowerCase()">
+                      <div
+                        class="pedido-status-badge"
+                        [class]="'badge-' + pedido.status.toLowerCase()"
+                      >
                         {{ pedido.status }}
                       </div>
                     </div>
@@ -249,7 +259,9 @@
                             @if (item.adicionais && item.adicionais.length > 0) {
                               <div class="item-adicionais">
                                 @for (ad of item.adicionais; track ad.adicionalId) {
-                                  <span class="adicional-badge">+{{ ad.quantidade }}x {{ ad.adicionalNome }}</span>
+                                  <span class="adicional-badge"
+                                    >+{{ ad.quantidade }}x {{ ad.adicionalNome }}</span
+                                  >
                                 }
                               </div>
                             }
@@ -271,8 +283,15 @@
                         <div class="pagamentos-lista">
                           @for (mp of pedido.meiosPagamento; track mp.meioPagamento) {
                             <span class="pagamento-item">
-                              {{ obterNomeMeioPagamento(mp.meioPagamento) }}: {{ formatarMoeda(mp.valor) }}
+                              {{ obterNomeMeioPagamento(mp.meioPagamento) }}:
+                              {{ formatarMoeda(mp.valor) }}
                             </span>
+                            @if (mp.troco && mp.troco > 0) {
+                              <span class="pagamento-item pagamento-troco">
+                                💵 Pago: {{ formatarMoeda(mp.valorPagoDinheiro!) }} · 🔄 Troco:
+                                {{ formatarMoeda(mp.troco) }}
+                              </span>
+                            }
                           }
                         </div>
                       </div>
@@ -357,7 +376,8 @@
       <div class="modal-body">
         <p class="modal-mensagem">
           Você está prestes a <strong>excluir permanentemente</strong> o pedido
-          <strong>#{{ pedidoParaExcluir()?.numeroPedido }}</strong>.
+          <strong>#{{ pedidoParaExcluir()?.numeroPedido }}</strong
+          >.
         </p>
         <p class="modal-aviso">
           Esta ação não pode ser desfeita. Para confirmar, digite exatamente:
@@ -375,9 +395,7 @@
         />
       </div>
       <div class="modal-footer">
-        <button class="btn-modal btn-cancelar" (click)="fecharModalExclusao()">
-          Cancelar
-        </button>
+        <button class="btn-modal btn-cancelar" (click)="fecharModalExclusao()">Cancelar</button>
         <button
           class="btn-modal btn-confirmar"
           [disabled]="!podeConfirmarExclusao()"
@@ -389,4 +407,3 @@
     </div>
   </div>
 }
-

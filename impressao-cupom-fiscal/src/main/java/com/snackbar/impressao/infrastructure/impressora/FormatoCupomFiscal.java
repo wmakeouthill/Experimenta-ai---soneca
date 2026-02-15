@@ -159,6 +159,20 @@ public class FormatoCupomFiscal {
             String valorStr = String.format("R$%.2f", meioPagamento.getValor().doubleValue());
             int espacos = LARGURA_PADRAO - descricao.length() - valorStr.length();
             pagamentos.append(descricao).append(" ".repeat(Math.max(1, espacos))).append(valorStr).append("\n");
+
+            // Troco para pagamento em dinheiro
+            if (meioPagamento.getTroco() != null && meioPagamento.getTroco().compareTo(BigDecimal.ZERO) > 0) {
+                String pagoLabel = "  Valor Pago:";
+                String pagoStr = String.format("R$%.2f", meioPagamento.getValorPagoDinheiro().doubleValue());
+                int espacosPago = LARGURA_PADRAO - pagoLabel.length() - pagoStr.length();
+                pagamentos.append(pagoLabel).append(" ".repeat(Math.max(1, espacosPago))).append(pagoStr).append("\n");
+
+                String trocoLabel = "  Troco:";
+                String trocoStr = String.format("R$%.2f", meioPagamento.getTroco().doubleValue());
+                int espacosTroco = LARGURA_PADRAO - trocoLabel.length() - trocoStr.length();
+                pagamentos.append(trocoLabel).append(" ".repeat(Math.max(1, espacosTroco))).append(trocoStr)
+                        .append("\n");
+            }
         }
 
         return pagamentos.toString().getBytes(StandardCharsets.UTF_8);
@@ -372,6 +386,20 @@ public class FormatoCupomFiscal {
             String valorStr = String.format("R$%.2f", meioPagamento.getValor().doubleValue());
             int espacos = LARGURA_PADRAO - descricao.length() - valorStr.length();
             pagamentos.append(descricao).append(" ".repeat(Math.max(1, espacos))).append(valorStr).append("\n");
+
+            // Troco para pagamento em dinheiro
+            if (meioPagamento.getTroco() != null && meioPagamento.getTroco().compareTo(BigDecimal.ZERO) > 0) {
+                String pagoLabel = "  Valor Pago:";
+                String pagoStr = String.format("R$%.2f", meioPagamento.getValorPagoDinheiro().doubleValue());
+                int espacosPago = LARGURA_PADRAO - pagoLabel.length() - pagoStr.length();
+                pagamentos.append(pagoLabel).append(" ".repeat(Math.max(1, espacosPago))).append(pagoStr).append("\n");
+
+                String trocoLabel = "  Troco:";
+                String trocoStr = String.format("R$%.2f", meioPagamento.getTroco().doubleValue());
+                int espacosTroco = LARGURA_PADRAO - trocoLabel.length() - trocoStr.length();
+                pagamentos.append(trocoLabel).append(" ".repeat(Math.max(1, espacosTroco))).append(trocoStr)
+                        .append("\n");
+            }
         }
 
         return pagamentos.toString();

@@ -129,6 +129,9 @@
     <!-- Migration: Corrige tipo da coluna id na tabela idempotency_keys (VARCHAR -> BIGINT) -->
     <include file="changes/039-fix-idempotency-keys-id-column.sql" relativeToChangelogFile="true" />
 
+    <!-- Migration: Adiciona campos de troco (valor pago em dinheiro e troco) nas tabelas de meios de pagamento -->
+    <include file="changes/040-add-troco-meios-pagamento.sql" relativeToChangelogFile="true" />
+
     <!-- 
     NOTA: O usuário administrador inicial é criado automaticamente via CommandLineRunner
     (UsuarioInicialConfig) na primeira execução da aplicação.

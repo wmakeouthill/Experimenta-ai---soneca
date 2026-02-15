@@ -120,7 +120,7 @@
                     }
                     <span class="info-item">
                       <span class="info-label">Usuário:</span>
-                      <span class="info-value">{{ obterNomeUsuario(sessao.usuarioId) }}</span>
+                      <span class="info-value">{{ sessao.usuarioNome ?? obterNomeUsuario(sessao.usuarioId) }}</span>
                     </span>
                   </div>
 
