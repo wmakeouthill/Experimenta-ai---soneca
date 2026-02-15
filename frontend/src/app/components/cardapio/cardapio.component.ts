@@ -1,12 +1,22 @@
-import { Component, inject, PLATFORM_ID, OnInit, signal, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import {
+  Component,
+  ElementRef,
+  inject,
+  OnInit,
+  PLATFORM_ID,
+  signal,
+  ViewChild,
+} from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { useProdutos } from './composables/use-produtos';
-import { ProdutoModalComponent } from './modals/produto-modal/produto-modal.component';
-import { CategoriaModalComponent } from './modals/categoria-modal/categoria-modal.component';
-import { AdicionalModalComponent } from './modals/adicional-modal/adicional-modal.component';
+import { Adicional, AdicionalService } from '../../services/adicional.service';
+import { Categoria, CategoriaService } from '../../services/categoria.service';
 import { ProdutoService } from '../../services/produto.service';
-import { AdicionalService, Adicional } from '../../services/adicional.service';
+import { MenuContextoCategoriaComponent } from './components/menu-contexto-categoria/menu-contexto-categoria.component';
+import { useProdutos } from './composables/use-produtos';
+import { AdicionalModalComponent } from './modals/adicional-modal/adicional-modal.component';
+import { CategoriaModalComponent } from './modals/categoria-modal/categoria-modal.component';
+import { ProdutoModalComponent } from './modals/produto-modal/produto-modal.component';
 
 @Component({
   selector: 'app-cardapio',
@@ -16,16 +26,18 @@ import { AdicionalService, Adicional } from '../../services/adicional.service';
     RouterModule,
     ProdutoModalComponent,
     CategoriaModalComponent,
-    AdicionalModalComponent
+    AdicionalModalComponent,
+    MenuContextoCategoriaComponent,
   ],
   templateUrl: './cardapio.component.html',
-  styleUrl: './cardapio.component.css'
+  styleUrl: './cardapio.component.css',
 })
 export class CardapioComponent implements OnInit {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
   private readonly produtoService = inject(ProdutoService);
   private readonly adicionalService = inject(AdicionalService);
+  private readonly categoriaService = inject(CategoriaService);
 
   // Composable com toda a lógica de produtos
   readonly produtosComposable = useProdutos();
@@ -46,6 +58,12 @@ export class CardapioComponent implements OnInit {
   readonly mostrarModalAdicional = signal(false);
   readonly produtoEditando = signal<any>(null);
   readonly adicionalEditando = signal<Adicional | null>(null);
+  readonly categoriaEditando = signal<Categoria | null>(null);
+
+  // Context menu de categoria
+  readonly menuContextoCategoria = signal<{ categoria: Categoria; x: number; y: number } | null>(
+    null
+  );
 
   // Abas: 'produtos' ou 'adicionais'
   readonly abaAtiva = signal<'produtos' | 'adicionais'>('produtos');
@@ -70,14 +88,14 @@ export class CardapioComponent implements OnInit {
   carregarAdicionais(): void {
     this.carregandoAdicionais.set(true);
     this.adicionalService.listar().subscribe({
-      next: (adicionais) => {
+      next: adicionais => {
         this.adicionais.set(adicionais);
         this.carregandoAdicionais.set(false);
       },
-      error: (error) => {
+      error: error => {
         console.error('Erro ao carregar adicionais:', error);
         this.carregandoAdicionais.set(false);
-      }
+      },
     });
   }
 
@@ -104,7 +122,7 @@ export class CardapioComponent implements OnInit {
         if (this.produtosSectionRef?.nativeElement) {
           this.produtosSectionRef.nativeElement.scrollIntoView({
             behavior: 'smooth',
-            block: 'start'
+            block: 'start',
           });
         } else {
           window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -131,12 +149,53 @@ export class CardapioComponent implements OnInit {
     this.produtoEditando.set(null);
   }
 
-  abrirModalCategoria(): void {
+  abrirModalCategoria(categoria?: Categoria): void {
+    this.categoriaEditando.set(categoria || null);
     this.mostrarModalCategoria.set(true);
   }
 
   fecharModalCategoria(): void {
     this.mostrarModalCategoria.set(false);
+    this.categoriaEditando.set(null);
+  }
+
+  // === Menu de contexto de categoria ===
+  abrirMenuContextoCategoria(event: MouseEvent, categoria: Categoria): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.menuContextoCategoria.set({
+      categoria,
+      x: event.clientX,
+      y: event.clientY,
+    });
+  }
+
+  fecharMenuContextoCategoria(): void {
+    this.menuContextoCategoria.set(null);
+  }
+
+  editarCategoria(categoria: Categoria): void {
+    this.fecharMenuContextoCategoria();
+    this.abrirModalCategoria(categoria);
+  }
+
+  removerCategoria(categoria: Categoria): void {
+    this.fecharMenuContextoCategoria();
+    if (!this.isBrowser) return;
+    if (!confirm(`Tem certeza que deseja remover a categoria "${categoria.nome}"?`)) return;
+
+    this.categoriaService.excluir(categoria.id).subscribe({
+      next: () => {
+        this.produtosComposable.carregarCategorias();
+        this.carregarDados();
+      },
+      error: error => {
+        console.error('Erro ao remover categoria:', error);
+        if (this.isBrowser) {
+          alert('Erro ao remover categoria. Verifique se não há produtos vinculados.');
+        }
+      },
+    });
   }
 
   // === Adicionais ===
@@ -167,12 +226,12 @@ export class CardapioComponent implements OnInit {
       next: () => {
         this.carregarAdicionais();
       },
-      error: (error) => {
+      error: error => {
         console.error('Erro ao excluir adicional:', error);
         if (this.isBrowser) {
           alert('Erro ao excluir adicional. Tente novamente.');
         }
-      }
+      },
     });
   }
 
@@ -187,12 +246,12 @@ export class CardapioComponent implements OnInit {
       next: () => {
         this.carregarAdicionais();
       },
-      error: (error) => {
+      error: error => {
         console.error('Erro ao alterar disponibilidade do adicional:', error);
         if (this.isBrowser) {
           alert('Erro ao alterar disponibilidade do adicional. Tente novamente.');
         }
-      }
+      },
     });
   }
 
@@ -213,18 +272,17 @@ export class CardapioComponent implements OnInit {
       return;
     }
 
-    this.produtoService.excluir(id)
-      .subscribe({
-        next: () => {
-          this.carregarDados();
-        },
-        error: (error) => {
-          console.error('Erro ao excluir produto:', error);
-          if (this.isBrowser) {
-            alert('Erro ao excluir produto. Tente novamente.');
-          }
+    this.produtoService.excluir(id).subscribe({
+      next: () => {
+        this.carregarDados();
+      },
+      error: error => {
+        console.error('Erro ao excluir produto:', error);
+        if (this.isBrowser) {
+          alert('Erro ao excluir produto. Tente novamente.');
         }
-      });
+      },
+    });
   }
 
   alternarDisponibilidade(produto: any): void {
@@ -234,18 +292,17 @@ export class CardapioComponent implements OnInit {
 
     const novaDisponibilidade = !produto.disponivel;
 
-    this.produtoService.alternarDisponibilidade(produto.id, novaDisponibilidade)
-      .subscribe({
-        next: () => {
-          this.carregarDados();
-        },
-        error: (error) => {
-          console.error('Erro ao alterar disponibilidade do produto:', error);
-          if (this.isBrowser) {
-            alert('Erro ao alterar disponibilidade do produto. Tente novamente.');
-          }
+    this.produtoService.alternarDisponibilidade(produto.id, novaDisponibilidade).subscribe({
+      next: () => {
+        this.carregarDados();
+      },
+      error: error => {
+        console.error('Erro ao alterar disponibilidade do produto:', error);
+        if (this.isBrowser) {
+          alert('Erro ao alterar disponibilidade do produto. Tente novamente.');
         }
-      });
+      },
+    });
   }
 
   onProdutoSalvo(): void {

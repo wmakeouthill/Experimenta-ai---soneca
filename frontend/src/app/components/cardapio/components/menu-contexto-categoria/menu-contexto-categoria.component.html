@@ -1,0 +1,27 @@
+@if (aberto() && posicao() && categoria()) {
+  <div
+    class="context-menu-overlay"
+    (click)="fechar()"
+    (contextmenu)="$event.preventDefault(); fechar()"
+  >
+    <div
+      class="context-menu"
+      [style.left.px]="posicao()!.x"
+      [style.top.px]="posicao()!.y"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="context-menu-header">
+        <span>{{ categoria()!.nome }}</span>
+      </div>
+      <div class="context-menu-items">
+        <button class="context-menu-item context-menu-item-editar" (click)="editar()">
+          ✏️ Editar Categoria
+        </button>
+        <div class="context-menu-divider"></div>
+        <button class="context-menu-item context-menu-item-remover" (click)="remover()">
+          🗑️ Remover Categoria
+        </button>
+      </div>
+    </div>
+  </div>
+}

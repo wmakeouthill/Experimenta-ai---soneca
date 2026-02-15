@@ -1,13 +1,13 @@
 package com.snackbar.impressao.infrastructure.impressora;
 
+import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+
 import com.snackbar.impressao.domain.entities.CupomFiscal;
 import com.snackbar.pedidos.application.dto.ItemPedidoAdicionalDTO;
 import com.snackbar.pedidos.application.dto.ItemPedidoDTO;
 import com.snackbar.pedidos.application.dto.MeioPagamentoDTO;
-
-import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 public class FormatoCupomFiscal {
 
@@ -25,17 +25,10 @@ public class FormatoCupomFiscal {
     public static byte[] formatarCupom(CupomFiscal cupomFiscal) {
         byte[] cupom = new byte[0];
 
-        // 1. Cabeçalho/Logo (bitmap centralizado no topo)
+        // 1. Cabeçalho (texto centralizado)
+        // Logo é tratado separadamente pelo Electron via node-thermal-printer
         cupom = concatenar(cupom, EscPosComandos.alinharCentro());
-
-        byte[] logoEscPos = obterLogoEscPos(cupomFiscal);
-        if (logoEscPos != null && logoEscPos.length > 0) {
-            cupom = concatenar(cupom, logoEscPos);
-            cupom = concatenar(cupom, EscPosComandos.linhaEmBranco(2));
-        } else {
-            cupom = concatenar(cupom, EscPosComandos.textoDuplo());
-            cupom = concatenar(cupom, formatarCabecalho(cupomFiscal));
-        }
+        cupom = concatenar(cupom, formatarCabecalho(cupomFiscal));
 
         // 2. Conteúdo do cupom (dados do pedido)
         cupom = concatenar(cupom, EscPosComandos.textoNormal());
@@ -58,26 +51,42 @@ public class FormatoCupomFiscal {
     }
 
     private static byte[] formatarCabecalho(CupomFiscal cupomFiscal) {
-        StringBuilder cabecalho = new StringBuilder();
-        cabecalho.append(cupomFiscal.getNomeEstabelecimento()).append("\n");
+        byte[] cabecalho = new byte[0];
 
-        if (cupomFiscal.getEnderecoEstabelecimento() != null) {
-            cabecalho.append(cupomFiscal.getEnderecoEstabelecimento()).append("\n");
+        // Nome do estabelecimento: altura dupla + negrito (mais evidente)
+        cabecalho = concatenar(cabecalho, EscPosComandos.textoDuploAltura());
+        String nome = cupomFiscal.getNomeEstabelecimento() + "\n";
+        cabecalho = concatenar(cabecalho, nome.getBytes(StandardCharsets.UTF_8));
+
+        // Volta para texto normal para o resto do cabeçalho
+        cabecalho = concatenar(cabecalho, EscPosComandos.textoNormal());
+
+        StringBuilder resto = new StringBuilder();
+
+        if (cupomFiscal.getEnderecoEstabelecimento() != null
+                && !cupomFiscal.getEnderecoEstabelecimento().trim().isEmpty()) {
+            resto.append(cupomFiscal.getEnderecoEstabelecimento()).append("\n");
         }
 
-        if (cupomFiscal.getTelefoneEstabelecimento() != null) {
-            cabecalho.append("Tel: ").append(cupomFiscal.getTelefoneEstabelecimento()).append("\n");
+        if (cupomFiscal.getTelefoneEstabelecimento() != null
+                && !cupomFiscal.getTelefoneEstabelecimento().trim().isEmpty()) {
+            resto.append("Tel: ").append(cupomFiscal.getTelefoneEstabelecimento()).append("\n");
         }
 
-        if (cupomFiscal.getCnpjEstabelecimento() != null) {
-            cabecalho.append("CNPJ: ").append(formatarCnpj(cupomFiscal.getCnpjEstabelecimento())).append("\n");
+        if (cupomFiscal.getCnpjEstabelecimento() != null && !cupomFiscal.getCnpjEstabelecimento().trim().isEmpty()) {
+            resto.append("CNPJ: ").append(formatarCnpj(cupomFiscal.getCnpjEstabelecimento())).append("\n");
         }
 
-        cabecalho.append("\n");
-        cabecalho.append("CUPOM FISCAL").append("\n");
-        cabecalho.append("\n");
+        resto.append("\n");
 
-        return cabecalho.toString().getBytes(StandardCharsets.UTF_8);
+        // CUPOM FISCAL em negrito
+        cabecalho = concatenar(cabecalho, resto.toString().getBytes(StandardCharsets.UTF_8));
+        cabecalho = concatenar(cabecalho, EscPosComandos.textoNegrito());
+        cabecalho = concatenar(cabecalho, "CUPOM FISCAL\n".getBytes(StandardCharsets.UTF_8));
+        cabecalho = concatenar(cabecalho, EscPosComandos.textoNormal());
+        cabecalho = concatenar(cabecalho, "\n".getBytes(StandardCharsets.UTF_8));
+
+        return cabecalho;
     }
 
     private static byte[] formatarDadosPedido(CupomFiscal cupomFiscal) {

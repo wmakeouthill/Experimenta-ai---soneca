@@ -1,11 +1,20 @@
-import { Component, inject, input, output, PLATFORM_ID, ChangeDetectionStrategy, ChangeDetectorRef, effect } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  effect,
+  inject,
+  input,
+  output,
+  PLATFORM_ID,
+} from '@angular/core';
 import { ReactiveFormsModule, Validators } from '@angular/forms';
-import { BaseModalComponent } from '../base-modal/base-modal.component';
+import { of } from 'rxjs';
+import { catchError, finalize } from 'rxjs/operators';
 import { CategoriaService } from '../../../../services/categoria.service';
 import { useFormulario } from '../../composables/use-formulario';
-import { catchError, finalize } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { BaseModalComponent } from '../base-modal/base-modal.component';
 
 export interface CategoriaFormData {
   nome: string;
@@ -22,7 +31,7 @@ export interface CategoriaFormData {
   imports: [CommonModule, ReactiveFormsModule, BaseModalComponent],
   templateUrl: './categoria-modal.component.html',
   styleUrl: './categoria-modal.component.css',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CategoriaModalComponent {
   private readonly categoriaService = inject(CategoriaService);
@@ -40,7 +49,7 @@ export class CategoriaModalComponent {
   readonly formulario = useFormulario<CategoriaFormData>(
     { nome: '', descricao: '' },
     {
-      nome: [Validators.required, Validators.minLength(2)]
+      nome: [Validators.required, Validators.minLength(2)],
     }
   );
 
@@ -51,7 +60,7 @@ export class CategoriaModalComponent {
       effect(() => {
         const estaAberto = this.aberto();
         const categoriaAtual = this.categoria();
-        
+
         if (estaAberto) {
           // Usar setTimeout para garantir que executa após a renderização
           setTimeout(() => {
@@ -65,12 +74,12 @@ export class CategoriaModalComponent {
 
   private inicializarFormulario(): void {
     const categoriaEdit = this.categoria();
-    
+
     if (categoriaEdit && categoriaEdit.id) {
       // Edição: preencher com dados da categoria
       this.formulario.definirValores({
         nome: categoriaEdit.nome || '',
-        descricao: categoriaEdit.descricao || ''
+        descricao: categoriaEdit.descricao || '',
       });
     } else {
       // Criação: resetar formulário
@@ -95,16 +104,20 @@ export class CategoriaModalComponent {
     const valores = this.formulario.obterValores();
     const categoria = this.categoria();
 
-    const request$ = categoria
-      ? of({}) // TODO: Implementar atualização quando backend tiver endpoint
-      : this.categoriaService.criar({
-          nome: valores.nome.trim(),
-          descricao: valores.descricao?.trim() || ''
-        });
+    const request$ =
+      categoria && categoria.id
+        ? this.categoriaService.atualizar(categoria.id, {
+            nome: valores.nome.trim(),
+            descricao: valores.descricao?.trim() || '',
+          })
+        : this.categoriaService.criar({
+            nome: valores.nome.trim(),
+            descricao: valores.descricao?.trim() || '',
+          });
 
     request$
       .pipe(
-        catchError((error) => {
+        catchError(error => {
           const mensagem = error.error?.message || 'Erro ao salvar categoria';
           this.formulario.adicionarErro('nome', mensagem);
           return of(null);
@@ -113,7 +126,7 @@ export class CategoriaModalComponent {
           this.formulario.enviando.set(false);
         })
       )
-      .subscribe((resultado) => {
+      .subscribe(resultado => {
         if (resultado) {
           this.formulario.sucesso.set(true);
           setTimeout(() => {
@@ -128,4 +141,3 @@ export class CategoriaModalComponent {
     return this.categoria() ? '✏️ Editar Categoria' : '➕ Nova Categoria';
   }
 }
-
