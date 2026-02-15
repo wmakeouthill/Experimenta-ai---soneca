@@ -1,149 +1,160 @@
-import { Component, inject, signal, OnInit, PLATFORM_ID, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  OnInit,
+  PLATFORM_ID,
+  signal,
+} from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { useMesas } from './composables/use-mesas';
+import { RouterModule } from '@angular/router';
 import { Mesa } from '../../services/mesa.service';
+import { useMesas } from './composables/use-mesas';
 
 @Component({
-    selector: 'app-gestao-mesas',
-    standalone: true,
-    imports: [CommonModule, RouterModule, ReactiveFormsModule],
-    templateUrl: './gestao-mesas.component.html',
-    styleUrl: './gestao-mesas.component.css',
-    changeDetection: ChangeDetectionStrategy.OnPush
+  selector: 'app-gestao-mesas',
+  standalone: true,
+  imports: [CommonModule, RouterModule, ReactiveFormsModule],
+  templateUrl: './gestao-mesas.component.html',
+  styleUrl: './gestao-mesas.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GestaoMesasComponent implements OnInit {
-    private readonly platformId = inject(PLATFORM_ID);
-    private readonly isBrowser = isPlatformBrowser(this.platformId);
-    private readonly fb = inject(FormBuilder);
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly isBrowser = isPlatformBrowser(this.platformId);
+  private readonly fb = inject(FormBuilder);
 
-    readonly mesasComposable = useMesas();
+  readonly mesasComposable = useMesas();
 
-    readonly mesas = this.mesasComposable.mesas;
-    readonly carregando = this.mesasComposable.carregando;
-    readonly erro = this.mesasComposable.erro;
-    readonly totalMesas = this.mesasComposable.totalMesas;
+  readonly mesas = this.mesasComposable.mesas;
+  readonly carregando = this.mesasComposable.carregando;
+  readonly erro = this.mesasComposable.erro;
+  readonly totalMesas = this.mesasComposable.totalMesas;
 
-    readonly mostrarModal = signal(false);
-    readonly mostrarModalQrCode = signal(false);
-    readonly mesaEditando = signal<Mesa | null>(null);
-    readonly mesaQrCode = signal<Mesa | null>(null);
+  readonly mostrarModal = signal(false);
+  readonly mostrarModalQrCode = signal(false);
+  readonly mesaEditando = signal<Mesa | null>(null);
+  readonly mesaQrCode = signal<Mesa | null>(null);
+  readonly linkTotemCopiado = signal(false);
+  readonly linkMesaCopiado = signal(false);
 
-    readonly form: FormGroup;
+  readonly form: FormGroup;
 
-    // URL do Auto-Atendimento (Totem)
-    get urlAutoAtendimento(): string {
-        if (!this.isBrowser) return '';
-        const baseUrl = window.location.origin;
-        return `${baseUrl}/autoatendimento`;
+  // URL do Auto-Atendimento (Totem)
+  get urlAutoAtendimento(): string {
+    if (!this.isBrowser) return '';
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/autoatendimento`;
+  }
+
+  constructor() {
+    this.form = this.fb.group({
+      numero: [null, [Validators.required, Validators.min(1)]],
+      nome: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+    });
+  }
+
+  ngOnInit(): void {
+    if (this.isBrowser) {
+      this.mesasComposable.carregarMesas();
+    }
+  }
+
+  abrirModalCriar(): void {
+    this.mesaEditando.set(null);
+    this.form.reset({
+      numero: this.sugerirProximoNumero(),
+      nome: '',
+    });
+    this.mostrarModal.set(true);
+  }
+
+  abrirModalEditar(mesa: Mesa): void {
+    this.mesaEditando.set(mesa);
+    this.form.patchValue({
+      numero: mesa.numero,
+      nome: mesa.nome,
+    });
+    this.mostrarModal.set(true);
+  }
+
+  fecharModal(): void {
+    this.mostrarModal.set(false);
+    this.mesaEditando.set(null);
+    this.form.reset();
+  }
+
+  async salvar(): Promise<void> {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
     }
 
-    constructor() {
-        this.form = this.fb.group({
-            numero: [null, [Validators.required, Validators.min(1)]],
-            nome: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]]
-        });
+    const formValue = this.form.value;
+    const mesaEditando = this.mesaEditando();
+
+    if (mesaEditando) {
+      const sucesso = await this.mesasComposable.atualizarMesa(mesaEditando.id, {
+        numero: formValue.numero,
+        nome: formValue.nome,
+      });
+      if (sucesso) {
+        this.fecharModal();
+      }
+    } else {
+      const sucesso = await this.mesasComposable.criarMesa({
+        numero: formValue.numero,
+        nome: formValue.nome,
+      });
+      if (sucesso) {
+        this.fecharModal();
+      }
     }
+  }
 
-    ngOnInit(): void {
-        if (this.isBrowser) {
-            this.mesasComposable.carregarMesas();
-        }
+  async excluirMesa(mesa: Mesa): Promise<void> {
+    if (!confirm(`Tem certeza que deseja excluir a mesa ${mesa.numero} - ${mesa.nome}?`)) {
+      return;
     }
+    await this.mesasComposable.excluirMesa(mesa.id);
+  }
 
-    abrirModalCriar(): void {
-        this.mesaEditando.set(null);
-        this.form.reset({
-            numero: this.sugerirProximoNumero(),
-            nome: ''
-        });
-        this.mostrarModal.set(true);
-    }
+  async alternarStatus(mesa: Mesa): Promise<void> {
+    await this.mesasComposable.alternarStatus(mesa);
+  }
 
-    abrirModalEditar(mesa: Mesa): void {
-        this.mesaEditando.set(mesa);
-        this.form.patchValue({
-            numero: mesa.numero,
-            nome: mesa.nome
-        });
-        this.mostrarModal.set(true);
-    }
+  abrirQrCode(mesa: Mesa): void {
+    this.mesaQrCode.set(mesa);
+    this.mostrarModalQrCode.set(true);
+  }
 
-    fecharModal(): void {
-        this.mostrarModal.set(false);
-        this.mesaEditando.set(null);
-        this.form.reset();
-    }
+  fecharModalQrCode(): void {
+    this.mostrarModalQrCode.set(false);
+    this.mesaQrCode.set(null);
+  }
 
-    async salvar(): Promise<void> {
-        if (this.form.invalid) {
-            this.form.markAllAsTouched();
-            return;
-        }
+  obterUrlQrCode(mesa: Mesa): string {
+    return this.mesasComposable.gerarUrlQrCode(mesa);
+  }
 
-        const formValue = this.form.value;
-        const mesaEditando = this.mesaEditando();
+  copiarUrl(mesa: Mesa): void {
+    if (!this.isBrowser) return;
+    const url = this.obterUrlQrCode(mesa);
+    this.copiarParaClipboard(url).then(sucesso => {
+      if (sucesso) {
+        this.linkMesaCopiado.set(true);
+        setTimeout(() => this.linkMesaCopiado.set(false), 2000);
+      }
+    });
+  }
 
-        if (mesaEditando) {
-            const sucesso = await this.mesasComposable.atualizarMesa(mesaEditando.id, {
-                numero: formValue.numero,
-                nome: formValue.nome
-            });
-            if (sucesso) {
-                this.fecharModal();
-            }
-        } else {
-            const sucesso = await this.mesasComposable.criarMesa({
-                numero: formValue.numero,
-                nome: formValue.nome
-            });
-            if (sucesso) {
-                this.fecharModal();
-            }
-        }
-    }
-
-    async excluirMesa(mesa: Mesa): Promise<void> {
-        if (!confirm(`Tem certeza que deseja excluir a mesa ${mesa.numero} - ${mesa.nome}?`)) {
-            return;
-        }
-        await this.mesasComposable.excluirMesa(mesa.id);
-    }
-
-    async alternarStatus(mesa: Mesa): Promise<void> {
-        await this.mesasComposable.alternarStatus(mesa);
-    }
-
-    abrirQrCode(mesa: Mesa): void {
-        this.mesaQrCode.set(mesa);
-        this.mostrarModalQrCode.set(true);
-    }
-
-    fecharModalQrCode(): void {
-        this.mostrarModalQrCode.set(false);
-        this.mesaQrCode.set(null);
-    }
-
-    obterUrlQrCode(mesa: Mesa): string {
-        return this.mesasComposable.gerarUrlQrCode(mesa);
-    }
-
-    copiarUrl(mesa: Mesa): void {
-        const url = this.obterUrlQrCode(mesa);
-        if (typeof navigator !== 'undefined' && navigator.clipboard) {
-            navigator.clipboard.writeText(url).then(() => {
-                alert('Link copiado para a área de transferência!');
-            });
-        }
-    }
-
-    imprimirQrCode(mesa: Mesa): void {
-        const url = this.obterUrlQrCode(mesa);
-        // Abre janela de impressão com o QR code
-        const printWindow = window.open('', '_blank');
-        if (printWindow) {
-            printWindow.document.write(`
+  imprimirQrCode(mesa: Mesa): void {
+    const url = this.obterUrlQrCode(mesa);
+    // Abre janela de impressão com o QR code
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
         <!DOCTYPE html>
         <html>
         <head>
@@ -202,31 +213,64 @@ export class GestaoMesasComponent implements OnInit {
         </body>
         </html>
       `);
-            printWindow.document.close();
-        }
+      printWindow.document.close();
     }
+  }
 
-    // ========== Totem Auto-Atendimento ==========
-    copiarUrlAutoAtendimento(): void {
-        const url = this.urlAutoAtendimento;
-        if (typeof navigator !== 'undefined' && navigator.clipboard) {
-            navigator.clipboard.writeText(url).then(() => {
-                alert('Link do Totem copiado para a área de transferência!');
-            });
-        }
+  // ========== Totem Auto-Atendimento ==========
+  copiarUrlAutoAtendimento(): void {
+    if (!this.isBrowser) return;
+    const url = this.urlAutoAtendimento;
+    this.copiarParaClipboard(url).then(sucesso => {
+      if (sucesso) {
+        this.linkTotemCopiado.set(true);
+        setTimeout(() => this.linkTotemCopiado.set(false), 2000);
+      }
+    });
+  }
+
+  /**
+   * Copia texto para a área de transferência com fallback para HTTP.
+   * navigator.clipboard requer HTTPS; o fallback usa execCommand.
+   */
+  private async copiarParaClipboard(texto: string): Promise<boolean> {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(texto);
+        return true;
+      }
+      // Fallback para HTTP (execCommand)
+      const textarea = document.createElement('textarea');
+      textarea.value = texto;
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      const sucesso = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      return sucesso;
+    } catch (err) {
+      console.error('Erro ao copiar link:', err);
+      return false;
     }
+  }
 
-    private sugerirProximoNumero(): number {
-        const mesasAtuais = this.mesas();
-        if (mesasAtuais.length === 0) return 1;
-        const maxNumero = Math.max(...mesasAtuais.map(m => m.numero));
-        return maxNumero + 1;
-    }
+  private sugerirProximoNumero(): number {
+    const mesasAtuais = this.mesas();
+    if (mesasAtuais.length === 0) return 1;
+    const maxNumero = Math.max(...mesasAtuais.map(m => m.numero));
+    return maxNumero + 1;
+  }
 
-    isEditando(): boolean {
-        return this.mesaEditando() !== null;
-    }
+  isEditando(): boolean {
+    return this.mesaEditando() !== null;
+  }
 
-    get numero() { return this.form.get('numero'); }
-    get nome() { return this.form.get('nome'); }
+  get numero() {
+    return this.form.get('numero');
+  }
+  get nome() {
+    return this.form.get('nome');
+  }
 }

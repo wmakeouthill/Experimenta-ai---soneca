@@ -36,6 +36,7 @@ public class SecurityConfig {
     private static final String MESAS_PATH = "/api/mesas";
     private static final String MESAS_PATTERN = "/api/mesas/**";
     private static final String PUBLIC_MESA_PATTERN = "/api/public/mesa/**";
+    private static final String PUBLIC_STATUS_LOJA_PATTERN = "/api/public/status-loja/**";
     private static final String PUBLIC_CLIENTE_AUTH_PATTERN = "/api/publico/cliente/auth/**";
     private static final String CLIENTE_CONTA_PATTERN = "/api/cliente/conta/**";
 
@@ -69,6 +70,8 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**").permitAll()
                         // Endpoints públicos de mesas (QR Code) - Permite pedidos de clientes
                         .requestMatchers(PUBLIC_MESA_PATTERN).permitAll()
+                        // Endpoint público de status da loja (sessão de trabalho)
+                        .requestMatchers(PUBLIC_STATUS_LOJA_PATTERN).permitAll()
                         // Endpoints públicos de autenticação de cliente (login, Google OAuth)
                         .requestMatchers(PUBLIC_CLIENTE_AUTH_PATTERN).permitAll()
                         // Endpoint público para proxy de imagens (fotos do Google)

@@ -2,14 +2,20 @@
   <header class="gestao-mesas-header">
     <div class="gestao-mesas-header-content">
       <h1 class="gestao-mesas-titulo">
-        <img src="/assets/experimenta_ai_banner_circular.png" alt="Experimenta aí" class="gestao-mesas-logo" />
+        <img
+          src="/assets/experimenta_ai_banner_circular.png"
+          alt="Experimenta aí"
+          class="gestao-mesas-logo"
+        />
         Administrar Mesas
       </h1>
       <div class="header-actions">
-        <button class="btn-header btn-primary" (click)="abrirModalCriar()">
-          ➕ Nova Mesa
-        </button>
-        <button class="btn-voltar" routerLink="/administracao" aria-label="Voltar para administração">
+        <button class="btn-header btn-primary" (click)="abrirModalCriar()">➕ Nova Mesa</button>
+        <button
+          class="btn-voltar"
+          routerLink="/administracao"
+          aria-label="Voltar para administração"
+        >
           ← Voltar
         </button>
       </div>
@@ -30,14 +36,17 @@
         <h3>Totem de Auto-Atendimento</h3>
       </div>
       <div class="totem-url">
-        <input
-          type="text"
-          [value]="urlAutoAtendimento"
-          readonly
-          class="url-input"
-        />
-        <button class="btn-copy" (click)="copiarUrlAutoAtendimento()">
-          📋 Copiar Link
+        <input type="text" [value]="urlAutoAtendimento" readonly class="url-input" />
+        <button
+          class="btn-copy"
+          (click)="copiarUrlAutoAtendimento()"
+          [class.copiado]="linkTotemCopiado()"
+        >
+          @if (linkTotemCopiado()) {
+            ✅ Copiado!
+          } @else {
+            📋 Copiar Link
+          }
         </button>
       </div>
     </div>
@@ -70,7 +79,11 @@
               <td class="numero-mesa">{{ mesa.numero }}</td>
               <td>{{ mesa.nome }}</td>
               <td>
-                <span class="badge" [class.badge-ativo]="mesa.ativa" [class.badge-inativo]="!mesa.ativa">
+                <span
+                  class="badge"
+                  [class.badge-ativo]="mesa.ativa"
+                  [class.badge-inativo]="!mesa.ativa"
+                >
                   {{ mesa.ativa ? 'Ativa' : 'Inativa' }}
                 </span>
               </td>
@@ -81,9 +94,7 @@
               </td>
               <td>
                 <div class="actions">
-                  <button class="btn-edit" (click)="abrirModalEditar(mesa)">
-                    Editar
-                  </button>
+                  <button class="btn-edit" (click)="abrirModalEditar(mesa)">Editar</button>
                   <button
                     class="btn-toggle"
                     (click)="alternarStatus(mesa)"
@@ -92,15 +103,15 @@
                   >
                     {{ mesa.ativa ? 'Desativar' : 'Ativar' }}
                   </button>
-                  <button class="btn-delete" (click)="excluirMesa(mesa)">
-                    Excluir
-                  </button>
+                  <button class="btn-delete" (click)="excluirMesa(mesa)">Excluir</button>
                 </div>
               </td>
             </tr>
           } @empty {
             <tr>
-              <td colspan="5" class="empty">Nenhuma mesa cadastrada. Clique em "Nova Mesa" para adicionar.</td>
+              <td colspan="5" class="empty">
+                Nenhuma mesa cadastrada. Clique em "Nova Mesa" para adicionar.
+              </td>
             </tr>
           }
         </tbody>
@@ -161,9 +172,7 @@
           </div>
 
           <div class="modal-actions">
-            <button type="button" class="btn-secondary" (click)="fecharModal()">
-              Cancelar
-            </button>
+            <button type="button" class="btn-secondary" (click)="fecharModal()">Cancelar</button>
             <button type="submit" class="btn-primary" [disabled]="form.invalid || carregando()">
               {{ isEditando() ? 'Atualizar' : 'Criar' }}
             </button>
@@ -190,20 +199,26 @@
 
           <div class="qrcode-image">
             <img
-              [src]="'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + obterUrlQrCode(mesaQrCode()!)"
+              [src]="
+                'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' +
+                obterUrlQrCode(mesaQrCode()!)
+              "
               alt="QR Code da Mesa"
             />
           </div>
 
           <div class="qrcode-url">
-            <input
-              type="text"
-              [value]="obterUrlQrCode(mesaQrCode()!)"
-              readonly
-              class="url-input"
-            />
-            <button class="btn-copy" (click)="copiarUrl(mesaQrCode()!)">
-              📋 Copiar
+            <input type="text" [value]="obterUrlQrCode(mesaQrCode()!)" readonly class="url-input" />
+            <button
+              class="btn-copy"
+              (click)="copiarUrl(mesaQrCode()!)"
+              [class.copiado]="linkMesaCopiado()"
+            >
+              @if (linkMesaCopiado()) {
+                ✅ Copiado!
+              } @else {
+                📋 Copiar
+              }
             </button>
           </div>
 

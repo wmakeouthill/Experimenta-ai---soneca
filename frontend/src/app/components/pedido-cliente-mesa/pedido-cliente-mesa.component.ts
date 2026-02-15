@@ -1,38 +1,56 @@
-import { Component, inject, signal, computed, OnInit, OnDestroy, ChangeDetectionStrategy, PLATFORM_ID, AfterViewInit, AfterViewChecked, ViewChild, ElementRef, effect } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import {
+  AfterViewChecked,
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  ElementRef,
+  inject,
+  OnDestroy,
+  OnInit,
+  PLATFORM_ID,
+  signal,
+  ViewChild,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { firstValueFrom, Subject, takeUntil } from 'rxjs';
-import { PedidoMesaService, ItemPedidoMesaRequest, CriarPedidoMesaRequest } from '../../services/pedido-mesa.service';
-import { Mesa } from '../../services/mesa.service';
-import { Produto } from '../../services/produto.service';
-import { ClienteAuthService } from '../../services/cliente-auth.service';
-import { PwaInstallService } from '../../services/pwa-install.service';
-import { AcaoChat } from '../../services/chat-ia.service';
 import { AdicionalService } from '../../services/adicional.service';
-import { DraggableScrollDirective } from './directives/draggable-scroll.directive';
+import { AcaoChat } from '../../services/chat-ia.service';
+import { ClienteAuthService } from '../../services/cliente-auth.service';
+import { Mesa } from '../../services/mesa.service';
+import {
+  CriarPedidoMesaRequest,
+  ItemPedidoMesaRequest,
+  PedidoMesaService,
+} from '../../services/pedido-mesa.service';
+import { Produto } from '../../services/produto.service';
+import { PwaInstallService } from '../../services/pwa-install.service';
+import { StatusLoja, StatusLojaService } from '../../services/status-loja.service';
 import { ImageProxyUtil } from '../../utils/image-proxy.util';
+import { DraggableScrollDirective } from './directives/draggable-scroll.directive';
 
 import {
-  useIdentificacaoCliente,
-  useCarrinho,
-  usePagamento,
+  useAvaliacao,
   useCardapio,
+  useCarrinho,
+  useChatIA,
   useFavoritos,
   useGoogleAuth,
+  useIdentificacaoCliente,
   useInicio,
-  useSucessoPedido,
   useMeusPedidos,
-  useAvaliacao,
-  useChatIA
+  usePagamento,
+  useSucessoPedido,
 } from './composables';
 
 import {
-  SucessoScreenComponent,
   CardapioFooterNavComponent,
   ChatIAButtonComponent,
   ChatIAFullscreenComponent,
-  AbaNavegacao
+  SucessoScreenComponent,
 } from './components';
 
 type EtapaPrincipal = 'identificacao' | 'cadastro' | 'cardapio' | 'sucesso';
@@ -53,7 +71,7 @@ type SecaoPerfil = 'principal' | 'favoritos' | 'pedidos' | 'senha' | 'celular';
     SucessoScreenComponent,
     CardapioFooterNavComponent,
     ChatIAButtonComponent,
-    ChatIAFullscreenComponent
+    ChatIAFullscreenComponent,
   ],
   templateUrl: './pedido-cliente-mesa.component.html',
   styleUrls: [
@@ -64,11 +82,13 @@ type SecaoPerfil = 'principal' | 'favoritos' | 'pedidos' | 'senha' | 'celular';
     './styles/carrinho.css',
     './styles/abas.css',
     './styles/pagamento.css',
-    './styles/responsive.css'
+    './styles/responsive.css',
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewInit, AfterViewChecked {
+export class PedidoClienteMesaComponent
+  implements OnInit, OnDestroy, AfterViewInit, AfterViewChecked
+{
   private readonly route = inject(ActivatedRoute);
   private readonly pedidoMesaService = inject(PedidoMesaService);
   private readonly platformId = inject(PLATFORM_ID);
@@ -76,8 +96,14 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   private readonly clienteAuthService = inject(ClienteAuthService);
   private readonly pwaInstallService = inject(PwaInstallService);
   private readonly adicionalService = inject(AdicionalService);
+  private readonly statusLojaService = inject(StatusLojaService);
 
   protected readonly Math = Math;
+
+  // ========== Status da Loja ==========
+  readonly statusLoja = signal<StatusLoja>(StatusLoja.FECHADA);
+  readonly verificandoStatusLoja = signal(true);
+  readonly mensagemStatusLoja = signal<string | null>(null);
 
   // ========== Estado Geral ==========
   readonly mesa = signal<Mesa | null>(null);
@@ -150,7 +176,7 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   );
   readonly googleAuth = useGoogleAuth(
     () => this.identificacao.clienteIdentificado(),
-    (cliente) => {
+    cliente => {
       this.identificacao.setClienteFromGoogle(cliente);
       this.irParaCardapio();
     }
@@ -168,7 +194,7 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   );
   readonly chatIA = useChatIA(
     () => this.identificacao.clienteIdentificado()?.id,
-    (acao) => this.processarAcaoChat(acao)
+    acao => this.processarAcaoChat(acao)
   );
 
   // ========== ViewChild para botão do Google ==========
@@ -183,10 +209,11 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   readonly salvandoSenha = signal(false);
 
   // ========== Computed ==========
-  readonly podeEnviarPedido = computed(() =>
-    !this.carrinho.carrinhoVazio() &&
-    this.identificacao.clienteIdentificado() !== null &&
-    !this.enviando()
+  readonly podeEnviarPedido = computed(
+    () =>
+      !this.carrinho.carrinhoVazio() &&
+      this.identificacao.clienteIdentificado() !== null &&
+      !this.enviando()
   );
 
   // Verifica se há pedidos finalizados não avaliados
@@ -194,8 +221,8 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
     const pedidos = this.meusPedidos.pedidos();
     if (!pedidos || pedidos.length === 0) return false;
 
-    return pedidos.some(pedido =>
-      pedido.status === 'FINALIZADO' && !this.avaliacao.isPedidoAvaliado(pedido.id)
+    return pedidos.some(
+      pedido => pedido.status === 'FINALIZADO' && !this.avaliacao.isPedidoAvaliado(pedido.id)
     );
   });
 
@@ -204,9 +231,10 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
     const pedidos = this.meusPedidos.pedidos();
     if (!pedidos || pedidos.length === 0) return null;
 
-    return pedidos.find(pedido =>
-      pedido.status !== 'FINALIZADO' && pedido.status !== 'CANCELADO'
-    ) || null;
+    return (
+      pedidos.find(pedido => pedido.status !== 'FINALIZADO' && pedido.status !== 'CANCELADO') ||
+      null
+    );
   });
 
   // Verifica se deve mostrar CTA de pedido ativo (quando não está na tela de sucesso)
@@ -215,14 +243,26 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   });
 
   // ========== Bindings para NgModel ==========
-  get telefoneInputValue(): string { return this.identificacao.getTelefone(); }
-  set telefoneInputValue(value: string) { this.identificacao.setTelefone(value); }
+  get telefoneInputValue(): string {
+    return this.identificacao.getTelefone();
+  }
+  set telefoneInputValue(value: string) {
+    this.identificacao.setTelefone(value);
+  }
 
-  get nomeInputValue(): string { return this.identificacao.getNome(); }
-  set nomeInputValue(value: string) { this.identificacao.setNome(value); }
+  get nomeInputValue(): string {
+    return this.identificacao.getNome();
+  }
+  set nomeInputValue(value: string) {
+    this.identificacao.setNome(value);
+  }
 
-  get observacaoTempValue(): string { return this.carrinho.getObservacao(); }
-  set observacaoTempValue(value: string) { this.carrinho.setObservacao(value); }
+  get observacaoTempValue(): string {
+    return this.carrinho.getObservacao();
+  }
+  set observacaoTempValue(value: string) {
+    this.carrinho.setObservacao(value);
+  }
 
   // Handler para back button do navegador
   private readonly boundHandlePopState = this.handlePopState.bind(this);
@@ -230,12 +270,15 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
 
   constructor() {
     // Effect para carregar adicionais quando o modal de detalhes é aberto
-    effect(() => {
-      const produtoSelecionado = this.carrinho.produtoSelecionado();
-      if (produtoSelecionado && this.carrinho.mostrarDetalhes()) {
-        this.carregarAdicionaisDoProduto(produtoSelecionado.id);
-      }
-    }, { allowSignalWrites: true });
+    effect(
+      () => {
+        const produtoSelecionado = this.carrinho.produtoSelecionado();
+        if (produtoSelecionado && this.carrinho.mostrarDetalhes()) {
+          this.carregarAdicionaisDoProduto(produtoSelecionado.id);
+        }
+      },
+      { allowSignalWrites: true }
+    );
   }
 
   /**
@@ -243,25 +286,29 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
    */
   private carregarAdicionaisDoProduto(produtoId: string): void {
     this.carrinho.setCarregandoAdicionais(true);
-    this.adicionalService.listarAdicionaisDoProduto(produtoId)
-      .subscribe({
-        next: (adicionais) => {
-          // Filtra apenas os disponíveis
-          const disponíveis = adicionais.filter(a => a.disponivel);
-          this.carrinho.setAdicionaisDisponiveis(disponíveis);
-          this.carrinho.setCarregandoAdicionais(false);
-        },
-        error: (err) => {
-          console.error('Erro ao carregar adicionais:', err);
-          this.carrinho.setAdicionaisDisponiveis([]);
-          this.carrinho.setCarregandoAdicionais(false);
-        }
-      });
+    this.adicionalService.listarAdicionaisDoProduto(produtoId).subscribe({
+      next: adicionais => {
+        // Filtra apenas os disponíveis
+        const disponíveis = adicionais.filter(a => a.disponivel);
+        this.carrinho.setAdicionaisDisponiveis(disponíveis);
+        this.carrinho.setCarregandoAdicionais(false);
+      },
+      error: err => {
+        console.error('Erro ao carregar adicionais:', err);
+        this.carrinho.setAdicionaisDisponiveis([]);
+        this.carrinho.setCarregandoAdicionais(false);
+      },
+    });
   }
 
   // ========== Lifecycle ==========
   ngOnInit(): void {
     if (!this.isBrowser) return;
+
+    // Verifica status da loja ANTES de carregar a mesa
+    this.verificarStatusLoja();
+    this.conectarStatusLojaSSE();
+
     const token = this.route.snapshot.paramMap.get('token');
     if (!token) {
       this.erro.set('Token da mesa não encontrado');
@@ -274,13 +321,16 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
     window.addEventListener('popstate', this.boundHandlePopState);
 
     // PWA: Detecta se está rodando como app instalado (standalone)
-    const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches
-      || (navigator as any).standalone === true;
+    const isStandaloneMode =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (navigator as any).standalone === true;
     this.isStandalone.set(isStandaloneMode);
 
     // Detecta navegador para instruções personalizadas
     const ua = navigator.userAgent;
-    const isIOSDevice = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isIOSDevice =
+      /iPad|iPhone|iPod/.test(ua) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const isSafariBrowser = /^((?!chrome|android).)*safari/i.test(ua);
     const isChrome = /chrome/i.test(ua) && !/edg/i.test(ua);
     const isFirefoxBrowser = /firefox/i.test(ua) && !isChrome;
@@ -367,13 +417,45 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
     }
   }
 
+  // ========== Status da Loja ==========
+  verificarStatusLoja(): void {
+    this.verificandoStatusLoja.set(true);
+    this.statusLojaService.verificarStatus().subscribe({
+      next: response => {
+        this.statusLoja.set(response.status);
+        this.mensagemStatusLoja.set(response.mensagem);
+        this.verificandoStatusLoja.set(false);
+      },
+      error: () => {
+        this.statusLoja.set(StatusLoja.FECHADA);
+        this.mensagemStatusLoja.set('Não foi possível verificar o status da loja.');
+        this.verificandoStatusLoja.set(false);
+      },
+    });
+  }
+
+  private conectarStatusLojaSSE(): void {
+    this.statusLojaService
+      .conectarStream()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: response => {
+          this.statusLoja.set(response.status);
+          this.mensagemStatusLoja.set(response.mensagem);
+          if (this.verificandoStatusLoja()) {
+            this.verificandoStatusLoja.set(false);
+          }
+        },
+      });
+  }
+
   // ========== Ações Gerais ==========
   private carregarMesa(token: string): void {
     this.carregando.set(true);
     this.erro.set(null);
 
     this.pedidoMesaService.buscarMesa(token).subscribe({
-      next: (mesa) => {
+      next: mesa => {
         if (!mesa.ativa) {
           this.erro.set('Esta mesa não está ativa no momento');
           this.carregando.set(false);
@@ -390,7 +472,7 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
       error: () => {
         this.erro.set('Mesa não encontrada ou indisponível');
         this.carregando.set(false);
-      }
+      },
     });
   }
 
@@ -423,7 +505,7 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
     Promise.all([
       this.cardapio.carregar(),
       this.favoritos.carregar(),
-      this.inicio.carregar()
+      this.inicio.carregar(),
     ]).catch(err => console.warn('Erro ao carregar dados:', err));
   }
 
@@ -596,7 +678,10 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
             const quantidade = acao.quantidade || 1;
             const observacao = acao.observacao || '';
             this.carrinho.adicionarComOpcoes(produto, quantidade, observacao);
-            console.log(`✅ Chat IA: Adicionado ${quantidade}x ${produto.nome} ao carrinho`, observacao ? `(${observacao})` : '');
+            console.log(
+              `✅ Chat IA: Adicionado ${quantidade}x ${produto.nome} ao carrinho`,
+              observacao ? `(${observacao})` : ''
+            );
             // Dispara animação do carrinho no header do chat
             this.dispararAnimacaoCarrinhoChat();
           } else {
@@ -637,10 +722,10 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
     const itens = this.carrinho.itens();
 
     if (itens.length === 0) {
-      return "Seu carrinho está vazio! 🛒\n\nQue tal dar uma olhada no cardápio? Posso te ajudar a escolher! 😊";
+      return 'Seu carrinho está vazio! 🛒\n\nQue tal dar uma olhada no cardápio? Posso te ajudar a escolher! 😊';
     }
 
-    let resumo = "**Seu carrinho:** 🛒\n\n";
+    let resumo = '**Seu carrinho:** 🛒\n\n';
 
     itens.forEach((item, index) => {
       resumo += `${index + 1}. **${item.produto.nome}** x${item.quantidade} - R$ ${(item.produto.preco * item.quantidade).toFixed(2)}`;
@@ -711,7 +796,14 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   enviarPedido(): void {
     const mesa = this.mesa();
     const cliente = this.identificacao.clienteIdentificado();
-    if (!mesa || !cliente || this.enviando() || !this.podeEnviarPedido() || !this.pagamento.pagamentoValido()) return;
+    if (
+      !mesa ||
+      !cliente ||
+      this.enviando() ||
+      !this.podeEnviarPedido() ||
+      !this.pagamento.pagamentoValido()
+    )
+      return;
 
     this.enviando.set(true);
 
@@ -724,14 +816,15 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
       produtoId: item.produto.id,
       quantidade: item.quantidade,
       observacoes: item.observacao || undefined,
-      adicionais: item.adicionais && item.adicionais.length > 0
-        ? item.adicionais.map(ad => ({ adicionalId: ad.adicional.id, quantidade: ad.quantidade }))
-        : undefined
+      adicionais:
+        item.adicionais && item.adicionais.length > 0
+          ? item.adicionais.map(ad => ({ adicionalId: ad.adicional.id, quantidade: ad.quantidade }))
+          : undefined,
     }));
 
     const meiosPagamento = this.pagamento.meiosSelecionados().map(m => ({
       meioPagamento: m.tipo,
-      valor: m.valor
+      valor: m.valor,
     }));
 
     const request: CriarPedidoMesaRequest = {
@@ -739,11 +832,11 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
       clienteId: cliente.id,
       nomeCliente: cliente.nome,
       itens,
-      meiosPagamento
+      meiosPagamento,
     };
 
     this.pedidoMesaService.criarPedido(request, idempotencyKey).subscribe({
-      next: (response) => {
+      next: response => {
         this.enviando.set(false);
         this.etapaAtual.set('sucesso');
         this.carrinho.limparCarrinho();
@@ -758,7 +851,7 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
       error: () => {
         this.enviando.set(false);
         this.erro.set('Erro ao enviar o pedido. Tente novamente.');
-      }
+      },
     });
   }
 
@@ -781,7 +874,7 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
     let total = item.produto.preco * item.quantidade;
     if (item.adicionais && item.adicionais.length > 0) {
       const totalAdicionais = item.adicionais.reduce(
-        (acc, ad) => acc + (ad.adicional.preco * ad.quantidade * item.quantidade),
+        (acc, ad) => acc + ad.adicional.preco * ad.quantidade * item.quantidade,
         0
       );
       total += totalAdicionais;
@@ -800,7 +893,7 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
     let total = item.produto.preco * item.quantidade;
     if (item.adicionais && item.adicionais.length > 0) {
       const totalAdicionais = item.adicionais.reduce(
-        (acc, ad) => acc + (ad.adicional.preco * ad.quantidade * item.quantidade),
+        (acc, ad) => acc + ad.adicional.preco * ad.quantidade * item.quantidade,
         0
       );
       total += totalAdicionais;
@@ -811,7 +904,9 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
   /**
    * Formata a lista de adicionais de um item para exibição.
    */
-  formatarAdicionais(adicionais?: Array<{ adicional: { nome: string }; quantidade: number }>): string {
+  formatarAdicionais(
+    adicionais?: Array<{ adicional: { nome: string }; quantidade: number }>
+  ): string {
     if (!adicionais || adicionais.length === 0) return '';
     return adicionais.map(a => `${a.quantidade}x ${a.adicional.nome}`).join(', ');
   }
@@ -840,7 +935,15 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
    * Adiciona um produto do chat ao carrinho abrindo o modal de detalhes.
    * O modal abre por cima do chat, permitindo continuar a conversa.
    */
-  adicionarProdutoChatAoCarrinho(produtoDestacado: { id: string; nome: string; descricao: string; categoria: string; preco: number; imagemUrl: string; disponivel: boolean }): void {
+  adicionarProdutoChatAoCarrinho(produtoDestacado: {
+    id: string;
+    nome: string;
+    descricao: string;
+    categoria: string;
+    preco: number;
+    imagemUrl: string;
+    disponivel: boolean;
+  }): void {
     console.log('🛒 Adicionando produto do chat:', produtoDestacado);
 
     // Busca o produto completo no cardápio
@@ -862,7 +965,7 @@ export class PedidoClienteMesaComponent implements OnInit, OnDestroy, AfterViewI
         disponivel: produtoDestacado.disponivel,
         foto: produtoDestacado.imagemUrl,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
       this.carrinho.abrirDetalhes(produtoMinimo);
     }

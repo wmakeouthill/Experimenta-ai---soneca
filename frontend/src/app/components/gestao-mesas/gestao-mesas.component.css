@@ -7,7 +7,7 @@
 
 /* Header */
 .gestao-mesas-header {
-  background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
   color: white;
   padding: 1rem 2rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -46,7 +46,8 @@
   flex-wrap: wrap;
 }
 
-.btn-header, .btn-voltar {
+.btn-header,
+.btn-voltar {
   background: rgba(255, 255, 255, 0.2);
   color: white;
   border: 2px solid rgba(255, 255, 255, 0.3);
@@ -64,7 +65,8 @@
   background: rgba(255, 255, 255, 0.25);
 }
 
-.btn-header:hover, .btn-voltar:hover {
+.btn-header:hover,
+.btn-voltar:hover {
   background: rgba(255, 255, 255, 0.35);
   border-color: rgba(255, 255, 255, 0.5);
   transform: translateY(-2px);
@@ -92,7 +94,7 @@
 .resumo-numero {
   font-size: 2.5rem;
   font-weight: 700;
-  color: #FF6B35;
+  color: #ff6b35;
 }
 
 .resumo-label {
@@ -166,7 +168,7 @@
 /* Tabela */
 .btn-primary {
   padding: 12px 24px;
-  background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -239,7 +241,7 @@ tbody tr:hover {
 .numero-mesa {
   font-size: 1.3rem;
   font-weight: 700;
-  color: #FF6B35;
+  color: #ff6b35;
 }
 
 .badge {
@@ -413,7 +415,7 @@ tbody tr:hover {
 
 .form-group input:focus {
   outline: none;
-  border-color: #FF6B35;
+  border-color: #ff6b35;
 }
 
 .form-group input.invalid {
@@ -455,7 +457,7 @@ tbody tr:hover {
 }
 
 .qrcode-info h3 {
-  color: #FF6B35;
+  color: #ff6b35;
   margin: 0 0 5px;
   font-size: 1.5rem;
 }
@@ -508,6 +510,16 @@ tbody tr:hover {
   background: #5a6268;
 }
 
+.btn-copy.copiado {
+  background: #28a745;
+  color: white;
+}
+
+.totem-url .btn-copy.copiado {
+  background: #28a745;
+  color: white;
+}
+
 .qrcode-actions {
   margin-top: 20px;
 }
@@ -544,7 +556,8 @@ tbody tr:hover {
     flex-direction: column;
   }
 
-  .btn-header, .btn-voltar {
+  .btn-header,
+  .btn-voltar {
     width: 100%;
   }
 
@@ -560,7 +573,8 @@ tbody tr:hover {
     font-size: 0.9rem;
   }
 
-  th, td {
+  th,
+  td {
     padding: 12px 8px;
   }
 
