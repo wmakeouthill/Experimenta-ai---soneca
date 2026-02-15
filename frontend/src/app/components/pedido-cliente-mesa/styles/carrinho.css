@@ -8,6 +8,7 @@
   animation: slideUp 0.3s ease;
   /* Safe area para iPhone X+ */
   padding-bottom: env(safe-area-inset-bottom, 0);
+  overflow: hidden;
 }
 
 .carrinho-header {
@@ -360,6 +361,7 @@
   border-top: 1px solid #e0e0e0;
   flex-shrink: 0;
   background: white;
+  z-index: 1;
 }
 
 .btn-enviar-pedido {

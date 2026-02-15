@@ -48,12 +48,67 @@ export function useGestaoEstoque() {
   const temItens = computed(() => itens().length > 0);
 
   /**
+   * Verifica se um item corresponde ao status de filtro (mesma lógica da legenda).
+   */
+  function itemCorrespondeStatus(item: ItemEstoque, status: string | null): boolean {
+    if (!status) return true;
+    if (status === 'ativos') return item.ativo === true;
+    if (status === 'inativos') return item.ativo === false;
+    if (!item.ativo) return status === 'inativos';
+
+    if (item.quantidade === 0) return status === 'semEstoque';
+    if (status === 'semEstoque') return false;
+
+    const min = item.quantidadeMinima;
+    if (item.quantidade <= min * 0.5) return status === 'estoqueCritico';
+    if (item.quantidade <= min) return status === 'estoqueBaixo';
+    if (item.quantidade <= min * 2) return status === 'estoqueMedio';
+    return status === 'estoqueAlto';
+  }
+
+  /**
    * Carrega os itens de estoque.
+   * Com filtro por status ativo: busca todos e filtra/pagina no cliente (backend não tem parâmetro de status).
    */
   function carregarItens(): void {
     estado.set('carregando');
     erro.set(null);
 
+    const statusFiltro = filtroStatus();
+
+    if (statusFiltro) {
+      // Filtro por status: busca todos e filtra no cliente, depois pagina em memória
+      estoqueService.listar({
+        page: 0,
+        size: 10000,
+        sort: 'nome',
+        direction: 'asc',
+        filtro: filtroNome() || undefined,
+        apenasAtivos: apenasAtivos() || undefined
+      }).subscribe({
+        next: (response) => {
+          const filtrados = response.content.filter((item) => itemCorrespondeStatus(item, statusFiltro));
+          const total = filtrados.length;
+          const tamanho = tamanhoPagina();
+          const totalPags = Math.max(1, Math.ceil(total / tamanho));
+          const inicio = paginaAtual() * tamanho;
+          const pagina = filtrados.slice(inicio, inicio + tamanho);
+
+          itens.set(pagina);
+          totalElementos.set(total);
+          totalPaginas.set(totalPags);
+          calcularEstatisticasCompletas(response.content);
+          estado.set('sucesso');
+        },
+        error: (err) => {
+          erro.set('Erro ao carregar itens de estoque: ' + (err.error?.message || err.message));
+          estado.set('erro');
+        }
+      });
+      return;
+    }
+
+    // Sem filtro de status: paginação normal na API
     estoqueService.listar({
       page: paginaAtual(),
       size: tamanhoPagina(),
@@ -75,7 +130,7 @@ export function useGestaoEstoque() {
       }
     });
 
-    // Carregar todos os itens para estatísticas completas
+    // Carregar todos os itens para estatísticas completas (contadores dos cards)
     estoqueService.listar({
       page: 0,
       size: 10000,

@@ -40,7 +40,7 @@ function configureChromiumFlags() {
   );
   app.commandLine.appendSwitch(
     'unsafely-treat-insecure-origin-as-secure',
-    'http://experimenta-ai-soneca.vps-kinghost.net,http://177.153.39.90'
+    'https://experimentaaisoneca.app'
   );
 }
 
@@ -146,8 +146,8 @@ function createWindow() {
 
   // Carrega a aplicação Angular
   // Em desenvolvimento, aponta para localhost
-  // Em produção, carrega do servidor VPS (KingHost)
-  const PRODUCTION_URL = 'http://experimenta-ai-soneca.vps-kinghost.net';
+  // Em produção, carrega do domínio oficial
+  const PRODUCTION_URL = 'https://experimentaaisoneca.app';
   const DEV_URL = 'http://localhost:8080';
 
   // Detecta desenvolvimento: NODE_ENV, flag --dev, ou se não estiver buildado (packaged)
@@ -212,7 +212,7 @@ function createWindow() {
 
 // Função para criar o menu da aplicação
 function criarMenu() {
-  const PRODUCTION_URL = 'http://experimenta-ai-soneca.vps-kinghost.net';
+  const PRODUCTION_URL = 'https://experimentaaisoneca.app';
   const DEV_URL = 'http://localhost:8080';
   const isDevelopment =
     process.env.NODE_ENV === 'development' || process.argv.includes('--dev') || !app.isPackaged;

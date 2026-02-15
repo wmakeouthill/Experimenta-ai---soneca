@@ -4,8 +4,7 @@
  */
 
 const ORIGINS_PERMITIDAS = [
-  'http://experimenta-ai-soneca.vps-kinghost.net',
-  'http://177.153.39.90',
+  'https://experimentaaisoneca.app',
   'http://localhost:4200',
   'http://127.0.0.1:4200',
   'http://localhost:8080',
