@@ -27,7 +27,7 @@
       (input)="valorMeioPagamento.set(parseValorMeioPagamento($any($event.target).value))"
       (focus)="onInputFocus()"
       (blur)="onInputBlur()"
-      [max]="valorRestante()"
+      [attr.max]="isDinheiro() ? null : valorRestante()"
     />
     <button
       type="button"
@@ -36,7 +36,7 @@
       [disabled]="
         !meioPagamentoSelecionado() ||
         valorMeioPagamento() <= 0 ||
-        valorMeioPagamento() > valorRestante()
+        (!isDinheiro() && valorMeioPagamento() > valorRestante())
       "
     >
       ➕

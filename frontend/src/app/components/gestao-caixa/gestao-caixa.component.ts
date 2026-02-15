@@ -1,14 +1,24 @@
-import { Component, inject, PLATFORM_ID, OnInit, ChangeDetectionStrategy, signal, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  HostListener,
+  inject,
+  OnInit,
+  PLATFORM_ID,
+  signal,
+  ViewChild,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
+import { TipoItemCaixa } from '../../services/gestao-caixa.service';
+import { SessaoTrabalho, StatusSessao } from '../../services/sessao-trabalho.service';
+import { FormatoUtil } from '../../utils/formato.util';
+import { useUsuarios } from '../sessoes/composables/use-usuarios';
+import { useEstatisticasCaixa } from './composables/use-estatisticas-caixa';
 import { useGestaoCaixa } from './composables/use-gestao-caixa';
 import { useSugestoesDescricao } from './composables/use-sugestoes-descricao';
-import { useEstatisticasCaixa } from './composables/use-estatisticas-caixa';
-import { useUsuarios } from '../sessoes/composables/use-usuarios';
-import { SessaoTrabalho, StatusSessao } from '../../services/sessao-trabalho.service';
-import { TipoItemCaixa } from '../../services/gestao-caixa.service';
-import { FormatoUtil } from '../../utils/formato.util';
 
 @Component({
   selector: 'app-gestao-caixa',
@@ -16,7 +26,7 @@ import { FormatoUtil } from '../../utils/formato.util';
   imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './gestao-caixa.component.html',
   styleUrl: './gestao-caixa.component.css',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GestaoCaixaComponent implements OnInit {
   private readonly platformId = inject(PLATFORM_ID);
@@ -113,6 +123,8 @@ export class GestaoCaixaComponent implements OnInit {
     switch (tipo) {
       case TipoItemCaixa.VENDA_DINHEIRO:
         return 'tipo-venda';
+      case TipoItemCaixa.TROCO_DINHEIRO:
+        return 'tipo-troco';
       case TipoItemCaixa.SANGRIA:
         return 'tipo-sangria';
       case TipoItemCaixa.SUPRIMENTO:
@@ -220,14 +232,15 @@ export class GestaoCaixaComponent implements OnInit {
     if (!resumo) return 0;
 
     const vendas = resumo.totalVendasDinheiro || 0;
+    const trocos = resumo.totalTrocosDinheiro || 0;
     const suprimentos = resumo.totalSuprimentos || 0;
     const sangrias = resumo.totalSangrias || 0;
 
-    return vendas + suprimentos - sangrias;
+    return vendas - trocos + suprimentos - sangrias;
   }
 
   /**
-   * Calcula o saldo esperado (abertura + vendas + suprimentos - sangrias).
+   * Calcula o saldo esperado (abertura + vendas - trocos + suprimentos - sangrias).
    */
   calcularSaldoEsperado(): number {
     const resumo = this.resumoCaixa();
@@ -235,10 +248,11 @@ export class GestaoCaixaComponent implements OnInit {
 
     const abertura = resumo.valorAbertura || 0;
     const vendas = resumo.totalVendasDinheiro || 0;
+    const trocos = resumo.totalTrocosDinheiro || 0;
     const suprimentos = resumo.totalSuprimentos || 0;
     const sangrias = resumo.totalSangrias || 0;
 
-    return abertura + vendas + suprimentos - sangrias;
+    return abertura + vendas - trocos + suprimentos - sangrias;
   }
 
   /**
@@ -274,7 +288,7 @@ export class GestaoCaixaComponent implements OnInit {
         if (this.tabelaCaixaRef?.nativeElement) {
           this.tabelaCaixaRef.nativeElement.scrollIntoView({
             behavior: 'smooth',
-            block: 'start'
+            block: 'start',
           });
         }
       });

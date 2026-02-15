@@ -2,7 +2,11 @@
   <header class="caixa-header">
     <div class="caixa-header-content">
       <h1 class="caixa-titulo">
-        <img src="/assets/experimenta_ai_banner_circular.png" alt="Experimenta aí" class="caixa-logo" />
+        <img
+          src="/assets/experimenta_ai_banner_circular.png"
+          alt="Experimenta aí"
+          class="caixa-logo"
+        />
         💵 Gestão de Caixa
       </h1>
 
@@ -11,10 +15,19 @@
         @if (resumoCaixa()) {
           <div class="header-diferencas">
             <!-- Diferença da Sessão Atual -->
-            @if (resumoCaixa()?.valorFechamento !== null && resumoCaixa()?.valorFechamento !== undefined) {
-              <div class="card-diferenca-header" [class.positiva]="(calcularDiferencaAtual()) >= 0" [class.negativa]="(calcularDiferencaAtual()) < 0">
+            @if (
+              resumoCaixa()?.valorFechamento !== null &&
+              resumoCaixa()?.valorFechamento !== undefined
+            ) {
+              <div
+                class="card-diferenca-header"
+                [class.positiva]="calcularDiferencaAtual() >= 0"
+                [class.negativa]="calcularDiferencaAtual() < 0"
+              >
                 <span class="card-dif-label">📊 Atual</span>
-                <span class="card-dif-valor">{{ formatarMoedaComSinal(calcularDiferencaAtual()) }}</span>
+                <span class="card-dif-valor">{{
+                  formatarMoedaComSinal(calcularDiferencaAtual())
+                }}</span>
               </div>
             } @else {
               <div class="card-diferenca-header neutro">
@@ -24,10 +37,19 @@
             }
 
             <!-- Diferença da Sessão Anterior -->
-            @if (resumoCaixa()?.diferencaSessaoAnterior !== null && resumoCaixa()?.diferencaSessaoAnterior !== undefined) {
-              <div class="card-diferenca-header" [class.positiva]="(resumoCaixa()?.diferencaSessaoAnterior ?? 0) >= 0" [class.negativa]="(resumoCaixa()?.diferencaSessaoAnterior ?? 0) < 0">
+            @if (
+              resumoCaixa()?.diferencaSessaoAnterior !== null &&
+              resumoCaixa()?.diferencaSessaoAnterior !== undefined
+            ) {
+              <div
+                class="card-diferenca-header"
+                [class.positiva]="(resumoCaixa()?.diferencaSessaoAnterior ?? 0) >= 0"
+                [class.negativa]="(resumoCaixa()?.diferencaSessaoAnterior ?? 0) < 0"
+              >
                 <span class="card-dif-label">⏮️ Anterior</span>
-                <span class="card-dif-valor">{{ formatarMoedaComSinal(resumoCaixa()?.diferencaSessaoAnterior) }}</span>
+                <span class="card-dif-valor">{{
+                  formatarMoedaComSinal(resumoCaixa()?.diferencaSessaoAnterior)
+                }}</span>
               </div>
             } @else {
               <div class="card-diferenca-header neutro">
@@ -37,17 +59,21 @@
             }
 
             <!-- Diferença Global -->
-            <div class="card-diferenca-header card-global" [class.positiva]="(resumoCaixa()?.diferencaGlobal ?? 0) >= 0" [class.negativa]="(resumoCaixa()?.diferencaGlobal ?? 0) < 0">
+            <div
+              class="card-diferenca-header card-global"
+              [class.positiva]="(resumoCaixa()?.diferencaGlobal ?? 0) >= 0"
+              [class.negativa]="(resumoCaixa()?.diferencaGlobal ?? 0) < 0"
+            >
               <span class="card-dif-label">🌍 Global</span>
-              <span class="card-dif-valor">{{ formatarMoedaComSinal(resumoCaixa()?.diferencaGlobal) }}</span>
+              <span class="card-dif-valor">{{
+                formatarMoedaComSinal(resumoCaixa()?.diferencaGlobal)
+              }}</span>
             </div>
           </div>
         }
 
         <div class="header-actions">
-          <button class="btn-voltar" routerLink="/" aria-label="Voltar para home">
-            ← Voltar
-          </button>
+          <button class="btn-voltar" routerLink="/" aria-label="Voltar para home">← Voltar</button>
         </div>
       </div>
     </div>
@@ -130,7 +156,10 @@
         <div class="sessao-header-compacto">
           <div class="sessao-info-compacto">
             <span class="sessao-nome-compacto">{{ resumoCaixa()?.nomeSessao }}</span>
-            <span class="sessao-status-compacto" [class]="'status-' + sessaoSelecionada()?.status?.toLowerCase()">
+            <span
+              class="sessao-status-compacto"
+              [class]="'status-' + sessaoSelecionada()?.status?.toLowerCase()"
+            >
               {{ sessaoSelecionada()?.status }}
             </span>
           </div>
@@ -141,36 +170,63 @@
         <div class="resumo-cards-compacto">
           <div class="card-compacto card-abertura">
             <span class="card-label-compacto">🔓 Abertura</span>
-            <span class="card-valor-compacto">{{ formatarMoeda(resumoCaixa()?.valorAbertura) }}</span>
+            <span class="card-valor-compacto">{{
+              formatarMoeda(resumoCaixa()?.valorAbertura)
+            }}</span>
           </div>
 
           <div class="card-compacto card-vendas">
-            <span class="card-label-compacto">💵 Vendas ({{ resumoCaixa()?.quantidadeVendasDinheiro }})</span>
-            <span class="card-valor-compacto">{{ formatarMoeda(resumoCaixa()?.totalVendasDinheiro) }}</span>
+            <span class="card-label-compacto"
+              >💵 Vendas ({{ resumoCaixa()?.quantidadeVendasDinheiro }})</span
+            >
+            <span class="card-valor-compacto">{{
+              formatarMoeda(resumoCaixa()?.totalVendasDinheiro)
+            }}</span>
           </div>
 
           <div class="card-compacto card-suprimentos">
             <span class="card-label-compacto">📥 Suprimentos</span>
-            <span class="card-valor-compacto valor-positivo">+{{ formatarMoeda(resumoCaixa()?.totalSuprimentos) }}</span>
+            <span class="card-valor-compacto valor-positivo"
+              >+{{ formatarMoeda(resumoCaixa()?.totalSuprimentos) }}</span
+            >
           </div>
 
           <div class="card-compacto card-sangrias">
             <span class="card-label-compacto">📤 Sangrias</span>
-            <span class="card-valor-compacto valor-negativo">-{{ formatarMoeda(resumoCaixa()?.totalSangrias) }}</span>
+            <span class="card-valor-compacto valor-negativo"
+              >-{{ formatarMoeda(resumoCaixa()?.totalSangrias) }}</span
+            >
           </div>
+
+          @if ((resumoCaixa()?.totalTrocosDinheiro ?? 0) > 0) {
+            <div class="card-compacto card-trocos">
+              <span class="card-label-compacto">🔄 Trocos</span>
+              <span class="card-valor-compacto valor-negativo"
+                >-{{ formatarMoeda(resumoCaixa()?.totalTrocosDinheiro) }}</span
+              >
+            </div>
+          }
 
           <div class="card-compacto card-esperado">
             <span class="card-label-compacto">🎯 Saldo Esperado</span>
             <span class="card-valor-compacto">{{ formatarMoeda(calcularSaldoEsperado()) }}</span>
           </div>
 
-          @if (resumoCaixa()?.valorFechamento !== null && resumoCaixa()?.valorFechamento !== undefined) {
+          @if (
+            resumoCaixa()?.valorFechamento !== null && resumoCaixa()?.valorFechamento !== undefined
+          ) {
             <div class="card-compacto card-fechamento">
               <span class="card-label-compacto">🔒 Fechamento</span>
-              <span class="card-valor-compacto">{{ formatarMoeda(resumoCaixa()?.valorFechamento) }}</span>
+              <span class="card-valor-compacto">{{
+                formatarMoeda(resumoCaixa()?.valorFechamento)
+              }}</span>
             </div>
 
-            <div class="card-compacto card-diferenca" [class.diferenca-positiva]="(resumoCaixa()?.diferenca ?? 0) >= 0" [class.diferenca-negativa]="(resumoCaixa()?.diferenca ?? 0) < 0">
+            <div
+              class="card-compacto card-diferenca"
+              [class.diferenca-positiva]="(resumoCaixa()?.diferenca ?? 0) >= 0"
+              [class.diferenca-negativa]="(resumoCaixa()?.diferenca ?? 0) < 0"
+            >
               <span class="card-label-compacto">📊 Diferença</span>
               <span class="card-valor-compacto">{{ formatarMoeda(resumoCaixa()?.diferenca) }}</span>
             </div>
@@ -186,7 +242,10 @@
             <button class="btn-acao-compacto btn-suprimento" (click)="abrirModalSuprimento()">
               📥 Suprimento
             </button>
-            <button class="btn-acao-compacto btn-estatisticas" (click)="estatisticasComposable.abrirModal()">
+            <button
+              class="btn-acao-compacto btn-estatisticas"
+              (click)="estatisticasComposable.abrirModal()"
+            >
               📊 Estatísticas
             </button>
           </div>
@@ -194,7 +253,10 @@
 
         @if (!sessaoEstaAberta() && temSessaoSelecionada()) {
           <div class="caixa-acoes-compacto">
-            <button class="btn-acao-compacto btn-estatisticas" (click)="estatisticasComposable.abrirModal()">
+            <button
+              class="btn-acao-compacto btn-estatisticas"
+              (click)="estatisticasComposable.abrirModal()"
+            >
               📊 Estatísticas
             </button>
           </div>
@@ -235,6 +297,11 @@
                           <span class="item-descricao">
                             <strong>#{{ item.numeroPedido }}</strong> - {{ item.clienteNome }}
                           </span>
+                        } @else if (item.tipo === TipoItemCaixa.TROCO_DINHEIRO) {
+                          <span class="item-descricao">
+                            🔄 Troco - <strong>#{{ item.numeroPedido }}</strong> -
+                            {{ item.clienteNome }}
+                          </span>
                         } @else {
                           <span class="item-descricao">{{ item.descricao || '-' }}</span>
                         }
@@ -244,7 +311,11 @@
                       </td>
                       <td>{{ formatarDataHora(item.dataHora) }}</td>
                       <td class="text-right">
-                        <span class="item-valor" [class.valor-positivo]="item.valor > 0" [class.valor-negativo]="item.valor < 0">
+                        <span
+                          class="item-valor"
+                          [class.valor-positivo]="item.valor > 0"
+                          [class.valor-negativo]="item.valor < 0"
+                        >
                           {{ item.valor >= 0 ? '+' : '' }}{{ formatarMoeda(item.valor) }}
                         </span>
                       </td>
@@ -254,7 +325,9 @@
                 <tfoot>
                   <tr class="tabela-total">
                     <td colspan="4"><strong>Total em Dinheiro</strong></td>
-                    <td class="text-right"><strong>{{ formatarMoeda(calcularTotalDinheiro()) }}</strong></td>
+                    <td class="text-right">
+                      <strong>{{ formatarMoeda(calcularTotalDinheiro()) }}</strong>
+                    </td>
                   </tr>
                 </tfoot>
               </table>
@@ -306,7 +379,9 @@
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h2 class="modal-titulo">
-          {{ tipoMovimentacao() === 'sangria' ? '📤 Registrar Sangria' : '📥 Registrar Suprimento' }}
+          {{
+            tipoMovimentacao() === 'sangria' ? '📤 Registrar Sangria' : '📥 Registrar Suprimento'
+          }}
         </h2>
         <button class="modal-fechar" (click)="fecharModalMovimentacao()">✕</button>
       </div>
@@ -347,16 +422,24 @@
               </span>
             </div>
 
-            @if (sugestoesComposable.mostrarSugestoes() && sugestoesComposable.todasDescricoes().length > 0) {
+            @if (
+              sugestoesComposable.mostrarSugestoes() &&
+              sugestoesComposable.todasDescricoes().length > 0
+            ) {
               <div class="sugestoes-dropdown">
                 <div class="sugestoes-header">
                   <span class="sugestoes-titulo">📋 Descrições anteriores</span>
-                  <span class="sugestoes-contador">{{ sugestoesComposable.descricoesFiltradas().length }} encontrada(s)</span>
+                  <span class="sugestoes-contador"
+                    >{{ sugestoesComposable.descricoesFiltradas().length }} encontrada(s)</span
+                  >
                 </div>
 
                 @if (sugestoesComposable.descricoesFiltradas().length > 0) {
                   <ul class="sugestoes-lista">
-                    @for (sugestao of sugestoesComposable.descricoesPaginadas(); track sugestao.descricao) {
+                    @for (
+                      sugestao of sugestoesComposable.descricoesPaginadas();
+                      track sugestao.descricao
+                    ) {
                       <li
                         class="sugestao-item"
                         [class.sugestao-popular]="sugestao.popular"
@@ -365,7 +448,10 @@
                         <span class="sugestao-icone">{{ sugestao.popular ? '🔥' : '↩' }}</span>
                         <span class="sugestao-texto">{{ sugestao.descricao }}</span>
                         @if (sugestao.popular) {
-                          <span class="sugestao-badge" title="Usada {{ sugestao.quantidade }} vezes">
+                          <span
+                            class="sugestao-badge"
+                            title="Usada {{ sugestao.quantidade }} vezes"
+                          >
                             {{ sugestao.quantidade }}x
                           </span>
                         }
@@ -374,7 +460,9 @@
                   </ul>
                 } @else {
                   <div class="sugestoes-vazio">
-                    <span>🔍 Nenhuma descrição encontrada para "{{ descricaoMovimentacao() }}"</span>
+                    <span
+                      >🔍 Nenhuma descrição encontrada para "{{ descricaoMovimentacao() }}"</span
+                    >
                   </div>
                 }
 
@@ -389,7 +477,8 @@
                       ‹
                     </button>
                     <span class="pagina-info">
-                      {{ sugestoesComposable.paginaAtual() }} de {{ sugestoesComposable.totalPaginas() }}
+                      {{ sugestoesComposable.paginaAtual() }} de
+                      {{ sugestoesComposable.totalPaginas() }}
                     </span>
                     <button
                       class="btn-paginar"
@@ -417,9 +506,7 @@
       </div>
 
       <div class="modal-footer">
-        <button class="btn-cancelar" (click)="fecharModalMovimentacao()">
-          Cancelar
-        </button>
+        <button class="btn-cancelar" (click)="fecharModalMovimentacao()">Cancelar</button>
         <button
           class="btn-confirmar"
           [class.btn-sangria]="tipoMovimentacao() === 'sangria'"
@@ -467,8 +554,12 @@
               <div class="grafico-header">
                 <h3>📤 Sangrias (Retiradas)</h3>
                 <div class="grafico-totais">
-                  <span class="total-qtd">{{ estatisticasComposable.totalSangrias() }} retiradas</span>
-                  <span class="total-valor">{{ formatarMoeda(estatisticasComposable.valorTotalSangrias()) }}</span>
+                  <span class="total-qtd"
+                    >{{ estatisticasComposable.totalSangrias() }} retiradas</span
+                  >
+                  <span class="total-valor">{{
+                    formatarMoeda(estatisticasComposable.valorTotalSangrias())
+                  }}</span>
                 </div>
               </div>
 
@@ -479,17 +570,32 @@
               } @else {
                 <div class="grafico-barras-vertical">
                   @for (item of estatisticasComposable.sangrias(); track item.descricao) {
-                    <div class="barra-vertical-item" [title]="item.descricao + ' - ' + item.quantidade + 'x - ' + formatarMoeda(item.valorTotal)">
+                    <div
+                      class="barra-vertical-item"
+                      [title]="
+                        item.descricao +
+                        ' - ' +
+                        item.quantidade +
+                        'x - ' +
+                        formatarMoeda(item.valorTotal)
+                      "
+                    >
                       <div class="barra-vertical-container">
                         <div
                           class="barra-vertical barra-sangria"
-                          [style.height.%]="estatisticasComposable.calcularLarguraBarra(item.quantidade, estatisticasComposable.maxQuantidadeSangria())"
-                        >
-                        </div>
+                          [style.height.%]="
+                            estatisticasComposable.calcularLarguraBarra(
+                              item.quantidade,
+                              estatisticasComposable.maxQuantidadeSangria()
+                            )
+                          "
+                        ></div>
                       </div>
                       <div class="barra-vertical-info">
                         <span class="barra-vertical-qtd">{{ item.quantidade }}x</span>
-                        <span class="barra-vertical-valor">{{ formatarMoeda(item.valorTotal) }}</span>
+                        <span class="barra-vertical-valor">{{
+                          formatarMoeda(item.valorTotal)
+                        }}</span>
                       </div>
                       <div class="barra-vertical-label">
                         {{ item.descricao }}
@@ -505,8 +611,12 @@
               <div class="grafico-header">
                 <h3>📥 Suprimentos (Entradas)</h3>
                 <div class="grafico-totais">
-                  <span class="total-qtd">{{ estatisticasComposable.totalSuprimentos() }} entradas</span>
-                  <span class="total-valor">{{ formatarMoeda(estatisticasComposable.valorTotalSuprimentos()) }}</span>
+                  <span class="total-qtd"
+                    >{{ estatisticasComposable.totalSuprimentos() }} entradas</span
+                  >
+                  <span class="total-valor">{{
+                    formatarMoeda(estatisticasComposable.valorTotalSuprimentos())
+                  }}</span>
                 </div>
               </div>
 
@@ -517,17 +627,32 @@
               } @else {
                 <div class="grafico-barras-vertical">
                   @for (item of estatisticasComposable.suprimentos(); track item.descricao) {
-                    <div class="barra-vertical-item" [title]="item.descricao + ' - ' + item.quantidade + 'x - ' + formatarMoeda(item.valorTotal)">
+                    <div
+                      class="barra-vertical-item"
+                      [title]="
+                        item.descricao +
+                        ' - ' +
+                        item.quantidade +
+                        'x - ' +
+                        formatarMoeda(item.valorTotal)
+                      "
+                    >
                       <div class="barra-vertical-container">
                         <div
                           class="barra-vertical barra-suprimento"
-                          [style.height.%]="estatisticasComposable.calcularLarguraBarra(item.quantidade, estatisticasComposable.maxQuantidadeSuprimento())"
-                        >
-                        </div>
+                          [style.height.%]="
+                            estatisticasComposable.calcularLarguraBarra(
+                              item.quantidade,
+                              estatisticasComposable.maxQuantidadeSuprimento()
+                            )
+                          "
+                        ></div>
                       </div>
                       <div class="barra-vertical-info">
                         <span class="barra-vertical-qtd">{{ item.quantidade }}x</span>
-                        <span class="barra-vertical-valor">{{ formatarMoeda(item.valorTotal) }}</span>
+                        <span class="barra-vertical-valor">{{
+                          formatarMoeda(item.valorTotal)
+                        }}</span>
                       </div>
                       <div class="barra-vertical-label">
                         {{ item.descricao }}
@@ -542,9 +667,7 @@
       </div>
 
       <div class="modal-footer modal-footer-estatisticas">
-        <button class="btn-fechar" (click)="estatisticasComposable.fecharModal()">
-          Fechar
-        </button>
+        <button class="btn-fechar" (click)="estatisticasComposable.fecharModal()">Fechar</button>
       </div>
     </div>
   </div>

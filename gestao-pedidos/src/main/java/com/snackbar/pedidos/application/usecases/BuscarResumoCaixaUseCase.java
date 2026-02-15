@@ -1,28 +1,24 @@
 package com.snackbar.pedidos.application.usecases;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.lang.NonNull;
+import org.springframework.stereotype.Service;
+
 import com.snackbar.kernel.domain.exceptions.ValidationException;
 import com.snackbar.pedidos.application.dto.ItemCaixaDTO;
 import com.snackbar.pedidos.application.dto.ResumoCaixaDTO;
 import com.snackbar.pedidos.application.ports.MovimentacaoCaixaRepositoryPort;
 import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
 import com.snackbar.pedidos.application.ports.SessaoTrabalhoRepositoryPort;
-import com.snackbar.pedidos.domain.entities.MeioPagamento;
-import com.snackbar.pedidos.domain.entities.MeioPagamentoPedido;
-import com.snackbar.pedidos.domain.entities.MovimentacaoCaixa;
-import com.snackbar.pedidos.domain.entities.Pedido;
-import com.snackbar.pedidos.domain.entities.SessaoTrabalho;
-import com.snackbar.pedidos.domain.entities.StatusSessao;
-import com.snackbar.pedidos.domain.entities.TipoMovimentacaoCaixa;
+import com.snackbar.pedidos.domain.entities.*;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.lang.NonNull;
-import org.springframework.stereotype.Service;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * Use case para buscar o resumo do caixa de uma sessão.
@@ -56,29 +52,40 @@ public class BuscarResumoCaixaUseCase {
                     p.getMeiosPagamento() != null ? p.getMeiosPagamento().size() : 0);
         }
 
-        List<ItemCaixaDTO> vendasDinheiro = extrairVendasEmDinheiro(pedidosSessao);
-        log.debug("[CAIXA] Vendas em dinheiro extraidas: {}", vendasDinheiro.size());
+        List<ItemCaixaDTO> itensVendaETroco = extrairVendasEmDinheiro(pedidosSessao);
+        log.debug("[CAIXA] Itens venda/troco em dinheiro extraidos: {}", itensVendaETroco.size());
 
         // Criar itens de sangria e suprimento
         List<ItemCaixaDTO> sangriasSuplementos = criarItensSangriasSuprimentos(movimentacoes);
 
         // Unificar todos os itens e ordenar por data/hora (mais recente primeiro)
         List<ItemCaixaDTO> todosItens = new ArrayList<>();
-        todosItens.addAll(vendasDinheiro);
+        todosItens.addAll(itensVendaETroco);
         todosItens.addAll(sangriasSuplementos);
         todosItens.sort(Comparator.comparing(ItemCaixaDTO::getDataHora).reversed());
 
-        // Calcular totais
+        // Calcular totais separando vendas e trocos
         BigDecimal valorAbertura = sessao.getValorAbertura() != null ? sessao.getValorAbertura() : BigDecimal.ZERO;
-        BigDecimal totalVendasDinheiro = vendasDinheiro.stream()
+        BigDecimal totalVendasDinheiro = itensVendaETroco.stream()
+                .filter(i -> i.getTipo() == ItemCaixaDTO.TipoItemCaixa.VENDA_DINHEIRO)
                 .map(ItemCaixaDTO::getValor)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalTrocosDinheiro = itensVendaETroco.stream()
+                .filter(i -> i.getTipo() == ItemCaixaDTO.TipoItemCaixa.TROCO_DINHEIRO)
+                .map(i -> i.getValor().abs())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        int quantidadeVendasDinheiro = (int) itensVendaETroco.stream()
+                .filter(i -> i.getTipo() == ItemCaixaDTO.TipoItemCaixa.VENDA_DINHEIRO)
+                .count();
 
         BigDecimal totalSangrias = calcularTotalPorTipo(movimentacoes, TipoMovimentacaoCaixa.SANGRIA);
         BigDecimal totalSuprimentos = calcularTotalPorTipo(movimentacoes, TipoMovimentacaoCaixa.SUPRIMENTO);
 
         BigDecimal saldoEsperado = valorAbertura
                 .add(totalVendasDinheiro)
+                .subtract(totalTrocosDinheiro)
                 .add(totalSuprimentos)
                 .subtract(totalSangrias.abs());
 
@@ -108,7 +115,8 @@ public class BuscarResumoCaixaUseCase {
                 .nomeSessao(sessao.obterNome())
                 .valorAbertura(valorAbertura)
                 .totalVendasDinheiro(totalVendasDinheiro)
-                .quantidadeVendasDinheiro(vendasDinheiro.size())
+                .quantidadeVendasDinheiro(quantidadeVendasDinheiro)
+                .totalTrocosDinheiro(totalTrocosDinheiro)
                 .totalSangrias(totalSangrias.abs())
                 .totalSuprimentos(totalSuprimentos)
                 .saldoEsperado(saldoEsperado)
@@ -123,11 +131,14 @@ public class BuscarResumoCaixaUseCase {
     }
 
     /**
-     * Extrai as vendas em dinheiro dos pedidos da sessão.
+     * Extrai as vendas em dinheiro e trocos dos pedidos da sessão.
      * Considera apenas pedidos NÃO CANCELADOS que têm pagamento em dinheiro.
+     * Para vendas com troco, usa o valorPagoDinheiro (valor real entregue pelo
+     * cliente)
+     * e gera um item de TROCO_DINHEIRO como saída de caixa.
      */
     private List<ItemCaixaDTO> extrairVendasEmDinheiro(List<Pedido> pedidos) {
-        List<ItemCaixaDTO> vendasDinheiro = new ArrayList<>();
+        List<ItemCaixaDTO> itens = new ArrayList<>();
 
         for (Pedido pedido : pedidos) {
             // Ignora pedidos cancelados
@@ -144,34 +155,51 @@ public class BuscarResumoCaixaUseCase {
             }
 
             for (MeioPagamentoPedido mp : pedido.getMeiosPagamento()) {
-                log.debug("[CAIXA] Pedido {}: meioPagamento={}, valor={}",
+                log.debug("[CAIXA] Pedido {}: meioPagamento={}, valor={}, valorPago={}, troco={}",
                         pedido.getNumeroPedido() != null ? pedido.getNumeroPedido().getNumero() : pedido.getId(),
                         mp.getMeioPagamento(),
-                        mp.getValor() != null ? mp.getValor().getAmount() : "null");
+                        mp.getValor() != null ? mp.getValor().getAmount() : "null",
+                        mp.getValorPagoDinheiro() != null ? mp.getValorPagoDinheiro().getAmount() : "null",
+                        mp.getTroco() != null ? mp.getTroco().getAmount() : "null");
 
                 if (mp.getMeioPagamento() == MeioPagamento.DINHEIRO) {
-                    BigDecimal valorDinheiro = mp.getValor() != null
-                            ? mp.getValor().getAmount()
-                            : BigDecimal.ZERO;
+                    // Usar valorPagoDinheiro (valor real entregue pelo cliente) quando disponível
+                    BigDecimal valorVenda = mp.getValorPagoDinheiro() != null
+                            ? mp.getValorPagoDinheiro().getAmount()
+                            : (mp.getValor() != null ? mp.getValor().getAmount() : BigDecimal.ZERO);
 
-                    if (valorDinheiro.compareTo(BigDecimal.ZERO) > 0) {
+                    if (valorVenda.compareTo(BigDecimal.ZERO) > 0) {
                         Integer numeroPedido = Integer.parseInt(pedido.getNumeroPedido().getNumero());
 
-                        vendasDinheiro.add(ItemCaixaDTO.criarVendaDinheiro(
+                        itens.add(ItemCaixaDTO.criarVendaDinheiro(
                                 pedido.getId(),
                                 numeroPedido,
                                 pedido.getClienteNome(),
                                 pedido.getDataPedido(),
-                                valorDinheiro,
+                                valorVenda,
                                 pedido.getUsuarioId()));
                         log.debug("[CAIXA] Adicionada venda em dinheiro: pedido={}, valor={}", numeroPedido,
-                                valorDinheiro);
+                                valorVenda);
+
+                        // Se possui troco, criar item de troco como saída de caixa
+                        if (mp.possuiTroco()) {
+                            BigDecimal valorTroco = mp.getTroco().getAmount();
+                            itens.add(ItemCaixaDTO.criarTrocoDinheiro(
+                                    pedido.getId(),
+                                    numeroPedido,
+                                    pedido.getClienteNome(),
+                                    pedido.getDataPedido(),
+                                    valorTroco,
+                                    pedido.getUsuarioId()));
+                            log.debug("[CAIXA] Adicionado troco dinheiro: pedido={}, troco={}", numeroPedido,
+                                    valorTroco);
+                        }
                     }
                 }
             }
         }
 
-        return vendasDinheiro;
+        return itens;
     }
 
     /**
@@ -253,9 +281,11 @@ public class BuscarResumoCaixaUseCase {
         // Buscar vendas em dinheiro da sessão
         List<Pedido> pedidos = pedidoRepository.buscarPorSessaoId(sessao.getId());
         BigDecimal totalVendasDinheiro = calcularTotalVendasDinheiro(pedidos);
+        BigDecimal totalTrocos = calcularTotalTrocosDinheiro(pedidos);
 
         BigDecimal saldoEsperado = valorAbertura
                 .add(totalVendasDinheiro)
+                .subtract(totalTrocos)
                 .add(totalSuprimentos)
                 .subtract(totalSangrias.abs());
 
@@ -264,6 +294,7 @@ public class BuscarResumoCaixaUseCase {
 
     /**
      * Calcula o total de vendas em dinheiro de uma lista de pedidos.
+     * Usa valorPagoDinheiro (valor real entregue pelo cliente) quando disponível.
      */
     private BigDecimal calcularTotalVendasDinheiro(List<Pedido> pedidos) {
         BigDecimal total = BigDecimal.ZERO;
@@ -273,8 +304,31 @@ public class BuscarResumoCaixaUseCase {
                 continue;
 
             for (MeioPagamentoPedido mp : pedido.getMeiosPagamento()) {
-                if (mp.getMeioPagamento() == MeioPagamento.DINHEIRO && mp.getValor() != null) {
-                    total = total.add(mp.getValor().getAmount());
+                if (mp.getMeioPagamento() == MeioPagamento.DINHEIRO) {
+                    BigDecimal valor = mp.getValorPagoDinheiro() != null
+                            ? mp.getValorPagoDinheiro().getAmount()
+                            : (mp.getValor() != null ? mp.getValor().getAmount() : BigDecimal.ZERO);
+                    total = total.add(valor);
+                }
+            }
+        }
+
+        return total;
+    }
+
+    /**
+     * Calcula o total de trocos em dinheiro de uma lista de pedidos.
+     */
+    private BigDecimal calcularTotalTrocosDinheiro(List<Pedido> pedidos) {
+        BigDecimal total = BigDecimal.ZERO;
+
+        for (Pedido pedido : pedidos) {
+            if (pedido.getMeiosPagamento() == null)
+                continue;
+
+            for (MeioPagamentoPedido mp : pedido.getMeiosPagamento()) {
+                if (mp.getMeioPagamento() == MeioPagamento.DINHEIRO && mp.possuiTroco()) {
+                    total = total.add(mp.getTroco().getAmount());
                 }
             }
         }

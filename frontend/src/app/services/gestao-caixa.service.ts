@@ -1,13 +1,14 @@
-import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 export enum TipoItemCaixa {
   VENDA_DINHEIRO = 'VENDA_DINHEIRO',
+  TROCO_DINHEIRO = 'TROCO_DINHEIRO',
   SANGRIA = 'SANGRIA',
   SUPRIMENTO = 'SUPRIMENTO',
   ABERTURA = 'ABERTURA',
-  FECHAMENTO = 'FECHAMENTO'
+  FECHAMENTO = 'FECHAMENTO',
 }
 
 export interface ItemCaixa {
@@ -28,6 +29,7 @@ export interface ResumoCaixa {
   valorAbertura: number;
   totalVendasDinheiro: number;
   quantidadeVendasDinheiro: number;
+  totalTrocosDinheiro: number;
   totalSangrias: number;
   totalSuprimentos: number;
   saldoEsperado: number;
@@ -62,7 +64,7 @@ export interface EstatisticasCaixa {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class GestaoCaixaService {
   private readonly http = inject(HttpClient);
@@ -85,7 +87,10 @@ export class GestaoCaixaService {
   /**
    * Registra um suprimento (entrada de dinheiro) no caixa.
    */
-  registrarSuprimento(sessaoId: string, request: RegistrarMovimentacaoRequest): Observable<unknown> {
+  registrarSuprimento(
+    sessaoId: string,
+    request: RegistrarMovimentacaoRequest
+  ): Observable<unknown> {
     return this.http.post(`${this.apiUrl}/sessao/${sessaoId}/suprimento`, request);
   }
 
@@ -105,4 +110,3 @@ export class GestaoCaixaService {
     return this.http.get<EstatisticasCaixa>(`${this.apiUrl}/estatisticas`);
   }
 }
-
