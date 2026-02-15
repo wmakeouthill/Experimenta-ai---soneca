@@ -18,6 +18,34 @@ const printServer = require('./infrastructure/http/print-server');
 let mainWindow;
 let printServerPort = null;
 
+function configureChromiumFlags() {
+  if (process.platform !== 'win32') {
+    return;
+  }
+
+  app.commandLine.appendSwitch('disable-lcd-text');
+  app.commandLine.appendSwitch('enable-font-antialiasing');
+  app.commandLine.appendSwitch('high-dpi-support', '1');
+  app.commandLine.appendSwitch('force-device-scale-factor', '1');
+  app.commandLine.appendSwitch('enable-font-hinting');
+  app.commandLine.appendSwitch('enable-font-subpixel-positioning');
+  app.commandLine.appendSwitch('enable-native-gpu-memory-buffers');
+  app.commandLine.appendSwitch(
+    'enable-features',
+    'VaapiIgnoreDriverChecks,CanvasOopRasterization,UseChromeOSDirectVideoDecoder,SkiaRenderer'
+  );
+  app.commandLine.appendSwitch(
+    'disable-features',
+    'VizDisplayCompositor,BlockInsecurePrivateNetworkRequests'
+  );
+  app.commandLine.appendSwitch(
+    'unsafely-treat-insecure-origin-as-secure',
+    'http://experimenta-ai-soneca.vps-kinghost.net,http://177.153.39.90'
+  );
+}
+
+configureChromiumFlags();
+
 function createWindow() {
   // Define o ícone do aplicativo (Windows usa .ico, Linux/Mac usa .png)
   const iconPath =
@@ -50,34 +78,6 @@ function createWindow() {
   // Configurações de DPI/Scaling para melhorar aparência no Windows 10
   // Força renderização similar ao Windows 11 (texto e emojis mais finos e nítidos)
   if (process.platform === 'win32') {
-    // Configura renderização de texto mais suave (similar ao Windows 11)
-    app.commandLine.appendSwitch('disable-lcd-text');
-    app.commandLine.appendSwitch('enable-font-antialiasing');
-
-    // Força DPI awareness para melhor controle de escala
-    app.commandLine.appendSwitch('high-dpi-support', '1');
-    app.commandLine.appendSwitch('force-device-scale-factor', '1');
-
-    // Melhora renderização de fontes (especialmente no Windows 10)
-    app.commandLine.appendSwitch('enable-font-hinting');
-
-    // Configurações específicas para melhor renderização de emojis
-    // Força uso de fontes nativas do Windows (Segoe UI Emoji) que são mais finas
-    app.commandLine.appendSwitch('enable-font-subpixel-positioning');
-
-    // Melhora renderização de caracteres especiais e emojis
-    app.commandLine.appendSwitch('enable-native-gpu-memory-buffers');
-
-    // Configurações específicas para melhor renderização de emojis
-    app.commandLine.appendSwitch(
-      'enable-features',
-      'VaapiIgnoreDriverChecks,CanvasOopRasterization,UseChromeOSDirectVideoDecoder,SkiaRenderer'
-    );
-    app.commandLine.appendSwitch(
-      'disable-features',
-      'VizDisplayCompositor,BlockInsecurePrivateNetworkRequests'
-    );
-
     // Abre DevTools automaticamente em desenvolvimento para ver logs
     if (process.env.NODE_ENV === 'development' || process.argv.includes('--dev')) {
       mainWindow.webContents.openDevTools();

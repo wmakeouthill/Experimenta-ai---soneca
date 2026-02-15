@@ -51,11 +51,15 @@ function eOrigemPermitida(origin, ip) {
 function corsMiddleware(req, res, next) {
   const origin = req.headers.origin;
   const ip = req.ip || req.connection.remoteAddress || '127.0.0.1';
+  const accessControlRequestHeaders = req.headers['access-control-request-headers'];
+  const allowedHeaders =
+    accessControlRequestHeaders ||
+    'Content-Type, Authorization, X-Usuario-Id, X-Cliente-Id, X-Session-Id, X-Idempotency-Key';
 
   if (eOrigemPermitida(origin, ip)) {
     res.setHeader('Access-Control-Allow-Origin', origin || '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Headers', allowedHeaders);
     // Permite acesso de rede pública para rede privada (Private Network Access)
     res.setHeader('Access-Control-Allow-Private-Network', 'true');
 
