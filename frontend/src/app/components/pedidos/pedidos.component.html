@@ -275,6 +275,31 @@
                     </div>
                   }
 
+                  @if (pedido.meiosPagamento && pedido.meiosPagamento.length > 0) {
+                    <div class="pedido-pagamento-info">
+                      @for (meio of pedido.meiosPagamento; track meio.meioPagamento) {
+                        <div class="pagamento-linha">
+                          <span class="pagamento-tipo">{{
+                            formatarMeioPagamento(meio.meioPagamento)
+                          }}</span>
+                          <span class="pagamento-valor">{{ formatarPreco(meio.valor) }}</span>
+                        </div>
+                        @if (meio.meioPagamento === 'DINHEIRO' && meio.troco && meio.troco > 0) {
+                          <div class="pagamento-troco-detalhe">
+                            <span>Pago: {{ formatarPreco(meio.valorPagoDinheiro!) }}</span>
+                            <span class="troco-valor">Troco: {{ formatarPreco(meio.troco) }}</span>
+                          </div>
+                        }
+                        @if (
+                          meio.meioPagamento === 'DINHEIRO' &&
+                          (!meio.valorPagoDinheiro || meio.valorPagoDinheiro <= meio.valor)
+                        ) {
+                          <span class="pagamento-sem-troco">💵 Sem troco informado</span>
+                        }
+                      }
+                    </div>
+                  }
+
                   <div class="pedido-footer">
                     <div class="pedido-total">
                       <strong>Total: {{ formatarPreco(pedido.valorTotal) }}</strong>

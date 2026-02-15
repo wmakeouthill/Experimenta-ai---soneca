@@ -1,18 +1,20 @@
 package com.snackbar.pedidos.infrastructure.idempotency;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.function.Supplier;
+
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
-import java.util.function.Supplier;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Serviço de idempotência para garantir que operações duplicadas
@@ -46,13 +48,19 @@ public class IdempotencyService {
      * Se a chave já existe e não expirou, retorna a resposta anterior.
      * Caso contrário, executa a operação e salva a resposta.
      * 
+     * IMPORTANTE: Este método NÃO é @Transactional propositalmente.
+     * A operação (operation.get()) gerencia sua própria transação,
+     * e o salvamento da chave de idempotência ocorre em transação separada.
+     * Isso evita UnexpectedRollbackException quando o save da chave
+     * falha por conflito de concorrência (DataIntegrityViolationException),
+     * pois a transação da operação principal já foi comitada.
+     * 
      * @param idempotencyKey Chave única da requisição
      * @param endpoint       Endpoint da API (para evitar colisão entre endpoints)
      * @param operation      Operação a ser executada
      * @param responseType   Tipo da resposta para deserialização
      * @return ResponseEntity com a resposta (nova ou cached)
      */
-    @Transactional
     public <T> ResponseEntity<T> executeIdempotent(
             String idempotencyKey,
             String endpoint,

@@ -24,6 +24,9 @@
 -- - Pedidos pendentes de mesa e respectivos itens
 -- - Dados derivados de clientes (favoritos e avaliações)
 --
+-- APÓS A LIMPEZA: o AUTO_INCREMENT de cada tabela é resetado para 1,
+-- ou seja, o próximo registro inserido terá id = 1 (contador “zerado”).
+--
 -- Como executar no IntelliJ:
 -- 1. Abra o Data Source configurado no IntelliJ
 -- 2. Clique com botão direito no banco de dados
@@ -139,6 +142,19 @@ DELETE FROM pedidos;
 DELETE FROM sessoes_trabalho;
 
 DELETE FROM cliente_favoritos;
+
+-- ============================================================
+-- RESETAR AUTO_INCREMENT (contador de ID) para próximo ID = 1
+-- ============================================================
+ALTER TABLE itens_pedido_pendente_mesa AUTO_INCREMENT = 1;
+ALTER TABLE pedidos_pendentes_mesa AUTO_INCREMENT = 1;
+ALTER TABLE cliente_avaliacoes AUTO_INCREMENT = 1;
+ALTER TABLE meios_pagamento_pedido AUTO_INCREMENT = 1;
+ALTER TABLE itens_pedido AUTO_INCREMENT = 1;
+ALTER TABLE movimentacoes_caixa AUTO_INCREMENT = 1;
+ALTER TABLE pedidos AUTO_INCREMENT = 1;
+ALTER TABLE sessoes_trabalho AUTO_INCREMENT = 1;
+ALTER TABLE cliente_favoritos AUTO_INCREMENT = 1;
 
 -- Reabilitar verificação de chaves estrangeiras
 SET FOREIGN_KEY_CHECKS = 1;

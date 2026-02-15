@@ -25,4 +25,12 @@ public class MeioPagamentoRequest {
      */
     @Positive(message = "Valor pago em dinheiro deve ser maior que zero")
     private BigDecimal valorPagoDinheiro;
+
+    /**
+     * Troco calculado (apenas para DINHEIRO).
+     * Campo somente de leitura - calculado automaticamente como valorPagoDinheiro -
+     * valor.
+     * Usado nas respostas da API, ignorado nas requisições.
+     */
+    private BigDecimal troco;
 }

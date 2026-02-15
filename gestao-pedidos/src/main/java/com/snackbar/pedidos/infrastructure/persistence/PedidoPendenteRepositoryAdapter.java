@@ -1,5 +1,6 @@
 package com.snackbar.pedidos.infrastructure.persistence;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -156,10 +157,19 @@ public class PedidoPendenteRepositoryAdapter implements PedidoPendenteRepository
         // Mapear meios de pagamento
         if (dto.getMeiosPagamento() != null) {
             for (MeioPagamentoRequest mpRequest : dto.getMeiosPagamento()) {
+                // Calcular troco para DINHEIRO
+                BigDecimal troco = null;
+                if (mpRequest.getMeioPagamento() == com.snackbar.pedidos.domain.entities.MeioPagamento.DINHEIRO
+                        && mpRequest.getValorPagoDinheiro() != null
+                        && mpRequest.getValor() != null
+                        && mpRequest.getValorPagoDinheiro().compareTo(mpRequest.getValor()) > 0) {
+                    troco = mpRequest.getValorPagoDinheiro().subtract(mpRequest.getValor());
+                }
                 MeioPagamentoPendenteEntity mpEntity = MeioPagamentoPendenteEntity.builder()
                         .meioPagamento(mpRequest.getMeioPagamento())
                         .valor(mpRequest.getValor())
                         .valorPagoDinheiro(mpRequest.getValorPagoDinheiro())
+                        .troco(troco)
                         .build();
                 entity.adicionarMeioPagamento(mpEntity);
             }
@@ -206,6 +216,7 @@ public class PedidoPendenteRepositoryAdapter implements PedidoPendenteRepository
                         req.setMeioPagamento(mp.getMeioPagamento());
                         req.setValor(mp.getValor());
                         req.setValorPagoDinheiro(mp.getValorPagoDinheiro());
+                        req.setTroco(mp.getTroco());
                         return req;
                     })
                     .collect(Collectors.toList());

@@ -60,4 +60,9 @@ public class UsuarioRepositoryAdapter implements UsuarioRepositoryPort {
     public boolean existePorEmail(Email email) {
         return jpaRepository.existsByEmail(email.getValor());
     }
+
+    @Override
+    public long count() {
+        return jpaRepository.count();
+    }
 }

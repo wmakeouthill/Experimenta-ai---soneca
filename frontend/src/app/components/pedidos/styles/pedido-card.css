@@ -334,6 +334,14 @@
   font-weight: 600;
 }
 
+.pagamento-sem-troco {
+  display: block;
+  padding: 0.15rem 0 0 0.3rem;
+  font-size: 0.7rem;
+  color: #999;
+  font-style: italic;
+}
+
 .btn-informar-troco {
   display: inline-block;
   margin-top: 0.3rem;

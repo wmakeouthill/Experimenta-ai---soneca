@@ -15,5 +15,6 @@ public interface UsuarioRepositoryPort {
     List<Usuario> buscarTodos();
     void excluir(@NonNull String id);
     boolean existePorEmail(Email email);
+    long count();
 }
 
