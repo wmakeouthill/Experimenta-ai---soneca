@@ -216,7 +216,7 @@ gcloud run deploy snackbar-app \
     --port 8080 \
     --add-cloudsql-instances "$CLOUD_SQL_CONNECTION_NAME" \
     --set-secrets="DB_PASSWORD=db-password:latest,JWT_SECRET=jwt-secret:latest" \
-    --set-env-vars="DB_HOST=/cloudsql/${CLOUD_SQL_CONNECTION_NAME},DB_PORT=3306,DB_NAME=${DB_NAME},DB_USERNAME=${DB_USERNAME},DB_URL=${DB_URL},SERVER_PORT=8080,JWT_EXPIRATION=86400,SHOW_SQL=false,LOG_LEVEL=INFO,SPRING_PROFILES_ACTIVE=prod" \
+    --set-env-vars="DB_HOST=/cloudsql/${CLOUD_SQL_CONNECTION_NAME},DB_PORT=3306,DB_NAME=${DB_NAME},DB_USERNAME=${DB_USERNAME},DB_URL=${DB_URL},SERVER_PORT=8080,JWT_EXPIRATION=86400,SHOW_SQL=false,LOG_LEVEL=INFO,SPRING_PROFILES_ACTIVE=prod,cloud" \
     --project="$PROJECT_ID"
 
 if [ $? -ne 0 ]; then
