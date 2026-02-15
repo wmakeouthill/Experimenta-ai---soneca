@@ -106,41 +106,48 @@ public class FormatoCupomFiscal {
     }
 
     private static byte[] formatarItens(List<ItemPedidoDTO> itens) {
-        StringBuilder itensFormatados = new StringBuilder();
-        itensFormatados.append("ITEM | DESCRICAO          | QTD | VALOR\n");
-        itensFormatados.append("\n");
+        StringBuilder sb = new StringBuilder();
+        sb.append("ITENS DO PEDIDO\n\n");
 
         int numeroItem = 1;
         for (ItemPedidoDTO item : itens) {
-            String nome = truncarTexto(item.getProdutoNome(), 18);
-            String linha = String.format("%2d   | %-18s | %3d | R$%7.2f\n",
-                    numeroItem++,
-                    nome,
-                    item.getQuantidade(),
-                    item.getSubtotal().doubleValue());
+            String nome = item.getProdutoNome();
+            String valor = String.format("R$ %.2f", item.getSubtotal().doubleValue());
+            String prefixo = String.format("%d) ", numeroItem++);
 
-            itensFormatados.append(linha);
+            // Formato: "1) Nome Completo do Produto R$ 50.00"
+            sb.append(formatarLinhaComValor(prefixo + nome, valor, LARGURA_PADRAO));
+            sb.append("\n");
 
-            // Adicionais do item (se houver)
+            // Detalhes de quantidade se qtd > 1
+            if (item.getQuantidade() > 1) {
+                String detalhe = String.format("   %dx R$ %.2f",
+                        item.getQuantidade(),
+                        item.getPrecoUnitario() != null ? item.getPrecoUnitario().doubleValue() : 0.0);
+                sb.append(detalhe).append("\n");
+            }
+
+            // Adicionais do item
             if (item.getAdicionais() != null && !item.getAdicionais().isEmpty()) {
                 for (ItemPedidoAdicionalDTO adicional : item.getAdicionais()) {
-                    String nomeAdicional = truncarTexto(adicional.getAdicionalNome(), 16);
-                    itensFormatados.append(String.format("       + %-16s x%d  R$%5.2f\n",
-                            nomeAdicional,
-                            adicional.getQuantidade(),
-                            adicional.getSubtotal() != null ? adicional.getSubtotal().doubleValue() : 0.0));
+                    String textoAdicional = String.format("   + %s x%d",
+                            adicional.getAdicionalNome(),
+                            adicional.getQuantidade());
+                    String valorAdicional = String.format("R$ %.2f",
+                            adicional.getSubtotal() != null ? adicional.getSubtotal().doubleValue() : 0.0);
+                    sb.append(formatarLinhaComValor(textoAdicional, valorAdicional, LARGURA_PADRAO));
+                    sb.append("\n");
                 }
             }
 
-            // Observações do item (se houver)
+            // Observações do item
             if (item.getObservacoes() != null && !item.getObservacoes().trim().isEmpty()) {
-                itensFormatados.append("       > ").append(item.getObservacoes()).append("\n");
+                sb.append("   > ").append(item.getObservacoes()).append("\n");
             }
         }
 
-        itensFormatados.append("\n");
-
-        return itensFormatados.toString().getBytes(StandardCharsets.UTF_8);
+        sb.append("\n");
+        return sb.toString().getBytes(StandardCharsets.UTF_8);
     }
 
     private static byte[] formatarTotal(BigDecimal valorTotal) {
@@ -156,9 +163,10 @@ public class FormatoCupomFiscal {
         pagamentos.append("FORMA DE PAGAMENTO:\n");
 
         for (MeioPagamentoDTO meioPagamento : meiosPagamento) {
-            pagamentos.append(String.format("%-20s R$ %7.2f\n",
-                    meioPagamento.getMeioPagamento().getDescricao(),
-                    meioPagamento.getValor().doubleValue()));
+            String descricao = meioPagamento.getMeioPagamento().getDescricao();
+            String valor = String.format("R$ %.2f", meioPagamento.getValor().doubleValue());
+            pagamentos.append(formatarLinhaComValor(descricao, valor, LARGURA_PADRAO));
+            pagamentos.append("\n");
         }
 
         return pagamentos.toString().getBytes(StandardCharsets.UTF_8);
@@ -183,6 +191,49 @@ public class FormatoCupomFiscal {
                 cnpj.substring(5, 8),
                 cnpj.substring(8, 12),
                 cnpj.substring(12, 14));
+    }
+
+    /**
+     * Formata uma linha com texto à esquerda e valor à direita,
+     * preenchendo o espaço entre eles com espaços.
+     * Se o texto for longo demais, quebra em múltiplas linhas
+     * e coloca o valor alinhado à direita na última linha.
+     */
+    private static String formatarLinhaComValor(String texto, String valor, int largura) {
+        int espacoMinimo = 2; // mínimo de 2 espaços entre texto e valor
+        int espacoDisponivel = largura - valor.length() - espacoMinimo;
+
+        if (texto.length() <= espacoDisponivel) {
+            // Cabe na mesma linha
+            int espacos = largura - texto.length() - valor.length();
+            return texto + " ".repeat(Math.max(1, espacos)) + valor;
+        }
+
+        // Texto longo: quebra em linhas e coloca valor na última
+        StringBuilder resultado = new StringBuilder();
+        String restante = texto;
+
+        while (restante.length() > largura) {
+            // Encontrar ponto de quebra (último espaço antes do limite)
+            int pontoQuebra = restante.lastIndexOf(' ', largura - 1);
+            if (pontoQuebra <= 0) {
+                pontoQuebra = largura; // sem espaço, corta no limite
+            }
+            resultado.append(restante, 0, pontoQuebra).append("\n");
+            restante = restante.substring(pontoQuebra).trim();
+        }
+
+        // Última linha: texto restante + valor alinhado à direita
+        if (restante.length() + valor.length() + espacoMinimo <= largura) {
+            int espacos = largura - restante.length() - valor.length();
+            resultado.append(restante).append(" ".repeat(Math.max(1, espacos))).append(valor);
+        } else {
+            // Ainda não cabe, coloca valor em linha própria
+            resultado.append(restante).append("\n");
+            resultado.append(" ".repeat(Math.max(0, largura - valor.length()))).append(valor);
+        }
+
+        return resultado.toString();
     }
 
     private static String truncarTexto(String texto, int tamanhoMaximo) {
@@ -279,38 +330,43 @@ public class FormatoCupomFiscal {
     }
 
     private static String formatarItensLegivel(List<ItemPedidoDTO> itens) {
-        StringBuilder itensFormatados = new StringBuilder();
-        itensFormatados.append("ITEM | DESCRICAO          | QTD | VALOR\n");
+        StringBuilder sb = new StringBuilder();
+        sb.append("ITENS DO PEDIDO\n\n");
 
         int numeroItem = 1;
         for (ItemPedidoDTO item : itens) {
-            String nome = truncarTexto(item.getProdutoNome(), 18);
-            String linha = String.format("%2d   | %-18s | %3d | R$%7.2f\n",
-                    numeroItem++,
-                    nome,
-                    item.getQuantidade(),
-                    item.getSubtotal().doubleValue());
+            String nome = item.getProdutoNome();
+            String valor = String.format("R$ %.2f", item.getSubtotal().doubleValue());
+            String prefixo = String.format("%d) ", numeroItem++);
 
-            itensFormatados.append(linha);
+            sb.append(formatarLinhaComValor(prefixo + nome, valor, LARGURA_PADRAO));
+            sb.append("\n");
 
-            // Adicionais do item (se houver)
+            if (item.getQuantidade() > 1) {
+                String detalhe = String.format("   %dx R$ %.2f",
+                        item.getQuantidade(),
+                        item.getPrecoUnitario() != null ? item.getPrecoUnitario().doubleValue() : 0.0);
+                sb.append(detalhe).append("\n");
+            }
+
             if (item.getAdicionais() != null && !item.getAdicionais().isEmpty()) {
                 for (ItemPedidoAdicionalDTO adicional : item.getAdicionais()) {
-                    String nomeAdicional = truncarTexto(adicional.getAdicionalNome(), 16);
-                    itensFormatados.append(String.format("       + %-16s x%d  R$%5.2f\n",
-                            nomeAdicional,
-                            adicional.getQuantidade(),
-                            adicional.getSubtotal() != null ? adicional.getSubtotal().doubleValue() : 0.0));
+                    String textoAdicional = String.format("   + %s x%d",
+                            adicional.getAdicionalNome(),
+                            adicional.getQuantidade());
+                    String valorAdicional = String.format("R$ %.2f",
+                            adicional.getSubtotal() != null ? adicional.getSubtotal().doubleValue() : 0.0);
+                    sb.append(formatarLinhaComValor(textoAdicional, valorAdicional, LARGURA_PADRAO));
+                    sb.append("\n");
                 }
             }
 
-            // Observações do item (se houver)
             if (item.getObservacoes() != null && !item.getObservacoes().trim().isEmpty()) {
-                itensFormatados.append("       > ").append(item.getObservacoes()).append("\n");
+                sb.append("   > ").append(item.getObservacoes()).append("\n");
             }
         }
 
-        return itensFormatados.toString();
+        return sb.toString();
     }
 
     private static String formatarTotalLegivel(BigDecimal valorTotal) {
@@ -326,9 +382,10 @@ public class FormatoCupomFiscal {
         pagamentos.append("FORMA DE PAGAMENTO:\n");
 
         for (MeioPagamentoDTO meioPagamento : meiosPagamento) {
-            pagamentos.append(String.format("%-20s R$ %7.2f\n",
-                    meioPagamento.getMeioPagamento().getDescricao(),
-                    meioPagamento.getValor().doubleValue()));
+            String descricao = meioPagamento.getMeioPagamento().getDescricao();
+            String valor = String.format("R$ %.2f", meioPagamento.getValor().doubleValue());
+            pagamentos.append(formatarLinhaComValor(descricao, valor, LARGURA_PADRAO));
+            pagamentos.append("\n");
         }
 
         return pagamentos.toString();
