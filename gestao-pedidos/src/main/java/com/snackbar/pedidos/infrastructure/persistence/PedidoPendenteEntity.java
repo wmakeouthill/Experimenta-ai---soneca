@@ -12,16 +12,14 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Entidade JPA para pedidos pendentes de mesa.
+ * Entidade JPA para pedidos pendentes (mesa ou totem).
  * 
- * Pedidos criados por clientes via QR code ficam nesta tabela
- * aguardando aceitação por um funcionário. Ao serem aceitos,
- * são convertidos para pedidos reais e removidos desta tabela.
+ * Pedidos criados por clientes via QR code (MESA) ou pelo totem (TOTEM)
+ * ficam nesta tabela aguardando aceitação por um funcionário. Ao serem
+ * aceitos, são convertidos para pedidos reais.
  * 
- * VANTAGENS DA PERSISTÊNCIA:
- * - Não perde pedidos em caso de restart do servidor
- * - Funciona com múltiplas instâncias da aplicação
- * - Auditoria e histórico de pedidos pendentes
+ * tipo = MESA: mesaToken, mesaId, numeroMesa preenchidos; clienteId opcional.
+ * tipo = TOTEM: mesaToken, mesaId, numeroMesa, clienteId nulos; nomeCliente para chamar.
  */
 @Entity
 @Table(name = "pedidos_pendentes_mesa")
@@ -31,17 +29,25 @@ import java.util.Set;
 @AllArgsConstructor
 public class PedidoPendenteEntity {
 
+    public static final String TIPO_MESA = "MESA";
+    public static final String TIPO_TOTEM = "TOTEM";
+
     @Id
     @Column(length = 36)
     private String id;
 
-    @Column(name = "mesa_token", nullable = false, length = 100)
+    /** Origem do pedido: MESA (QR code) ou TOTEM (auto atendimento). */
+    @Column(name = "tipo", nullable = false, length = 10)
+    @Builder.Default
+    private String tipo = TIPO_MESA;
+
+    @Column(name = "mesa_token", length = 100)
     private String mesaToken;
 
-    @Column(name = "mesa_id", nullable = false, length = 36)
+    @Column(name = "mesa_id", length = 36)
     private String mesaId;
 
-    @Column(name = "numero_mesa", nullable = false)
+    @Column(name = "numero_mesa")
     private Integer numeroMesa;
 
     @Column(name = "cliente_id", length = 36)

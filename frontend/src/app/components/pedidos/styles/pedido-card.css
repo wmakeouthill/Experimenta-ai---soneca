@@ -486,6 +486,34 @@
   gap: 0.3rem;
 }
 
+/* Fila Totem */
+.pedido-card.status-fila-totem::before {
+  background: linear-gradient(90deg, #00897b, #4db6ac);
+}
+
+.pedido-card.status-fila-totem {
+  border-color: #b2dfdb;
+  background: linear-gradient(135deg, #fff 0%, #f0faf9 100%);
+}
+
+.pedido-card.status-fila-totem:hover {
+  border-color: #00897b;
+}
+
+.pedido-totem-badge.fila {
+  background: linear-gradient(135deg, #00897b, #4db6ac);
+  font-size: 0.85rem;
+  padding: 0.2rem 0.6rem;
+}
+
+.badge-fila-totem {
+  background: #e0f2f1;
+  color: #00695c;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
 .tempo-espera {
   font-size: 0.75rem;
   font-weight: 700;

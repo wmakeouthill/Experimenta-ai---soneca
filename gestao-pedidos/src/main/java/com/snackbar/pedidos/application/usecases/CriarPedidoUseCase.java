@@ -3,7 +3,6 @@ package com.snackbar.pedidos.application.usecases;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,35 +43,13 @@ public class CriarPedidoUseCase {
     private final GeradorNumeroPedidoService geradorNumeroPedido;
     private final AuditoriaPagamentoService auditoriaPagamentoService;
 
-    private static final int MAX_TENTATIVAS_CONCORRENCIA = 3;
-
     @Transactional
     public PedidoDTO executar(CriarPedidoRequest request, @Nullable ContextoRequisicao contexto) {
         if (contexto == null) {
             contexto = ContextoRequisicao.vazio();
         }
 
-        int tentativas = 0;
-        DataIntegrityViolationException ultimaExcecao = null;
-
-        while (tentativas < MAX_TENTATIVAS_CONCORRENCIA) {
-            tentativas++;
-
-            try {
-                return executarCriacao(request, contexto);
-            } catch (DataIntegrityViolationException e) {
-                // Com a nova sequence, este cenário é muito improvável
-                log.warn("Conflito de integridade detectado (tentativa {}), tentando novamente...", tentativas);
-                ultimaExcecao = e;
-            }
-        }
-
-        log.error("Falha ao criar pedido após {} tentativas por conflito de integridade",
-                MAX_TENTATIVAS_CONCORRENCIA);
-        throw new IllegalStateException(
-                "Não foi possível criar o pedido após " + MAX_TENTATIVAS_CONCORRENCIA +
-                        " tentativas devido a alta concorrência",
-                ultimaExcecao);
+        return executarCriacao(request, contexto);
     }
 
     /**
@@ -127,9 +104,13 @@ public class CriarPedidoUseCase {
 
         Pedido pedidoSalvo = pedidoRepository.salvar(pedido);
 
-        // Registra auditoria do pagamento (assíncrono)
+        // Registra auditoria do pagamento (assíncrono via @Async)
         if (!pedidoSalvo.getMeiosPagamento().isEmpty()) {
-            auditoriaPagamentoService.registrarPagamentoCriacaoPedido(pedidoSalvo, contexto);
+            try {
+                auditoriaPagamentoService.registrarPagamentoCriacaoPedido(pedidoSalvo, contexto);
+            } catch (Exception e) {
+                log.warn("Falha ao registrar auditoria de pagamento criação (não-crítico): {}", e.getMessage());
+            }
         }
 
         return PedidoDTO.de(pedidoSalvo);

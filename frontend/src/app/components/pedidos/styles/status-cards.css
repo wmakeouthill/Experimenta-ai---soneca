@@ -225,6 +225,31 @@
   background: linear-gradient(90deg, #6a1b9a 0%, #9C27B0 50%, #BA68C8 100%);
 }
 
+/* Card Fila Totem */
+.status-card.fila-totem {
+  border-color: #B2DFDB;
+  background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 50%);
+}
+
+.status-card.fila-totem::before {
+  background: linear-gradient(90deg, #00897B 0%, #4DB6AC 100%);
+}
+
+.status-card.fila-totem .status-count {
+  background: #00897B;
+  color: white;
+}
+
+.status-card.selected.fila-totem {
+  border-color: #00897B;
+  background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 50%, #80cbc4 100%);
+}
+
+.status-card.selected.fila-totem::before {
+  height: 3px;
+  background: linear-gradient(90deg, #00695C 0%, #00897B 50%, #4DB6AC 100%);
+}
+
 /* Animação de pulso para pedidos pendentes */
 .status-count.pulse {
   animation: pulse 2s infinite;

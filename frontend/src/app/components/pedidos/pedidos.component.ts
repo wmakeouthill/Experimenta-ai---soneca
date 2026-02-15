@@ -16,6 +16,7 @@ import { RouterModule } from '@angular/router';
 import { catchError, of, Subscription, switchMap, takeWhile, timer } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { FilaPedidosMesaService, PedidoPendente } from '../../services/fila-pedidos-mesa.service';
+import { FilaPedidosTotemService } from '../../services/fila-pedidos-totem.service';
 import { ImpressaoService } from '../../services/impressao.service';
 import { NotificationService } from '../../services/notification.service';
 import { Pedido, PedidoService, StatusPedido } from '../../services/pedido.service';
@@ -49,11 +50,14 @@ export class PedidosComponent implements OnInit, OnDestroy {
   private readonly notificationService = inject(NotificationService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly filaPedidosMesaService = inject(FilaPedidosMesaService);
+  private readonly filaPedidosTotemService = inject(FilaPedidosTotemService);
   private readonly ngZone = inject(NgZone);
 
-  // Subscription para polling de fila de mesa
+  // Subscription para polling de fila de mesa e totem
   private filaPollingSubscription?: Subscription;
+  private filaTotemPollingSubscription?: Subscription;
   private filaPollingAtivo = false;
+  private filaTotemPollingAtivo = false;
 
   // Composable com toda a lógica de pedidos - inicializado no construtor para contexto de injeção válido
   readonly pedidosComposable!: ReturnType<typeof usePedidos>;
@@ -106,7 +110,12 @@ export class PedidosComponent implements OnInit, OnDestroy {
   // Fila de pedidos de mesa pendentes
   readonly pedidosPendentesMesa = signal<PedidoPendente[]>([]);
   readonly carregandoFilaMesa = signal(false);
-  readonly filtroFilaMesa = signal(false); // quando true, mostra apenas pedidos da fila
+  readonly filtroFilaMesa = signal(false);
+
+  // Fila de pedidos do totem pendentes
+  readonly pedidosPendentesTotem = signal<PedidoPendente[]>([]);
+  readonly carregandoFilaTotem = signal(false);
+  readonly filtroFilaTotem = signal(false);
 
   constructor() {
     this.pedidosComposable = usePedidos();
@@ -118,6 +127,7 @@ export class PedidosComponent implements OnInit, OnDestroy {
       this.verificarSessaoAtiva();
       this.pedidosComposable.carregarProdutos();
       this.iniciarPollingFilaMesa();
+      this.iniciarPollingFilaTotem();
 
       // Notificação visual apenas (impressão é global no AppComponent)
       this.pedidosComposable.onNovoPedido
@@ -139,7 +149,9 @@ export class PedidosComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.filaPollingAtivo = false;
+    this.filaTotemPollingAtivo = false;
     this.filaPollingSubscription?.unsubscribe();
+    this.filaTotemPollingSubscription?.unsubscribe();
   }
 
   private iniciarPollingFilaMesa(): void {
@@ -173,6 +185,35 @@ export class PedidosComponent implements OnInit, OnDestroy {
               const novos = pedidos.length - pedidosAnteriores.length;
               this.notificationService.info(
                 `🍽️ ${novos} novo(s) pedido(s) de mesa aguardando aceitação!`
+              );
+            }
+          });
+        });
+    });
+  }
+
+  private iniciarPollingFilaTotem(): void {
+    if (this.filaTotemPollingAtivo) return;
+    this.filaTotemPollingAtivo = true;
+    this.filaTotemPollingSubscription?.unsubscribe();
+    this.ngZone.runOutsideAngular(() => {
+      this.filaTotemPollingSubscription = timer(0, 5000)
+        .pipe(
+          takeWhile(() => this.filaTotemPollingAtivo),
+          switchMap(() => this.filaPedidosTotemService.listarPedidosPendentes()),
+          catchError(err => {
+            console.error('Erro ao carregar fila totem:', err);
+            return of([]);
+          })
+        )
+        .subscribe(pedidos => {
+          this.ngZone.run(() => {
+            const anteriores = this.pedidosPendentesTotem();
+            this.pedidosPendentesTotem.set([...pedidos]);
+            if (pedidos.length > anteriores.length) {
+              const novos = pedidos.length - anteriores.length;
+              this.notificationService.info(
+                `🖥️ ${novos} novo(s) pedido(s) do totem aguardando aceitação!`
               );
             }
           });
@@ -216,7 +257,8 @@ export class PedidosComponent implements OnInit, OnDestroy {
   }
 
   filtrarPorStatus(status: StatusPedido): void {
-    this.filtroFilaMesa.set(false); // Desativa filtro de fila ao filtrar por status
+    this.filtroFilaMesa.set(false);
+    this.filtroFilaTotem.set(false);
     this.pedidosComposable.filtrarPorStatus(status);
   }
 
@@ -227,11 +269,19 @@ export class PedidosComponent implements OnInit, OnDestroy {
   limparFiltros(): void {
     this.pedidosComposable.limparFiltros();
     this.filtroFilaMesa.set(false);
+    this.filtroFilaTotem.set(false);
   }
 
   filtrarPorFilaMesa(): void {
-    this.pedidosComposable.limparFiltros(); // Limpa filtros de status normais
+    this.pedidosComposable.limparFiltros();
+    this.filtroFilaTotem.set(false);
     this.filtroFilaMesa.set(true);
+  }
+
+  filtrarPorFilaTotem(): void {
+    this.pedidosComposable.limparFiltros();
+    this.filtroFilaMesa.set(false);
+    this.filtroFilaTotem.set(true);
   }
 
   recarregar(): void {
@@ -272,13 +322,12 @@ export class PedidosComponent implements OnInit, OnDestroy {
     if (!this.isBrowser) return;
 
     const motivo = prompt('Motivo da rejeição (opcional):');
-    if (motivo === null) return; // Usuário cancelou
+    if (motivo === null) return;
 
     this.carregandoFilaMesa.set(true);
     this.filaPedidosMesaService.rejeitarPedido(pedidoId, motivo || undefined).subscribe({
       next: () => {
         this.notificationService.info('Pedido rejeitado.');
-        // Remove da fila local
         this.pedidosPendentesMesa.update(lista => lista.filter(p => p.id !== pedidoId));
         this.carregandoFilaMesa.set(false);
       },
@@ -292,8 +341,64 @@ export class PedidosComponent implements OnInit, OnDestroy {
     });
   }
 
+  // Fila de pedidos do totem
+  aceitarPedidoTotem(pedidoId: string): void {
+    if (!this.temSessaoAtiva()) {
+      if (this.isBrowser) {
+        alert('É necessário ter uma sessão de trabalho ativa para aceitar pedidos.');
+      }
+      return;
+    }
+    this.carregandoFilaTotem.set(true);
+    const idempotencyKey = this.filaPedidosTotemService.gerarChaveIdempotencia();
+    this.filaPedidosTotemService.aceitarPedido(pedidoId, idempotencyKey).subscribe({
+      next: () => {
+        this.notificationService.sucesso('✅ Pedido totem aceito e criado com sucesso!');
+        this.pedidosPendentesTotem.update(lista => lista.filter(p => p.id !== pedidoId));
+        this.carregarDados();
+        this.carregandoFilaTotem.set(false);
+      },
+      error: error => {
+        console.error('Erro ao aceitar pedido totem:', error);
+        this.notificationService.erro(
+          '❌ Erro ao aceitar pedido: ' + (error.error?.message || error.message)
+        );
+        this.carregandoFilaTotem.set(false);
+      },
+    });
+  }
+
+  rejeitarPedidoTotem(pedidoId: string): void {
+    if (!this.isBrowser) return;
+    const motivo = prompt('Motivo da rejeição (opcional):');
+    if (motivo === null) return;
+    this.carregandoFilaTotem.set(true);
+    this.filaPedidosTotemService.rejeitarPedido(pedidoId, motivo || undefined).subscribe({
+      next: () => {
+        this.notificationService.info('Pedido rejeitado.');
+        this.pedidosPendentesTotem.update(lista => lista.filter(p => p.id !== pedidoId));
+        this.carregandoFilaTotem.set(false);
+      },
+      error: error => {
+        console.error('Erro ao rejeitar pedido totem:', error);
+        this.notificationService.erro(
+          '❌ Erro ao rejeitar pedido: ' + (error.error?.message || error.message)
+        );
+        this.carregandoFilaTotem.set(false);
+      },
+    });
+  }
+
   formatarTempoEspera(segundos: number): string {
     return this.filaPedidosMesaService.formatarTempoEspera(segundos);
+  }
+
+  formatarTempoEsperaTotem(segundos: number): string {
+    return this.filaPedidosTotemService.formatarTempoEspera(segundos);
+  }
+
+  getClasseTempoEsperaTotem(segundos: number): string {
+    return this.filaPedidosTotemService.getClasseTempoEspera(segundos);
   }
 
   getClasseTempoEspera(segundos: number): string {

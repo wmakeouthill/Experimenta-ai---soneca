@@ -843,17 +843,23 @@
       <div class="tela-sucesso">
         <div class="sucesso-content">
           <div class="sucesso-icon">✅</div>
-          <h1>Pedido Realizado!</h1>
+          <h1>Pedido Enviado!</h1>
 
-          <div class="numero-pedido">
-            <span class="label">Seu número</span>
-            <span class="numero">{{ pedidoCriado()!.numeroPedido }}</span>
-          </div>
-
-          @if (nomeClienteInput.trim()) {
-            <p class="sucesso-nome">{{ nomeClienteInput }}, aguarde ser chamado!</p>
+          @if (pedidoCriado()!.naFila) {
+            <p class="sucesso-info sucesso-mensagem-fila">{{ pedidoCriado()!.mensagem }}</p>
+            @if (nomeClienteInput.trim()) {
+              <p class="sucesso-nome">{{ nomeClienteInput }}, aguarde a confirmação do atendente.</p>
+            }
           } @else {
-            <p class="sucesso-info">Aguarde seu número ser chamado!</p>
+            <div class="numero-pedido">
+              <span class="label">Seu número</span>
+              <span class="numero">{{ pedidoCriado()!.numeroPedido }}</span>
+            </div>
+            @if (nomeClienteInput.trim()) {
+              <p class="sucesso-nome">{{ nomeClienteInput }}, aguarde ser chamado!</p>
+            } @else {
+              <p class="sucesso-info">Aguarde seu número ser chamado!</p>
+            }
           }
 
           <p class="sucesso-timer">Esta tela será reiniciada automaticamente...</p>

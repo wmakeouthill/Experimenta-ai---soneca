@@ -19,8 +19,14 @@ public interface PedidoPendenteRepositoryPort {
 
     /**
      * Lista todos os pedidos pendentes (ainda não aceitos) ordenados por data.
+     * @deprecated Preferir {@link #listarPendentesPorTipo(String)} para filtrar por origem.
      */
     List<PedidoPendenteDTO> listarPendentes();
+
+    /**
+     * Lista pedidos pendentes por tipo (MESA ou TOTEM).
+     */
+    List<PedidoPendenteDTO> listarPendentesPorTipo(String tipo);
 
     /**
      * Busca um pedido pendente que ainda não foi aceito.
@@ -45,6 +51,11 @@ public interface PedidoPendenteRepositoryPort {
      * Conta a quantidade de pedidos pendentes na fila.
      */
     long contarPendentes();
+
+    /**
+     * Conta pedidos pendentes por tipo (MESA ou TOTEM).
+     */
+    long contarPendentesPorTipo(String tipo);
 
     /**
      * Remove um pedido pendente da fila.

@@ -49,6 +49,14 @@ public class PedidoPendenteRepositoryAdapter implements PedidoPendenteRepository
 
     @Override
     @Transactional(readOnly = true)
+    public List<PedidoPendenteDTO> listarPendentesPorTipo(String tipo) {
+        return jpaRepository.findPendentesPorTipo(tipo).stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Optional<PedidoPendenteDTO> buscarPendentePorId(String id) {
         return jpaRepository.findPendenteById(id)
                 .map(this::toDTO);
@@ -72,6 +80,12 @@ public class PedidoPendenteRepositoryAdapter implements PedidoPendenteRepository
     @Transactional(readOnly = true)
     public long contarPendentes() {
         return jpaRepository.countPendentes();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long contarPendentesPorTipo(String tipo) {
+        return jpaRepository.countPendentesPorTipo(tipo);
     }
 
     @Override
@@ -112,13 +126,15 @@ public class PedidoPendenteRepositoryAdapter implements PedidoPendenteRepository
     // ========== Mapeamentos ==========
 
     private PedidoPendenteEntity toEntity(PedidoPendenteDTO dto) {
+        String tipo = dto.getTipo() != null ? dto.getTipo() : PedidoPendenteEntity.TIPO_MESA;
         PedidoPendenteEntity entity = PedidoPendenteEntity.builder()
                 .id(dto.getId())
+                .tipo(tipo)
                 .mesaToken(dto.getMesaToken())
                 .mesaId(dto.getMesaId())
                 .numeroMesa(dto.getNumeroMesa())
                 .clienteId(dto.getClienteId())
-                .nomeCliente(dto.getNomeCliente())
+                .nomeCliente(dto.getNomeCliente() != null ? dto.getNomeCliente() : "Cliente")
                 .telefoneCliente(dto.getTelefoneCliente())
                 .observacoes(dto.getObservacoes())
                 .valorTotal(dto.getValorTotal())
@@ -228,6 +244,7 @@ public class PedidoPendenteRepositoryAdapter implements PedidoPendenteRepository
 
         return PedidoPendenteDTO.builder()
                 .id(entity.getId())
+                .tipo(entity.getTipo() != null ? entity.getTipo() : PedidoPendenteDTO.TIPO_MESA)
                 .mesaToken(entity.getMesaToken())
                 .mesaId(entity.getMesaId())
                 .numeroMesa(entity.getNumeroMesa())

@@ -2,10 +2,7 @@ package com.snackbar.pedidos.application.services;
 
 import com.snackbar.pedidos.application.dto.*;
 import com.snackbar.pedidos.application.ports.CardapioServicePort;
-import com.snackbar.pedidos.application.ports.MesaRepositoryPort;
 import com.snackbar.pedidos.application.ports.PedidoPendenteRepositoryPort;
-import com.snackbar.pedidos.domain.entities.Mesa;
-import com.snackbar.pedidos.domain.exceptions.MesaNaoEncontradaException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -13,47 +10,34 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * Serviço que gerencia a fila de pedidos de mesa aguardando aceitação.
- * 
- * Quando um cliente faz um pedido via QR code, o pedido vai para esta fila.
- * Um funcionário logado pode ver os pedidos pendentes e aceitar,
- * momento em que o pedido é criado de verdade no sistema.
- * 
- * PERSISTÊNCIA EM BANCO:
- * Os pedidos pendentes são armazenados em banco de dados para garantir
- * que não sejam perdidos em caso de restart do servidor e para suportar
- * múltiplas instâncias da aplicação.
+ * Serviço que gerencia a fila de pedidos de totem (auto atendimento) aguardando aceitação.
+ * Quando o operador finaliza um pedido no totem, o pedido vai para esta fila.
+ * Um funcionário no painel pode aceitar ou rejeitar; ao aceitar, o pedido real é criado.
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class FilaPedidosMesaService {
+public class FilaPedidosTotemService {
 
-    private final MesaRepositoryPort mesaRepository;
     private final CardapioServicePort cardapioService;
     private final PedidoPendenteRepositoryPort pedidoPendenteRepository;
 
-    // Tempo máximo que um pedido pode ficar na fila (30 minutos)
     private static final long TEMPO_MAXIMO_FILA_MINUTOS = 30;
 
     /**
-     * Adiciona um pedido à fila de pendentes.
-     * 
-     * @param request Request do pedido vindo do cliente
-     * @return DTO do pedido pendente criado
+     * Adiciona um pedido à fila de pendentes do totem.
      */
     @Transactional
-    public PedidoPendenteDTO adicionarPedido(CriarPedidoMesaRequest request) {
-        Mesa mesa = mesaRepository.buscarPorQrCodeToken(request.getMesaToken())
-                .orElseThrow(() -> MesaNaoEncontradaException.porToken(request.getMesaToken()));
-
+    public PedidoPendenteDTO adicionarPedido(CriarPedidoAutoAtendimentoRequest request) {
         String pedidoId = UUID.randomUUID().toString();
-
-        // Busca informações dos produtos e calcula valores
         List<ItemPedidoPendenteDTO> itens = new ArrayList<>();
         BigDecimal valorTotal = BigDecimal.ZERO;
 
@@ -61,7 +45,6 @@ public class FilaPedidosMesaService {
             var produto = cardapioService.buscarProdutoPorId(itemReq.getProdutoId());
             BigDecimal precoUnitario = produto.getPreco();
 
-            // Processa adicionais do item
             List<AdicionalPedidoPendenteDTO> adicionaisDTO = new ArrayList<>();
             BigDecimal subtotalAdicionais = BigDecimal.ZERO;
 
@@ -84,7 +67,6 @@ public class FilaPedidosMesaService {
                 }
             }
 
-            // Subtotal = (preço unitário + adicionais) * quantidade
             BigDecimal precoComAdicionais = precoUnitario.add(subtotalAdicionais);
             BigDecimal subtotal = precoComAdicionais.multiply(BigDecimal.valueOf(itemReq.getQuantidade()));
 
@@ -101,52 +83,47 @@ public class FilaPedidosMesaService {
             valorTotal = valorTotal.add(subtotal);
         }
 
+        String nomeCliente = request.getNomeCliente() != null && !request.getNomeCliente().isBlank()
+                ? request.getNomeCliente()
+                : "Cliente Totem";
+
         PedidoPendenteDTO pedidoPendente = PedidoPendenteDTO.builder()
                 .id(pedidoId)
-                .tipo(PedidoPendenteDTO.TIPO_MESA)
-                .mesaToken(request.getMesaToken())
-                .mesaId(mesa.getId())
-                .numeroMesa(mesa.getNumero())
-                .clienteId(request.getClienteId())
-                .nomeCliente(request.getNomeCliente())
+                .tipo(PedidoPendenteDTO.TIPO_TOTEM)
+                .mesaToken(null)
+                .mesaId(null)
+                .numeroMesa(null)
+                .clienteId(null)
+                .nomeCliente(nomeCliente)
                 .itens(itens)
-                .meiosPagamento(request.getMeiosPagamento()) // Incluir meios de pagamento
-                .observacoes(request.getObservacoes())
+                .meiosPagamento(request.getMeiosPagamento())
+                .observacoes(request.getObservacao())
                 .valorTotal(valorTotal)
                 .dataHoraSolicitacao(LocalDateTime.now())
                 .tempoEsperaSegundos(0)
                 .build();
 
-        // Persiste no banco de dados
         PedidoPendenteDTO salvo = pedidoPendenteRepository.salvar(pedidoPendente);
 
-        log.info("Pedido adicionado à fila (banco) - ID: {}, Mesa: {}, Cliente: {}",
-                pedidoId, mesa.getNumero(), request.getNomeCliente());
+        log.info("Pedido totem adicionado à fila - ID: {}, Cliente: {}", pedidoId, nomeCliente);
 
         return salvo;
     }
 
-    /**
-     * Lista todos os pedidos pendentes na fila, ordenados por tempo de espera.
-     * Remove automaticamente pedidos expirados.
-     */
     @Transactional
     public List<PedidoPendenteDTO> listarPedidosPendentes() {
-        // Remove expirados em background
         pedidoPendenteRepository.removerExpirados(TEMPO_MAXIMO_FILA_MINUTOS);
 
-        return pedidoPendenteRepository.listarPendentesPorTipo(PedidoPendenteDTO.TIPO_MESA).stream()
+        return pedidoPendenteRepository.listarPendentesPorTipo(PedidoPendenteDTO.TIPO_TOTEM).stream()
                 .peek(PedidoPendenteDTO::atualizarTempoEspera)
                 .sorted(Comparator.comparing(PedidoPendenteDTO::getDataHoraSolicitacao))
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Busca um pedido pendente pelo ID.
-     */
     @Transactional(readOnly = true)
     public Optional<PedidoPendenteDTO> buscarPorId(String pedidoId) {
         return pedidoPendenteRepository.buscarPendentePorId(pedidoId)
+                .filter(p -> PedidoPendenteDTO.TIPO_TOTEM.equals(p.getTipo()))
                 .map(pedido -> {
                     pedido.atualizarTempoEspera();
                     return pedido;
@@ -154,99 +131,54 @@ public class FilaPedidosMesaService {
     }
 
     /**
-     * Busca e "remove" atomicamente um pedido da fila.
-     * 
-     * IMPORTANTE: Este método é thread-safe e garante que apenas um funcionário
-     * consiga aceitar o mesmo pedido, evitando race conditions onde dois
-     * funcionários poderiam aceitar o mesmo pedido simultaneamente.
-     * 
-     * Usa SELECT FOR UPDATE (lock pessimista) para garantir exclusividade.
-     * 
-     * NOTA: O registro NÃO é deletado do banco. Ao ser aceito, o campo
-     * pedido_real_id
-     * será preenchido pelo método registrarConversaoParaPedidoReal(), removendo-o
-     * da listagem de pendentes (filtro: pedido_real_id IS NULL). Isso mantém
-     * histórico para auditoria.
-     * 
-     * @param pedidoId ID do pedido a ser buscado e marcado para aceitação
-     * @return Optional contendo o pedido se encontrado e ainda pendente, ou empty
+     * Busca e remove atomicamente um pedido totem da fila (para aceitação).
+     * Garante que o pedido seja do tipo TOTEM.
      */
     @Transactional
     public Optional<PedidoPendenteDTO> buscarERemoverAtomicamente(String pedidoId) {
-        // Usa lock pessimista para garantir que apenas uma transação processe este
-        // pedido
         Optional<PedidoPendenteDTO> pedidoOpt = pedidoPendenteRepository.buscarPendentePorIdComLock(pedidoId);
 
         if (pedidoOpt.isPresent()) {
             PedidoPendenteDTO pedido = pedidoOpt.get();
+            if (!PedidoPendenteDTO.TIPO_TOTEM.equals(pedido.getTipo())) {
+                log.warn("Pedido {} não é do tipo TOTEM (tipo: {}), ignorando aceitação totem", pedidoId, pedido.getTipo());
+                return Optional.empty();
+            }
             pedido.atualizarTempoEspera();
-            log.info("Pedido obtido para aceitação (com lock) - ID: {}, Mesa: {}",
-                    pedidoId, pedido.getNumeroMesa());
+            log.info("Pedido totem obtido para aceitação (com lock) - ID: {}", pedidoId);
             return Optional.of(pedido);
         }
 
         return Optional.empty();
     }
 
-    /**
-     * Remove um pedido da fila (quando aceito ou rejeitado).
-     */
     @Transactional
     public PedidoPendenteDTO removerPedido(String pedidoId) {
-        Optional<PedidoPendenteDTO> pedidoOpt = pedidoPendenteRepository.buscarPorId(pedidoId);
+        Optional<PedidoPendenteDTO> pedidoOpt = buscarPorId(pedidoId);
         if (pedidoOpt.isPresent()) {
             pedidoPendenteRepository.remover(pedidoId);
-            log.info("Pedido removido da fila - ID: {}", pedidoId);
+            log.info("Pedido totem removido da fila - ID: {}", pedidoId);
             return pedidoOpt.get();
         }
         return null;
     }
 
-    /**
-     * Registra o mapeamento entre um pedido pendente e o pedido real criado ao
-     * aceitá-lo.
-     */
     @Transactional
     public void registrarConversaoParaPedidoReal(String pedidoPendenteId, String pedidoRealId) {
         if (pedidoPendenteId != null && pedidoRealId != null) {
             pedidoPendenteRepository.marcarComoAceito(pedidoPendenteId, pedidoRealId);
-            log.info("Mapeado pedido pendente {} -> pedido real {}", pedidoPendenteId, pedidoRealId);
+            log.info("Mapeado pedido pendente totem {} -> pedido real {}", pedidoPendenteId, pedidoRealId);
         }
     }
 
-    /**
-     * Obtém o ID do pedido real a partir do ID pendente, se existir.
-     */
     @Transactional(readOnly = true)
     public Optional<String> buscarPedidoRealPorPendente(String pedidoPendenteId) {
         return pedidoPendenteRepository.buscarPedidoRealPorPendente(pedidoPendenteId);
     }
 
-    /**
-     * Retorna a quantidade de pedidos na fila.
-     */
     @Transactional
     public int quantidadePedidosPendentes() {
         pedidoPendenteRepository.removerExpirados(TEMPO_MAXIMO_FILA_MINUTOS);
-        return (int) pedidoPendenteRepository.contarPendentesPorTipo(PedidoPendenteDTO.TIPO_MESA);
-    }
-
-    /**
-     * Verifica se há pedidos pendentes na fila.
-     */
-    @Transactional(readOnly = true)
-    public boolean existemPedidosPendentes() {
-        return pedidoPendenteRepository.contarPendentesPorTipo(PedidoPendenteDTO.TIPO_MESA) > 0;
-    }
-
-    /**
-     * Limpa toda a fila (para testes ou reset).
-     * Remove todos os pedidos pendentes do banco.
-     */
-    @Transactional
-    public void limparFila() {
-        // Remove todos os pendentes (tempoLimite = 0 remove tudo)
-        int removidos = pedidoPendenteRepository.removerExpirados(0);
-        log.info("Fila de pedidos limpa - {} pedidos removidos", removidos);
+        return (int) pedidoPendenteRepository.contarPendentesPorTipo(PedidoPendenteDTO.TIPO_TOTEM);
     }
 }

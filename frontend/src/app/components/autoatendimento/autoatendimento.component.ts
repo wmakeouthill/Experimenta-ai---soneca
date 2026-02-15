@@ -83,7 +83,13 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
   readonly enviando = signal(false);
 
   // Estado do pedido criado
-  readonly pedidoCriado = signal<{ id: string; numeroPedido: number } | null>(null);
+  /** Quando naFila: pedido na fila aguardando aceite; senão: pedido já aceito (tem numeroPedido). */
+  readonly pedidoCriado = signal<{
+    id: string;
+    numeroPedido?: number;
+    mensagem?: string;
+    naFila?: boolean;
+  } | null>(null);
 
   // Timer de inatividade (em segundos)
   private inactivityTimer: ReturnType<typeof setTimeout> | null = null;
@@ -294,9 +300,17 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
         this.autoAtendimentoService.criarPedido(request, idempotencyKey)
       );
 
+      const naFila = (response as { status?: string }).status === 'NA_FILA';
       this.pedidoCriado.set({
         id: response.id,
-        numeroPedido: response.numeroPedido,
+        ...(naFila
+          ? {
+              mensagem:
+                (response as { mensagem?: string }).mensagem ??
+                'Aguarde a confirmação do atendente.',
+              naFila: true,
+            }
+          : { numeroPedido: (response as unknown as { numeroPedido: number }).numeroPedido }),
       });
 
       this.etapaAtual.set('sucesso');

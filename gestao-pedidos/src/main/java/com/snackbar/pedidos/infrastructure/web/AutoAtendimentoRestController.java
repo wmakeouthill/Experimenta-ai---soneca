@@ -3,8 +3,8 @@ package com.snackbar.pedidos.infrastructure.web;
 import com.snackbar.pedidos.infrastructure.idempotency.IdempotencyService;
 import com.snackbar.kernel.security.JwtUserDetails;
 import com.snackbar.pedidos.application.dto.CriarPedidoAutoAtendimentoRequest;
-import com.snackbar.pedidos.application.dto.PedidoAutoAtendimentoResponse;
-import com.snackbar.pedidos.application.usecases.CriarPedidoAutoAtendimentoUseCase;
+import com.snackbar.pedidos.application.dto.PedidoTotemNaFilaResponse;
+import com.snackbar.pedidos.application.usecases.EnviarPedidoTotemParaFilaUseCase;
 import com.snackbar.pedidos.application.usecases.BuscarPedidoPorIdUseCase;
 import com.snackbar.pedidos.application.dto.PedidoDTO;
 import jakarta.validation.Valid;
@@ -24,11 +24,12 @@ import org.springframework.web.bind.annotation.*;
  * 
  * Diferente do PedidoMesaRestController (público), este:
  * - Requer autenticação JWT
- * - Cria pedidos diretamente (sem fila de pendentes)
+ * - Envia o pedido para a fila de aceitação (igual ao fluxo de mesa)
+ * - O pedido só vira pedido real quando um funcionário aceitar no painel
  * - Não exige cliente cadastrado
- * 
+ *
  * Suporta idempotência via header X-Idempotency-Key para evitar
- * criação de pedidos duplicados.
+ * duplicação em caso de retry.
  */
 @RestController
 @RequestMapping("/api/autoatendimento")
@@ -36,68 +37,49 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class AutoAtendimentoRestController {
 
-    private final CriarPedidoAutoAtendimentoUseCase criarPedidoUseCase;
+    private final EnviarPedidoTotemParaFilaUseCase enviarPedidoTotemParaFilaUseCase;
     private final BuscarPedidoPorIdUseCase buscarPedidoUseCase;
     private final IdempotencyService idempotencyService;
 
     /**
-     * Cria um pedido via auto atendimento (totem).
-     * O pedido é criado diretamente no status PENDENTE.
-     * 
-     * Suporta idempotência via header X-Idempotency-Key para evitar
-     * criação de pedidos duplicados em caso de retry.
-     * 
+     * Envia um pedido do totem para a fila de aceitação.
+     * O pedido NÃO é criado como pedido real; fica pendente até um funcionário
+     * aceitar no painel (igual ao fluxo de pedido de mesa).
+     *
      * @param request        Dados do pedido
      * @param idempotencyKey Chave de idempotência opcional
-     * @return PedidoAutoAtendimentoResponse com dados do pedido criado
+     * @return PedidoTotemNaFilaResponse (id, status NA_FILA, mensagem)
      */
     @PostMapping("/pedido")
-    public ResponseEntity<PedidoAutoAtendimentoResponse> criarPedido(
+    public ResponseEntity<PedidoTotemNaFilaResponse> criarPedido(
             @Valid @RequestBody CriarPedidoAutoAtendimentoRequest request,
             @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey) {
 
-        // Obtém a autenticação do contexto de segurança
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        // Verifica se usuário está autenticado
         if (authentication == null || authentication.getPrincipal() == null
                 || "anonymousUser".equals(authentication.getPrincipal())) {
             log.error("[AUTO-ATENDIMENTO] Tentativa de criar pedido sem autenticação");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        // Obtém email e ID do usuário do JWT
-        String usuarioEmail;
-        String usuarioId;
-
         Object principal = authentication.getPrincipal();
         if (principal instanceof JwtUserDetails) {
             JwtUserDetails userDetails = (JwtUserDetails) principal;
-            usuarioEmail = userDetails.getEmail();
-            usuarioId = userDetails.getId();
-        } else {
-            // Fallback para compatibilidade (não deveria acontecer)
-            usuarioEmail = principal.toString();
-            usuarioId = null;
-            log.warn("[AUTO-ATENDIMENTO] Principal não é JwtUserDetails: {}", principal.getClass().getName());
+            log.info("[AUTO-ATENDIMENTO] Enviando pedido para fila - Operador: {}, Cliente: {}",
+                    userDetails.getEmail(),
+                    request.getNomeCliente());
         }
 
-        log.info("[AUTO-ATENDIMENTO] Criando pedido - Operador: {} (ID: {}), Cliente: {}",
-                usuarioEmail,
-                usuarioId,
-                request.getNomeCliente());
-
-        // Se há chave de idempotência, usa o serviço
         if (idempotencyKey != null && !idempotencyKey.isBlank()) {
-            final String finalUsuarioId = usuarioId;
             return idempotencyService.executeIdempotent(
                     idempotencyKey,
                     "POST /api/autoatendimento/pedido",
-                    () -> criarPedidoUseCase.executar(request, finalUsuarioId),
-                    PedidoAutoAtendimentoResponse.class);
+                    () -> enviarPedidoTotemParaFilaUseCase.executar(request),
+                    PedidoTotemNaFilaResponse.class);
         }
 
-        PedidoAutoAtendimentoResponse response = criarPedidoUseCase.executar(request, usuarioId);
+        PedidoTotemNaFilaResponse response = enviarPedidoTotemParaFilaUseCase.executar(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

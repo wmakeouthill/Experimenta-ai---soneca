@@ -11,8 +11,7 @@ import java.util.List;
 
 /**
  * DTO para pedido pendente de aceitação (na fila).
- * Representa um pedido feito pelo cliente via QR code que aguarda
- * aceitação de um funcionário.
+ * Pode ser de origem MESA (QR code) ou TOTEM (auto atendimento).
  */
 @Data
 @Builder
@@ -20,7 +19,12 @@ import java.util.List;
 @AllArgsConstructor
 public class PedidoPendenteDTO {
 
+    public static final String TIPO_MESA = "MESA";
+    public static final String TIPO_TOTEM = "TOTEM";
+
     private String id;
+    /** Origem: MESA ou TOTEM */
+    private String tipo;
     private String mesaToken;
     private String mesaId;
     private Integer numeroMesa;

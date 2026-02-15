@@ -99,8 +99,12 @@ public class RegistrarPagamentoPedidoUseCase {
 
         Pedido pedidoAtualizado = pedidoRepository.salvar(pedido);
 
-        // Registra auditoria do pagamento (assíncrono)
-        auditoriaPagamentoService.registrarPagamentoPosterior(pedidoAtualizado, contexto);
+        // Registra auditoria do pagamento (assíncrono via @Async)
+        try {
+            auditoriaPagamentoService.registrarPagamentoPosterior(pedidoAtualizado, contexto);
+        } catch (Exception e) {
+            log.warn("Falha ao registrar auditoria de pagamento posterior (não-crítico): {}", e.getMessage());
+        }
 
         log.info("[PAGAMENTO] Pagamento registrado para pedido {}: R$ {}",
                 pedidoAtualizado.getNumeroPedido().getNumero(),

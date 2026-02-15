@@ -30,10 +30,26 @@ public interface PedidoPendenteJpaRepository extends JpaRepository<PedidoPendent
     List<PedidoPendenteEntity> findPendentes();
 
     /**
+     * Lista pedidos pendentes por tipo (MESA ou TOTEM).
+     */
+    @Query("SELECT DISTINCT p FROM PedidoPendenteEntity p " +
+            "LEFT JOIN FETCH p.itens " +
+            "LEFT JOIN FETCH p.meiosPagamento " +
+            "WHERE p.pedidoRealId IS NULL AND p.tipo = :tipo " +
+            "ORDER BY p.dataHoraSolicitacao ASC")
+    List<PedidoPendenteEntity> findPendentesPorTipo(@Param("tipo") String tipo);
+
+    /**
      * Conta pedidos pendentes na fila.
      */
     @Query("SELECT COUNT(p) FROM PedidoPendenteEntity p WHERE p.pedidoRealId IS NULL")
     long countPendentes();
+
+    /**
+     * Conta pedidos pendentes por tipo.
+     */
+    @Query("SELECT COUNT(p) FROM PedidoPendenteEntity p WHERE p.pedidoRealId IS NULL AND p.tipo = :tipo")
+    long countPendentesPorTipo(@Param("tipo") String tipo);
 
     /**
      * Busca pedido pendente que ainda não foi aceito.

@@ -3,7 +3,6 @@ package com.snackbar.pedidos.application.usecases;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,8 +46,6 @@ public class CriarPedidoAutoAtendimentoUseCase {
     private final GeradorNumeroPedidoService geradorNumeroPedido;
     private final AuditoriaPagamentoService auditoriaPagamentoService;
 
-    private static final int MAX_TENTATIVAS_CONCORRENCIA = 3;
-
     @Transactional
     public PedidoAutoAtendimentoResponse executar(
             CriarPedidoAutoAtendimentoRequest request,
@@ -59,26 +56,7 @@ public class CriarPedidoAutoAtendimentoUseCase {
             contexto = ContextoRequisicao.vazio();
         }
 
-        int tentativas = 0;
-        DataIntegrityViolationException ultimaExcecao = null;
-
-        while (tentativas < MAX_TENTATIVAS_CONCORRENCIA) {
-            tentativas++;
-
-            try {
-                return executarCriacao(request, usuarioId, contexto);
-            } catch (DataIntegrityViolationException e) {
-                log.warn("Conflito de integridade detectado (tentativa {}), tentando novamente...", tentativas);
-                ultimaExcecao = e;
-            }
-        }
-
-        log.error("Falha ao criar pedido de auto atendimento após {} tentativas por conflito de integridade",
-                MAX_TENTATIVAS_CONCORRENCIA);
-        throw new IllegalStateException(
-                "Não foi possível criar o pedido após " + MAX_TENTATIVAS_CONCORRENCIA +
-                        " tentativas devido a alta concorrência",
-                ultimaExcecao);
+        return executarCriacao(request, usuarioId, contexto);
     }
 
     /**
@@ -143,9 +121,14 @@ public class CriarPedidoAutoAtendimentoUseCase {
 
         Pedido pedidoSalvo = pedidoRepository.salvar(pedido);
 
-        // Registra auditoria do pagamento (assíncrono)
+        // Registra auditoria do pagamento (assíncrono via @Async)
         if (!pedidoSalvo.getMeiosPagamento().isEmpty()) {
-            auditoriaPagamentoService.registrarPagamentoAutoatendimento(pedidoSalvo, contexto);
+            try {
+                auditoriaPagamentoService.registrarPagamentoAutoatendimento(pedidoSalvo, contexto);
+            } catch (Exception e) {
+                log.warn("Falha ao registrar auditoria de pagamento auto-atendimento (não-crítico): {}",
+                        e.getMessage());
+            }
         }
 
         log.info("[AUTO-ATENDIMENTO] Pedido criado - Número: {}, Cliente: {}, Valor: {}",

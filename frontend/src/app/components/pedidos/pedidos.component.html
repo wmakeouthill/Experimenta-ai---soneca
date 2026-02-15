@@ -146,10 +146,22 @@
               </div>
             </button>
           }
+          @if (pedidosPendentesTotem().length > 0) {
+            <button
+              class="status-card fila-totem"
+              [class.selected]="filtroFilaTotem()"
+              (click)="filtrarPorFilaTotem()"
+            >
+              <div class="status-card-header">
+                <h3>🖥️ Totem</h3>
+                <span class="status-count pulse">{{ pedidosPendentesTotem().length }}</span>
+              </div>
+            </button>
+          }
           <button
             class="status-card aguardando"
             [class.selected]="
-              pedidosComposable.statusSelecionado() === StatusPedido.PENDENTE && !filtroFilaMesa()
+              pedidosComposable.statusSelecionado() === StatusPedido.PENDENTE && !filtroFilaMesa() && !filtroFilaTotem()
             "
             (click)="filtrarPorStatus(StatusPedido.PENDENTE)"
           >
@@ -161,7 +173,7 @@
           <button
             class="status-card preparando"
             [class.selected]="
-              pedidosComposable.statusSelecionado() === StatusPedido.PREPARANDO && !filtroFilaMesa()
+              pedidosComposable.statusSelecionado() === StatusPedido.PREPARANDO && !filtroFilaMesa() && !filtroFilaTotem()
             "
             (click)="filtrarPorStatus(StatusPedido.PREPARANDO)"
           >
@@ -173,7 +185,7 @@
           <button
             class="status-card pronto"
             [class.selected]="
-              pedidosComposable.statusSelecionado() === StatusPedido.PRONTO && !filtroFilaMesa()
+              pedidosComposable.statusSelecionado() === StatusPedido.PRONTO && !filtroFilaMesa() && !filtroFilaTotem()
             "
             (click)="filtrarPorStatus(StatusPedido.PRONTO)"
           >
@@ -185,7 +197,7 @@
           <button
             class="status-card finalizado"
             [class.selected]="
-              pedidosComposable.statusSelecionado() === StatusPedido.FINALIZADO && !filtroFilaMesa()
+              pedidosComposable.statusSelecionado() === StatusPedido.FINALIZADO && !filtroFilaMesa() && !filtroFilaTotem()
             "
             (click)="filtrarPorStatus(StatusPedido.FINALIZADO)"
           >
@@ -197,7 +209,7 @@
           <button
             class="status-card cancelado"
             [class.selected]="
-              pedidosComposable.statusSelecionado() === StatusPedido.CANCELADO && !filtroFilaMesa()
+              pedidosComposable.statusSelecionado() === StatusPedido.CANCELADO && !filtroFilaMesa() && !filtroFilaTotem()
             "
             (click)="filtrarPorStatus(StatusPedido.CANCELADO)"
           >
@@ -282,11 +294,15 @@
                           <span class="pagamento-tipo">{{
                             formatarMeioPagamento(meio.meioPagamento)
                           }}</span>
-                          <span class="pagamento-valor">{{ formatarPreco(meio.valor) }}</span>
+                          <span class="pagamento-valor">{{
+                            meio.meioPagamento === 'DINHEIRO' && meio.valorPagoDinheiro
+                              ? formatarPreco(meio.valorPagoDinheiro)
+                              : formatarPreco(meio.valor)
+                          }}</span>
                         </div>
                         @if (meio.meioPagamento === 'DINHEIRO' && meio.troco && meio.troco > 0) {
                           <div class="pagamento-troco-detalhe">
-                            <span>Pago: {{ formatarPreco(meio.valorPagoDinheiro!) }}</span>
+                            <span>Valor: {{ formatarPreco(meio.valor) }}</span>
                             <span class="troco-valor">Troco: {{ formatarPreco(meio.troco) }}</span>
                           </div>
                         }
@@ -316,6 +332,123 @@
                         class="btn-acao btn-rejeitar"
                         (click)="rejeitarPedidoMesa(pedido.id)"
                         [disabled]="carregandoFilaMesa()"
+                      >
+                        ❌ Rejeitar
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              }
+            </div>
+          }
+        } @else if (filtroFilaTotem()) {
+          <!-- Lista de Pedidos Pendentes do Totem -->
+          @if (pedidosPendentesTotem().length === 0) {
+            <div class="estado-vazio">
+              <p class="vazio-mensagem">Nenhum pedido do totem aguardando aceitação.</p>
+            </div>
+          } @else {
+            <div class="pedidos-lista">
+              @for (pedido of pedidosPendentesTotem(); track pedido.id) {
+                <article class="pedido-card status-fila-totem">
+                  <div class="pedido-header">
+                    <div class="pedido-info-principal">
+                      <h3 class="pedido-numero">
+                        <span class="pedido-totem-badge fila">🖥️ Totem</span>
+                      </h3>
+                      <p class="pedido-cliente-data">
+                        <span class="pedido-cliente" [title]="pedido.nomeCliente">{{
+                          pedido.nomeCliente
+                        }}</span>
+                      </p>
+                    </div>
+                    <div class="pedido-header-direita">
+                      <div class="pedido-status-badge badge-fila-totem">
+                        <span
+                          class="tempo-espera"
+                          [class]="getClasseTempoEsperaTotem(pedido.tempoEsperaSegundos)"
+                        >
+                          ⏱️ {{ formatarTempoEsperaTotem(pedido.tempoEsperaSegundos) }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="pedido-itens">
+                    <ul class="itens-lista">
+                      @for (item of pedido.itens; track item.produtoId) {
+                        <li class="item-lista">
+                          <div class="item-linha-principal">
+                            <span class="item-quantidade">{{ item.quantidade }}x</span>
+                            <span class="item-nome">{{ item.nomeProduto }}</span>
+                            <span class="item-preco">{{ formatarPreco(item.subtotal) }}</span>
+                          </div>
+                          @if (item.adicionais && item.adicionais.length > 0) {
+                            <div class="item-adicionais">
+                              @for (ad of item.adicionais; track ad.adicionalId) {
+                                <span class="adicional-badge"
+                                  >+{{ ad.quantidade }}x {{ ad.nome }}</span
+                                >
+                              }
+                            </div>
+                          }
+                        </li>
+                      }
+                    </ul>
+                  </div>
+
+                  @if (pedido.observacoes && pedido.observacoes.trim()) {
+                    <div class="pedido-observacoes">
+                      <span class="observacoes-titulo">Observações:</span>
+                      <span class="observacoes-texto">{{ pedido.observacoes }}</span>
+                    </div>
+                  }
+
+                  @if (pedido.meiosPagamento && pedido.meiosPagamento.length > 0) {
+                    <div class="pedido-pagamento-info">
+                      @for (meio of pedido.meiosPagamento; track meio.meioPagamento) {
+                        <div class="pagamento-linha">
+                          <span class="pagamento-tipo">{{
+                            formatarMeioPagamento(meio.meioPagamento)
+                          }}</span>
+                          <span class="pagamento-valor">{{
+                            meio.meioPagamento === 'DINHEIRO' && meio.valorPagoDinheiro
+                              ? formatarPreco(meio.valorPagoDinheiro)
+                              : formatarPreco(meio.valor)
+                          }}</span>
+                        </div>
+                        @if (meio.meioPagamento === 'DINHEIRO' && meio.troco && meio.troco > 0) {
+                          <div class="pagamento-troco-detalhe">
+                            <span>Valor: {{ formatarPreco(meio.valor) }}</span>
+                            <span class="troco-valor">Troco: {{ formatarPreco(meio.troco) }}</span>
+                          </div>
+                        }
+                        @if (
+                          meio.meioPagamento === 'DINHEIRO' &&
+                          (!meio.valorPagoDinheiro || meio.valorPagoDinheiro <= meio.valor)
+                        ) {
+                          <span class="pagamento-sem-troco">💵 Sem troco informado</span>
+                        }
+                      }
+                    </div>
+                  }
+
+                  <div class="pedido-footer">
+                    <div class="pedido-total">
+                      <strong>Total: {{ formatarPreco(pedido.valorTotal) }}</strong>
+                    </div>
+                    <div class="pedido-acoes fila-acoes">
+                      <button
+                        class="btn-acao btn-aceitar"
+                        (click)="aceitarPedidoTotem(pedido.id)"
+                        [disabled]="carregandoFilaTotem()"
+                      >
+                        ✅ Aceitar
+                      </button>
+                      <button
+                        class="btn-acao btn-rejeitar"
+                        (click)="rejeitarPedidoTotem(pedido.id)"
+                        [disabled]="carregandoFilaTotem()"
                       >
                         ❌ Rejeitar
                       </button>

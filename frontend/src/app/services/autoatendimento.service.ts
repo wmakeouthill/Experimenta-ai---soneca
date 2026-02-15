@@ -38,6 +38,14 @@ export interface CriarPedidoAutoAtendimentoRequest {
   meiosPagamento: MeioPagamentoAutoAtendimentoRequest[];
 }
 
+/** Resposta quando o pedido do totem foi enviado para a fila de aceitação. */
+export interface PedidoTotemNaFilaResponse {
+  id: string;
+  status: string;
+  mensagem: string;
+}
+
+/** Resposta ao buscar status de um pedido já aceito (pedido real). */
 export interface PedidoAutoAtendimentoResponse {
   id: string;
   numeroPedido: number;
@@ -49,7 +57,8 @@ export interface PedidoAutoAtendimentoResponse {
 
 /**
  * Service para operações do auto atendimento (totem).
- * Endpoints autenticados com JWT do operador logado.
+ * O pedido é enviado para a fila de aceitação (igual ao fluxo de mesa)
+ * e só vira pedido real quando um funcionário aceitar no painel.
  */
 @Injectable({
   providedIn: 'root',
@@ -58,37 +67,27 @@ export class AutoAtendimentoService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = '/api/autoatendimento';
 
-  /**
-   * Gera uma chave de idempotência única.
-   * Deve ser chamado UMA VEZ no componente e reutilizado em caso de retry.
-   */
   gerarChaveIdempotencia(): string {
     return generateIdempotencyKey();
   }
 
   /**
-   * Cria um pedido de auto atendimento.
-   * O pedido é criado diretamente (sem fila de pendentes) pois
-   * o operador já está autenticado no totem.
-   *
-   * A chave de idempotência deve ser gerada pelo componente chamador
-   * para garantir que retries/double-clicks usem a mesma chave.
+   * Envia o pedido do totem para a fila de aceitação.
+   * Retorna id e mensagem; o pedido só vira "aguardando" após aceite no painel.
    */
   criarPedido(
     request: CriarPedidoAutoAtendimentoRequest,
     idempotencyKey: string
-  ): Observable<PedidoAutoAtendimentoResponse> {
+  ): Observable<PedidoTotemNaFilaResponse> {
     const headers = new HttpHeaders({
       'X-Idempotency-Key': idempotencyKey,
     });
-    return this.http.post<PedidoAutoAtendimentoResponse>(`${this.apiUrl}/pedido`, request, {
+    return this.http.post<PedidoTotemNaFilaResponse>(`${this.apiUrl}/pedido`, request, {
       headers,
     });
   }
 
-  /**
-   * Busca o status de um pedido de auto atendimento.
-   */
+  /** Busca o status de um pedido já aceito (por id do pedido real). */
   buscarStatus(pedidoId: string): Observable<PedidoAutoAtendimentoResponse> {
     return this.http.get<PedidoAutoAtendimentoResponse>(`${this.apiUrl}/pedido/${pedidoId}/status`);
   }

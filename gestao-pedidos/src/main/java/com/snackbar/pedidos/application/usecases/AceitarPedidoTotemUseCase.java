@@ -11,39 +11,33 @@ import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
 import com.snackbar.pedidos.application.ports.SessaoTrabalhoRepositoryPort;
 import com.snackbar.pedidos.application.services.AuditoriaPagamentoService;
 import com.snackbar.pedidos.application.services.AuditoriaPagamentoService.ContextoRequisicao;
-import com.snackbar.pedidos.application.services.FilaPedidosMesaService;
+import com.snackbar.pedidos.application.services.FilaPedidosTotemService;
 import com.snackbar.pedidos.application.services.GeradorNumeroPedidoService;
 import com.snackbar.pedidos.domain.entities.ItemPedido;
 import com.snackbar.pedidos.domain.entities.ItemPedidoAdicional;
 import com.snackbar.pedidos.domain.entities.MeioPagamentoPedido;
 import com.snackbar.pedidos.domain.entities.Pedido;
+import com.snackbar.pedidos.domain.services.PedidoValidator;
 import com.snackbar.pedidos.domain.valueobjects.NumeroPedido;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Use case para funcionário aceitar um pedido pendente de mesa.
- * 
- * Quando o funcionário aceita, o pedido é:
- * 1. Removido atomicamente da fila de pendentes (thread-safe)
- * 2. Criado como pedido real no sistema (com retry em caso de conflito)
- * 3. Vinculado ao usuário que aceitou
- * 4. Colocado no status PENDENTE para preparação
- * 
- * PROTEÇÕES DE CONCORRÊNCIA:
- * - Remoção atômica da fila evita que dois funcionários aceitem o mesmo pedido
- * - Geração de número via sequence atômica elimina conflitos
+ * Use case para funcionário aceitar um pedido pendente de totem.
+ * Quando aceito, o pedido é criado como pedido real (status
+ * PENDENTE/aguardando).
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AceitarPedidoMesaUseCase {
+public class AceitarPedidoTotemUseCase {
 
-    private final FilaPedidosMesaService filaPedidosMesa;
+    private final FilaPedidosTotemService filaPedidosTotem;
     private final PedidoRepositoryPort pedidoRepository;
     private final SessaoTrabalhoRepositoryPort sessaoTrabalhoRepository;
     private final GeradorNumeroPedidoService geradorNumeroPedido;
+    private final PedidoValidator pedidoValidator;
     private final AuditoriaPagamentoService auditoriaPagamentoService;
 
     @Transactional
@@ -52,7 +46,6 @@ public class AceitarPedidoMesaUseCase {
             contexto = ContextoRequisicao.vazio();
         }
 
-        // Valida parâmetros
         if (pedidoPendenteId == null || pedidoPendenteId.isBlank()) {
             throw new ValidationException("ID do pedido pendente é obrigatório");
         }
@@ -60,19 +53,13 @@ public class AceitarPedidoMesaUseCase {
             throw new ValidationException("ID do usuário é obrigatório");
         }
 
-        // Busca e remove atomicamente o pedido da fila (thread-safe)
-        // Isso garante que apenas um funcionário consiga aceitar o mesmo pedido
-        PedidoPendenteDTO pedidoPendente = filaPedidosMesa.buscarERemoverAtomicamente(pedidoPendenteId)
+        PedidoPendenteDTO pedidoPendente = filaPedidosTotem.buscarERemoverAtomicamente(pedidoPendenteId)
                 .orElseThrow(() -> new ValidationException(
                         "Pedido pendente não encontrado ou já foi aceito/expirado: " + pedidoPendenteId));
 
-        // Cria o pedido real a partir do pendente
         return criarPedidoReal(pedidoPendente, usuarioId, pedidoPendenteId, contexto);
     }
 
-    /**
-     * Método de compatibilidade para chamadas sem contexto.
-     */
     @Transactional
     public PedidoDTO executar(String pedidoPendenteId, String usuarioId) {
         return executar(pedidoPendenteId, usuarioId, null);
@@ -83,20 +70,12 @@ public class AceitarPedidoMesaUseCase {
             String usuarioId,
             String pedidoPendenteId,
             ContextoRequisicao contexto) {
-        // Gera número do pedido usando o serviço dedicado
         NumeroPedido numeroPedido = geradorNumeroPedido.gerarProximoNumero();
+        String nomeCliente = pedidoPendente.getNomeCliente() != null ? pedidoPendente.getNomeCliente()
+                : "Cliente Totem";
 
-        // Cria o pedido real vinculado ao funcionário que aceitou
-        Pedido pedido = Pedido.criar(
-                numeroPedido,
-                pedidoPendente.getClienteId(),
-                pedidoPendente.getNomeCliente(),
-                usuarioId);
+        Pedido pedido = Pedido.criarPedidoAutoAtendimento(numeroPedido, nomeCliente, usuarioId);
 
-        // Define a mesa
-        pedido.definirMesa(pedidoPendente.getMesaId(), pedidoPendente.getNumeroMesa(), pedidoPendente.getNomeCliente());
-
-        // Adiciona os itens
         for (ItemPedidoPendenteDTO itemPendente : pedidoPendente.getItens()) {
             Preco precoUnitario = Preco.of(itemPendente.getPrecoUnitario());
 
@@ -107,7 +86,6 @@ public class AceitarPedidoMesaUseCase {
                     precoUnitario,
                     itemPendente.getObservacoes());
 
-            // Adiciona os adicionais ao item
             if (itemPendente.getAdicionais() != null && !itemPendente.getAdicionais().isEmpty()) {
                 for (AdicionalPedidoPendenteDTO adicionalPendente : itemPendente.getAdicionais()) {
                     ItemPedidoAdicional adicional = ItemPedidoAdicional.criar(
@@ -122,49 +100,39 @@ public class AceitarPedidoMesaUseCase {
             pedido.adicionarItem(item);
         }
 
-        // Adiciona observações
         if (pedidoPendente.getObservacoes() != null && !pedidoPendente.getObservacoes().isBlank()) {
             pedido.atualizarObservacoes(pedidoPendente.getObservacoes());
         }
 
-        // Adiciona meios de pagamento do pedido pendente
         if (pedidoPendente.getMeiosPagamento() != null) {
             for (MeioPagamentoRequest mpRequest : pedidoPendente.getMeiosPagamento()) {
                 Preco valor = Preco.of(mpRequest.getValor());
                 MeioPagamentoPedido meioPagamento = criarMeioPagamentoComTroco(mpRequest, valor);
                 pedido.adicionarMeioPagamento(meioPagamento);
             }
-            log.debug("Adicionados {} meios de pagamento ao pedido",
-                    pedidoPendente.getMeiosPagamento().size());
         }
 
-        // Vincula sessão de trabalho ativa
         sessaoTrabalhoRepository.buscarSessaoAtiva()
                 .ifPresent(sessao -> pedido.definirSessaoId(sessao.getId()));
 
-        // Salva o pedido
+        pedidoValidator.validarCriacao(pedido);
+
         Pedido pedidoSalvo = pedidoRepository.salvar(pedido);
 
-        // Registra auditoria do pagamento (assíncrono via @Async)
         if (!pedidoSalvo.getMeiosPagamento().isEmpty()) {
             try {
-                auditoriaPagamentoService.registrarPagamentoMesa(pedidoSalvo, contexto);
+                auditoriaPagamentoService.registrarPagamentoAutoatendimento(pedidoSalvo, contexto);
             } catch (Exception e) {
-                log.warn("Falha ao registrar auditoria de pagamento mesa (não-crítico): {}", e.getMessage());
+                log.warn("Falha ao registrar auditoria de pagamento totem (não-crítico): {}", e.getMessage());
             }
         }
 
-        // Nota: A remoção da fila já foi feita atomicamente em
-        // buscarERemoverAtomicamente()
-        // Registra mapeamento pendente -> pedido real para que o cliente acompanhe o
-        // status
-        filaPedidosMesa.registrarConversaoParaPedidoReal(pedidoPendenteId, pedidoSalvo.getId());
+        filaPedidosTotem.registrarConversaoParaPedidoReal(pedidoPendenteId, pedidoSalvo.getId());
 
-        log.info("Pedido aceito - Número: {}, Mesa: {}, Usuário: {}, Cliente: {}",
+        log.info("Pedido totem aceito - Número: {}, Cliente: {}, Usuário: {}",
                 pedidoSalvo.getNumeroPedido().getNumero(),
-                pedidoPendente.getNumeroMesa(),
-                usuarioId,
-                pedidoPendente.getNomeCliente());
+                nomeCliente,
+                usuarioId);
 
         return PedidoDTO.de(pedidoSalvo);
     }
