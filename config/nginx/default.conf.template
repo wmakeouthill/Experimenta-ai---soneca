@@ -3,9 +3,10 @@ server {
     listen 80;
     server_name ${DOMAIN} www.${DOMAIN};
 
-    # Certbot challenge
-    location /.well-known/acme-challenge/ {
+    # Certbot challenge (^~ garante prioridade sobre regex de dotfiles)
+    location ^~ /.well-known/acme-challenge/ {
         root /var/www/certbot;
+        allow all;
     }
 
     # Health check (sem redirect)
