@@ -45,21 +45,19 @@ export class ImageUploadComponent {
     effect(() => {
       const imagemAtual = this.imagemAtual();
       
-      // Só atualizar se a imagemAtual mudou e usuário não definiu preview
       if (imagemAtual !== this.ultimaImagemAtual) {
         this.ultimaImagemAtual = imagemAtual;
         
-        if (imagemAtual && !this.usuarioDefiniuPreview) {
-          // Atualizar preview apenas se usuário não definiu um próprio
-          // Usar setTimeout para evitar mutação durante effect
+        if (imagemAtual) {
+          if (!this.usuarioDefiniuPreview) {
+            setTimeout(() => {
+              this.imagemPreview.set(imagemAtual);
+            }, 0);
+          }
+        } else {
+          // imagemAtual é null: limpar preview e resetar flag (ex.: novo produto após salvar outro)
+          this.usuarioDefiniuPreview = false;
           setTimeout(() => {
-            this.imagemPreview.set(imagemAtual);
-          }, 0);
-        } else if (!imagemAtual && !this.usuarioDefiniuPreview) {
-          // Só limpar se não houver imagem atual e usuário não definiu preview
-          // Usar setTimeout para evitar mutação durante effect
-          setTimeout(() => {
-            // Verificar se não está carregando antes de limpar (fora do effect)
             if (!this.carregando()) {
               this.imagemPreview.set(null);
             }

@@ -87,7 +87,10 @@ public class SecurityConfig {
                         // Endpoints de autenticação (exigem autenticação)
                         .requestMatchers("/api/auth/**").authenticated()
 
-                        // Endpoints administrativos (exigem role ADMINISTRADOR)
+                        // Listagem de usuários - ADMINISTRADOR e OPERADOR (necessário para exibir
+                        // nome do usuário na tela de sessões de trabalho; OPERADOR só pode GET)
+                        .requestMatchers("GET", "/api/admin/usuarios").hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
+                        // Demais endpoints administrativos - apenas ADMINISTRADOR
                         .requestMatchers("/api/admin/**").hasRole(ROLE_ADMINISTRADOR)
 
                         // Endpoints de cardápio - Leitura para ADMINISTRADOR e OPERADOR, escrita apenas

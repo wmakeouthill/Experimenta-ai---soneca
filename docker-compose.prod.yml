@@ -79,7 +79,8 @@ services:
       - SHOW_SQL=false
       - LOG_LEVEL=${LOG_LEVEL:-WARN}
       # JVM otimizada para VPS 4 GB RAM
-      - JAVA_OPTS=-Xms256m -Xmx768m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseStringDeduplication -XX:+UseCompressedOops -Djava.security.egd=file:/dev/./urandom
+      - TZ=America/Sao_Paulo
+      - JAVA_OPTS=-Xms256m -Xmx768m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:+UseStringDeduplication -XX:+UseCompressedOops -Duser.timezone=America/Sao_Paulo -Djava.security.egd=file:/dev/./urandom
       # Chat IA (opcional)
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}

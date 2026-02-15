@@ -52,6 +52,7 @@ echo "✅ Banco de dados configurado com sucesso!"
 # Iniciar aplicação Spring Boot
 echo "🚀 Iniciando aplicação Spring Boot..."
 exec java -jar \
+    -Duser.timezone=America/Sao_Paulo \
     -Dspring.profiles.active=prod \
     -Dspring.datasource.url="${DB_URL}" \
     -Dspring.datasource.username="${DB_USERNAME}" \

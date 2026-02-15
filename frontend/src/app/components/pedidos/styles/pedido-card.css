@@ -35,32 +35,32 @@
 .pedido-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  border-color: #4CAF50;
+  border-color: #4caf50;
 }
 
 .pedido-card:hover::before {
-  background: #4CAF50;
+  background: #4caf50;
 }
 
 .pedido-card.status-pendente::before,
 .pedido-card.status-aguardando::before {
-  background: #FFC107;
+  background: #ffc107;
 }
 
 .pedido-card.status-preparando::before {
-  background: #FF9800;
+  background: #ff9800;
 }
 
 .pedido-card.status-pronto::before {
-  background: #4CAF50;
+  background: #4caf50;
 }
 
 .pedido-card.status-finalizado::before {
-  background: #2196F3;
+  background: #2196f3;
 }
 
 .pedido-card.status-cancelado::before {
-  background: #F44336;
+  background: #f44336;
 }
 
 .pedido-header {
@@ -88,46 +88,57 @@
   font-size: 0.85rem;
   color: #666;
   margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   display: flex;
   align-items: center;
   gap: 0.3rem;
+  overflow: hidden;
 }
 
 .pedido-cliente {
   color: #666;
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .pedido-mesa-badge {
-  background: linear-gradient(135deg, #FF6B35, #F7931E);
+  background: linear-gradient(135deg, #ff6b35, #f7931e);
   color: white;
   padding: 0.1rem 0.4rem;
   border-radius: 4px;
   font-size: 0.7rem;
   font-weight: 600;
   margin-right: 0.3rem;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .pedido-totem-badge {
-  background: linear-gradient(135deg, #6B5B95, #9B59B6);
+  background: linear-gradient(135deg, #6b5b95, #9b59b6);
   color: white;
   padding: 0.1rem 0.4rem;
   border-radius: 4px;
   font-size: 0.7rem;
   font-weight: 600;
   margin-right: 0.3rem;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .pedido-separador {
   color: #999;
   font-weight: 400;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .pedido-data {
   font-size: 0.8rem;
   color: #999;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .pedido-status-badge {
@@ -204,7 +215,7 @@
 
 .item-quantidade {
   font-weight: 600;
-  color: #4CAF50;
+  color: #4caf50;
   min-width: 30px;
   font-size: 0.8rem;
   flex-shrink: 0;
@@ -315,32 +326,32 @@
 }
 
 .btn-preparando {
-  color: #FF9800;
-  border-color: #FF9800;
+  color: #ff9800;
+  border-color: #ff9800;
 }
 
 .btn-preparando:hover {
-  background: #FF9800;
+  background: #ff9800;
   color: white;
 }
 
 .btn-pronto {
-  color: #4CAF50;
-  border-color: #4CAF50;
+  color: #4caf50;
+  border-color: #4caf50;
 }
 
 .btn-pronto:hover {
-  background: #4CAF50;
+  background: #4caf50;
   color: white;
 }
 
 .btn-finalizar {
-  color: #2196F3;
-  border-color: #2196F3;
+  color: #2196f3;
+  border-color: #2196f3;
 }
 
 .btn-finalizar:hover {
-  background: #2196F3;
+  background: #2196f3;
   color: white;
 }
 
@@ -355,7 +366,7 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -373,20 +384,20 @@
 
 /* Estilos para Fila de Pedidos de Mesa */
 .pedido-card.status-fila-mesa::before {
-  background: linear-gradient(90deg, #9C27B0, #BA68C8);
+  background: linear-gradient(90deg, #9c27b0, #ba68c8);
 }
 
 .pedido-card.status-fila-mesa {
-  border-color: #E1BEE7;
+  border-color: #e1bee7;
   background: linear-gradient(135deg, #fff 0%, #faf5fc 100%);
 }
 
 .pedido-card.status-fila-mesa:hover {
-  border-color: #9C27B0;
+  border-color: #9c27b0;
 }
 
 .pedido-mesa-badge.fila {
-  background: linear-gradient(135deg, #9C27B0, #BA68C8);
+  background: linear-gradient(135deg, #9c27b0, #ba68c8);
   font-size: 0.85rem;
   padding: 0.2rem 0.6rem;
 }
@@ -423,7 +434,8 @@
 }
 
 @keyframes urgente-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -441,7 +453,7 @@
 }
 
 .btn-aceitar {
-  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
   color: white;
   border: none;
   font-weight: 600;
@@ -477,4 +489,3 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
-
