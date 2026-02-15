@@ -103,8 +103,11 @@ export class MeiosPagamentoComponent {
     // Se o valor excede o restante, ajusta para o restante (exceto dinheiro)
     const valorAtual = this.valorMeioPagamento();
     const restante = this.valorRestante();
-    if (this.meioPagamentoSelecionado() !== MeioPagamento.DINHEIRO &&
-        valorAtual > restante && restante > 0) {
+    if (
+      this.meioPagamentoSelecionado() !== MeioPagamento.DINHEIRO &&
+      valorAtual > restante &&
+      restante > 0
+    ) {
       this.valorMeioPagamento.set(restante);
     }
   }
@@ -165,7 +168,9 @@ export class MeiosPagamentoComponent {
       // Outros meios: bloqueia valor acima do restante
       if (valorDigitado > valorRestante) {
         if (this.isBrowser) {
-          alert(`O valor não pode ser maior que o restante (${this.formatarPreco(valorRestante)}).`);
+          alert(
+            `O valor não pode ser maior que o restante (${this.formatarPreco(valorRestante)}).`
+          );
         }
         return;
       }
