@@ -135,7 +135,11 @@
     <!-- Migration: Adiciona coluna tipo (MESA/TOTEM) e torna colunas de mesa nullable para suportar totem -->
     <include file="changes/041-add-tipo-pedidos-pendentes-mesa.sql" relativeToChangelogFile="true" />
 
-    <!-- 
+    <!-- Migration: Adiciona colunas version para Optimistic Locking em produtos, clientes e itens_estoque -->
+    <include file="changes/042-add-version-columns-produtos-clientes-estoque.sql"
+        relativeToChangelogFile="true" />
+
+    <!--
     NOTA: O usuário administrador inicial é criado automaticamente via CommandLineRunner
     (UsuarioInicialConfig) na primeira execução da aplicação.
     Credenciais: admin@snackbar.com / admin123

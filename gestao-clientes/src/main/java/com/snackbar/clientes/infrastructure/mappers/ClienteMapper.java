@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 public class ClienteMapper {
 
     public ClienteEntity paraEntity(Cliente cliente) {
-        return ClienteEntity.builder()
+        ClienteEntity.ClienteEntityBuilder builder = ClienteEntity.builder()
                 .id(cliente.getId())
                 .nome(cliente.getNome())
                 .telefone(cliente.getTelefone())
@@ -23,8 +23,14 @@ public class ClienteMapper {
                 .ultimoLogin(cliente.getUltimoLogin())
                 // Timestamps
                 .createdAt(cliente.getCreatedAt())
-                .updatedAt(cliente.getUpdatedAt())
-                .build();
+                .updatedAt(cliente.getUpdatedAt());
+
+        if (cliente.getVersion() != null) {
+            builder.version(cliente.getVersion());
+            builder.novo(false);
+        }
+
+        return builder.build();
     }
 
     public Cliente paraDomain(ClienteEntity entity) {
@@ -47,6 +53,7 @@ public class ClienteMapper {
                     entity.getFotoUrl(),
                     entity.getEmailVerificado() != null && entity.getEmailVerificado(),
                     entity.getUltimoLogin());
+            cliente.restaurarVersionDoBanco(entity.getVersion());
 
             return cliente;
         }
@@ -70,6 +77,7 @@ public class ClienteMapper {
                 entity.getFotoUrl(),
                 entity.getEmailVerificado() != null && entity.getEmailVerificado(),
                 entity.getUltimoLogin());
+        cliente.restaurarVersionDoBanco(entity.getVersion());
 
         return cliente;
     }

@@ -25,6 +25,7 @@ public class SessaoTrabalhoMapper {
                 // @Builder.Default usar 0L)
                 if (sessao.getVersion() != null) {
                         builder.version(sessao.getVersion());
+                        builder.novo(false);
                 }
 
                 return builder.build();

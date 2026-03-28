@@ -18,7 +18,7 @@ public class ItemEstoqueMapper {
             return null;
         }
         
-        return ItemEstoque.restaurarDoBancoFactory(
+        ItemEstoque item = ItemEstoque.restaurarDoBancoFactory(
                 entity.getId(),
                 entity.getNome(),
                 entity.getDescricao(),
@@ -32,6 +32,8 @@ public class ItemEstoqueMapper {
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );
+        item.restaurarVersionDoBanco(entity.getVersion());
+        return item;
     }
     
     /**
@@ -42,7 +44,7 @@ public class ItemEstoqueMapper {
             return null;
         }
         
-        return ItemEstoqueEntity.builder()
+        ItemEstoqueEntity.ItemEstoqueEntityBuilder builder = ItemEstoqueEntity.builder()
                 .id(item.getId())
                 .nome(item.getNome())
                 .descricao(item.getDescricao())
@@ -54,8 +56,14 @@ public class ItemEstoqueMapper {
                 .codigoBarras(item.getCodigoBarras())
                 .ativo(item.isAtivo())
                 .createdAt(item.getCreatedAt())
-                .updatedAt(item.getUpdatedAt())
-                .build();
+                .updatedAt(item.getUpdatedAt());
+
+        if (item.getVersion() != null) {
+            builder.version(item.getVersion());
+            builder.novo(false);
+        }
+
+        return builder.build();
     }
 }
 

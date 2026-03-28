@@ -20,6 +20,7 @@ public class Cliente extends BaseEntity {
     private String fotoUrl;
     private boolean emailVerificado;
     private LocalDateTime ultimoLogin;
+    private Long version;
 
     private Cliente() {
         super();
@@ -185,6 +186,10 @@ public class Cliente extends BaseEntity {
     public void restaurarDoBanco(String id, LocalDateTime createdAt, LocalDateTime updatedAt) {
         restaurarId(id);
         restaurarTimestamps(createdAt, updatedAt);
+    }
+
+    public void restaurarVersionDoBanco(Long version) {
+        this.version = version;
     }
 
     /**

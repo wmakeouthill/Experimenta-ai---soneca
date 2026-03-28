@@ -22,6 +22,7 @@ public class ItemEstoque extends BaseEntity {
     private String fornecedor;
     private String codigoBarras;
     private boolean ativo;
+    private Long version;
 
     private ItemEstoque() {
         super();
@@ -139,6 +140,10 @@ public class ItemEstoque extends BaseEntity {
         item.restaurarId(id);
         item.restaurarTimestamps(createdAt, updatedAt);
         return item;
+    }
+
+    public void restaurarVersionDoBanco(Long version) {
+        this.version = version;
     }
 
     private static void validarNome(String nome) {

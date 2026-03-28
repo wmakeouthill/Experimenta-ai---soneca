@@ -18,7 +18,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class MovimentacaoCaixaEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
     
     @Column(nullable = false, length = 36)

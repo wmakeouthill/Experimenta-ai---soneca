@@ -15,7 +15,7 @@ public class ProdutoMapper implements Mapper<Produto, ProdutoEntity> {
             return null;
         }
         
-        return ProdutoEntity.builder()
+        ProdutoEntity.ProdutoEntityBuilder builder = ProdutoEntity.builder()
             .id(produto.getId())
             .nome(produto.getNome())
             .descricao(produto.getDescricao())
@@ -24,8 +24,14 @@ public class ProdutoMapper implements Mapper<Produto, ProdutoEntity> {
             .disponivel(produto.estaDisponivel())
             .foto(produto.getFoto())
             .createdAt(produto.getCreatedAt())
-            .updatedAt(produto.getUpdatedAt())
-            .build();
+            .updatedAt(produto.getUpdatedAt());
+
+        if (produto.getVersion() != null) {
+            builder.version(produto.getVersion());
+            builder.novo(false);
+        }
+
+        return builder.build();
     }
     
     @Override
@@ -44,11 +50,12 @@ public class ProdutoMapper implements Mapper<Produto, ProdutoEntity> {
         
         // Restaura ID e timestamps do banco de dados
         produto.restaurarDoBanco(entity.getId(), entity.getCreatedAt(), entity.getUpdatedAt());
-        
+        produto.restaurarVersionDoBanco(entity.getVersion());
+
         if (!entity.isDisponivel()) {
             produto.marcarComoIndisponivel();
         }
-        
+
         return produto;
     }
 }

@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.domain.Persistable;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -16,9 +17,8 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ItemEstoqueEntity {
+public class ItemEstoqueEntity implements Persistable<String> {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
     
     @Column(nullable = false, length = 150, unique = true)
@@ -49,10 +49,29 @@ public class ItemEstoqueEntity {
     @Column(nullable = false)
     private boolean ativo;
     
+    @Version
+    @Builder.Default
+    private Long version = 0L;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
-    
+
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    @Transient
+    @Builder.Default
+    private boolean novo = true;
+
+    @Override
+    public boolean isNew() {
+        return novo;
+    }
+
+    @PostLoad
+    @PostPersist
+    void markNotNew() {
+        this.novo = false;
+    }
 }
 

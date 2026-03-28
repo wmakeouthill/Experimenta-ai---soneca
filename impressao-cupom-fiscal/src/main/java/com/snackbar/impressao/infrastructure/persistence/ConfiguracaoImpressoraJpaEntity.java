@@ -18,7 +18,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ConfiguracaoImpressoraJpaEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     @Enumerated(EnumType.STRING)

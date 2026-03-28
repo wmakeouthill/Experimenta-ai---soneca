@@ -44,6 +44,8 @@ public class PedidoMapper {
         // @Builder.Default usar 0L)
         if (pedido.getVersion() != null) {
             builder.version(pedido.getVersion());
+            // Se tem version do banco, não é entidade nova (evita merge vs persist)
+            builder.novo(false);
         }
 
         PedidoEntity entity = builder.build();

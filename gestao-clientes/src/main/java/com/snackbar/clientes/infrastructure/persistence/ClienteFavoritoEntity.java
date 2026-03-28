@@ -21,7 +21,6 @@ import java.time.LocalDateTime;
 public class ClienteFavoritoEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     @Column(name = "cliente_id", nullable = false, length = 36)

@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class CategoriaEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
     
     @Column(nullable = false, length = 200)

@@ -13,7 +13,8 @@ public class Produto extends BaseEntity {
     private String categoria;
     private boolean disponivel;
     private String foto; // Base64 string da imagem
-    
+    private Long version;
+
     private Produto() {
         super();
     }
@@ -90,6 +91,10 @@ public class Produto extends BaseEntity {
     public void restaurarDoBanco(String id, java.time.LocalDateTime createdAt, java.time.LocalDateTime updatedAt) {
         restaurarId(id);
         restaurarTimestamps(createdAt, updatedAt);
+    }
+
+    public void restaurarVersionDoBanco(Long version) {
+        this.version = version;
     }
     
     @SuppressWarnings("java:S1172") // descricao é usado no método criar, não precisa validação
