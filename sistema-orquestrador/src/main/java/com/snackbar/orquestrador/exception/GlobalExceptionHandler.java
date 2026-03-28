@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -102,6 +103,25 @@ public class GlobalExceptionHandler {
         
         logger.warn("Erro de conversão de tipo: {}", mensagem);
         
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<Map<String, Object>> handleMissingRequestHeaderException(
+            MissingRequestHeaderException ex) {
+        String mensagem = String.format(
+            "Header obrigatório ausente: %s",
+            ex.getHeaderName()
+        );
+
+        Map<String, Object> body = criarRespostaErro(
+            HttpStatus.BAD_REQUEST.value(),
+            "Requisição Inválida",
+            mensagem
+        );
+
+        logger.warn("Header obrigatório ausente: {}", ex.getHeaderName());
+
         return ResponseEntity.badRequest().body(body);
     }
     

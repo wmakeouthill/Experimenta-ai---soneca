@@ -3,6 +3,7 @@ package com.snackbar.pedidos.infrastructure.persistence.entities;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.domain.Persistable;
 
 import java.time.LocalDateTime;
 
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 @Table(name = "mesas")
 @Data
 @NoArgsConstructor
-public class MesaEntity {
+public class MesaEntity implements Persistable<String> {
 
     @Id
     @Column(length = 36)
@@ -37,6 +38,14 @@ public class MesaEntity {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Transient
+    private boolean novo = true;
+
+    @Override
+    public boolean isNew() {
+        return novo;
+    }
+
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {
@@ -50,5 +59,15 @@ public class MesaEntity {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    @PostLoad
+    @PostPersist
+    void markNotNew() {
+        this.novo = false;
+    }
+
+    public void markAsPersisted() {
+        this.novo = false;
     }
 }

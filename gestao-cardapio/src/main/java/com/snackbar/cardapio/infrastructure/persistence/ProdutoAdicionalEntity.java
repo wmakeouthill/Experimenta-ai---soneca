@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.domain.Persistable;
 
 import java.time.LocalDateTime;
 
@@ -15,7 +16,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @IdClass(ProdutoAdicionalId.class)
-public class ProdutoAdicionalEntity {
+public class ProdutoAdicionalEntity implements Persistable<ProdutoAdicionalId> {
 
     @Id
     @Column(name = "produto_id", nullable = false, length = 36)
@@ -28,10 +29,30 @@ public class ProdutoAdicionalEntity {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    @Transient
+    @Builder.Default
+    private boolean novo = true;
+
+    @Override
+    public ProdutoAdicionalId getId() {
+        return new ProdutoAdicionalId(produtoId, adicionalId);
+    }
+
+    @Override
+    public boolean isNew() {
+        return novo;
+    }
+
     @PrePersist
     public void prePersist() {
         if (createdAt == null) {
             createdAt = LocalDateTime.now();
         }
+    }
+
+    @PostLoad
+    @PostPersist
+    void markNotNew() {
+        this.novo = false;
     }
 }

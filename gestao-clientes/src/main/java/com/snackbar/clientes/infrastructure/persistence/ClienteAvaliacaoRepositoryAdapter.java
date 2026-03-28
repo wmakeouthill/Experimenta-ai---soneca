@@ -21,6 +21,9 @@ public class ClienteAvaliacaoRepositoryAdapter implements ClienteAvaliacaoReposi
     @SuppressWarnings("null")
     public ClienteAvaliacao salvar(@NonNull ClienteAvaliacao avaliacao) {
         ClienteAvaliacaoEntity entity = mapper.paraEntity(avaliacao);
+        if (jpaRepository.existsById(entity.getId())) {
+            entity.markAsPersisted();
+        }
         ClienteAvaliacaoEntity salvo = jpaRepository.save(entity);
         return mapper.paraDomain(salvo);
     }

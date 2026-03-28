@@ -2,10 +2,10 @@ import { signal, computed, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Produto } from '../../../services/produto.service';
+import { ClienteAuthService } from '../../../services/cliente-auth.service';
 import { firstValueFrom } from 'rxjs';
 
 const CACHE_KEY = 'experimenta-ai-favoritos-cache';
-const API_BASE = '/api/cliente/conta';
 
 interface FavoritoResponse {
     id: string;
@@ -31,6 +31,7 @@ export function useFavoritos(
 ) {
     const platformId = inject(PLATFORM_ID);
     const http = inject(HttpClient);
+    const clienteAuthService = inject(ClienteAuthService);
     const isBrowser = isPlatformBrowser(platformId);
 
     // Estado
@@ -54,8 +55,17 @@ export function useFavoritos(
     }
 
     // ========== OPERAÇÕES COM API (fonte de verdade) ==========
-    // Headers (Authorization e X-Cliente-Id) são adicionados automaticamente
-    // pelo clienteAuthInterceptor
+
+    function isFluxoAutenticado(): boolean {
+        const cliente = clienteId();
+        return !!cliente && clienteAuthService.estaLogado && clienteAuthService.clienteLogado?.id === cliente;
+    }
+
+    function baseUrlFavoritos(cliente: string): string {
+        return isFluxoAutenticado()
+            ? '/api/cliente/conta/favoritos'
+            : `/api/clientes/${cliente}/favoritos`;
+    }
 
     /**
      * Adiciona produto aos favoritos.
@@ -78,7 +88,7 @@ export function useFavoritos(
         try {
             await firstValueFrom(
                 http.post<FavoritoResponse>(
-                    `${API_BASE}/favoritos`,
+                    baseUrlFavoritos(cliente),
                     { produtoId }
                 )
             );
@@ -114,7 +124,7 @@ export function useFavoritos(
 
         try {
             await firstValueFrom(
-                http.delete(`${API_BASE}/favoritos/${produtoId}`)
+                http.delete(`${baseUrlFavoritos(cliente)}/${produtoId}`)
             );
             erro.set(null);
             return true;
@@ -156,7 +166,7 @@ export function useFavoritos(
         try {
             // Busca da API (fonte de verdade)
             const idsFromApi = await firstValueFrom(
-                http.get<string[]>(`${API_BASE}/favoritos/ids`)
+                http.get<string[]>(`${baseUrlFavoritos(cliente)}/ids`)
             );
 
             // Atualiza estado com dados da API
@@ -251,7 +261,7 @@ export function useFavoritos(
         for (const produtoId of idsAtuais) {
             try {
                 await firstValueFrom(
-                    http.delete(`${API_BASE}/favoritos/${produtoId}`)
+                    http.delete(`${baseUrlFavoritos(cliente)}/${produtoId}`)
                 );
             } catch {
                 // Continua tentando remover os outros

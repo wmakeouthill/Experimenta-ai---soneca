@@ -26,6 +26,9 @@ public class MesaRepositoryAdapter implements MesaRepositoryPort {
     @Override
     public Mesa salvar(@NonNull Mesa mesa) {
         MesaEntity entity = mapper.paraEntity(mesa);
+        if (jpaRepository.existsById(entity.getId())) {
+            entity.markAsPersisted();
+        }
         MesaEntity salvo = jpaRepository.save(entity);
         return mapper.paraDomain(salvo);
     }

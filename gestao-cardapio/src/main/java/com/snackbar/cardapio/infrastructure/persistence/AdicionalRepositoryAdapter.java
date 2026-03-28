@@ -21,6 +21,9 @@ public class AdicionalRepositoryAdapter implements AdicionalRepositoryPort {
     @SuppressWarnings("null")
     public Adicional salvar(@NonNull Adicional adicional) {
         AdicionalEntity entity = mapper.paraEntity(adicional);
+        if (jpaRepository.existsById(entity.getId())) {
+            entity.markAsPersisted();
+        }
         AdicionalEntity salvo = jpaRepository.save(entity);
         return mapper.paraDomain(salvo);
     }

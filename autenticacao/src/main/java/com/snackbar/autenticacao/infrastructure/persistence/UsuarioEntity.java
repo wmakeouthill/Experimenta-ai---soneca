@@ -3,6 +3,7 @@ package com.snackbar.autenticacao.infrastructure.persistence;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.domain.Persistable;
 
 import java.time.LocalDateTime;
 
@@ -10,7 +11,7 @@ import java.time.LocalDateTime;
 @Table(name = "usuarios")
 @Getter
 @Setter
-public class UsuarioEntity {
+public class UsuarioEntity implements Persistable<String> {
     
     @Id
     private String id;
@@ -36,6 +37,14 @@ public class UsuarioEntity {
     
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    @Transient
+    private boolean novo = true;
+
+    @Override
+    public boolean isNew() {
+        return novo;
+    }
     
     @PrePersist
     protected void onCreate() {
@@ -46,6 +55,16 @@ public class UsuarioEntity {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    @PostLoad
+    @PostPersist
+    void markNotNew() {
+        this.novo = false;
+    }
+
+    public void markAsPersisted() {
+        this.novo = false;
     }
     
     public enum RoleEntity {

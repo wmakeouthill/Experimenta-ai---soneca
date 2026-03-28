@@ -23,7 +23,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class HistoricoConversaChatEntity {
+public class HistoricoConversaChatEntity implements Persistable<String> {
     
     @Id
     @Column(length = 36)
@@ -70,9 +70,24 @@ public class HistoricoConversaChatEntity {
     
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @Transient
+    @Builder.Default
+    private boolean novo = true;
+
+    @Override
+    public boolean isNew() {
+        return novo;
+    }
     
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    @PostLoad
+    @PostPersist
+    void markNotNew() {
+        this.novo = false;
     }
 }

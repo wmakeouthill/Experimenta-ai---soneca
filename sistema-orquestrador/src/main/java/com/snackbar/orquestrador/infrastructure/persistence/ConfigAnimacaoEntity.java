@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ConfigAnimacaoEntity {
+public class ConfigAnimacaoEntity implements Persistable<String> {
     @Id
     @Column(length = 36)
     private String id;
@@ -40,5 +40,24 @@ public class ConfigAnimacaoEntity {
     
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @Transient
+    @Builder.Default
+    private boolean novo = true;
+
+    @Override
+    public boolean isNew() {
+        return novo;
+    }
+
+    @PostLoad
+    @PostPersist
+    void markNotNew() {
+        this.novo = false;
+    }
+
+    public void markAsPersisted() {
+        this.novo = false;
+    }
 }
 

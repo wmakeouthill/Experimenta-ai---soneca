@@ -23,6 +23,9 @@ public class ConfigAnimacaoRepositoryAdapter implements ConfigAnimacaoRepository
         ConfigAnimacaoEntity entity = Objects.requireNonNull(
                 mapper.paraEntity(config),
                 "Configuração de animação não pôde ser convertida para entidade");
+        if (jpaRepository.existsById(entity.getId())) {
+            entity.markAsPersisted();
+        }
         ConfigAnimacaoEntity salva = Objects.requireNonNull(
                 jpaRepository.save(entity),
                 "Configuração de animação não pôde ser persistida");

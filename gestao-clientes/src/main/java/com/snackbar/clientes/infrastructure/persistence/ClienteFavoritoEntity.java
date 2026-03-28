@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ClienteFavoritoEntity {
+public class ClienteFavoritoEntity implements Persistable<String> {
 
     @Id
     private String id;
@@ -33,8 +33,23 @@ public class ClienteFavoritoEntity {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @Transient
+    @Builder.Default
+    private boolean novo = true;
+
+    @Override
+    public boolean isNew() {
+        return novo;
+    }
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+    }
+
+    @PostLoad
+    @PostPersist
+    void markNotNew() {
+        this.novo = false;
     }
 }

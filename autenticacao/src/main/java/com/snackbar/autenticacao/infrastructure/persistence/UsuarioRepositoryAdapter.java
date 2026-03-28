@@ -22,6 +22,9 @@ public class UsuarioRepositoryAdapter implements UsuarioRepositoryPort {
     @SuppressWarnings("null") // jpaRepository.save() nunca retorna null
     public Usuario salvar(@NonNull Usuario usuario) {
         UsuarioEntity entity = mapper.paraEntity(usuario);
+        if (jpaRepository.existsById(entity.getId())) {
+            entity.markAsPersisted();
+        }
         UsuarioEntity salvo = jpaRepository.save(entity);
         return mapper.paraDomain(salvo);
     }

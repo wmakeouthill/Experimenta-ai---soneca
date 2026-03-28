@@ -21,6 +21,9 @@ public class CategoriaRepositoryAdapter implements CategoriaRepositoryPort {
     @SuppressWarnings("null") // jpaRepository.save() nunca retorna null
     public Categoria salvar(@NonNull Categoria categoria) {
         CategoriaEntity entity = mapper.paraEntity(categoria);
+        if (jpaRepository.existsById(entity.getId())) {
+            entity.markAsPersisted();
+        }
         CategoriaEntity salva = jpaRepository.save(entity);
         return mapper.paraDomain(salva);
     }

@@ -20,6 +20,9 @@ public class ConfiguracaoImpressoraRepositoryAdapter implements ConfiguracaoImpr
     public ConfiguracaoImpressoraEntity salvar(ConfiguracaoImpressoraEntity config) {
         ConfiguracaoImpressoraJpaEntity entity = ConfiguracaoImpressoraMapper
                 .paraEntity(Objects.requireNonNull(config));
+        if (jpaRepository.existsById(entity.getId())) {
+            entity.markAsPersisted();
+        }
         ConfiguracaoImpressoraJpaEntity salva = jpaRepository.save(entity);
         return ConfiguracaoImpressoraMapper.paraDomain(salva);
     }

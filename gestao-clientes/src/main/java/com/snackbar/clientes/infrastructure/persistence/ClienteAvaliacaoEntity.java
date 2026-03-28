@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ClienteAvaliacaoEntity {
+public class ClienteAvaliacaoEntity implements Persistable<String> {
 
     @Id
     private String id;
@@ -45,6 +45,15 @@ public class ClienteAvaliacaoEntity {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Transient
+    @Builder.Default
+    private boolean novo = true;
+
+    @Override
+    public boolean isNew() {
+        return novo;
+    }
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -54,5 +63,15 @@ public class ClienteAvaliacaoEntity {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    @PostLoad
+    @PostPersist
+    void markNotNew() {
+        this.novo = false;
+    }
+
+    public void markAsPersisted() {
+        this.novo = false;
     }
 }

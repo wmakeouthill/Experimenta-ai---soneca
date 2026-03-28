@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CategoriaEntity {
+public class CategoriaEntity implements Persistable<String> {
     @Id
     private String id;
     
@@ -33,5 +33,24 @@ public class CategoriaEntity {
     
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    @Transient
+    @Builder.Default
+    private boolean novo = true;
+
+    @Override
+    public boolean isNew() {
+        return novo;
+    }
+
+    @PostLoad
+    @PostPersist
+    void markNotNew() {
+        this.novo = false;
+    }
+
+    public void markAsPersisted() {
+        this.novo = false;
+    }
 }
 
