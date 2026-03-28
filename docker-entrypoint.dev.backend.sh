@@ -96,28 +96,31 @@ echo "📊 Monitor otimizado iniciado"
 # Função de monitoramento
 monitor_and_recompile() {
     echo "👀 Monitor de mudanças iniciado (polling a cada 3s - Ryzen 5600X)..."
-    
+
     while true; do
         sleep 3
-        
+
         # Verificar se há arquivos .java modificados recentemente
         MODIFIED_FILES=$(find /app -name "*.java" -type f -newer /tmp/.last_check 2>/dev/null | head -5)
-        
+
         if [ -n "$MODIFIED_FILES" ]; then
+            # Detectar quais módulos foram afetados (compila só o necessário)
+            MODULES=$(echo "$MODIFIED_FILES" | sed 's|/app/\([^/]*\)/.*|\1|' | sort -u | tr '\n' ',' | sed 's/,$//')
+
             echo ""
             echo "🔄 ============================================"
-            echo "🔄 Mudança detectada nos arquivos .java!"
+            echo "🔄 Mudança detectada nos módulos: $MODULES"
             echo "$MODIFIED_FILES" | head -3 | sed 's|/app/||g' | xargs -I {} echo "   📝 {}"
-            echo "🔄 Recompilando projeto..."
+            echo "🔄 Recompilando apenas módulos afetados..."
             echo "🔄 ============================================"
-            
+
             # Atualizar timestamp ANTES de compilar
             touch /tmp/.last_check
-            
+
             cd /app
-            # ⚠️ SKIP FRONTEND BUILD: frontend já roda em container separado
-            if mvn compile -DskipTests -Dskip.frontend.build=true -B -q -T 2C 2>&1; then
-                echo "✅ Recompilação concluída!"
+            # Compilar apenas módulos afetados + dependências (-pl -am)
+            if mvn compile -pl "$MODULES" -am -DskipTests -Dskip.frontend.build=true -B -q -T 2C 2>&1; then
+                echo "✅ Recompilação concluída ($MODULES)!"
                 echo "🔄 Spring DevTools vai reiniciar a aplicação..."
             else
                 echo "❌ Erro na compilação - verifique o código"
@@ -139,6 +142,6 @@ echo ""
 # ✅ JVM otimizada para 8GB container: hot reload ultra rápido
 exec mvn spring-boot:run \
     -Dskip.frontend.build=true \
-    -Dspring-boot.run.jvmArguments="-Xmx3072m -Xms1536m -XX:+UseG1GC -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 -Dspring.datasource.url=${DB_URL} -Dspring.datasource.username=${DB_USERNAME} -Dspring.datasource.password=${DB_PASSWORD} -Dserver.port=${SERVER_PORT:-8080} -Djwt.secret=${JWT_SECRET} -Djwt.expiration=${JWT_EXPIRATION:-86400} -Dlogging.level.com.snackbar=${LOG_LEVEL:-DEBUG} -Dspring.devtools.restart.enabled=true -Dspring.devtools.restart.poll-interval=500 -Dspring.devtools.restart.quiet-period=200" \
+    -Dspring-boot.run.jvmArguments="-Xmx2048m -Xms512m -XX:+UseG1GC -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 -Dspring.datasource.url=${DB_URL} -Dspring.datasource.username=${DB_USERNAME} -Dspring.datasource.password=${DB_PASSWORD} -Dserver.port=${SERVER_PORT:-8080} -Djwt.secret=${JWT_SECRET} -Djwt.expiration=${JWT_EXPIRATION:-86400} -Dlogging.level.com.snackbar=${LOG_LEVEL:-DEBUG} -Dspring.devtools.restart.enabled=true -Dspring.devtools.restart.poll-interval=500 -Dspring.devtools.restart.quiet-period=200" \
     -Dspring.profiles.active=${SPRING_PROFILES_ACTIVE:-dev} \
     -B

@@ -17,7 +17,7 @@ COPY frontend ./
 RUN npm run build
 
 # Stage 2: Build do Maven (com frontend já buildado)
-FROM maven:3.9-eclipse-temurin-17 AS maven-build
+FROM maven:3.9-eclipse-temurin-21 AS maven-build
 
 WORKDIR /app
 
@@ -60,7 +60,7 @@ RUN mvn clean install -DskipTests -B -Dskip.frontend.build=true && \
     cd ..
 
 # Stage 3: Imagem final otimizada para Cloud Run
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:21-jre-alpine
 
 # Instalar apenas dependências necessárias (SEM MySQL - usando Cloud SQL)
 RUN apk add --no-cache \

@@ -1,6 +1,6 @@
 # Multi-stage build para imagem otimizada
 # Stage 1: Build do Maven
-FROM maven:3.9-eclipse-temurin-17 AS maven-build
+FROM maven:3.9-eclipse-temurin-21 AS maven-build
 
 WORKDIR /app
 
@@ -45,7 +45,7 @@ COPY frontend ./
 RUN npm run build
 
 # Stage 3: Imagem final otimizada
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:21-jre-alpine
 
 # Instalar MySQL (MariaDB) e dependências necessárias
 RUN apk add --no-cache \

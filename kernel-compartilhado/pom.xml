@@ -30,11 +30,10 @@
             <version>3.0.2</version>
         </dependency>
 
-        <!-- Jackson para mapeamento genérico -->
+        <!-- Jackson para mapeamento genérico (versão gerenciada pelo Spring Boot BOM) -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.16.1</version>
         </dependency>
     </dependencies>
 
