@@ -248,7 +248,7 @@ coverage/
 # Arquivos de Build Específicos
 # ============================================
 # Electron
-out/
+frontend/electron/out/
 app/dist/
 
 # Build scripts temporários
