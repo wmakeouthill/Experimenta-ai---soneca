@@ -73,6 +73,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(body);
     }
     
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(IllegalArgumentException ex) {
+        Map<String, Object> body = criarRespostaErro(
+            HttpStatus.BAD_REQUEST.value(),
+            "Requisição Inválida",
+            ex.getMessage()
+        );
+        return ResponseEntity.badRequest().body(body);
+    }
+
     @ExceptionHandler(TypeMismatchException.class)
     public ResponseEntity<Map<String, Object>> handleTypeMismatchException(TypeMismatchException ex) {
         Class<?> requiredType = ex.getRequiredType();

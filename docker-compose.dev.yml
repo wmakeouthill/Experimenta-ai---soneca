@@ -64,6 +64,8 @@ services:
       # ✅ Hot Reload Frontend: Backend faz proxy para ng serve (porta 4200) em dev
       - PROJECT_BASE_DIR=/app
       - FRONTEND_PROXY_URL=http://frontend-dev:4200
+      # ========== Google OAuth ==========
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
       # ========== Chat IA - OpenAI ==========
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - OPENAI_MODEL=${OPENAI_MODEL:-gpt-5-mini}

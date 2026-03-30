@@ -52,8 +52,8 @@ public class GoogleAuthServiceAdapter implements GoogleAuthServicePort {
             log.info("Token Google validado com sucesso para: {}", email);
             return new GoogleUserInfo(googleId, email, nome, fotoUrl, emailVerificado);
 
-        } catch (IllegalStateException e) {
-            throw e; // Repassa erro de configuração
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            throw e; // Repassa erros de configuração e token inválido
         } catch (Exception e) {
             log.error("Erro ao validar token do Google: {}", e.getMessage(), e);
             throw new IllegalArgumentException("Erro ao validar token do Google: " + e.getMessage(), e);
