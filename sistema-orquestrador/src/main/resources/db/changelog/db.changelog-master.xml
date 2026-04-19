@@ -139,6 +139,9 @@
     <include file="changes/042-add-version-columns-produtos-clientes-estoque.sql"
         relativeToChangelogFile="true" />
 
+    <!-- Migration: Cria tabela de pagamentos do totem -->
+    <include file="changes/043-create-pagamentos-totem-table.sql" relativeToChangelogFile="true" />
+
     <!--
     NOTA: O usuário administrador inicial é criado automaticamente via CommandLineRunner
     (UsuarioInicialConfig) na primeira execução da aplicação.

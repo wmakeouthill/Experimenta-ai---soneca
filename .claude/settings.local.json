@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(awk '{print $NF}')",
+      "WebFetch(domain:tefdoc.stone.com.br)",
+      "WebSearch"
+    ]
+  }
+}
