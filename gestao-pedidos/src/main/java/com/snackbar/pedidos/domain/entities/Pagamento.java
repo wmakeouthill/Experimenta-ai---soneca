@@ -10,21 +10,34 @@ import com.snackbar.pedidos.domain.valueobjects.DadosTef;
 
 import lombok.Getter;
 
+/**
+ * Pagamento digital/integrado de um pedido (canal TOTEM ou MESA),
+ * processado por um gateway (SIMULADO, STONE, GETNET).
+ *
+ * Referencia exatamente UMA origem: pedidoId (pedido real),
+ * pedidoPendenteId (pedido de mesa pre-pago aguardando aceite)
+ * ou contaMesaId (conta pos-paga de mesa).
+ */
 @Getter
-public class PagamentoTotem extends BaseEntity {
+public class Pagamento extends BaseEntity {
 
-    private static final EnumSet<StatusPagamentoTotem> STATUS_FINAIS = EnumSet.of(
-            StatusPagamentoTotem.APROVADO,
-            StatusPagamentoTotem.NEGADO,
-            StatusPagamentoTotem.CANCELADO,
-            StatusPagamentoTotem.FALHA_TECNICA,
-            StatusPagamentoTotem.EXPIRADO);
+    private static final EnumSet<StatusPagamento> STATUS_FINAIS = EnumSet.of(
+            StatusPagamento.APROVADO,
+            StatusPagamento.NEGADO,
+            StatusPagamento.CANCELADO,
+            StatusPagamento.FALHA_TECNICA,
+            StatusPagamento.EXPIRADO);
 
+    private CanalPagamento canal;
+    private GatewayPagamento gateway;
     private String pedidoId;
+    private String pedidoPendenteId;
+    private String contaMesaId;
     private String correlationId;
+    private String gatewayPaymentId;
     private long valorCentavos;
-    private MeioPagamentoTotem meioPagamento;
-    private StatusPagamentoTotem status;
+    private MeioPagamentoGateway meioPagamento;
+    private StatusPagamento status;
     private String nsuTef;
     private String bandeira;
     private String codigoAutorizacao;
@@ -41,18 +54,62 @@ public class PagamentoTotem extends BaseEntity {
     private LocalDateTime finalizadoEm;
     private Long version;
 
-    private PagamentoTotem() {
+    private Pagamento() {
         super();
     }
 
-    public static PagamentoTotem iniciar(
+    public static Pagamento iniciarParaPedido(
             String pedidoId,
+            CanalPagamento canal,
+            GatewayPagamento gateway,
             long valorCentavos,
-            MeioPagamentoTotem meioPagamento,
+            MeioPagamentoGateway meioPagamento,
             String correlationId) {
-
         validarObrigatorio(pedidoId, "pedidoId");
+        Pagamento pagamento = iniciar(canal, gateway, valorCentavos, meioPagamento, correlationId);
+        pagamento.pedidoId = pedidoId.trim();
+        return pagamento;
+    }
+
+    public static Pagamento iniciarParaPedidoPendente(
+            String pedidoPendenteId,
+            CanalPagamento canal,
+            GatewayPagamento gateway,
+            long valorCentavos,
+            MeioPagamentoGateway meioPagamento,
+            String correlationId) {
+        validarObrigatorio(pedidoPendenteId, "pedidoPendenteId");
+        Pagamento pagamento = iniciar(canal, gateway, valorCentavos, meioPagamento, correlationId);
+        pagamento.pedidoPendenteId = pedidoPendenteId.trim();
+        return pagamento;
+    }
+
+    public static Pagamento iniciarParaContaMesa(
+            String contaMesaId,
+            CanalPagamento canal,
+            GatewayPagamento gateway,
+            long valorCentavos,
+            MeioPagamentoGateway meioPagamento,
+            String correlationId) {
+        validarObrigatorio(contaMesaId, "contaMesaId");
+        Pagamento pagamento = iniciar(canal, gateway, valorCentavos, meioPagamento, correlationId);
+        pagamento.contaMesaId = contaMesaId.trim();
+        return pagamento;
+    }
+
+    private static Pagamento iniciar(
+            CanalPagamento canal,
+            GatewayPagamento gateway,
+            long valorCentavos,
+            MeioPagamentoGateway meioPagamento,
+            String correlationId) {
         validarObrigatorio(correlationId, "correlationId");
+        if (canal == null) {
+            throw new ValidationException("canal do pagamento e obrigatorio");
+        }
+        if (gateway == null) {
+            throw new ValidationException("gateway do pagamento e obrigatorio");
+        }
         if (valorCentavos <= 0) {
             throw new ValidationException("valor do pagamento deve ser maior que zero");
         }
@@ -60,24 +117,30 @@ public class PagamentoTotem extends BaseEntity {
             throw new ValidationException("meio de pagamento e obrigatorio");
         }
 
-        PagamentoTotem pagamento = new PagamentoTotem();
-        pagamento.pedidoId = pedidoId.trim();
+        Pagamento pagamento = new Pagamento();
+        pagamento.canal = canal;
+        pagamento.gateway = gateway;
         pagamento.valorCentavos = valorCentavos;
         pagamento.meioPagamento = meioPagamento;
         pagamento.correlationId = correlationId.trim();
-        pagamento.status = StatusPagamentoTotem.INICIADO;
+        pagamento.status = StatusPagamento.INICIADO;
         pagamento.iniciadoEm = LocalDateTime.now();
         pagamento.touch();
         return pagamento;
     }
 
-    public static PagamentoTotem restaurar(
+    public static Pagamento restaurar(
             String id,
+            CanalPagamento canal,
+            GatewayPagamento gateway,
             String pedidoId,
+            String pedidoPendenteId,
+            String contaMesaId,
             String correlationId,
+            String gatewayPaymentId,
             long valorCentavos,
-            MeioPagamentoTotem meioPagamento,
-            StatusPagamentoTotem status,
+            MeioPagamentoGateway meioPagamento,
+            StatusPagamento status,
             String nsuTef,
             String bandeira,
             String codigoAutorizacao,
@@ -96,11 +159,16 @@ public class PagamentoTotem extends BaseEntity {
             LocalDateTime updatedAt,
             Long version) {
 
-        PagamentoTotem pagamento = new PagamentoTotem();
+        Pagamento pagamento = new Pagamento();
         pagamento.restaurarId(id);
         pagamento.restaurarTimestamps(createdAt, updatedAt);
+        pagamento.canal = canal;
+        pagamento.gateway = gateway;
         pagamento.pedidoId = pedidoId;
+        pagamento.pedidoPendenteId = pedidoPendenteId;
+        pagamento.contaMesaId = contaMesaId;
         pagamento.correlationId = correlationId;
+        pagamento.gatewayPaymentId = gatewayPaymentId;
         pagamento.valorCentavos = valorCentavos;
         pagamento.meioPagamento = meioPagamento;
         pagamento.status = status;
@@ -122,18 +190,24 @@ public class PagamentoTotem extends BaseEntity {
         return pagamento;
     }
 
+    public void definirGatewayPaymentId(String gatewayPaymentId) {
+        validarObrigatorio(gatewayPaymentId, "gatewayPaymentId");
+        this.gatewayPaymentId = gatewayPaymentId.trim();
+        touch();
+    }
+
     public void marcarAguardandoTef() {
-        exigirStatus(StatusPagamentoTotem.INICIADO);
+        exigirStatus(StatusPagamento.INICIADO);
         if (!meioPagamento.isCartao()) {
             throw new ValidationException("apenas cartao pode aguardar TEF");
         }
-        this.status = StatusPagamentoTotem.AGUARDANDO_TEF;
+        this.status = StatusPagamento.AGUARDANDO_TEF;
         touch();
     }
 
     public void marcarAguardandoPix(DadosPix dadosPix) {
-        exigirStatus(StatusPagamentoTotem.INICIADO);
-        if (meioPagamento != MeioPagamentoTotem.PIX) {
+        exigirStatus(StatusPagamento.INICIADO);
+        if (meioPagamento != MeioPagamentoGateway.PIX) {
             throw new ValidationException("apenas PIX pode aguardar QR Code");
         }
         this.pixTxid = dadosPix.txid();
@@ -141,59 +215,59 @@ public class PagamentoTotem extends BaseEntity {
         this.pixQrCodeBase64 = dadosPix.qrCodeBase64();
         this.pixCopiaECola = dadosPix.copiaECola();
         this.pixExpiracaoEm = dadosPix.expiracaoEm();
-        this.status = StatusPagamentoTotem.AGUARDANDO_PIX;
+        this.status = StatusPagamento.AGUARDANDO_PIX;
         touch();
     }
 
     public void aprovarTef(DadosTef dadosTef) {
-        exigirStatus(StatusPagamentoTotem.AGUARDANDO_TEF);
+        exigirStatus(StatusPagamento.AGUARDANDO_TEF);
         this.nsuTef = dadosTef.nsu();
         this.bandeira = dadosTef.bandeira();
         this.codigoAutorizacao = dadosTef.codigoAutorizacao();
         this.codigoAdquirente = dadosTef.codigoAdquirente();
         this.comprovanteCliente = dadosTef.comprovanteCliente();
-        finalizar(StatusPagamentoTotem.APROVADO, null);
+        finalizar(StatusPagamento.APROVADO, null);
     }
 
     public void aprovarPix(String endToEndId) {
-        exigirStatus(StatusPagamentoTotem.AGUARDANDO_PIX);
+        exigirStatus(StatusPagamento.AGUARDANDO_PIX);
         validarObrigatorio(endToEndId, "endToEndId");
         this.pixEndToEndId = endToEndId.trim();
-        finalizar(StatusPagamentoTotem.APROVADO, null);
+        finalizar(StatusPagamento.APROVADO, null);
     }
 
     public void negar(String motivo) {
         exigirNaoFinalizado();
-        finalizar(StatusPagamentoTotem.NEGADO, motivo);
+        finalizar(StatusPagamento.NEGADO, motivo);
     }
 
     public void cancelar(String motivo) {
         exigirNaoFinalizado();
-        finalizar(StatusPagamentoTotem.CANCELADO, motivo);
+        finalizar(StatusPagamento.CANCELADO, motivo);
     }
 
     public void marcarFalhaTecnica(String motivo) {
         exigirNaoFinalizado();
-        finalizar(StatusPagamentoTotem.FALHA_TECNICA, motivo);
+        finalizar(StatusPagamento.FALHA_TECNICA, motivo);
     }
 
     public void expirar() {
         exigirNaoFinalizado();
-        finalizar(StatusPagamentoTotem.EXPIRADO, "Tempo de pagamento expirado");
+        finalizar(StatusPagamento.EXPIRADO, "Tempo de pagamento expirado");
     }
 
     public boolean estaFinalizado() {
         return STATUS_FINAIS.contains(status);
     }
 
-    private void finalizar(StatusPagamentoTotem novoStatus, String motivoFinalizacao) {
+    private void finalizar(StatusPagamento novoStatus, String motivoFinalizacao) {
         this.status = novoStatus;
         this.motivo = normalizarMotivo(motivoFinalizacao);
         this.finalizadoEm = LocalDateTime.now();
         touch();
     }
 
-    private void exigirStatus(StatusPagamentoTotem statusEsperado) {
+    private void exigirStatus(StatusPagamento statusEsperado) {
         if (this.status != statusEsperado) {
             throw new ValidationException(
                     "pagamento em status " + this.status + " nao permite esta operacao");

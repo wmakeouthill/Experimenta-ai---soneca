@@ -1,6 +1,6 @@
 package com.snackbar.pedidos.domain.entities;
 
-public enum StatusPagamentoTotem {
+public enum StatusPagamento {
     INICIADO,
     AGUARDANDO_TEF,
     AGUARDANDO_PIX,

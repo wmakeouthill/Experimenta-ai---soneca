@@ -1,6 +1,6 @@
 package com.snackbar.pedidos.domain.entities;
 
-public enum MeioPagamentoTotem {
+public enum MeioPagamentoGateway {
     CARTAO_CREDITO,
     CARTAO_DEBITO,
     CARTAO_VOUCHER,
