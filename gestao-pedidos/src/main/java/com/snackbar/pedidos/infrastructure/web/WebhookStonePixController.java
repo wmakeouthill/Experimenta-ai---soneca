@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.snackbar.kernel.domain.exceptions.ValidationException;
-import com.snackbar.pedidos.application.usecases.ConfirmarPagamentoTotemPixUseCase;
+import com.snackbar.pedidos.application.usecases.ConfirmarPagamentoPixUseCase;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 public class WebhookStonePixController {
 
     private final StonePixWebhookVerifier verifier;
-    private final ConfirmarPagamentoTotemPixUseCase confirmarPixUseCase;
+    private final ConfirmarPagamentoPixUseCase confirmarPixUseCase;
     private final ObjectMapper objectMapper;
 
     @PostMapping("/api/v1/webhooks/stone/pix")

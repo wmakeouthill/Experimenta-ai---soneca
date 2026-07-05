@@ -39,8 +39,9 @@ public class SecurityConfig {
     private static final String PUBLIC_STATUS_LOJA_PATTERN = "/api/public/status-loja/**";
     private static final String PUBLIC_CLIENTE_AUTH_PATTERN = "/api/publico/cliente/auth/**";
     private static final String CLIENTE_CONTA_PATTERN = "/api/cliente/conta/**";
-    private static final String PAGAMENTOS_TOTEM_PATTERN = "/api/v1/pagamentos-totem/**";
+    private static final String PAGAMENTOS_PATTERN = "/api/v1/pagamentos/**";
     private static final String STONE_PIX_WEBHOOK_PATH = "/api/v1/webhooks/stone/pix";
+    private static final String GETNET_WEBHOOK_PATTERN = "/api/v1/webhooks/getnet/**";
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
@@ -77,6 +78,10 @@ public class SecurityConfig {
                         // Endpoints públicos de autenticação de cliente (login, Google OAuth)
                         .requestMatchers(PUBLIC_CLIENTE_AUTH_PATTERN).permitAll()
                         .requestMatchers(STONE_PIX_WEBHOOK_PATH).permitAll()
+                        .requestMatchers(GETNET_WEBHOOK_PATTERN).permitAll()
+                        // Endpoints de pagamentos integrados (PIX/cartao digital/TEF) - publicos;
+                        // feature-flag e validacoes de negocio ficam a cargo do controller/use cases
+                        .requestMatchers(PAGAMENTOS_PATTERN).permitAll()
                         // Endpoint público para proxy de imagens (fotos do Google)
                         .requestMatchers("/api/publico/cliente/imagem/**").permitAll()
                         // Endpoints de conta do cliente (favoritos, perfil, etc.) - usa header
@@ -175,8 +180,6 @@ public class SecurityConfig {
 
                         // Endpoints de auto atendimento (totem) - ADMINISTRADOR e OPERADOR
                         .requestMatchers("/api/autoatendimento/**")
-                        .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
-                        .requestMatchers(PAGAMENTOS_TOTEM_PATTERN)
                         .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
 
                         // Endpoints de impressão - Configuração apenas ADMINISTRADOR, impressão

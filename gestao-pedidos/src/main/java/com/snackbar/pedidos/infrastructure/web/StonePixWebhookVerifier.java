@@ -8,22 +8,28 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.springframework.stereotype.Component;
 
-import com.snackbar.pedidos.infrastructure.config.PagamentoTotemProperties;
+import com.snackbar.pedidos.domain.entities.GatewayPagamento;
+import com.snackbar.pedidos.infrastructure.config.PagamentoProperties;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Verifica a assinatura HMAC do webhook PIX simulado/Stone.
+ * Sem secret configurado, o webhook so e aceito quando o gateway
+ * PIX ativo e o SIMULADO (uso em desenvolvimento).
+ */
 @Component
 @RequiredArgsConstructor
 public class StonePixWebhookVerifier {
 
     private static final String HMAC_SHA_256 = "HmacSHA256";
 
-    private final PagamentoTotemProperties properties;
+    private final PagamentoProperties properties;
 
     public boolean assinaturaValida(String payload, String assinaturaRecebida) {
-        String secret = properties.getPix().getWebhookSecret();
+        String secret = properties.getSimulado().getWebhookSecret();
         if (secret == null || secret.isBlank()) {
-            return properties.getPix().isMockEnabled();
+            return properties.getGateway().getPix() == GatewayPagamento.SIMULADO;
         }
         if (assinaturaRecebida == null || assinaturaRecebida.isBlank()) {
             return false;

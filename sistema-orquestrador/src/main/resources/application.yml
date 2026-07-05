@@ -58,16 +58,19 @@ google:
   client-id: ${GOOGLE_CLIENT_ID:}
 
 pagamento:
-  totem:
-    enabled: ${PAGAMENTO_TOTEM_ENABLED:false}
-    pix:
-      mock-enabled: ${STONE_PIX_MOCK_ENABLED:false}
-      base-url: ${STONE_PIX_BASE_URL:https://api.openbank.stone.com.br}
-      client-id: ${STONE_PIX_CLIENT_ID:}
-      client-secret: ${STONE_PIX_CLIENT_SECRET:}
-      account-id: ${STONE_PIX_ACCOUNT_ID:}
-      webhook-secret: ${STONE_PIX_WEBHOOK_SECRET:}
-      expiracao-segundos: ${STONE_PIX_EXPIRACAO_SEGUNDOS:300}
+  enabled: ${PAGAMENTO_ENABLED:false}
+  gateway:
+    pix: ${PAGAMENTO_GATEWAY_PIX:SIMULADO}
+  pix:
+    expiracao-segundos: ${PAGAMENTO_PIX_EXPIRACAO_SEGUNDOS:180}
+  getnet:
+    base-url: ${GETNET_BASE_URL:https://api-homologacao.getnet.com.br}
+    client-id: ${GETNET_CLIENT_ID:}
+    client-secret: ${GETNET_CLIENT_SECRET:}
+    seller-id: ${GETNET_SELLER_ID:}
+    webhook-token: ${GETNET_WEBHOOK_TOKEN:}
+  simulado:
+    webhook-secret: ${PAGAMENTO_SIMULADO_WEBHOOK_SECRET:}
 
 server:
   port: ${SERVER_PORT:8080}
