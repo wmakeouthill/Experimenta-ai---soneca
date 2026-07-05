@@ -14,7 +14,10 @@
     "format": "prettier --write \"src/**/*.{ts,html,css,scss,json}\"",
     "serve:ssr:frontend": "node dist/frontend/server/server.mjs",
     "png-to-ico": "node scripts/png-to-ico.js",
-    "icon:generate": "npm run png-to-ico src/assets/experimenta_ai_banner_circular.png electron/icon.ico"
+    "icon:generate": "npm run png-to-ico src/assets/experimenta_ai_banner_circular.png electron/icon.ico",
+    "totem:dev": "cd electron-totem && npm run dev",
+    "totem:start": "cd electron-totem && npm start",
+    "totem:check": "cd electron-totem && npm run check"
   },
   "private": true,
   "dependencies": {

@@ -32,6 +32,37 @@
   flex-direction: column;
   position: relative;
   overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.autoatendimento-container input,
+.autoatendimento-container textarea {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+:host * {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 107, 53, 0.5) transparent;
+}
+
+:host *::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+:host *::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+:host *::-webkit-scrollbar-thumb {
+  background: rgba(255, 107, 53, 0.45);
+  border-radius: 8px;
+}
+
+:host *::-webkit-scrollbar-thumb:hover {
+  background: rgba(229, 90, 43, 0.65);
 }
 
 /* ========== LOADING E ERROR ========== */

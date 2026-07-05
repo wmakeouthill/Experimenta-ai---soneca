@@ -326,11 +326,24 @@
             <button class="btn-secondary" (click)="navegarPara('cardapio')">Ver cardápio</button>
           </div>
         } @else {
+          <div class="carrinho-lista-header">
+            <span>{{ carrinho.totalItens() }} item(ns)</span>
+            <strong>{{ formatarPreco(carrinho.totalValor()) }}</strong>
+          </div>
+
           <div class="carrinho-items">
             @for (item of carrinho.itens(); track item.produto.id) {
               <div class="carrinho-item">
+                <div class="item-imagem-carrinho">
+                  @if (item.produto.foto) {
+                    <img [src]="getImagemProduto(item.produto)" [alt]="item.produto.nome" />
+                  } @else {
+                    <span>🍽️</span>
+                  }
+                </div>
                 <div class="item-info">
                   <h4>{{ item.produto.nome }}</h4>
+                  <p class="item-preco-unitario">{{ formatarPreco(item.produto.preco) }} cada</p>
                   @if (item.adicionais && item.adicionais.length > 0) {
                     <div class="item-adicionais">
                       @for (ad of item.adicionais; track ad.adicional.id) {
@@ -363,9 +376,10 @@
                       +
                     </button>
                   </div>
-                  <span class="item-preco">{{
-                    formatarPreco(item.produto.preco * item.quantidade)
-                  }}</span>
+                  <span class="item-preco">{{ formatarPreco(calcularSubtotalItem(item)) }}</span>
+                  <button class="btn-remover-item" (click)="carrinho.removerItem(item.produto.id)">
+                    Remover
+                  </button>
                 </div>
               </div>
             }
@@ -551,6 +565,7 @@
             <input
               type="checkbox"
               [checked]="pagamento.dividido()"
+              [disabled]="enviando() || !!checkoutPagamento()"
               (change)="pagamento.toggleDividido()"
             />
             <span class="toggle-slider"></span>
@@ -565,6 +580,7 @@
           <button
             class="pagamento-opcao"
             [class.selecionado]="pagamento.isMeioSelecionado('PIX')"
+            [disabled]="enviando() || !!checkoutPagamento()"
             (click)="selecionarMeioPagamento('PIX')"
           >
             <span class="pagamento-icone">📱</span>
@@ -592,6 +608,7 @@
           <button
             class="pagamento-opcao"
             [class.selecionado]="pagamento.isMeioSelecionado('CARTAO_CREDITO')"
+            [disabled]="enviando() || !!checkoutPagamento()"
             (click)="selecionarMeioPagamento('CARTAO_CREDITO')"
           >
             <span class="pagamento-icone">💳</span>
@@ -622,6 +639,7 @@
           <button
             class="pagamento-opcao"
             [class.selecionado]="pagamento.isMeioSelecionado('CARTAO_DEBITO')"
+            [disabled]="enviando() || !!checkoutPagamento()"
             (click)="selecionarMeioPagamento('CARTAO_DEBITO')"
           >
             <span class="pagamento-icone">💳</span>
@@ -652,6 +670,7 @@
           <button
             class="pagamento-opcao"
             [class.selecionado]="pagamento.isMeioSelecionado('VALE_REFEICAO')"
+            [disabled]="enviando() || !!checkoutPagamento()"
             (click)="selecionarMeioPagamento('VALE_REFEICAO')"
           >
             <span class="pagamento-icone">🎫</span>
@@ -682,6 +701,7 @@
           <button
             class="pagamento-opcao pagamento-opcao-full"
             [class.selecionado]="pagamento.isMeioSelecionado('DINHEIRO')"
+            [disabled]="enviando() || !!checkoutPagamento()"
             (click)="selecionarMeioPagamento('DINHEIRO')"
           >
             <span class="pagamento-icone">💵</span>
@@ -768,12 +788,85 @@
           }
         </div>
 
+        @if (pagamento.dividido()) {
+          <div class="pagamento-aviso">
+            Pagamento dividido continua na revisao do pedido. PIX e cartao integrados entram no
+            fluxo direto quando uma unica forma e escolhida.
+          </div>
+        } @else if (meioPagamentoIntegradoSelecionado()) {
+          <div class="pagamento-aviso pagamento-aviso-integrado">
+            Este pagamento usa o fluxo novo com PIX/TEF integrado.
+          </div>
+        }
+
+        @if (checkoutPagamento(); as checkout) {
+          <div class="checkout-card">
+            @if (checkout.status === 'PIX_QR') {
+              @if (checkout.pix; as pix) {
+                <div class="checkout-titulo">
+                  <span>PIX</span>
+                  <strong>{{ formatarPreco(carrinho.totalValor()) }}</strong>
+                </div>
+                <p class="checkout-texto">Aponte a camera para o QR Code ou use o copia e cola.</p>
+                <div class="pix-qr-container">
+                  <img [src]="pix.qrCodeBase64" alt="QR Code PIX" />
+                </div>
+                <div class="pix-copia-cola">
+                  {{ pix.copiaECola }}
+                </div>
+                <div class="checkout-acoes">
+                  <button class="btn-checkout-secundario" type="button" (click)="copiarCodigoPix()">
+                    Copiar codigo
+                  </button>
+                  <button
+                    class="btn-checkout-secundario"
+                    type="button"
+                    [disabled]="enviando()"
+                    (click)="verificarPagamentoPix()"
+                  >
+                    Ja paguei
+                  </button>
+                  <button
+                    class="btn-checkout-primario"
+                    type="button"
+                    [disabled]="enviando()"
+                    (click)="simularPixAprovado()"
+                  >
+                    Aprovar PIX mock
+                  </button>
+                </div>
+              }
+            }
+
+            @if (checkout.status === 'CARTAO_PROCESSANDO') {
+              <div class="cartao-processando">
+                <div class="cartao-icone">TEF</div>
+                <h3>Use a maquininha</h3>
+                <p>{{ checkout.mensagem || 'Aguardando retorno da maquininha.' }}</p>
+                @if (enviando()) {
+                  <span class="spinner-mini"></span>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        @if (erroPagamento()) {
+          <div class="pagamento-feedback">{{ erroPagamento() }}</div>
+        }
+
         <button
           class="btn-continuar-grande"
-          [disabled]="!pagamento.pagamentoValido()"
-          (click)="irParaConfirmacao()"
+          [disabled]="!pagamento.pagamentoValido() || enviando() || !!checkoutPagamento()"
+          (click)="processarPagamento()"
         >
-          Confirmar Pagamento
+          @if (enviando()) {
+            <span class="spinner-mini"></span> Processando...
+          } @else if (meioPagamentoIntegradoSelecionado()) {
+            Pagar agora
+          } @else {
+            Revisar pedido
+          }
         </button>
       </div>
     }

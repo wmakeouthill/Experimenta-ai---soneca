@@ -3,7 +3,9 @@ package com.snackbar.pedidos.infrastructure.web;
 import com.snackbar.pedidos.infrastructure.idempotency.IdempotencyService;
 import com.snackbar.kernel.security.JwtUserDetails;
 import com.snackbar.pedidos.application.dto.CriarPedidoAutoAtendimentoRequest;
+import com.snackbar.pedidos.application.dto.PedidoAutoAtendimentoResponse;
 import com.snackbar.pedidos.application.dto.PedidoTotemNaFilaResponse;
+import com.snackbar.pedidos.application.usecases.CriarPedidoAutoAtendimentoUseCase;
 import com.snackbar.pedidos.application.usecases.EnviarPedidoTotemParaFilaUseCase;
 import com.snackbar.pedidos.application.usecases.BuscarPedidoPorIdUseCase;
 import com.snackbar.pedidos.application.dto.PedidoDTO;
@@ -15,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Controller REST para auto atendimento (totem).
@@ -38,6 +41,7 @@ import org.springframework.web.bind.annotation.*;
 public class AutoAtendimentoRestController {
 
     private final EnviarPedidoTotemParaFilaUseCase enviarPedidoTotemParaFilaUseCase;
+    private final CriarPedidoAutoAtendimentoUseCase criarPedidoAutoAtendimentoUseCase;
     private final BuscarPedidoPorIdUseCase buscarPedidoUseCase;
     private final IdempotencyService idempotencyService;
 
@@ -84,6 +88,34 @@ public class AutoAtendimentoRestController {
     }
 
     /**
+     * Cria o pedido real antes do pagamento TEF/PIX.
+     * O meio de pagamento pode ser registrado depois pela confirmacao do pagamento do totem.
+     */
+    @PostMapping("/pedido-direto")
+    public ResponseEntity<PedidoAutoAtendimentoResponse> criarPedidoDireto(
+            @Valid @RequestBody CriarPedidoAutoAtendimentoRequest request,
+            @RequestHeader(value = "X-Idempotency-Key", required = false) String idempotencyKey) {
+
+        JwtUserDetails userDetails = obterUsuarioAutenticado();
+
+        log.info("[AUTO-ATENDIMENTO] Criando pedido direto para pagamento - Operador: {}, Cliente: {}",
+                userDetails.getEmail(),
+                request.getNomeCliente());
+
+        if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+            return idempotencyService.executeIdempotent(
+                    idempotencyKey,
+                    "POST /api/autoatendimento/pedido-direto",
+                    () -> criarPedidoAutoAtendimentoUseCase.executar(request, userDetails.getId()),
+                    PedidoAutoAtendimentoResponse.class);
+        }
+
+        PedidoAutoAtendimentoResponse response =
+                criarPedidoAutoAtendimentoUseCase.executar(request, userDetails.getId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
      * Busca o status de um pedido de auto atendimento.
      * 
      * @param pedidoId ID do pedido
@@ -93,5 +125,21 @@ public class AutoAtendimentoRestController {
     public ResponseEntity<PedidoDTO> buscarStatus(@PathVariable String pedidoId) {
         PedidoDTO pedido = buscarPedidoUseCase.executar(pedidoId);
         return ResponseEntity.ok(pedido);
+    }
+
+    private JwtUserDetails obterUsuarioAutenticado() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || authentication.getPrincipal() == null
+                || "anonymousUser".equals(authentication.getPrincipal())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Operador nao autenticado");
+        }
+
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof JwtUserDetails userDetails) {
+            return userDetails;
+        }
+
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Operador nao autenticado");
     }
 }

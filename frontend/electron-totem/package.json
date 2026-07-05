@@ -1,0 +1,12 @@
+{
+  "name": "experimenta-ai-soneca-totem",
+  "version": "1.0.0",
+  "description": "Electron dedicado ao totem de autoatendimento",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "dev": "node scripts/run-electron.js --dev",
+    "start": "node scripts/run-electron.js",
+    "check": "node --check main.js && node --check preload.js && node --check touch-mode.js && node --check virtual-keyboard.js && node --check scripts/run-electron.js"
+  }
+}

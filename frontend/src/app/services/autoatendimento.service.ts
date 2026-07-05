@@ -48,7 +48,7 @@ export interface PedidoTotemNaFilaResponse {
 /** Resposta ao buscar status de um pedido já aceito (pedido real). */
 export interface PedidoAutoAtendimentoResponse {
   id: string;
-  numeroPedido: number;
+  numeroPedido: number | string;
   nomeCliente?: string;
   status: string;
   valorTotal: number;
@@ -87,7 +87,20 @@ export class AutoAtendimentoService {
     });
   }
 
-  /** Busca o status de um pedido já aceito (por id do pedido real). */
+  /** Cria pedido real imediatamente para fluxos que precisam de pagamento antes da conclusao. */
+  criarPedidoDireto(
+    request: CriarPedidoAutoAtendimentoRequest,
+    idempotencyKey: string
+  ): Observable<PedidoAutoAtendimentoResponse> {
+    const headers = new HttpHeaders({
+      'X-Idempotency-Key': idempotencyKey,
+    });
+    return this.http.post<PedidoAutoAtendimentoResponse>(`${this.apiUrl}/pedido-direto`, request, {
+      headers,
+    });
+  }
+
+  /** Busca o status de um pedido ja aceito (por id do pedido real). */
   buscarStatus(pedidoId: string): Observable<PedidoAutoAtendimentoResponse> {
     return this.http.get<PedidoAutoAtendimentoResponse>(`${this.apiUrl}/pedido/${pedidoId}/status`);
   }

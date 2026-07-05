@@ -21,13 +21,21 @@ import {
   CriarPedidoAutoAtendimentoRequest,
   ItemPedidoAutoAtendimentoRequest,
   MeioPagamentoAutoAtendimentoRequest,
+  PedidoAutoAtendimentoResponse,
 } from '../../services/autoatendimento.service';
+import {
+  type MeioPagamentoTotemGateway,
+  type PagamentoTotemDTO,
+  PagamentoTotemService,
+  type PixCobrancaCriadaDTO,
+} from '../../services/pagamento-totem.service';
 import { Produto } from '../../services/produto.service';
 import { StatusLoja, StatusLojaService } from '../../services/status-loja.service';
 import { ImageProxyUtil } from '../../utils/image-proxy.util';
 
 import { AbaNavegacaoAutoatendimento, AutoatendimentoFooterNavComponent } from './components';
 import {
+  type ItemCarrinhoTotem,
   useAutoAtendimentoCardapio,
   useAutoAtendimentoCarrinho,
   useAutoAtendimentoCliente,
@@ -37,6 +45,34 @@ import {
 
 type EtapaTotem = 'cardapio' | 'pagamento' | 'confirmacao' | 'sucesso';
 type MeioPagamentoTipo = 'PIX' | 'CARTAO_CREDITO' | 'CARTAO_DEBITO' | 'VALE_REFEICAO' | 'DINHEIRO';
+type StatusCheckoutTotem = 'PIX_QR' | 'CARTAO_PROCESSANDO' | 'ERRO';
+
+interface PagamentoCheckoutTotem {
+  status: StatusCheckoutTotem;
+  correlationId: string;
+  pedido: PedidoAutoAtendimentoResponse;
+  pix?: PixCobrancaCriadaDTO;
+  mensagem?: string;
+}
+
+interface ResultadoTefTotem {
+  sucesso: boolean;
+  status: string;
+  correlationId: string;
+  nsu?: string;
+  bandeira?: string;
+  autorizacao?: string;
+  adquirente?: string;
+  mensagem?: string;
+}
+
+interface TotemApi {
+  iniciarPagamentoTef?: (payload: {
+    correlationId: string;
+    valorCentavos: number;
+    meio: MeioPagamentoTotemGateway;
+  }) => Promise<ResultadoTefTotem>;
+}
 
 /**
  * Componente de auto atendimento para totem.
@@ -65,6 +101,7 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly adicionalService = inject(AdicionalService);
   private readonly autoAtendimentoService = inject(AutoAtendimentoService);
+  private readonly pagamentoTotemService = inject(PagamentoTotemService);
   private readonly statusLojaService = inject(StatusLojaService);
   private readonly destroy$ = new Subject<void>();
 
@@ -81,12 +118,14 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
   readonly etapaAtual = signal<EtapaTotem | null>(null);
   readonly abaAtual = signal<AbaNavegacaoAutoatendimento>('inicio');
   readonly enviando = signal(false);
+  readonly checkoutPagamento = signal<PagamentoCheckoutTotem | null>(null);
+  readonly erroPagamento = signal<string | null>(null);
 
   // Estado do pedido criado
   /** Quando naFila: pedido na fila aguardando aceite; senão: pedido já aceito (tem numeroPedido). */
   readonly pedidoCriado = signal<{
     id: string;
-    numeroPedido?: number;
+    numeroPedido?: number | string;
     mensagem?: string;
     naFila?: boolean;
   } | null>(null);
@@ -113,6 +152,15 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
   readonly podeEnviarPedido = computed(
     () => this.carrinho.podeEnviarPedido() && this.pagamento.pagamentoValido() && !this.enviando()
   );
+
+  readonly meioPagamentoIntegradoSelecionado = computed(() => {
+    const meios = this.pagamento.meiosSelecionados();
+    if (this.pagamento.dividido() || meios.length !== 1) {
+      return null;
+    }
+    const meio = meios[0];
+    return meio ? this.mapearMeioPagamentoTotem(meio.tipo as MeioPagamentoTipo) : null;
+  });
 
   constructor() {
     // Effect para carregar adicionais quando abre detalhes de produto
@@ -228,6 +276,7 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
   navegarPara(aba: AbaNavegacaoAutoatendimento): void {
     this.abaAtual.set(aba);
     this.etapaAtual.set(null);
+    this.limparCheckoutPagamento();
     this.resetarInatividade();
   }
 
@@ -240,6 +289,7 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
   }
 
   irParaPagamento(): void {
+    this.limparCheckoutPagamento();
     this.etapaAtual.set('pagamento');
     this.resetarInatividade();
   }
@@ -256,6 +306,7 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
     if (etapa) {
       switch (etapa) {
         case 'pagamento':
+          this.limparCheckoutPagamento();
           this.etapaAtual.set(null);
           this.abaAtual.set('carrinho');
           break;
@@ -327,7 +378,7 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
     }
   }
 
-  private montarRequestPedido(): CriarPedidoAutoAtendimentoRequest {
+  private montarRequestPedido(incluirMeiosPagamento = true): CriarPedidoAutoAtendimentoRequest {
     const itens: ItemPedidoAutoAtendimentoRequest[] = this.carrinho.itens().map(item => ({
       produtoId: item.produto.id,
       quantidade: item.quantidade,
@@ -338,13 +389,13 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
       })),
     }));
 
-    const meiosPagamento: MeioPagamentoAutoAtendimentoRequest[] = this.pagamento
-      .getMeiosComTroco()
-      .map(m => ({
-        meioPagamento: m.tipo as MeioPagamentoAutoAtendimentoRequest['meioPagamento'],
-        valor: m.valor,
-        valorPagoDinheiro: m.valorPagoDinheiro,
-      }));
+    const meiosPagamento: MeioPagamentoAutoAtendimentoRequest[] = incluirMeiosPagamento
+      ? this.pagamento.getMeiosComTroco().map(m => ({
+          meioPagamento: m.tipo as MeioPagamentoAutoAtendimentoRequest['meioPagamento'],
+          valor: m.valor,
+          valorPagoDinheiro: m.valorPagoDinheiro,
+        }))
+      : [];
 
     return {
       nomeCliente: this.nomeClienteInput.trim() || undefined,
@@ -361,6 +412,7 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
     this.nomeClienteInput = '';
     this.pedidoCriado.set(null);
     this.erro.set(null);
+    this.limparCheckoutPagamento();
     this.etapaAtual.set(null);
     this.abaAtual.set('inicio');
     this.resetarInatividade();
@@ -436,6 +488,14 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
     }).format(valor);
   }
 
+  calcularSubtotalItem(item: ItemCarrinhoTotem): number {
+    const subtotalAdicionais = item.adicionais.reduce(
+      (total, adicional) => total + adicional.adicional.preco * adicional.quantidade,
+      0
+    );
+    return (item.produto.preco + subtotalAdicionais) * item.quantidade;
+  }
+
   getImagemProduto(produto: Produto): string {
     if (produto.foto) {
       return ImageProxyUtil.getProxyUrl(produto.foto) || produto.foto;
@@ -445,8 +505,293 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
 
   // ========== Pagamento ==========
   selecionarMeioPagamento(tipo: MeioPagamentoTipo): void {
+    if (this.checkoutPagamento()) {
+      return;
+    }
+    this.erroPagamento.set(null);
     this.pagamento.selecionarMeio(tipo);
     this.resetarInatividade();
+  }
+
+  async processarPagamento(): Promise<void> {
+    if (!this.pagamento.pagamentoValido() || this.enviando()) {
+      return;
+    }
+
+    const meioIntegrado = this.meioPagamentoIntegradoSelecionado();
+    if (!meioIntegrado) {
+      this.irParaConfirmacao();
+      return;
+    }
+
+    this.enviando.set(true);
+    this.erroPagamento.set(null);
+    this.resetarInatividade();
+
+    try {
+      const correlationId = this.gerarCorrelationId();
+      const pedido = await this.criarPedidoDiretoParaPagamento(correlationId);
+
+      if (meioIntegrado === 'PIX') {
+        await this.iniciarPagamentoPix(pedido, correlationId);
+        return;
+      }
+
+      await this.iniciarPagamentoCartao(pedido, meioIntegrado, correlationId);
+    } catch (error) {
+      console.error('Erro ao processar pagamento do totem:', error);
+      this.erroPagamento.set(this.getMensagemErroPagamento(error));
+    } finally {
+      this.enviando.set(false);
+    }
+  }
+
+  async simularPixAprovado(): Promise<void> {
+    const checkout = this.checkoutPagamento();
+    if (!checkout?.pix || this.enviando()) {
+      return;
+    }
+
+    this.enviando.set(true);
+    this.erroPagamento.set(null);
+
+    try {
+      await firstValueFrom(this.pagamentoTotemService.simularPixAprovado(checkout.pix.txid));
+      const pagamento = await firstValueFrom(
+        this.pagamentoTotemService.buscarStatus(checkout.correlationId)
+      );
+      this.aplicarStatusPagamento(pagamento, checkout.pedido);
+    } catch (error) {
+      console.error('Erro ao simular PIX aprovado:', error);
+      this.erroPagamento.set(this.getMensagemErroPagamento(error));
+    } finally {
+      this.enviando.set(false);
+    }
+  }
+
+  async verificarPagamentoPix(): Promise<void> {
+    const checkout = this.checkoutPagamento();
+    if (!checkout || this.enviando()) {
+      return;
+    }
+
+    this.enviando.set(true);
+    this.erroPagamento.set(null);
+
+    try {
+      const pagamento = await firstValueFrom(
+        this.pagamentoTotemService.buscarStatus(checkout.correlationId)
+      );
+      this.aplicarStatusPagamento(pagamento, checkout.pedido);
+    } catch (error) {
+      console.error('Erro ao verificar pagamento PIX:', error);
+      this.erroPagamento.set(this.getMensagemErroPagamento(error));
+    } finally {
+      this.enviando.set(false);
+    }
+  }
+
+  async copiarCodigoPix(): Promise<void> {
+    const pix = this.checkoutPagamento()?.pix;
+    const codigo = pix?.copiaECola || pix?.qrCodePayload;
+    if (!codigo || !this.isBrowser || !navigator.clipboard) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(codigo);
+      this.erroPagamento.set('Codigo PIX copiado.');
+    } catch {
+      this.erroPagamento.set('Nao foi possivel copiar automaticamente.');
+    }
+  }
+
+  private async criarPedidoDiretoParaPagamento(
+    correlationId: string
+  ): Promise<PedidoAutoAtendimentoResponse> {
+    const request = this.montarRequestPedido(false);
+    return firstValueFrom(this.autoAtendimentoService.criarPedidoDireto(request, correlationId));
+  }
+
+  private async iniciarPagamentoPix(
+    pedido: PedidoAutoAtendimentoResponse,
+    correlationId: string
+  ): Promise<void> {
+    const pix = await firstValueFrom(
+      this.pagamentoTotemService.iniciarPix({
+        pedidoId: pedido.id,
+        correlationId,
+      })
+    );
+
+    this.checkoutPagamento.set({
+      status: 'PIX_QR',
+      correlationId,
+      pedido,
+      pix,
+      mensagem: 'Aguardando pagamento PIX.',
+    });
+  }
+
+  private async iniciarPagamentoCartao(
+    pedido: PedidoAutoAtendimentoResponse,
+    meioPagamento: MeioPagamentoTotemGateway,
+    correlationId: string
+  ): Promise<void> {
+    const pagamento = await firstValueFrom(
+      this.pagamentoTotemService.iniciarCartao({
+        pedidoId: pedido.id,
+        meioPagamento,
+        correlationId,
+      })
+    );
+
+    this.checkoutPagamento.set({
+      status: 'CARTAO_PROCESSANDO',
+      correlationId,
+      pedido,
+      mensagem: 'Siga as instrucoes na maquininha.',
+    });
+
+    const resultadoTef = await this.executarTef(pagamento, meioPagamento);
+    if (!resultadoTef.sucesso) {
+      await firstValueFrom(
+        this.pagamentoTotemService.confirmarCartao({
+          correlationId,
+          aprovado: false,
+          motivo: resultadoTef.mensagem || resultadoTef.status,
+        })
+      );
+      throw new Error(resultadoTef.mensagem || 'Pagamento nao aprovado na maquininha.');
+    }
+
+    const confirmado = await firstValueFrom(
+      this.pagamentoTotemService.confirmarCartao({
+        correlationId,
+        aprovado: true,
+        nsuTef: resultadoTef.nsu,
+        bandeira: resultadoTef.bandeira,
+        codigoAutorizacao: resultadoTef.autorizacao,
+        codigoAdquirente: resultadoTef.adquirente,
+        comprovanteCliente: resultadoTef.mensagem,
+      })
+    );
+
+    this.aplicarStatusPagamento(confirmado, pedido);
+  }
+
+  private async executarTef(
+    pagamento: PagamentoTotemDTO,
+    meioPagamento: MeioPagamentoTotemGateway
+  ): Promise<ResultadoTefTotem> {
+    const totemApi = this.getTotemApi();
+    if (totemApi?.iniciarPagamentoTef) {
+      return totemApi.iniciarPagamentoTef({
+        correlationId: pagamento.correlationId,
+        valorCentavos: pagamento.valorCentavos,
+        meio: meioPagamento,
+      });
+    }
+
+    await this.aguardar(900);
+    const sufixo = String(Date.now()).slice(-8);
+    return {
+      sucesso: true,
+      status: 'APROVADO',
+      correlationId: pagamento.correlationId,
+      nsu: `WEB${sufixo}`,
+      bandeira: 'MOCK',
+      autorizacao: `AUT${sufixo.slice(-6)}`,
+      adquirente: 'BROWSER_MOCK',
+      mensagem: 'Pagamento aprovado pelo mock do navegador.',
+    };
+  }
+
+  private aplicarStatusPagamento(
+    pagamento: PagamentoTotemDTO,
+    pedido: PedidoAutoAtendimentoResponse
+  ): void {
+    if (pagamento.status === 'APROVADO') {
+      this.concluirPedidoPago(pedido);
+      return;
+    }
+
+    if (['NEGADO', 'CANCELADO', 'FALHA_TECNICA', 'EXPIRADO'].includes(pagamento.status)) {
+      this.erroPagamento.set(pagamento.motivo || 'Pagamento nao aprovado.');
+      return;
+    }
+
+    this.erroPagamento.set('Pagamento ainda pendente. Verifique novamente em alguns segundos.');
+  }
+
+  private concluirPedidoPago(pedido: PedidoAutoAtendimentoResponse): void {
+    this.pedidoCriado.set({
+      id: pedido.id,
+      numeroPedido: pedido.numeroPedido,
+    });
+    this.limparCheckoutPagamento();
+    this.etapaAtual.set('sucesso');
+
+    setTimeout(() => {
+      this.novoAtendimento();
+    }, 10000);
+  }
+
+  private limparCheckoutPagamento(): void {
+    this.checkoutPagamento.set(null);
+    this.erroPagamento.set(null);
+  }
+
+  private mapearMeioPagamentoTotem(tipo: MeioPagamentoTipo): MeioPagamentoTotemGateway | null {
+    switch (tipo) {
+      case 'PIX':
+        return 'PIX';
+      case 'CARTAO_CREDITO':
+        return 'CARTAO_CREDITO';
+      case 'CARTAO_DEBITO':
+        return 'CARTAO_DEBITO';
+      case 'VALE_REFEICAO':
+        return 'CARTAO_VOUCHER';
+      case 'DINHEIRO':
+        return null;
+    }
+  }
+
+  private gerarCorrelationId(): string {
+    if (this.isBrowser && typeof window.crypto?.randomUUID === 'function') {
+      return window.crypto.randomUUID();
+    }
+    return this.autoAtendimentoService.gerarChaveIdempotencia();
+  }
+
+  private getTotemApi(): TotemApi | null {
+    if (!this.isBrowser) {
+      return null;
+    }
+    return (window as Window & { totemAPI?: TotemApi }).totemAPI ?? null;
+  }
+
+  private aguardar(milliseconds: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, milliseconds));
+  }
+
+  private getMensagemErroPagamento(error: unknown): string {
+    if (error instanceof Error) {
+      return error.message;
+    }
+
+    const httpError = error as {
+      error?: { message?: string; detail?: string; erro?: string };
+      message?: string;
+    };
+
+    return (
+      httpError.error?.message ||
+      httpError.error?.detail ||
+      httpError.error?.erro ||
+      httpError.message ||
+      'Nao foi possivel processar o pagamento. Tente novamente.'
+    );
   }
 
   // ========== Debug/Admin ==========

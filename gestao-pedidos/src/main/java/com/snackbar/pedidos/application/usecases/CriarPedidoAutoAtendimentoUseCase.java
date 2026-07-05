@@ -108,14 +108,16 @@ public class CriarPedidoAutoAtendimentoUseCase {
 
         pedido.atualizarObservacoes(request.getObservacao());
 
-        // Processa meios de pagamento
-        for (MeioPagamentoRequest meioPagamentoRequest : request.getMeiosPagamento()) {
-            Preco valor = Preco.of(meioPagamentoRequest.getValor());
-            MeioPagamentoPedido meioPagamentoPedido = criarMeioPagamentoComTroco(meioPagamentoRequest, valor);
-            pedido.adicionarMeioPagamento(meioPagamentoPedido);
+        // Processa meios de pagamento quando o pedido ja chega pago.
+        if (request.getMeiosPagamento() != null && !request.getMeiosPagamento().isEmpty()) {
+            for (MeioPagamentoRequest meioPagamentoRequest : request.getMeiosPagamento()) {
+                Preco valor = Preco.of(meioPagamentoRequest.getValor());
+                MeioPagamentoPedido meioPagamentoPedido = criarMeioPagamentoComTroco(meioPagamentoRequest, valor);
+                pedido.adicionarMeioPagamento(meioPagamentoPedido);
+            }
+            validarTotalMeiosPagamento(pedido);
         }
 
-        validarTotalMeiosPagamento(pedido);
         pedidoValidator.validarCriacao(pedido);
         vincularSessaoAtiva(pedido);
 
