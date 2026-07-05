@@ -123,6 +123,11 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
   readonly checkoutPagamento = signal<PagamentoCheckoutTotem | null>(null);
   readonly erroPagamento = signal<string | null>(null);
 
+  // ========== Countdown do QR Code PIX ==========
+  readonly pixTempoRestante = signal(0);
+  readonly pixExpirado = computed(() => this.pixTempoRestante() <= 0);
+  private pixTimer?: ReturnType<typeof setInterval>;
+
   // Estado do pedido criado
   /** Quando naFila: pedido na fila aguardando aceite; senão: pedido já aceito (tem numeroPedido). */
   readonly pedidoCriado = signal<{
@@ -208,6 +213,7 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.pararMonitoramentoInatividade();
+    this.pararContagemPix();
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -561,7 +567,7 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
 
   async simularPixAprovado(): Promise<void> {
     const checkout = this.checkoutPagamento();
-    if (!checkout?.pix || this.enviando()) {
+    if (!checkout?.pix || this.enviando() || this.pixExpirado()) {
       return;
     }
 
@@ -584,7 +590,7 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
 
   async verificarPagamentoPix(): Promise<void> {
     const checkout = this.checkoutPagamento();
-    if (!checkout || this.enviando()) {
+    if (!checkout || this.enviando() || this.pixExpirado()) {
       return;
     }
 
@@ -644,6 +650,20 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
       pix,
       mensagem: 'Aguardando pagamento PIX.',
     });
+    this.iniciarContagemPix(pix.expiracaoEm);
+  }
+
+  /**
+   * Gera um novo QR Code PIX para o mesmo pedido, com um novo correlationId.
+   * O backend expira a cobranca anterior ao receber a nova solicitacao.
+   */
+  regenerarQrCodePix(): void {
+    const pedido = this.checkoutPagamento()?.pedido;
+    if (!pedido) {
+      return;
+    }
+    const novoCorrelationId = this.gerarCorrelationId();
+    void this.iniciarPagamentoPix(pedido, novoCorrelationId);
   }
 
   private async iniciarPagamentoCartao(
@@ -753,6 +773,37 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
   private limparCheckoutPagamento(): void {
     this.checkoutPagamento.set(null);
     this.erroPagamento.set(null);
+    this.pararContagemPix();
+  }
+
+  private iniciarContagemPix(expiracaoEm: string): void {
+    this.pararContagemPix();
+    if (!this.isBrowser) {
+      return;
+    }
+    const expiraEmMs = new Date(expiracaoEm).getTime();
+    const atualizar = () => {
+      const restante = Math.max(0, Math.floor((expiraEmMs - Date.now()) / 1000));
+      this.pixTempoRestante.set(restante);
+      if (restante <= 0) {
+        this.pararContagemPix();
+      }
+    };
+    atualizar();
+    this.pixTimer = setInterval(atualizar, 1000);
+  }
+
+  private pararContagemPix(): void {
+    if (this.pixTimer) {
+      clearInterval(this.pixTimer);
+      this.pixTimer = undefined;
+    }
+  }
+
+  formatarTempoPix(segundos: number): string {
+    const min = Math.floor(segundos / 60);
+    const seg = segundos % 60;
+    return `${min}:${seg.toString().padStart(2, '0')}`;
   }
 
   private mapearMeioPagamentoTotem(tipo: MeioPagamentoTipo): MeioPagamentoGateway | null {

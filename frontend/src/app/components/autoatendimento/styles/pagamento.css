@@ -367,6 +367,49 @@
   object-fit: contain;
 }
 
+.pix-qr-container img.pix-qr--expirado {
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.pix-countdown {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin: 0.625rem 0 0;
+  text-align: center;
+}
+
+.pix-countdown strong {
+  color: var(--text-primary);
+}
+
+.pix-expirado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.625rem;
+  text-align: center;
+}
+
+.pix-expirado p {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.pix-expirado button {
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--primary-color);
+  color: #ffffff;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .pix-copia-cola {
   margin-top: 0.75rem;
   padding: 0.75rem;

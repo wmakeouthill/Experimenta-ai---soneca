@@ -809,8 +809,22 @@
                 </div>
                 <p class="checkout-texto">Aponte a camera para o QR Code ou use o copia e cola.</p>
                 <div class="pix-qr-container">
-                  <img [src]="pix.qrCodeBase64" alt="QR Code PIX" />
+                  <img
+                    [src]="pix.qrCodeBase64"
+                    alt="QR Code PIX"
+                    [class.pix-qr--expirado]="pixExpirado()"
+                  />
                 </div>
+                @if (!pixExpirado()) {
+                  <p class="pix-countdown">
+                    QR Code expira em <strong>{{ formatarTempoPix(pixTempoRestante()) }}</strong>
+                  </p>
+                } @else {
+                  <div class="pix-expirado">
+                    <p>Este QR Code expirou.</p>
+                    <button type="button" (click)="regenerarQrCodePix()">Gerar novo QR Code</button>
+                  </div>
+                }
                 <div class="pix-copia-cola">
                   {{ pix.copiaECola }}
                 </div>
@@ -821,7 +835,7 @@
                   <button
                     class="btn-checkout-secundario"
                     type="button"
-                    [disabled]="enviando()"
+                    [disabled]="enviando() || pixExpirado()"
                     (click)="verificarPagamentoPix()"
                   >
                     Ja paguei
@@ -830,7 +844,7 @@
                     <button
                       class="btn-checkout-primario"
                       type="button"
-                      [disabled]="enviando()"
+                      [disabled]="enviando() || pixExpirado()"
                       (click)="simularPixAprovado()"
                     >
                       Aprovar PIX mock
