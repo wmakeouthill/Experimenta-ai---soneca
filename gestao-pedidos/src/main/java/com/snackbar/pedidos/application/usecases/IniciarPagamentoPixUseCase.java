@@ -6,14 +6,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.snackbar.kernel.domain.exceptions.ValidationException;
-import com.snackbar.pedidos.application.dto.IniciarPagamentoTotemPixRequest;
+import com.snackbar.pedidos.application.dto.IniciarPagamentoPixRequest;
 import com.snackbar.pedidos.application.dto.PixCobrancaCriadaDTO;
-import com.snackbar.pedidos.application.ports.PagamentoTotemRepositoryPort;
+import com.snackbar.pedidos.application.ports.PagamentoRepositoryPort;
 import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
-import com.snackbar.pedidos.application.ports.StonePixGatewayPort;
-import com.snackbar.pedidos.application.ports.StonePixGatewayPort.CriarCobrancaPixCommand;
-import com.snackbar.pedidos.domain.entities.MeioPagamentoTotem;
-import com.snackbar.pedidos.domain.entities.PagamentoTotem;
+import com.snackbar.pedidos.application.ports.PixGatewayPort;
+import com.snackbar.pedidos.application.ports.PixGatewayPort.CriarCobrancaPixCommand;
+import com.snackbar.pedidos.domain.entities.CanalPagamento;
+import com.snackbar.pedidos.domain.entities.MeioPagamentoGateway;
+import com.snackbar.pedidos.domain.entities.Pagamento;
 import com.snackbar.pedidos.domain.valueobjects.DadosPix;
 
 import lombok.RequiredArgsConstructor;
@@ -22,14 +23,14 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class IniciarPagamentoTotemPixUseCase {
+public class IniciarPagamentoPixUseCase {
 
-    private final PagamentoTotemRepositoryPort pagamentoRepository;
+    private final PagamentoRepositoryPort pagamentoRepository;
     private final PedidoRepositoryPort pedidoRepository;
-    private final StonePixGatewayPort stonePixGateway;
+    private final PixGatewayPort pixGateway;
 
     @Transactional
-    public PixCobrancaCriadaDTO executar(IniciarPagamentoTotemPixRequest request) {
+    public PixCobrancaCriadaDTO executar(IniciarPagamentoPixRequest request) {
         var existente = pagamentoRepository.buscarPorCorrelationId(request.correlationId());
         if (existente.isPresent()) {
             return PixCobrancaCriadaDTO.de(existente.get());
@@ -38,18 +39,29 @@ public class IniciarPagamentoTotemPixUseCase {
         var pedido = pedidoRepository.buscarPorId(request.pedidoId())
                 .orElseThrow(() -> new ValidationException("Pedido nao encontrado"));
 
+        // Regeneracao de QR: expira cobranca pendente anterior do mesmo pedido.
+        pagamentoRepository.buscarAguardandoPixPorPedidoId(pedido.getId())
+                .ifPresent(anterior -> {
+                    anterior.expirar();
+                    pagamentoRepository.salvar(anterior);
+                    log.info("Pagamento PIX anterior expirado para regeneracao correlationId={}",
+                            anterior.getCorrelationId());
+                });
+
         long valorCentavos = pedido.getValorTotal().getAmount()
                 .movePointRight(2)
                 .setScale(0, RoundingMode.HALF_UP)
                 .longValueExact();
 
-        var pagamento = PagamentoTotem.iniciar(
+        var pagamento = Pagamento.iniciarParaPedido(
                 pedido.getId(),
+                CanalPagamento.TOTEM,
+                pixGateway.gateway(),
                 valorCentavos,
-                MeioPagamentoTotem.PIX,
+                MeioPagamentoGateway.PIX,
                 request.correlationId());
 
-        var cobranca = stonePixGateway.criarCobrancaDinamica(
+        var cobranca = pixGateway.criarCobrancaDinamica(
                 new CriarCobrancaPixCommand(pedido.getId(), request.correlationId(), valorCentavos));
 
         pagamento.marcarAguardandoPix(new DadosPix(
@@ -60,8 +72,8 @@ public class IniciarPagamentoTotemPixUseCase {
                 cobranca.expiracaoEm()));
 
         var salvo = pagamentoRepository.salvar(pagamento);
-        log.info("Pagamento PIX iniciado correlationId={} txid={}",
-                salvo.getCorrelationId(), salvo.getPixTxid());
+        log.info("Pagamento PIX iniciado correlationId={} txid={} gateway={}",
+                salvo.getCorrelationId(), salvo.getPixTxid(), salvo.getGateway());
         return PixCobrancaCriadaDTO.de(salvo);
     }
 }

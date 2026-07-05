@@ -2,8 +2,8 @@ package com.snackbar.pedidos.application.dto;
 
 import java.time.LocalDateTime;
 
-import com.snackbar.pedidos.domain.entities.PagamentoTotem;
-import com.snackbar.pedidos.domain.entities.StatusPagamentoTotem;
+import com.snackbar.pedidos.domain.entities.Pagamento;
+import com.snackbar.pedidos.domain.entities.StatusPagamento;
 
 public record PixCobrancaCriadaDTO(
         String correlationId,
@@ -12,9 +12,9 @@ public record PixCobrancaCriadaDTO(
         String qrCodeBase64,
         String copiaECola,
         LocalDateTime expiracaoEm,
-        StatusPagamentoTotem status) {
+        StatusPagamento status) {
 
-    public static PixCobrancaCriadaDTO de(PagamentoTotem pagamento) {
+    public static PixCobrancaCriadaDTO de(Pagamento pagamento) {
         return new PixCobrancaCriadaDTO(
                 pagamento.getCorrelationId(),
                 pagamento.getPixTxid(),

@@ -2,17 +2,23 @@ package com.snackbar.pedidos.application.dto;
 
 import java.time.LocalDateTime;
 
-import com.snackbar.pedidos.domain.entities.MeioPagamentoTotem;
-import com.snackbar.pedidos.domain.entities.PagamentoTotem;
-import com.snackbar.pedidos.domain.entities.StatusPagamentoTotem;
+import com.snackbar.pedidos.domain.entities.CanalPagamento;
+import com.snackbar.pedidos.domain.entities.GatewayPagamento;
+import com.snackbar.pedidos.domain.entities.MeioPagamentoGateway;
+import com.snackbar.pedidos.domain.entities.Pagamento;
+import com.snackbar.pedidos.domain.entities.StatusPagamento;
 
-public record PagamentoTotemDTO(
+public record PagamentoDTO(
         String id,
+        CanalPagamento canal,
+        GatewayPagamento gateway,
         String pedidoId,
+        String pedidoPendenteId,
+        String contaMesaId,
         String correlationId,
         long valorCentavos,
-        MeioPagamentoTotem meioPagamento,
-        StatusPagamentoTotem status,
+        MeioPagamentoGateway meioPagamento,
+        StatusPagamento status,
         String nsuTef,
         String bandeira,
         String codigoAutorizacao,
@@ -28,10 +34,14 @@ public record PagamentoTotemDTO(
         LocalDateTime iniciadoEm,
         LocalDateTime finalizadoEm) {
 
-    public static PagamentoTotemDTO de(PagamentoTotem pagamento) {
-        return new PagamentoTotemDTO(
+    public static PagamentoDTO de(Pagamento pagamento) {
+        return new PagamentoDTO(
                 pagamento.getId(),
+                pagamento.getCanal(),
+                pagamento.getGateway(),
                 pagamento.getPedidoId(),
+                pagamento.getPedidoPendenteId(),
+                pagamento.getContaMesaId(),
                 pagamento.getCorrelationId(),
                 pagamento.getValorCentavos(),
                 pagamento.getMeioPagamento(),

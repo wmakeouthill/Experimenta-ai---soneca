@@ -7,9 +7,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.snackbar.cardapio.domain.valueobjects.Preco;
 import com.snackbar.kernel.domain.exceptions.ValidationException;
-import com.snackbar.pedidos.application.dto.PagamentoTotemDTO;
-import com.snackbar.pedidos.application.ports.PagamentoTotemRepositoryPort;
+import com.snackbar.pedidos.application.dto.PagamentoDTO;
+import com.snackbar.pedidos.application.ports.PagamentoRepositoryPort;
 import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
+import com.snackbar.pedidos.domain.entities.CanalPagamento;
 import com.snackbar.pedidos.domain.entities.MeioPagamento;
 import com.snackbar.pedidos.domain.entities.MeioPagamentoPedido;
 
@@ -19,13 +20,13 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class ConfirmarPagamentoTotemPixUseCase {
+public class ConfirmarPagamentoPixUseCase {
 
-    private final PagamentoTotemRepositoryPort pagamentoRepository;
+    private final PagamentoRepositoryPort pagamentoRepository;
     private final PedidoRepositoryPort pedidoRepository;
 
     @Transactional
-    public PagamentoTotemDTO executar(String txid, String endToEndId) {
+    public PagamentoDTO executar(String txid, String endToEndId) {
         validarObrigatorio(txid, "txid");
         validarObrigatorio(endToEndId, "endToEndId");
 
@@ -33,16 +34,22 @@ public class ConfirmarPagamentoTotemPixUseCase {
                 .orElseThrow(() -> new ValidationException("Pagamento PIX nao encontrado"));
 
         if (pagamento.estaFinalizado()) {
-            return PagamentoTotemDTO.de(pagamento);
+            return PagamentoDTO.de(pagamento);
         }
 
         pagamento.aprovarPix(endToEndId);
-        registrarPixNoPedido(pagamento.getPedidoId(), pagamento.getValorCentavos());
+
+        if (pagamento.getCanal() == CanalPagamento.TOTEM) {
+            registrarPixNoPedido(pagamento.getPedidoId(), pagamento.getValorCentavos());
+        } else {
+            // Canal MESA (pedido pendente pre-pago / conta pos-paga) e tratado no Plano 2.
+            throw new ValidationException("Pagamento PIX de mesa ainda nao suportado");
+        }
 
         var salvo = pagamentoRepository.salvar(pagamento);
         log.info("Pagamento PIX confirmado correlationId={} txid={}",
                 salvo.getCorrelationId(), salvo.getPixTxid());
-        return PagamentoTotemDTO.de(salvo);
+        return PagamentoDTO.de(salvo);
     }
 
     private void registrarPixNoPedido(String pedidoId, long valorCentavos) {

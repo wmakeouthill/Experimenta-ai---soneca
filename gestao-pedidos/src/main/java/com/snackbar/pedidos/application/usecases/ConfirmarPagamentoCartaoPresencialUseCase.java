@@ -7,13 +7,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.snackbar.cardapio.domain.valueobjects.Preco;
 import com.snackbar.kernel.domain.exceptions.ValidationException;
-import com.snackbar.pedidos.application.dto.ConfirmarPagamentoTotemCartaoRequest;
-import com.snackbar.pedidos.application.dto.PagamentoTotemDTO;
-import com.snackbar.pedidos.application.ports.PagamentoTotemRepositoryPort;
+import com.snackbar.pedidos.application.dto.ConfirmarPagamentoCartaoPresencialRequest;
+import com.snackbar.pedidos.application.dto.PagamentoDTO;
+import com.snackbar.pedidos.application.ports.PagamentoRepositoryPort;
 import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
 import com.snackbar.pedidos.domain.entities.MeioPagamento;
+import com.snackbar.pedidos.domain.entities.MeioPagamentoGateway;
 import com.snackbar.pedidos.domain.entities.MeioPagamentoPedido;
-import com.snackbar.pedidos.domain.entities.MeioPagamentoTotem;
 import com.snackbar.pedidos.domain.valueobjects.DadosTef;
 
 import lombok.RequiredArgsConstructor;
@@ -22,18 +22,18 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class ConfirmarPagamentoTotemCartaoUseCase {
+public class ConfirmarPagamentoCartaoPresencialUseCase {
 
-    private final PagamentoTotemRepositoryPort pagamentoRepository;
+    private final PagamentoRepositoryPort pagamentoRepository;
     private final PedidoRepositoryPort pedidoRepository;
 
     @Transactional
-    public PagamentoTotemDTO executar(ConfirmarPagamentoTotemCartaoRequest request) {
+    public PagamentoDTO executar(ConfirmarPagamentoCartaoPresencialRequest request) {
         var pagamento = pagamentoRepository.buscarPorCorrelationId(request.correlationId())
-                .orElseThrow(() -> new ValidationException("Pagamento do totem nao encontrado"));
+                .orElseThrow(() -> new ValidationException("Pagamento nao encontrado"));
 
         if (pagamento.estaFinalizado()) {
-            return PagamentoTotemDTO.de(pagamento);
+            return PagamentoDTO.de(pagamento);
         }
 
         if (Boolean.TRUE.equals(request.aprovado())) {
@@ -52,10 +52,11 @@ public class ConfirmarPagamentoTotemCartaoUseCase {
         var salvo = pagamentoRepository.salvar(pagamento);
         log.info("Pagamento TEF confirmado correlationId={} status={}",
                 salvo.getCorrelationId(), salvo.getStatus());
-        return PagamentoTotemDTO.de(salvo);
+        return PagamentoDTO.de(salvo);
     }
 
-    private void registrarMeioPagamentoNoPedido(String pedidoId, MeioPagamentoTotem meioTotem, long valorCentavos) {
+    private void registrarMeioPagamentoNoPedido(String pedidoId, MeioPagamentoGateway meioGateway,
+            long valorCentavos) {
         var pedido = pedidoRepository.buscarPorId(pedidoId)
                 .orElseThrow(() -> new ValidationException("Pedido nao encontrado"));
 
@@ -64,13 +65,13 @@ public class ConfirmarPagamentoTotemCartaoUseCase {
         }
 
         pedido.adicionarMeioPagamento(MeioPagamentoPedido.criar(
-                mapearMeioPagamento(meioTotem),
+                mapearMeioPagamento(meioGateway),
                 Preco.of(BigDecimal.valueOf(valorCentavos, 2))));
         pedidoRepository.salvar(pedido);
     }
 
-    private MeioPagamento mapearMeioPagamento(MeioPagamentoTotem meioTotem) {
-        return switch (meioTotem) {
+    private MeioPagamento mapearMeioPagamento(MeioPagamentoGateway meioGateway) {
+        return switch (meioGateway) {
             case CARTAO_CREDITO -> MeioPagamento.CARTAO_CREDITO;
             case CARTAO_DEBITO -> MeioPagamento.CARTAO_DEBITO;
             case CARTAO_VOUCHER -> MeioPagamento.VALE_REFEICAO;

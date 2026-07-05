@@ -3,7 +3,7 @@ package com.snackbar.pedidos.application.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-public record ConfirmarPagamentoTotemCartaoRequest(
+public record ConfirmarPagamentoCartaoPresencialRequest(
         @NotBlank String correlationId,
         @NotNull Boolean aprovado,
         String nsuTef,

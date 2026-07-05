@@ -3,23 +3,23 @@ package com.snackbar.pedidos.application.usecases;
 import org.springframework.stereotype.Service;
 
 import com.snackbar.kernel.domain.exceptions.ValidationException;
-import com.snackbar.pedidos.application.dto.PagamentoTotemDTO;
-import com.snackbar.pedidos.application.ports.PagamentoTotemRepositoryPort;
+import com.snackbar.pedidos.application.dto.PagamentoDTO;
+import com.snackbar.pedidos.application.ports.PagamentoRepositoryPort;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class BuscarPagamentoTotemUseCase {
+public class BuscarPagamentoUseCase {
 
-    private final PagamentoTotemRepositoryPort pagamentoRepository;
+    private final PagamentoRepositoryPort pagamentoRepository;
 
-    public PagamentoTotemDTO executar(String correlationId) {
+    public PagamentoDTO executar(String correlationId) {
         validarObrigatorio(correlationId, "correlationId");
 
         return pagamentoRepository.buscarPorCorrelationId(correlationId)
-                .map(PagamentoTotemDTO::de)
-                .orElseThrow(() -> new ValidationException("Pagamento do totem nao encontrado"));
+                .map(PagamentoDTO::de)
+                .orElseThrow(() -> new ValidationException("Pagamento nao encontrado"));
     }
 
     private static void validarObrigatorio(String valor, String campo) {

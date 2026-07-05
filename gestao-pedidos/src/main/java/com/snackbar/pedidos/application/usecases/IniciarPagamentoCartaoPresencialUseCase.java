@@ -6,11 +6,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.snackbar.kernel.domain.exceptions.ValidationException;
-import com.snackbar.pedidos.application.dto.IniciarPagamentoTotemCartaoRequest;
-import com.snackbar.pedidos.application.dto.PagamentoTotemDTO;
-import com.snackbar.pedidos.application.ports.PagamentoTotemRepositoryPort;
+import com.snackbar.pedidos.application.dto.IniciarPagamentoCartaoPresencialRequest;
+import com.snackbar.pedidos.application.dto.PagamentoDTO;
+import com.snackbar.pedidos.application.ports.PagamentoRepositoryPort;
 import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
-import com.snackbar.pedidos.domain.entities.PagamentoTotem;
+import com.snackbar.pedidos.domain.entities.CanalPagamento;
+import com.snackbar.pedidos.domain.entities.GatewayPagamento;
+import com.snackbar.pedidos.domain.entities.Pagamento;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,20 +20,20 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class IniciarPagamentoTotemCartaoUseCase {
+public class IniciarPagamentoCartaoPresencialUseCase {
 
-    private final PagamentoTotemRepositoryPort pagamentoRepository;
+    private final PagamentoRepositoryPort pagamentoRepository;
     private final PedidoRepositoryPort pedidoRepository;
 
     @Transactional
-    public PagamentoTotemDTO executar(IniciarPagamentoTotemCartaoRequest request) {
+    public PagamentoDTO executar(IniciarPagamentoCartaoPresencialRequest request) {
         if (!request.meioPagamento().isCartao()) {
             throw new ValidationException("meio de pagamento deve ser cartao");
         }
 
         var existente = pagamentoRepository.buscarPorCorrelationId(request.correlationId());
         if (existente.isPresent()) {
-            return PagamentoTotemDTO.de(existente.get());
+            return PagamentoDTO.de(existente.get());
         }
 
         var pedido = pedidoRepository.buscarPorId(request.pedidoId())
@@ -42,8 +44,12 @@ public class IniciarPagamentoTotemCartaoUseCase {
                 .setScale(0, RoundingMode.HALF_UP)
                 .longValueExact();
 
-        var pagamento = PagamentoTotem.iniciar(
+        // Cartao presencial (TEF/maquininha): a integracao real depende da
+        // definicao do equipamento (Fase 0). Ate la o fluxo e simulado.
+        var pagamento = Pagamento.iniciarParaPedido(
                 pedido.getId(),
+                CanalPagamento.TOTEM,
+                GatewayPagamento.SIMULADO,
                 valorCentavos,
                 request.meioPagamento(),
                 request.correlationId());
@@ -52,6 +58,6 @@ public class IniciarPagamentoTotemCartaoUseCase {
         var salvo = pagamentoRepository.salvar(pagamento);
         log.info("Pagamento TEF iniciado correlationId={} pedidoId={}",
                 salvo.getCorrelationId(), salvo.getPedidoId());
-        return PagamentoTotemDTO.de(salvo);
+        return PagamentoDTO.de(salvo);
     }
 }
