@@ -801,7 +801,7 @@
 
         @if (checkoutPagamento(); as checkout) {
           <div class="checkout-card">
-            @if (checkout.status === 'PIX_QR') {
+            @if (pagamentoConfig.pixTotemAtivo() && checkout.status === 'PIX_QR') {
               @if (checkout.pix; as pix) {
                 <div class="checkout-titulo">
                   <span>PIX</span>
@@ -826,19 +826,21 @@
                   >
                     Ja paguei
                   </button>
-                  <button
-                    class="btn-checkout-primario"
-                    type="button"
-                    [disabled]="enviando()"
-                    (click)="simularPixAprovado()"
-                  >
-                    Aprovar PIX mock
-                  </button>
+                  @if (pagamentoConfig.gatewayPixSimulado()) {
+                    <button
+                      class="btn-checkout-primario"
+                      type="button"
+                      [disabled]="enviando()"
+                      (click)="simularPixAprovado()"
+                    >
+                      Aprovar PIX mock
+                    </button>
+                  }
                 </div>
               }
             }
 
-            @if (checkout.status === 'CARTAO_PROCESSANDO') {
+            @if (pagamentoConfig.cartaoTotemAtivo() && checkout.status === 'CARTAO_PROCESSANDO') {
               <div class="cartao-processando">
                 <div class="cartao-icone">TEF</div>
                 <h3>Use a maquininha</h3>

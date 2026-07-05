@@ -29,6 +29,7 @@ import {
   PagamentoService,
   type PixCobrancaCriadaDTO,
 } from '../../services/pagamento.service';
+import { PagamentoConfigService } from '../../services/pagamento-config.service';
 import { Produto } from '../../services/produto.service';
 import { StatusLoja, StatusLojaService } from '../../services/status-loja.service';
 import { ImageProxyUtil } from '../../utils/image-proxy.util';
@@ -103,6 +104,7 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
   private readonly autoAtendimentoService = inject(AutoAtendimentoService);
   private readonly pagamentoService = inject(PagamentoService);
   private readonly statusLojaService = inject(StatusLojaService);
+  readonly pagamentoConfig = inject(PagamentoConfigService);
   private readonly destroy$ = new Subject<void>();
 
   protected readonly Math = Math;
@@ -159,7 +161,16 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
       return null;
     }
     const meio = meios[0];
-    return meio ? this.mapearMeioPagamentoTotem(meio.tipo as MeioPagamentoTipo) : null;
+    const meioGateway = meio ? this.mapearMeioPagamentoTotem(meio.tipo as MeioPagamentoTipo) : null;
+    if (!meioGateway) {
+      return null;
+    }
+    // Respeita a configuracao efetiva de pagamentos do totem: sem o flag correspondente
+    // ativo, o meio selecionado nao entra no fluxo integrado (segue como meio manual).
+    if (meioGateway === 'PIX') {
+      return this.pagamentoConfig.pixTotemAtivo() ? meioGateway : null;
+    }
+    return this.pagamentoConfig.cartaoTotemAtivo() ? meioGateway : null;
   });
 
   constructor() {
@@ -174,6 +185,8 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.pagamentoConfig.carregar();
+
     if (!this.isBrowser) return;
 
     // Verifica se operador está logado
