@@ -142,6 +142,9 @@
     <!-- Migration: Cria tabela de pagamentos do totem -->
     <include file="changes/043-create-pagamentos-totem-table.sql" relativeToChangelogFile="true" />
 
+    <!-- Migration: Generaliza tabela pagamentos_totem para pagamentos (canal, gateway, referencias) -->
+    <include file="changes/044-generalizar-pagamentos.sql" relativeToChangelogFile="true"/>
+
     <!--
     NOTA: O usuário administrador inicial é criado automaticamente via CommandLineRunner
     (UsuarioInicialConfig) na primeira execução da aplicação.
