@@ -24,11 +24,11 @@ import {
   PedidoAutoAtendimentoResponse,
 } from '../../services/autoatendimento.service';
 import {
-  type MeioPagamentoTotemGateway,
-  type PagamentoTotemDTO,
-  PagamentoTotemService,
+  type MeioPagamentoGateway,
+  type PagamentoDTO,
+  PagamentoService,
   type PixCobrancaCriadaDTO,
-} from '../../services/pagamento-totem.service';
+} from '../../services/pagamento.service';
 import { Produto } from '../../services/produto.service';
 import { StatusLoja, StatusLojaService } from '../../services/status-loja.service';
 import { ImageProxyUtil } from '../../utils/image-proxy.util';
@@ -70,7 +70,7 @@ interface TotemApi {
   iniciarPagamentoTef?: (payload: {
     correlationId: string;
     valorCentavos: number;
-    meio: MeioPagamentoTotemGateway;
+    meio: MeioPagamentoGateway;
   }) => Promise<ResultadoTefTotem>;
 }
 
@@ -101,7 +101,7 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly adicionalService = inject(AdicionalService);
   private readonly autoAtendimentoService = inject(AutoAtendimentoService);
-  private readonly pagamentoTotemService = inject(PagamentoTotemService);
+  private readonly pagamentoService = inject(PagamentoService);
   private readonly statusLojaService = inject(StatusLojaService);
   private readonly destroy$ = new Subject<void>();
 
@@ -556,9 +556,9 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
     this.erroPagamento.set(null);
 
     try {
-      await firstValueFrom(this.pagamentoTotemService.simularPixAprovado(checkout.pix.txid));
+      await firstValueFrom(this.pagamentoService.simularPixAprovado(checkout.pix.txid));
       const pagamento = await firstValueFrom(
-        this.pagamentoTotemService.buscarStatus(checkout.correlationId)
+        this.pagamentoService.buscarStatus(checkout.correlationId)
       );
       this.aplicarStatusPagamento(pagamento, checkout.pedido);
     } catch (error) {
@@ -580,7 +580,7 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
 
     try {
       const pagamento = await firstValueFrom(
-        this.pagamentoTotemService.buscarStatus(checkout.correlationId)
+        this.pagamentoService.buscarStatus(checkout.correlationId)
       );
       this.aplicarStatusPagamento(pagamento, checkout.pedido);
     } catch (error) {
@@ -618,7 +618,7 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
     correlationId: string
   ): Promise<void> {
     const pix = await firstValueFrom(
-      this.pagamentoTotemService.iniciarPix({
+      this.pagamentoService.iniciarPix({
         pedidoId: pedido.id,
         correlationId,
       })
@@ -635,11 +635,11 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
 
   private async iniciarPagamentoCartao(
     pedido: PedidoAutoAtendimentoResponse,
-    meioPagamento: MeioPagamentoTotemGateway,
+    meioPagamento: MeioPagamentoGateway,
     correlationId: string
   ): Promise<void> {
     const pagamento = await firstValueFrom(
-      this.pagamentoTotemService.iniciarCartao({
+      this.pagamentoService.iniciarCartao({
         pedidoId: pedido.id,
         meioPagamento,
         correlationId,
@@ -656,7 +656,7 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
     const resultadoTef = await this.executarTef(pagamento, meioPagamento);
     if (!resultadoTef.sucesso) {
       await firstValueFrom(
-        this.pagamentoTotemService.confirmarCartao({
+        this.pagamentoService.confirmarCartao({
           correlationId,
           aprovado: false,
           motivo: resultadoTef.mensagem || resultadoTef.status,
@@ -666,7 +666,7 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
     }
 
     const confirmado = await firstValueFrom(
-      this.pagamentoTotemService.confirmarCartao({
+      this.pagamentoService.confirmarCartao({
         correlationId,
         aprovado: true,
         nsuTef: resultadoTef.nsu,
@@ -681,8 +681,8 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
   }
 
   private async executarTef(
-    pagamento: PagamentoTotemDTO,
-    meioPagamento: MeioPagamentoTotemGateway
+    pagamento: PagamentoDTO,
+    meioPagamento: MeioPagamentoGateway
   ): Promise<ResultadoTefTotem> {
     const totemApi = this.getTotemApi();
     if (totemApi?.iniciarPagamentoTef) {
@@ -708,7 +708,7 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
   }
 
   private aplicarStatusPagamento(
-    pagamento: PagamentoTotemDTO,
+    pagamento: PagamentoDTO,
     pedido: PedidoAutoAtendimentoResponse
   ): void {
     if (pagamento.status === 'APROVADO') {
@@ -742,7 +742,7 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
     this.erroPagamento.set(null);
   }
 
-  private mapearMeioPagamentoTotem(tipo: MeioPagamentoTipo): MeioPagamentoTotemGateway | null {
+  private mapearMeioPagamentoTotem(tipo: MeioPagamentoTipo): MeioPagamentoGateway | null {
     switch (tipo) {
       case 'PIX':
         return 'PIX';

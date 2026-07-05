@@ -2,13 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
-export type MeioPagamentoTotemGateway =
+export type MeioPagamentoGateway =
   | 'PIX'
   | 'CARTAO_CREDITO'
   | 'CARTAO_DEBITO'
   | 'CARTAO_VOUCHER';
 
-export type StatusPagamentoTotem =
+export type StatusPagamento =
   | 'INICIADO'
   | 'AGUARDANDO_TEF'
   | 'AGUARDANDO_PIX'
@@ -18,6 +18,8 @@ export type StatusPagamentoTotem =
   | 'FALHA_TECNICA'
   | 'EXPIRADO';
 
+export type CanalPagamento = 'TOTEM' | 'MESA';
+
 export interface PixCobrancaCriadaDTO {
   correlationId: string;
   txid: string;
@@ -25,16 +27,20 @@ export interface PixCobrancaCriadaDTO {
   qrCodeBase64: string;
   copiaECola: string;
   expiracaoEm: string;
-  status: StatusPagamentoTotem;
+  status: StatusPagamento;
 }
 
-export interface PagamentoTotemDTO {
+export interface PagamentoDTO {
   id: string;
-  pedidoId: string;
+  canal: CanalPagamento;
+  gateway: 'SIMULADO' | 'STONE' | 'GETNET';
+  pedidoId?: string;
+  pedidoPendenteId?: string;
+  contaMesaId?: string;
   correlationId: string;
   valorCentavos: number;
-  meioPagamento: MeioPagamentoTotemGateway;
-  status: StatusPagamentoTotem;
+  meioPagamento: MeioPagamentoGateway;
+  status: StatusPagamento;
   nsuTef?: string;
   bandeira?: string;
   codigoAutorizacao?: string;
@@ -58,7 +64,7 @@ export interface IniciarPagamentoPixRequest {
 
 export interface IniciarPagamentoCartaoRequest {
   pedidoId: string;
-  meioPagamento: MeioPagamentoTotemGateway;
+  meioPagamento: MeioPagamentoGateway;
   correlationId: string;
 }
 
@@ -76,26 +82,31 @@ export interface ConfirmarPagamentoCartaoRequest {
 @Injectable({
   providedIn: 'root',
 })
-export class PagamentoTotemService {
+export class PagamentoService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = '/api/v1/pagamentos-totem';
+  private readonly apiUrl = '/api/v1/pagamentos';
 
   iniciarPix(request: IniciarPagamentoPixRequest): Observable<PixCobrancaCriadaDTO> {
     return this.http.post<PixCobrancaCriadaDTO>(`${this.apiUrl}/pix/iniciar`, request);
   }
 
-  iniciarCartao(request: IniciarPagamentoCartaoRequest): Observable<PagamentoTotemDTO> {
-    return this.http.post<PagamentoTotemDTO>(`${this.apiUrl}/cartao/iniciar`, request);
+  iniciarCartao(request: IniciarPagamentoCartaoRequest): Observable<PagamentoDTO> {
+    return this.http.post<PagamentoDTO>(`${this.apiUrl}/cartao-presencial/iniciar`, request);
   }
 
-  confirmarCartao(request: ConfirmarPagamentoCartaoRequest): Observable<PagamentoTotemDTO> {
-    return this.http.post<PagamentoTotemDTO>(`${this.apiUrl}/cartao/confirmar`, request);
+  confirmarCartao(request: ConfirmarPagamentoCartaoRequest): Observable<PagamentoDTO> {
+    return this.http.post<PagamentoDTO>(`${this.apiUrl}/cartao-presencial/confirmar`, request);
   }
 
-  buscarStatus(correlationId: string): Observable<PagamentoTotemDTO> {
-    return this.http.get<PagamentoTotemDTO>(`${this.apiUrl}/${correlationId}`);
+  buscarStatus(correlationId: string): Observable<PagamentoDTO> {
+    return this.http.get<PagamentoDTO>(`${this.apiUrl}/${correlationId}`);
   }
 
+  cancelar(correlationId: string, motivo?: string): Observable<PagamentoDTO> {
+    return this.http.post<PagamentoDTO>(`${this.apiUrl}/cancelar`, { correlationId, motivo });
+  }
+
+  /** Somente gateway SIMULADO: dispara o webhook simulado aprovando o PIX. */
   simularPixAprovado(txid: string): Observable<{ status: string }> {
     return this.http.post<{ status: string }>('/api/v1/webhooks/stone/pix', {
       txid,
