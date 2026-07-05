@@ -1,0 +1,61 @@
+<section class="config-pagamento">
+  <h2>Pagamentos integrados</h2>
+
+  @if (carregando()) {
+    <p class="config-pagamento__status">Carregando configuração…</p>
+  } @else {
+    <div class="config-pagamento__grupo">
+      <h3>Totem</h3>
+      <label>
+        <input type="checkbox" [(ngModel)]="config.pixTotemAtivo" name="pixTotemAtivo" />
+        PIX no totem
+      </label>
+      <label>
+        <input type="checkbox" [(ngModel)]="config.cartaoTotemAtivo" name="cartaoTotemAtivo" />
+        Cartão (maquininha) no totem
+      </label>
+    </div>
+
+    <div class="config-pagamento__grupo">
+      <h3>Pedido na mesa (QR Code)</h3>
+      <label>
+        <input type="checkbox" [(ngModel)]="config.pixMesaAtivo" name="pixMesaAtivo" />
+        PIX na mesa
+      </label>
+      <label>
+        <input type="checkbox" [(ngModel)]="config.cartaoMesaAtivo" name="cartaoMesaAtivo" />
+        Cartão digitado na mesa
+      </label>
+
+      <fieldset class="config-pagamento__modo">
+        <legend>Modo de cobrança da mesa</legend>
+        <label>
+          <input type="radio" name="modoMesa" value="PRE_PAGO" [(ngModel)]="config.modoMesa" />
+          Pré-pago — cliente paga ao fazer o pedido
+        </label>
+        <label>
+          <input type="radio" name="modoMesa" value="POS_PAGO" [(ngModel)]="config.modoMesa" />
+          Pós-pago — cliente consome e fecha a conta no final
+        </label>
+      </fieldset>
+    </div>
+
+    <div class="config-pagamento__acoes">
+      <button type="button" (click)="salvar()" [disabled]="salvando()">
+        {{ salvando() ? 'Salvando…' : 'Salvar configuração' }}
+      </button>
+      @if (mensagem()) {
+        <span class="config-pagamento__ok">{{ mensagem() }}</span>
+      }
+      @if (erro()) {
+        <span class="config-pagamento__erro">{{ erro() }}</span>
+      }
+    </div>
+
+    <p class="config-pagamento__aviso">
+      O gateway (Simulado/Getnet) e as credenciais são definidos por variáveis de
+      ambiente e exigem reinício do sistema. Estas opções só têm efeito com a
+      feature de pagamentos habilitada no servidor.
+    </p>
+  }
+</section>

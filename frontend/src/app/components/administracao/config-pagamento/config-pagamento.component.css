@@ -1,0 +1,68 @@
+.config-pagamento {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-top: 1rem;
+  background: #fff;
+}
+
+.config-pagamento h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+}
+
+.config-pagamento__grupo {
+  margin-bottom: 1rem;
+}
+
+.config-pagamento__grupo h3 {
+  font-size: 0.95rem;
+  margin: 0 0 0.5rem;
+}
+
+.config-pagamento__grupo label {
+  display: block;
+  margin: 0.25rem 0;
+  cursor: pointer;
+}
+
+.config-pagamento__modo {
+  margin-top: 0.5rem;
+  border: 1px dashed #ccc;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+}
+
+.config-pagamento__acoes {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.config-pagamento__acoes button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #1976d2;
+  color: #fff;
+  cursor: pointer;
+}
+
+.config-pagamento__acoes button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.config-pagamento__ok {
+  color: #2e7d32;
+}
+
+.config-pagamento__erro {
+  color: #c62828;
+}
+
+.config-pagamento__aviso {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  color: #666;
+}
