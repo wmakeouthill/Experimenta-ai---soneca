@@ -4,8 +4,10 @@ import java.time.LocalDateTime;
 
 import org.springframework.data.domain.Persistable;
 
-import com.snackbar.pedidos.domain.entities.MeioPagamentoTotem;
-import com.snackbar.pedidos.domain.entities.StatusPagamentoTotem;
+import com.snackbar.pedidos.domain.entities.CanalPagamento;
+import com.snackbar.pedidos.domain.entities.GatewayPagamento;
+import com.snackbar.pedidos.domain.entities.MeioPagamentoGateway;
+import com.snackbar.pedidos.domain.entities.StatusPagamento;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,32 +25,49 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "pagamentos_totem")
+@Table(name = "pagamentos")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PagamentoTotemEntity implements Persistable<String> {
+public class PagamentoEntity implements Persistable<String> {
 
     @Id
     private String id;
 
-    @Column(name = "pedido_id", nullable = false, length = 36)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private CanalPagamento canal;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private GatewayPagamento gateway;
+
+    @Column(name = "pedido_id", length = 36)
     private String pedidoId;
+
+    @Column(name = "pedido_pendente_id", length = 36)
+    private String pedidoPendenteId;
+
+    @Column(name = "conta_mesa_id", length = 36)
+    private String contaMesaId;
 
     @Column(name = "correlation_id", nullable = false, unique = true, length = 100)
     private String correlationId;
+
+    @Column(name = "gateway_payment_id", length = 64)
+    private String gatewayPaymentId;
 
     @Column(name = "valor_centavos", nullable = false)
     private Long valorCentavos;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "meio_pagamento", nullable = false, length = 30)
-    private MeioPagamentoTotem meioPagamento;
+    private MeioPagamentoGateway meioPagamento;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
-    private StatusPagamentoTotem status;
+    private StatusPagamento status;
 
     @Column(name = "nsu_tef", length = 50)
     private String nsuTef;

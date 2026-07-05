@@ -5,27 +5,36 @@ import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-import com.snackbar.kernel.domain.exceptions.ValidationException;
-import com.snackbar.pedidos.application.ports.StonePixGatewayPort;
-import com.snackbar.pedidos.infrastructure.config.PagamentoTotemProperties;
+import com.snackbar.pedidos.application.ports.PixGatewayPort;
+import com.snackbar.pedidos.domain.entities.GatewayPagamento;
 
-import lombok.RequiredArgsConstructor;
-
+/**
+ * Gateway PIX simulado para desenvolvimento e demonstracao.
+ * Ativo quando pagamento.gateway.pix=SIMULADO (default).
+ * A "aprovacao" acontece via webhook simulado
+ * (POST /api/v1/webhooks/stone/pix disparado pelo frontend).
+ */
 @Component
-@RequiredArgsConstructor
-public class StonePixGatewayAdapter implements StonePixGatewayPort {
+@ConditionalOnProperty(name = "pagamento.gateway.pix", havingValue = "SIMULADO", matchIfMissing = true)
+public class SimuladoPixAdapter implements PixGatewayPort {
 
-    private final PagamentoTotemProperties properties;
+    private final int expiracaoSegundos;
+
+    public SimuladoPixAdapter(@Value("${pagamento.pix.expiracao-segundos:180}") int expiracaoSegundos) {
+        this.expiracaoSegundos = expiracaoSegundos;
+    }
+
+    @Override
+    public GatewayPagamento gateway() {
+        return GatewayPagamento.SIMULADO;
+    }
 
     @Override
     public CobrancaPixCriada criarCobrancaDinamica(CriarCobrancaPixCommand command) {
-        if (!properties.getPix().isMockEnabled()) {
-            throw new ValidationException(
-                    "Stone PIX nao configurado. Use STONE_PIX_MOCK_ENABLED=true em desenvolvimento.");
-        }
-
         String txid = "SIM" + UUID.randomUUID().toString().replace("-", "").substring(0, 24);
         String copiaECola = "PIX_SIMULADO|" + command.correlationId() + "|" + command.valorCentavos();
         String qrCodeBase64 = gerarQrCodeSimulado(txid, command.valorCentavos());
@@ -35,7 +44,14 @@ public class StonePixGatewayAdapter implements StonePixGatewayPort {
                 copiaECola,
                 qrCodeBase64,
                 copiaECola,
-                LocalDateTime.now().plusSeconds(properties.getPix().getExpiracaoSegundos()));
+                LocalDateTime.now().plusSeconds(expiracaoSegundos));
+    }
+
+    @Override
+    public ResultadoConsultaPix consultarStatus(String txid) {
+        // O simulador nao tem backend de consulta: aprovacao chega apenas
+        // pelo webhook simulado.
+        return new ResultadoConsultaPix(StatusCobrancaPix.AGUARDANDO, null);
     }
 
     private String gerarQrCodeSimulado(String txid, long valorCentavos) {

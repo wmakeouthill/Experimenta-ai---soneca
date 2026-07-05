@@ -2,17 +2,22 @@ package com.snackbar.pedidos.infrastructure.mappers;
 
 import org.springframework.stereotype.Component;
 
-import com.snackbar.pedidos.domain.entities.PagamentoTotem;
-import com.snackbar.pedidos.infrastructure.persistence.PagamentoTotemEntity;
+import com.snackbar.pedidos.domain.entities.Pagamento;
+import com.snackbar.pedidos.infrastructure.persistence.PagamentoEntity;
 
 @Component
-public class PagamentoTotemMapper {
+public class PagamentoMapper {
 
-    public PagamentoTotemEntity paraEntity(PagamentoTotem pagamento) {
-        PagamentoTotemEntity.PagamentoTotemEntityBuilder builder = PagamentoTotemEntity.builder()
+    public PagamentoEntity paraEntity(Pagamento pagamento) {
+        PagamentoEntity.PagamentoEntityBuilder builder = PagamentoEntity.builder()
                 .id(pagamento.getId())
+                .canal(pagamento.getCanal())
+                .gateway(pagamento.getGateway())
                 .pedidoId(pagamento.getPedidoId())
+                .pedidoPendenteId(pagamento.getPedidoPendenteId())
+                .contaMesaId(pagamento.getContaMesaId())
                 .correlationId(pagamento.getCorrelationId())
+                .gatewayPaymentId(pagamento.getGatewayPaymentId())
                 .valorCentavos(pagamento.getValorCentavos())
                 .meioPagamento(pagamento.getMeioPagamento())
                 .status(pagamento.getStatus())
@@ -41,11 +46,16 @@ public class PagamentoTotemMapper {
         return builder.build();
     }
 
-    public PagamentoTotem paraDomain(PagamentoTotemEntity entity) {
-        return PagamentoTotem.restaurar(
+    public Pagamento paraDomain(PagamentoEntity entity) {
+        return Pagamento.restaurar(
                 entity.getId(),
+                entity.getCanal(),
+                entity.getGateway(),
                 entity.getPedidoId(),
+                entity.getPedidoPendenteId(),
+                entity.getContaMesaId(),
                 entity.getCorrelationId(),
+                entity.getGatewayPaymentId(),
                 entity.getValorCentavos(),
                 entity.getMeioPagamento(),
                 entity.getStatus(),
