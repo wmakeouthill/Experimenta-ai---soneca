@@ -11,11 +11,13 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.snackbar.pedidos.application.dto.CancelarPagamentoRequest;
+import com.snackbar.pedidos.application.dto.ConfigPagamentoPublicaDTO;
 import com.snackbar.pedidos.application.dto.ConfirmarPagamentoCartaoPresencialRequest;
 import com.snackbar.pedidos.application.dto.IniciarPagamentoCartaoPresencialRequest;
 import com.snackbar.pedidos.application.dto.IniciarPagamentoPixRequest;
 import com.snackbar.pedidos.application.dto.PagamentoDTO;
 import com.snackbar.pedidos.application.dto.PixCobrancaCriadaDTO;
+import com.snackbar.pedidos.application.usecases.BuscarConfigPagamentoPublicaUseCase;
 import com.snackbar.pedidos.application.usecases.BuscarPagamentoUseCase;
 import com.snackbar.pedidos.application.usecases.CancelarPagamentoUseCase;
 import com.snackbar.pedidos.application.usecases.ConfirmarPagamentoCartaoPresencialUseCase;
@@ -37,6 +39,7 @@ public class PagamentoRestController {
     private final BuscarPagamentoUseCase buscarPagamentoUseCase;
     private final CancelarPagamentoUseCase cancelarPagamentoUseCase;
     private final PagamentoProperties properties;
+    private final BuscarConfigPagamentoPublicaUseCase buscarConfigPublicaUseCase;
 
     @PostMapping("/cartao-presencial/iniciar")
     public ResponseEntity<PagamentoDTO> iniciarCartao(
@@ -57,6 +60,16 @@ public class PagamentoRestController {
             @Valid @RequestBody IniciarPagamentoPixRequest request) {
         exigirFeatureHabilitada();
         return ResponseEntity.status(HttpStatus.CREATED).body(iniciarPixUseCase.executar(request));
+    }
+
+    /**
+     * Configuracao efetiva de pagamentos para totem/mesa.
+     * Publico e SEM exigirFeatureHabilitada(): com a feature desligada
+     * retorna tudo desativado (o frontend esconde os fluxos).
+     */
+    @GetMapping("/config")
+    public ResponseEntity<ConfigPagamentoPublicaDTO> buscarConfig() {
+        return ResponseEntity.ok(buscarConfigPublicaUseCase.executar());
     }
 
     @GetMapping("/{correlationId}")
