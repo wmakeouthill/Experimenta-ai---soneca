@@ -25,7 +25,7 @@ public interface PedidoPendenteJpaRepository extends JpaRepository<PedidoPendent
     @Query("SELECT DISTINCT p FROM PedidoPendenteEntity p " +
             "LEFT JOIN FETCH p.itens " +
             "LEFT JOIN FETCH p.meiosPagamento " +
-            "WHERE p.pedidoRealId IS NULL " +
+            "WHERE p.pedidoRealId IS NULL AND p.aguardandoPagamento = false " +
             "ORDER BY p.dataHoraSolicitacao ASC")
     List<PedidoPendenteEntity> findPendentes();
 
@@ -35,20 +35,22 @@ public interface PedidoPendenteJpaRepository extends JpaRepository<PedidoPendent
     @Query("SELECT DISTINCT p FROM PedidoPendenteEntity p " +
             "LEFT JOIN FETCH p.itens " +
             "LEFT JOIN FETCH p.meiosPagamento " +
-            "WHERE p.pedidoRealId IS NULL AND p.tipo = :tipo " +
+            "WHERE p.pedidoRealId IS NULL AND p.aguardandoPagamento = false AND p.tipo = :tipo " +
             "ORDER BY p.dataHoraSolicitacao ASC")
     List<PedidoPendenteEntity> findPendentesPorTipo(@Param("tipo") String tipo);
 
     /**
      * Conta pedidos pendentes na fila.
      */
-    @Query("SELECT COUNT(p) FROM PedidoPendenteEntity p WHERE p.pedidoRealId IS NULL")
+    @Query("SELECT COUNT(p) FROM PedidoPendenteEntity p " +
+            "WHERE p.pedidoRealId IS NULL AND p.aguardandoPagamento = false")
     long countPendentes();
 
     /**
      * Conta pedidos pendentes por tipo.
      */
-    @Query("SELECT COUNT(p) FROM PedidoPendenteEntity p WHERE p.pedidoRealId IS NULL AND p.tipo = :tipo")
+    @Query("SELECT COUNT(p) FROM PedidoPendenteEntity p " +
+            "WHERE p.pedidoRealId IS NULL AND p.aguardandoPagamento = false AND p.tipo = :tipo")
     long countPendentesPorTipo(@Param("tipo") String tipo);
 
     /**
@@ -68,7 +70,7 @@ public interface PedidoPendenteJpaRepository extends JpaRepository<PedidoPendent
     @Query("SELECT p FROM PedidoPendenteEntity p " +
             "LEFT JOIN FETCH p.itens " +
             "LEFT JOIN FETCH p.meiosPagamento " +
-            "WHERE p.id = :id AND p.pedidoRealId IS NULL")
+            "WHERE p.id = :id AND p.pedidoRealId IS NULL AND p.aguardandoPagamento = false")
     Optional<PedidoPendenteEntity> findPendenteByIdComLock(@Param("id") String id);
 
     /**
@@ -92,4 +94,12 @@ public interface PedidoPendenteJpaRepository extends JpaRepository<PedidoPendent
     @Query("UPDATE PedidoPendenteEntity p SET p.pedidoRealId = :pedidoRealId, p.updatedAt = CURRENT_TIMESTAMP WHERE p.id = :pedidoPendenteId")
     int marcarComoAceito(@Param("pedidoPendenteId") String pedidoPendenteId,
             @Param("pedidoRealId") String pedidoRealId);
+
+    /**
+     * Torna um pedido pendente visivel na fila apos a aprovacao do pagamento PIX.
+     */
+    @Modifying
+    @Query("UPDATE PedidoPendenteEntity p SET p.aguardandoPagamento = false, " +
+            "p.updatedAt = CURRENT_TIMESTAMP WHERE p.id = :id")
+    int liberarPagamento(@Param("id") String id);
 }

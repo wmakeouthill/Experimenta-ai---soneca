@@ -37,6 +37,12 @@ public class PedidoPendenteDTO {
     private BigDecimal valorTotal;
     private LocalDateTime dataHoraSolicitacao;
     private long tempoEsperaSegundos;
+    /** Quando true, o pedido fica oculto da fila do funcionario ate o PIX ser aprovado. */
+    @lombok.Builder.Default
+    private boolean aguardandoPagamento = false;
+
+    /** correlationId do pagamento PIX associado (fluxo pre-pago). */
+    private String pagamentoCorrelationId;
 
     /**
      * Calcula o tempo de espera em segundos.

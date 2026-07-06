@@ -79,6 +79,12 @@ public interface PedidoPendenteRepositoryPort {
     void marcarComoAceito(String pedidoPendenteId, String pedidoRealId);
 
     /**
+     * Libera um pedido pendente que estava aguardando pagamento digital,
+     * tornando-o visivel na fila do funcionario.
+     */
+    void liberarPagamento(String pedidoPendenteId);
+
+    /**
      * Busca o ID do pedido real associado a um pedido pendente.
      * Útil para o cliente acompanhar o status após aceitação.
      */

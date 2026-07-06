@@ -118,6 +118,15 @@ public class PedidoPendenteRepositoryAdapter implements PedidoPendenteRepository
     }
 
     @Override
+    @Transactional
+    public void liberarPagamento(String pedidoPendenteId) {
+        int atualizados = jpaRepository.liberarPagamento(pedidoPendenteId);
+        if (atualizados > 0) {
+            log.info("Pedido pendente {} liberado para a fila apos pagamento", pedidoPendenteId);
+        }
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Optional<String> buscarPedidoRealPorPendente(String pedidoPendenteId) {
         return jpaRepository.findPedidoRealIdByPendenteId(pedidoPendenteId);
@@ -139,6 +148,8 @@ public class PedidoPendenteRepositoryAdapter implements PedidoPendenteRepository
                 .observacoes(dto.getObservacoes())
                 .valorTotal(dto.getValorTotal())
                 .dataHoraSolicitacao(dto.getDataHoraSolicitacao())
+                .aguardandoPagamento(dto.isAguardandoPagamento())
+                .pagamentoCorrelationId(dto.getPagamentoCorrelationId())
                 .build();
 
         if (dto.getItens() != null) {
@@ -257,6 +268,8 @@ public class PedidoPendenteRepositoryAdapter implements PedidoPendenteRepository
                 .valorTotal(entity.getValorTotal())
                 .dataHoraSolicitacao(entity.getDataHoraSolicitacao())
                 .tempoEsperaSegundos(tempoEspera)
+                .aguardandoPagamento(entity.isAguardandoPagamento())
+                .pagamentoCorrelationId(entity.getPagamentoCorrelationId())
                 .build();
     }
 }
