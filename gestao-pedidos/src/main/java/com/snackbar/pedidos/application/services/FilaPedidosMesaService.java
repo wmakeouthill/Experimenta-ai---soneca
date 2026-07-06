@@ -48,12 +48,47 @@ public class FilaPedidosMesaService {
      */
     @Transactional
     public PedidoPendenteDTO adicionarPedido(CriarPedidoMesaRequest request) {
+        PedidoPendenteDTO pedido = montarPedidoPendente(request, false, null, request.getMeiosPagamento());
+        PedidoPendenteDTO salvo = pedidoPendenteRepository.salvar(pedido);
+        log.info("Pedido adicionado a fila (banco) - ID: {}, Mesa: {}, Cliente: {}",
+                salvo.getId(), salvo.getNumeroMesa(), request.getNomeCliente());
+        return salvo;
+    }
+
+    /**
+     * Cria um pedido pendente OCULTO (aguardando aprovacao de PIX), com um unico
+     * meio de pagamento PIX pelo valor total calculado no backend.
+     */
+    @Transactional
+    public PedidoPendenteDTO adicionarPedidoAguardandoPagamento(
+            CriarPedidoMesaRequest request, String pagamentoCorrelationId) {
+        PedidoPendenteDTO pedido = montarPedidoPendente(request, true, pagamentoCorrelationId, null);
+        // Substitui quaisquer meios enviados pelo cliente por um unico PIX do valor total.
+        MeioPagamentoRequest pix = new MeioPagamentoRequest();
+        pix.setMeioPagamento(com.snackbar.pedidos.domain.entities.MeioPagamento.PIX);
+        pix.setValor(pedido.getValorTotal());
+        pedido.setMeiosPagamento(java.util.List.of(pix));
+
+        PedidoPendenteDTO salvo = pedidoPendenteRepository.salvar(pedido);
+        log.info("Pedido pre-pago (oculto) adicionado - ID: {}, Mesa: {}, correlationId: {}",
+                salvo.getId(), salvo.getNumeroMesa(), pagamentoCorrelationId);
+        return salvo;
+    }
+
+    /**
+     * Monta o DTO do pedido pendente calculando itens e valor total a partir do
+     * cardapio. Nao persiste.
+     */
+    private PedidoPendenteDTO montarPedidoPendente(
+            CriarPedidoMesaRequest request,
+            boolean aguardandoPagamento,
+            String pagamentoCorrelationId,
+            List<MeioPagamentoRequest> meiosPagamento) {
         Mesa mesa = mesaRepository.buscarPorQrCodeToken(request.getMesaToken())
                 .orElseThrow(() -> MesaNaoEncontradaException.porToken(request.getMesaToken()));
 
         String pedidoId = UUID.randomUUID().toString();
 
-        // Busca informações dos produtos e calcula valores
         List<ItemPedidoPendenteDTO> itens = new ArrayList<>();
         BigDecimal valorTotal = BigDecimal.ZERO;
 
@@ -61,7 +96,6 @@ public class FilaPedidosMesaService {
             var produto = cardapioService.buscarProdutoPorId(itemReq.getProdutoId());
             BigDecimal precoUnitario = produto.getPreco();
 
-            // Processa adicionais do item
             List<AdicionalPedidoPendenteDTO> adicionaisDTO = new ArrayList<>();
             BigDecimal subtotalAdicionais = BigDecimal.ZERO;
 
@@ -84,7 +118,6 @@ public class FilaPedidosMesaService {
                 }
             }
 
-            // Subtotal = (preço unitário + adicionais) * quantidade
             BigDecimal precoComAdicionais = precoUnitario.add(subtotalAdicionais);
             BigDecimal subtotal = precoComAdicionais.multiply(BigDecimal.valueOf(itemReq.getQuantidade()));
 
@@ -101,7 +134,7 @@ public class FilaPedidosMesaService {
             valorTotal = valorTotal.add(subtotal);
         }
 
-        PedidoPendenteDTO pedidoPendente = PedidoPendenteDTO.builder()
+        return PedidoPendenteDTO.builder()
                 .id(pedidoId)
                 .tipo(PedidoPendenteDTO.TIPO_MESA)
                 .mesaToken(request.getMesaToken())
@@ -110,20 +143,14 @@ public class FilaPedidosMesaService {
                 .clienteId(request.getClienteId())
                 .nomeCliente(request.getNomeCliente())
                 .itens(itens)
-                .meiosPagamento(request.getMeiosPagamento()) // Incluir meios de pagamento
+                .meiosPagamento(meiosPagamento)
                 .observacoes(request.getObservacoes())
                 .valorTotal(valorTotal)
                 .dataHoraSolicitacao(LocalDateTime.now())
                 .tempoEsperaSegundos(0)
+                .aguardandoPagamento(aguardandoPagamento)
+                .pagamentoCorrelationId(pagamentoCorrelationId)
                 .build();
-
-        // Persiste no banco de dados
-        PedidoPendenteDTO salvo = pedidoPendenteRepository.salvar(pedidoPendente);
-
-        log.info("Pedido adicionado à fila (banco) - ID: {}, Mesa: {}, Cliente: {}",
-                pedidoId, mesa.getNumero(), request.getNomeCliente());
-
-        return salvo;
     }
 
     /**

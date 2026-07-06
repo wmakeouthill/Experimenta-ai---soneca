@@ -3,6 +3,7 @@ package com.snackbar.pedidos.infrastructure.web;
 import com.snackbar.pedidos.infrastructure.idempotency.IdempotencyService;
 import com.snackbar.pedidos.application.dto.CriarPedidoMesaRequest;
 import com.snackbar.pedidos.application.dto.MesaDTO;
+import com.snackbar.pedidos.application.dto.PedidoMesaComPixDTO;
 import com.snackbar.pedidos.application.dto.PedidoPendenteDTO;
 import com.snackbar.pedidos.application.dto.CardapioPublicoDTO;
 import com.snackbar.pedidos.application.dto.ClientePublicoDTO;
@@ -10,6 +11,7 @@ import com.snackbar.pedidos.application.dto.CadastrarClienteRequest;
 import com.snackbar.pedidos.application.dto.ProdutoPopularDTO;
 import com.snackbar.pedidos.application.dto.StatusPedidoClienteDTO;
 import com.snackbar.pedidos.application.usecases.BuscarMesaPorTokenUseCase;
+import com.snackbar.pedidos.application.usecases.CriarPedidoMesaComPixUseCase;
 import com.snackbar.pedidos.application.usecases.CriarPedidoMesaUseCase;
 import com.snackbar.pedidos.application.usecases.BuscarCardapioPublicoUseCase;
 import com.snackbar.pedidos.application.usecases.BuscarProdutosPopularesUseCase;
@@ -46,6 +48,7 @@ public class PedidoMesaRestController {
 
     private final BuscarMesaPorTokenUseCase buscarMesaPorTokenUseCase;
     private final CriarPedidoMesaUseCase criarPedidoMesaUseCase;
+    private final CriarPedidoMesaComPixUseCase criarPedidoMesaComPixUseCase;
     private final BuscarCardapioPublicoUseCase buscarCardapioPublicoUseCase;
     private final BuscarProdutosPopularesUseCase buscarProdutosPopularesUseCase;
     private final BuscarStatusPedidoClienteUseCase buscarStatusPedidoClienteUseCase;
@@ -139,6 +142,18 @@ public class PedidoMesaRestController {
 
         PedidoPendenteDTO pedidoPendente = criarPedidoMesaUseCase.executar(request.mesaToken(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(pedidoPendente);
+    }
+
+    /**
+     * Cria um pedido-mesa PRE_PAGO com cobranca PIX. O pedido fica oculto ate a
+     * aprovacao do pagamento. Retorna os dados do QR Code para o cliente pagar.
+     */
+    @PostMapping("/pedido/pix")
+    public ResponseEntity<PedidoMesaComPixDTO> criarPedidoComPix(
+            @Valid @RequestBody CriarPedidoMesaRequest request,
+            @RequestHeader("X-Correlation-Id") String correlationId) {
+        PedidoMesaComPixDTO resposta = criarPedidoMesaComPixUseCase.executar(correlationId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(resposta);
     }
 
     /**
