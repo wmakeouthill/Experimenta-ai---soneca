@@ -1,8 +1,7 @@
 <app-lobby-interlude
   [ativo]="mostrarInterludio()"
-  [duracaoSegundos]="configAtual().duracaoAnimacao"
-  [video1Url]="configAtual().video1Url"
-  [video2Url]="configAtual().video2Url"
+  [duracaoPorReelSegundos]="configAtual().duracaoAnimacao"
+  [reels]="configAtual().reels"
   [permitirFechar]="isAdministrador()"
   [tema]="tema()"
   (onFechar)="handleFecharInterludio()"

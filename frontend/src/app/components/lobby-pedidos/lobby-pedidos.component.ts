@@ -11,6 +11,13 @@ import { ConfigAnimacaoModalComponent, ConfigAnimacao } from './components/confi
 import { ConfigAnimacaoService } from '../../services/config-animacao.service';
 import { AuthService } from '../../services/auth.service';
 import { LobbyPiso, LobbyTema } from './models/lobby-ui.types';
+import {
+  carregarReelsLocalStorage,
+  migrarReelsDeApi,
+  montarTickerTexto,
+  reelsParaApiUrls,
+  salvarReelsLocalStorage,
+} from './utils/lobby-promocoes.util';
 
 @Component({
   selector: 'app-lobby-pedidos',
@@ -145,17 +152,23 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
   }
 
   private carregarConfigAnimacao() {
-    // O serviço já trata erros e retorna valores padrão
     this.configAnimacaoService.carregar().subscribe({
       next: (config) => {
+        const reelsLocal = carregarReelsLocalStorage();
+        const reels = migrarReelsDeApi(
+          config.video1Url,
+          config.video2Url,
+          reelsLocal ?? config.reels
+        );
+
         this.animations.animacaoConfig.set({
           animacaoAtivada: config.animacaoAtivada,
           intervaloAnimacao: config.intervaloAnimacao,
           duracaoAnimacao: config.duracaoAnimacao,
+          reels,
           video1Url: config.video1Url || null,
           video2Url: config.video2Url || null
         });
-        // Reiniciar animação periódica quando config mudar
         this.iniciarAnimacaoPeriodica();
       }
     });
@@ -239,30 +252,34 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
   }
 
   handleSalvarConfig(config: ConfigAnimacao) {
-    // Atualizar configuração local imediatamente
+    const apiUrls = reelsParaApiUrls(config.reels);
+
     this.animations.animacaoConfig.set({
       animacaoAtivada: config.animacaoAtivada,
       intervaloAnimacao: config.intervaloAnimacao,
       duracaoAnimacao: config.duracaoAnimacao,
-      video1Url: config.video1Url || null,
-      video2Url: config.video2Url || null
+      reels: config.reels,
+      video1Url: apiUrls.video1Url,
+      video2Url: apiUrls.video2Url
     });
 
-    // Reiniciar animação periódica com nova configuração
-    this.iniciarAnimacaoPeriodica();
+    if (this.isBrowser) {
+      salvarReelsLocalStorage(config.reels);
+    }
 
-    // Fechar modal imediatamente (configuração já foi aplicada localmente)
+    this.iniciarAnimacaoPeriodica();
     this.mostrarConfigModal.set(false);
 
-    // Tentar salvar no backend (silenciosamente, sem mostrar erros)
-    this.configAnimacaoService.salvar(config).subscribe({
-      next: () => {
-        // Configuração salva com sucesso (quando backend estiver disponível)
-      },
-      error: () => {
-        // Backend não disponível - configuração já foi aplicada localmente
-        // Não mostrar erro para o usuário
-      }
+    this.configAnimacaoService.salvar({
+      animacaoAtivada: config.animacaoAtivada,
+      intervaloAnimacao: config.intervaloAnimacao,
+      duracaoAnimacao: config.duracaoAnimacao,
+      video1Url: apiUrls.video1Url,
+      video2Url: apiUrls.video2Url,
+      reels: config.reels,
+    }).subscribe({
+      next: () => {},
+      error: () => {},
     });
   }
 
@@ -314,13 +331,14 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
   }
 
   readonly tickerTexto = computed(() =>
-    '★ Combo Duplo Bacon — só hoje ★ Sobremesa grátis acima de R$ 60 ★ Novo: Milkshake de Paçoca ★ Experimenta aí do Soneca — Peça pelo app e retire com praticidade!'
+    montarTickerTexto(this.animations.animacaoConfig().reels)
   );
 
   readonly configAtual = computed(() => ({
     animacaoAtivada: this.animations.animacaoConfig().animacaoAtivada,
     intervaloAnimacao: this.animations.animacaoConfig().intervaloAnimacao,
     duracaoAnimacao: this.animations.animacaoConfig().duracaoAnimacao,
+    reels: this.animations.animacaoConfig().reels,
     video1Url: this.animations.animacaoConfig().video1Url || null,
     video2Url: this.animations.animacaoConfig().video2Url || null
   }));

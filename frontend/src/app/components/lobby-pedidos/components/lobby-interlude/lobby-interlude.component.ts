@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   effect,
   input,
   OnDestroy,
@@ -8,13 +9,8 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { LobbySlidePromo, LobbyTema } from '../../models/lobby-ui.types';
-
-const SLIDES_PADRAO: LobbySlidePromo[] = [
-  { titulo: 'Combo Duplo Bacon — só hoje' },
-  { titulo: 'Sobremesa grátis acima de R$ 60' },
-  { titulo: 'Novo: Milkshake de Paçoca' },
-];
+import { LobbyReelItem, LobbyTema } from '../../models/lobby-ui.types';
+import { normalizarReels, REELS_PADRAO } from '../../utils/lobby-promocoes.util';
 
 @Component({
   selector: 'app-lobby-interlude',
@@ -26,11 +22,9 @@ const SLIDES_PADRAO: LobbySlidePromo[] = [
 })
 export class LobbyInterludeComponent implements OnDestroy {
   readonly ativo = input(false);
-  readonly duracaoSegundos = input(6);
-  readonly video1Url = input<string | null>(null);
-  readonly video2Url = input<string | null>(null);
+  readonly duracaoPorReelSegundos = input(4);
+  readonly reels = input<LobbyReelItem[]>(REELS_PADRAO);
   readonly permitirFechar = input(false);
-  readonly slides = input<LobbySlidePromo[]>(SLIDES_PADRAO);
   readonly tema = input<LobbyTema>('escuro');
 
   readonly onFechar = output<void>();
@@ -40,11 +34,24 @@ export class LobbyInterludeComponent implements OnDestroy {
   private slideInterval: ReturnType<typeof setInterval> | null = null;
   private closeTimeout: ReturnType<typeof setTimeout> | null = null;
 
-  readonly slideAtual = signal<LobbySlidePromo>(SLIDES_PADRAO[0]);
+  readonly reelsAtivos = computed(() => normalizarReels(this.reels()));
+
+  readonly slideAtual = computed(() => {
+    const lista = this.reelsAtivos();
+    return lista[this.slideIndex()] ?? lista[0];
+  });
+
+  readonly duracaoSlideMs = computed(() => Math.max(2, this.duracaoPorReelSegundos()) * 1000);
+
+  readonly duracaoTotalMs = computed(() => this.reelsAtivos().length * this.duracaoSlideMs());
+
+  readonly videoUrlAtual = computed(() => this.slideAtual()?.videoUrl ?? null);
 
   constructor() {
     effect(() => {
       const aberto = this.ativo();
+      const duracaoSlide = this.duracaoSlideMs();
+      const duracaoTotal = this.duracaoTotalMs();
       this.limparTimers();
 
       if (!aberto) {
@@ -52,19 +59,14 @@ export class LobbyInterludeComponent implements OnDestroy {
         return;
       }
 
-      const lista = this.slides();
+      const total = this.reelsAtivos().length;
       this.slideIndex.set(0);
-      this.slideAtual.set(lista[0] ?? SLIDES_PADRAO[0]);
 
       this.slideInterval = setInterval(() => {
-        this.slideIndex.update((i) => {
-          const proximo = (i + 1) % Math.max(lista.length, 1);
-          this.slideAtual.set(lista[proximo] ?? SLIDES_PADRAO[0]);
-          return proximo;
-        });
-      }, 4200);
+        this.slideIndex.update((i) => (i + 1) % Math.max(total, 1));
+      }, duracaoSlide);
 
-      this.closeTimeout = setTimeout(() => this.fechar(), this.duracaoSegundos() * 1000);
+      this.closeTimeout = setTimeout(() => this.fechar(), duracaoTotal);
     });
   }
 
@@ -85,11 +87,8 @@ export class LobbyInterludeComponent implements OnDestroy {
     return indice === this.slideIndex();
   }
 
-  videoAtual(): string | null {
-    const idx = this.slideIndex();
-    if (idx === 0 && this.video1Url()) return this.video1Url();
-    if (idx === 1 && this.video2Url()) return this.video2Url();
-    return this.video1Url() ?? this.video2Url();
+  duracaoBarraCss(): string {
+    return `${this.duracaoPorReelSegundos()}s`;
   }
 
   private limparTimers(): void {

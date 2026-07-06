@@ -19,9 +19,10 @@ export const silent500ConfigInterceptor: HttpInterceptorFn = (req, next) => {
               body: {
                 animacaoAtivada: true,
                 intervaloAnimacao: 30,
-                duracaoAnimacao: 6,
+                duracaoAnimacao: 4,
                 video1Url: null,
-                video2Url: null
+                video2Url: null,
+                reels: []
               }
             }));
           }

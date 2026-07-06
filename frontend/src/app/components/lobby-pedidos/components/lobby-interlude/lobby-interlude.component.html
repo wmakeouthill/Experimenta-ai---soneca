@@ -4,9 +4,10 @@
     role="dialog"
     aria-label="Interlúdio promocional"
     [attr.data-lobby-tema]="tema()"
+    [style.--lobby-slide-duration]="duracaoBarraCss()"
   >
     <div class="lobby-interlude__progress">
-      @for (slide of slides(); track $index) {
+      @for (reel of reelsAtivos(); track reel.id) {
         <div class="lobby-interlude__bar">
           <div
             class="lobby-interlude__bar-fill"
@@ -19,14 +20,14 @@
 
     <div class="lobby-interlude__stage">
       <div class="lobby-interlude__media">
-        @if (videoAtual(); as videoUrl) {
+        @if (videoUrlAtual(); as videoUrl) {
           <video
             class="lobby-interlude__video"
             [src]="videoUrl"
             autoplay
-            loop
             muted
             playsinline
+            [attr.data-reel]="slideIndex()"
           ></video>
         } @else {
           <span class="lobby-interlude__placeholder">vídeo / imagem promocional</span>

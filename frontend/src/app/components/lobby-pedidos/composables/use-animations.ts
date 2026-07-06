@@ -1,10 +1,13 @@
 import { signal } from '@angular/core';
 import { Pedido, StatusPedido } from '../../../services/pedido.service';
+import { LobbyReelItem } from '../models/lobby-ui.types';
+import { REELS_PADRAO } from '../utils/lobby-promocoes.util';
 
 interface AnimationConfig {
   animacaoAtivada: boolean;
   intervaloAnimacao: number;
   duracaoAnimacao: number;
+  reels: LobbyReelItem[];
   video1Url?: string | null;
   video2Url?: string | null;
 }
@@ -19,7 +22,8 @@ export function useAnimations() {
   const animacaoConfig = signal<AnimationConfig>({
     animacaoAtivada: true,
     intervaloAnimacao: 30,
-    duracaoAnimacao: 6,
+    duracaoAnimacao: 4,
+    reels: [...REELS_PADRAO],
     video1Url: null,
     video2Url: null
   });

@@ -39,7 +39,7 @@
 
 .lobby-interlude__bar-fill--active {
   width: 100%;
-  animation: lobby-fill-bar 4.2s linear;
+  animation: lobby-fill-bar var(--lobby-slide-duration, 4s) linear;
 }
 
 @keyframes lobby-fill-bar {
