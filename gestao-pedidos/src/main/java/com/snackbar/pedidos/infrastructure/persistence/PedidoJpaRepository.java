@@ -41,4 +41,18 @@ public interface PedidoJpaRepository extends JpaRepository<PedidoEntity, String>
                         "AND p.status <> 'CANCELADO' " +
                         "ORDER BY p.numero_pedido ASC, p.data_pedido ASC", nativeQuery = true)
         List<PedidoEntity> findByDataInicioSessao(@Param("dataInicio") java.sql.Date dataInicio);
+
+        /**
+         * Pedidos de uma mesa/cliente que ainda nao foram pagos (sem meios de
+         * pagamento) e estao em andamento. Base da conta pos-paga.
+         */
+        @Query("SELECT DISTINCT p FROM PedidoEntity p " +
+                        "LEFT JOIN FETCH p.itens " +
+                        "WHERE p.mesaId = :mesaId AND p.clienteId = :clienteId " +
+                        "AND p.status IN :statusAbertos AND p.meiosPagamento IS EMPTY " +
+                        "ORDER BY p.dataPedido ASC")
+        List<PedidoEntity> findAbertosSemPagamento(
+                        @Param("mesaId") String mesaId,
+                        @Param("clienteId") String clienteId,
+                        @Param("statusAbertos") java.util.Collection<StatusPedido> statusAbertos);
 }

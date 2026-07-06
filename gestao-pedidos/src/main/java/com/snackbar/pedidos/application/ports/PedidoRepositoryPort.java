@@ -35,4 +35,10 @@ public interface PedidoRepositoryPort {
     int buscarUltimoNumeroPedido();
 
     void excluir(@NonNull String id);
+
+    /**
+     * Pedidos abertos (em andamento) de um cliente numa mesa que ainda nao
+     * possuem meio de pagamento registrado.
+     */
+    List<Pedido> buscarAbertosPorMesaESemPagamento(String mesaId, String clienteId);
 }

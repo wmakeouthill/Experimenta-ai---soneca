@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -100,5 +101,15 @@ public class PedidoRepositoryAdapter implements PedidoRepositoryPort {
     @Override
     public void excluir(@NonNull String id) {
         jpaRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Pedido> buscarAbertosPorMesaESemPagamento(String mesaId, String clienteId) {
+        List<StatusPedido> statusAbertos = List.of(
+                StatusPedido.PENDENTE, StatusPedido.PREPARANDO, StatusPedido.PRONTO);
+        return jpaRepository.findAbertosSemPagamento(mesaId, clienteId, statusAbertos).stream()
+                .map(mapper::paraDomain)
+                .toList();
     }
 }
