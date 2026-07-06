@@ -4,8 +4,8 @@
       <header class="modal-header">
         <h3>Configurar promoções</h3>
         <p class="modal-description">
-          Cada reel tem título e vídeo opcional. Os títulos aparecem no interlúdio e na faixa inferior em loop.
-          A duração total do interlúdio é calculada automaticamente.
+          Cada reel tem título e mídia opcional (vídeo ou imagem). Os títulos rolam na faixa inferior
+          o tempo todo. No interlúdio, vídeos usam a duração real do arquivo; imagens usam o tempo configurável.
         </p>
       </header>
 
@@ -41,7 +41,7 @@
 
           <div class="config-item">
             <label>
-              Duração de cada reel (s)
+              Duração de imagens / texto (s)
               <input
                 type="number"
                 min="2"
@@ -55,8 +55,7 @@
         </div>
 
         <p class="config-hint">
-          Duração total do interlúdio: <strong>{{ duracaoInterludioTotal() }}s</strong>
-          ({{ reels().length }} reel{{ reels().length === 1 ? '' : 's' }})
+          Duração estimada do interlúdio: <strong>{{ duracaoInterludioResumo() }}</strong>
         </p>
       </div>
 
@@ -65,7 +64,7 @@
           <div>
             <h4>Reels promocionais</h4>
             <p class="section-description">
-              Até {{ maxReels }} reels. Título obrigatório para exibir na faixa de promoções.
+              Até {{ maxReels }} reels. Vídeo ou imagem por reel — passam em sequência com transição vertical.
             </p>
           </div>
           @if (podeAdicionarReel()) {
@@ -80,6 +79,11 @@
             <article class="reel-card">
               <div class="reel-card__head">
                 <span class="reel-card__numero">Reel {{ i + 1 }}</span>
+                @if (tipoMidia(reel) === 'video') {
+                  <span class="reel-card__tipo">Vídeo — duração automática</span>
+                } @else if (tipoMidia(reel) === 'imagem') {
+                  <span class="reel-card__tipo">Imagem — {{ duracaoAnimacao() }}s</span>
+                }
                 @if (podeRemoverReel()) {
                   <button
                     type="button"
@@ -105,15 +109,19 @@
               </label>
 
               <div class="reel-video">
-                <span class="reel-video__label">Vídeo (opcional)</span>
-                @if (reel.videoUrl) {
+                <span class="reel-video__label">Mídia (vídeo ou imagem)</span>
+                @if (reel.videoUrl || reel.imagemUrl) {
                   <div class="video-preview-container">
-                    <video [src]="reel.videoUrl" controls class="video-preview" playsinline></video>
+                    @if (reel.videoUrl) {
+                      <video [src]="reel.videoUrl" controls class="video-preview" playsinline></video>
+                    } @else if (reel.imagemUrl) {
+                      <img [src]="reel.imagemUrl" [alt]="reel.titulo" class="imagem-preview" />
+                    }
                     <button
                       type="button"
                       class="btn-remover-video"
-                      (click)="removerVideo(reel.id)"
-                      [attr.aria-label]="'Remover vídeo do reel ' + (i + 1)"
+                      (click)="removerMidia(reel.id)"
+                      [attr.aria-label]="'Remover mídia do reel ' + (i + 1)"
                     >
                       ✕
                     </button>
@@ -125,19 +133,19 @@
                         <polygon points="5 3 19 12 5 21 5 3" />
                       </svg>
                     </div>
-                    <p class="placeholder-text">Clique para enviar vídeo vertical (reel)</p>
-                    <p class="placeholder-hint">MP4, WebM — máx. 100MB</p>
+                    <p class="placeholder-text">Vídeo vertical (reel) ou imagem promocional</p>
+                    <p class="placeholder-hint">Vídeo até 100MB · Imagem até 10MB</p>
                     @if (estaCarregando(reel.id)) {
                       <div class="loading-overlay">
                         <div class="spinner"></div>
-                        <p>Processando vídeo...</p>
+                        <p>Processando arquivo...</p>
                       </div>
                     }
                     <input
                       type="file"
-                      accept="video/*"
+                      accept="video/*,image/*"
                       class="video-input"
-                      (change)="onVideoSelected(reel.id, $event)"
+                      (change)="onMidiaSelected(reel.id, $event)"
                       [disabled]="estaCarregando(reel.id)"
                     />
                   </div>

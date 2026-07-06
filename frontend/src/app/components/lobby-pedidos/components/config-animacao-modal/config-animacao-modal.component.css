@@ -222,7 +222,27 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
   margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.reel-card__tipo {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #1fa971;
+  background: rgba(31, 169, 113, 0.1);
+  padding: 4px 10px;
+  border-radius: 100px;
+  margin-right: auto;
+  margin-left: 8px;
+}
+
+.imagem-preview {
+  width: 100%;
+  display: block;
+  max-height: 220px;
+  object-fit: cover;
 }
 
 .reel-card__numero {

@@ -20,6 +20,13 @@ export class LobbyTickerComponent {
 
   readonly textoMarquee = computed(() => {
     const partes = this.segmentos();
-    return partes.map((p) => `★ ${p}`).join('   ') + '   ';
+    return partes.map((p) => `★ ${p}`).join('    ');
+  });
+
+  /** Velocidade estilo canal de TV: ~10 caracteres por segundo */
+  readonly duracaoAnimacaoCss = computed(() => {
+    const chars = Math.max(this.textoMarquee().length, 24);
+    const segundos = Math.max(16, Math.min(90, chars / 10));
+    return `${segundos}s`;
   });
 }

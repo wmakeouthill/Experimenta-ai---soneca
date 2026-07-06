@@ -8,7 +8,9 @@ import {
   MIN_LOBBY_REELS,
   REELS_PADRAO,
   criarReelVazio,
+  estimarDuracaoInterludioSegundos,
   normalizarReels,
+  tipoMidiaReel,
 } from '../../utils/lobby-promocoes.util';
 
 export interface ConfigAnimacao {
@@ -55,9 +57,12 @@ export class ConfigAnimacaoModalComponent {
     reels: normalizarReels(this.reels()),
   }));
 
-  readonly duracaoInterludioTotal = computed(() => {
-    const qtd = this.reels().filter((r) => r.titulo.trim() || r.videoUrl).length || this.reels().length;
-    return qtd * this.duracaoAnimacao();
+  readonly duracaoInterludioResumo = computed(() => {
+    const est = estimarDuracaoInterludioSegundos(this.reels(), this.duracaoAnimacao());
+    if (est.temVideo) {
+      return `mín. ${est.minimo}s (vídeos usam a duração real de cada arquivo)`;
+    }
+    return `${est.minimo}s`;
   });
 
   readonly podeAdicionarReel = computed(() => this.reels().length < MAX_LOBBY_REELS);
@@ -84,41 +89,60 @@ export class ConfigAnimacaoModalComponent {
     );
   }
 
-  onVideoSelected(id: string, event: Event): void {
+  onMidiaSelected(id: string, event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('video/')) {
-      alert('Por favor, selecione um arquivo de vídeo válido');
+    const eVideo = file.type.startsWith('video/');
+    const eImagem = UploadUtil.eImagem(file);
+
+    if (!eVideo && !eImagem) {
+      alert('Selecione um vídeo ou imagem válido');
       return;
     }
 
-    if (file.size > 100 * 1024 * 1024) {
-      alert('Vídeo muito grande. Tamanho máximo: 100MB');
+    const limiteMb = eVideo ? 100 : 10;
+    if (!UploadUtil.validarTamanho(file, limiteMb)) {
+      alert(`Arquivo muito grande. Máximo: ${limiteMb}MB`);
       return;
     }
 
     this.carregandoVideoId.set(id);
-    UploadUtil.fileParaBase64(file)
+
+    const processar = eImagem
+      ? UploadUtil.redimensionarImagem(file, 1080, 1920, 0.85).then((f) => UploadUtil.fileParaBase64(f))
+      : UploadUtil.fileParaBase64(file);
+
+    processar
       .then((base64) => {
         this.reels.update((lista) =>
-          lista.map((r) => (r.id === id ? { ...r, videoUrl: base64 } : r))
+          lista.map((r) =>
+            r.id === id
+              ? eVideo
+                ? { ...r, videoUrl: base64, imagemUrl: null }
+                : { ...r, imagemUrl: base64, videoUrl: null }
+              : r
+          )
         );
         this.carregandoVideoId.set(null);
       })
       .catch((error: Error) => {
-        alert('Erro ao processar vídeo: ' + error.message);
+        alert('Erro ao processar arquivo: ' + error.message);
         this.carregandoVideoId.set(null);
       });
 
     input.value = '';
   }
 
-  removerVideo(id: string): void {
+  removerMidia(id: string): void {
     this.reels.update((lista) =>
-      lista.map((r) => (r.id === id ? { ...r, videoUrl: null } : r))
+      lista.map((r) => (r.id === id ? { ...r, videoUrl: null, imagemUrl: null } : r))
     );
+  }
+
+  tipoMidia(reel: LobbyReelItem): string {
+    return tipoMidiaReel(reel);
   }
 
   adicionarReel(): void {
@@ -141,9 +165,9 @@ export class ConfigAnimacaoModalComponent {
       titulo: r.titulo.trim(),
     }));
 
-    const semConteudo = reelsValidos.every((r) => !r.titulo && !r.videoUrl);
+    const semConteudo = reelsValidos.every((r) => !r.titulo && !r.videoUrl && !r.imagemUrl);
     if (semConteudo) {
-      alert('Adicione pelo menos um título ou vídeo em algum reel.');
+      alert('Adicione pelo menos um título, imagem ou vídeo em algum reel.');
       return;
     }
 

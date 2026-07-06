@@ -7,9 +7,13 @@
     <span>Promoções</span>
   </div>
   <div class="lobby-ticker__track">
-    <div class="lobby-ticker__marquee">
-      <span>{{ textoMarquee() }}</span>
-      <span>{{ textoMarquee() }}</span>
+    <div
+      class="lobby-ticker__marquee"
+      [style.--ticker-duration]="duracaoAnimacaoCss()"
+    >
+      <span class="lobby-ticker__item">{{ textoMarquee() }}</span>
+      <span class="lobby-ticker__item" aria-hidden="true">{{ textoMarquee() }}</span>
+      <span class="lobby-ticker__item" aria-hidden="true">{{ textoMarquee() }}</span>
     </div>
   </div>
 </div>

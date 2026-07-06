@@ -1,13 +1,14 @@
-import { LobbyReelItem } from '../models/lobby-ui.types';
+import { LobbyReelItem, LobbyReelMidiaTipo } from '../models/lobby-ui.types';
 
 export const LOBBY_REELS_STORAGE_KEY = 'lobby-reels';
 export const MAX_LOBBY_REELS = 5;
 export const MIN_LOBBY_REELS = 1;
+export const TRANSICAO_REEL_MS = 480;
 
 export const REELS_PADRAO: LobbyReelItem[] = [
-  { id: 'padrao-1', titulo: 'Combo Duplo Bacon — só hoje', videoUrl: null },
-  { id: 'padrao-2', titulo: 'Sobremesa grátis acima de R$ 60', videoUrl: null },
-  { id: 'padrao-3', titulo: 'Novo: Milkshake de Paçoca', videoUrl: null },
+  { id: 'padrao-1', titulo: 'Combo Duplo Bacon — só hoje', videoUrl: null, imagemUrl: null },
+  { id: 'padrao-2', titulo: 'Sobremesa grátis acima de R$ 60', videoUrl: null, imagemUrl: null },
+  { id: 'padrao-3', titulo: 'Novo: Milkshake de Paçoca', videoUrl: null, imagemUrl: null },
 ];
 
 export function criarIdReel(): string {
@@ -18,11 +19,21 @@ export function criarIdReel(): string {
 }
 
 export function criarReelVazio(): LobbyReelItem {
-  return { id: criarIdReel(), titulo: '', videoUrl: null };
+  return { id: criarIdReel(), titulo: '', videoUrl: null, imagemUrl: null };
+}
+
+export function tipoMidiaReel(reel: LobbyReelItem): LobbyReelMidiaTipo {
+  if (reel.videoUrl) return 'video';
+  if (reel.imagemUrl) return 'imagem';
+  return 'texto';
+}
+
+export function reelTemConteudo(reel: LobbyReelItem): boolean {
+  return Boolean(reel.titulo.trim() || reel.videoUrl || reel.imagemUrl);
 }
 
 export function normalizarReels(reels: LobbyReelItem[]): LobbyReelItem[] {
-  const validos = reels.filter((r) => r.titulo.trim() || r.videoUrl);
+  const validos = reels.filter(reelTemConteudo);
   if (validos.length > 0) return validos.slice(0, MAX_LOBBY_REELS);
   return [...REELS_PADRAO];
 }
@@ -33,18 +44,31 @@ export function migrarReelsDeApi(
   reels?: LobbyReelItem[] | null
 ): LobbyReelItem[] {
   if (reels && reels.length > 0) {
-    return normalizarReels(reels);
+    return normalizarReels(
+      reels.map((r) => ({
+        id: r.id || criarIdReel(),
+        titulo: r.titulo ?? '',
+        videoUrl: r.videoUrl ?? null,
+        imagemUrl: r.imagemUrl ?? null,
+      }))
+    );
   }
 
   const migrados: LobbyReelItem[] = [];
   if (video1Url) {
-    migrados.push({ id: criarIdReel(), titulo: REELS_PADRAO[0].titulo, videoUrl: video1Url });
+    migrados.push({
+      id: criarIdReel(),
+      titulo: REELS_PADRAO[0].titulo,
+      videoUrl: video1Url,
+      imagemUrl: null,
+    });
   }
   if (video2Url) {
     migrados.push({
       id: criarIdReel(),
       titulo: REELS_PADRAO[1]?.titulo ?? 'Promoção',
       videoUrl: video2Url,
+      imagemUrl: null,
     });
   }
 
@@ -63,6 +87,7 @@ export function carregarReelsLocalStorage(): LobbyReelItem[] | null {
       id: r.id || criarIdReel(),
       titulo: r.titulo ?? '',
       videoUrl: r.videoUrl ?? null,
+      imagemUrl: r.imagemUrl ?? null,
     }));
   } catch {
     return null;
@@ -96,6 +121,23 @@ export function montarTickerTexto(reels: LobbyReelItem[]): string {
   return titulos.join('★');
 }
 
-export function reelsParaSlides(reels: LobbyReelItem[]): { titulo: string }[] {
-  return normalizarReels(reels).map((r) => ({ titulo: r.titulo.trim() || 'Promoção' }));
+export function estimarDuracaoInterludioSegundos(
+  reels: LobbyReelItem[],
+  duracaoImagemSegundos: number
+): { minimo: number; temVideo: boolean } {
+  const lista = normalizarReels(reels);
+  let minimo = 0;
+  let temVideo = false;
+
+  for (const reel of lista) {
+    const tipo = tipoMidiaReel(reel);
+    if (tipo === 'video') {
+      temVideo = true;
+      minimo += 3;
+    } else {
+      minimo += Math.max(2, duracaoImagemSegundos);
+    }
+  }
+
+  return { minimo, temVideo };
 }

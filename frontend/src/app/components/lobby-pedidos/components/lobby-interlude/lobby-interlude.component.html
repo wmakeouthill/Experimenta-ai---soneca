@@ -4,35 +4,63 @@
     role="dialog"
     aria-label="Interlúdio promocional"
     [attr.data-lobby-tema]="tema()"
-    [style.--lobby-slide-duration]="duracaoBarraCss()"
   >
     <div class="lobby-interlude__progress">
-      @for (reel of reelsAtivos(); track reel.id) {
+      @for (reel of reelsAtivos(); track reel.id; let i = $index) {
         <div class="lobby-interlude__bar">
-          <div
-            class="lobby-interlude__bar-fill"
-            [class.lobby-interlude__bar-fill--done]="indiceBarraPreenchida($index)"
-            [class.lobby-interlude__bar-fill--active]="indiceBarraAtiva($index)"
-          ></div>
+          @if (indiceBarraPreenchida(i)) {
+            <div class="lobby-interlude__bar-fill lobby-interlude__bar-fill--done"></div>
+          } @else if (indiceBarraAtiva(i) && barPronta()) {
+            <div
+              class="lobby-interlude__bar-fill lobby-interlude__bar-fill--active"
+              [style.--lobby-slide-duration]="barDurationCss()"
+              (animationend)="onBarAnimationEnd(i, $event)"
+            ></div>
+          }
         </div>
       }
     </div>
 
     <div class="lobby-interlude__stage">
-      <div class="lobby-interlude__media">
-        @if (videoUrlAtual(); as videoUrl) {
-          <video
-            class="lobby-interlude__video"
-            [src]="videoUrl"
-            autoplay
-            muted
-            playsinline
-            [attr.data-reel]="slideIndex()"
-          ></video>
-        } @else {
-          <span class="lobby-interlude__placeholder">vídeo / imagem promocional</span>
-        }
-        <h2 class="lobby-interlude__titulo">{{ slideAtual().titulo }}</h2>
+      <div class="lobby-interlude__viewport">
+        <div
+          class="lobby-interlude__stack"
+          [style.--slide-count]="reelsAtivos().length"
+          [style.transform]="'translateY(calc(-' + stackOffset() + ' / ' + reelsAtivos().length + ' * 100%))'"
+        >
+          @for (reel of reelsAtivos(); track reel.id; let i = $index) {
+            <article class="lobby-interlude__slide">
+              <div class="lobby-interlude__media">
+                @if (reel.videoUrl && i === slideIndex()) {
+                  <video
+                    class="lobby-interlude__video"
+                    [src]="reel.videoUrl"
+                    autoplay
+                    muted
+                    playsinline
+                    preload="auto"
+                    (loadedmetadata)="onVideoMetadata($event)"
+                    (ended)="onVideoEnded()"
+                    (error)="onVideoErro()"
+                  ></video>
+                } @else if (reel.videoUrl && i !== slideIndex()) {
+                  <div class="lobby-interlude__video-placeholder" aria-hidden="true"></div>
+                } @else if (reel.imagemUrl) {
+                  <img
+                    class="lobby-interlude__imagem"
+                    [src]="reel.imagemUrl"
+                    [alt]="reel.titulo"
+                  />
+                } @else {
+                  <div class="lobby-interlude__texto-fundo" aria-hidden="true"></div>
+                }
+
+                <div class="lobby-interlude__overlay" aria-hidden="true"></div>
+                <h2 class="lobby-interlude__titulo">{{ reel.titulo }}</h2>
+              </div>
+            </article>
+          }
+        </div>
       </div>
     </div>
 
