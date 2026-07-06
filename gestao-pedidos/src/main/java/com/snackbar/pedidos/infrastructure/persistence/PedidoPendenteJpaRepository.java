@@ -100,6 +100,6 @@ public interface PedidoPendenteJpaRepository extends JpaRepository<PedidoPendent
      */
     @Modifying
     @Query("UPDATE PedidoPendenteEntity p SET p.aguardandoPagamento = false, " +
-            "p.updatedAt = CURRENT_TIMESTAMP WHERE p.id = :id")
+            "p.updatedAt = CURRENT_TIMESTAMP WHERE p.id = :id AND p.pedidoRealId IS NULL AND p.aguardandoPagamento = true")
     int liberarPagamento(@Param("id") String id);
 }
