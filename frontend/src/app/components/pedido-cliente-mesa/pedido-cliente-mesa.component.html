@@ -626,6 +626,12 @@
                 </button>
               </div>
             }
+
+            @if (contaDisponivel()) {
+              <button type="button" class="btn-secondary btn-large mesa-tab" (click)="abrirConta()">
+                Ver conta
+              </button>
+            }
           </div>
         }
 
@@ -1394,6 +1400,38 @@
         }
         @if (pagamentoDigital.erro(); as msg) {
           <p class="pix-mesa__erro">{{ msg }}</p>
+        }
+      </section>
+    }
+
+    <!-- ========== CONTA PÓS-PAGA (MESA) ========== -->
+    @if (contaMesa; as cm) {
+      <section class="conta-mesa">
+        @if (cm.etapa() === 'previa' && cm.conta(); as conta) {
+          <h2>Sua conta — Mesa {{ conta.numeroMesa }}</h2>
+          <ul>
+            @for (item of conta.pedidos; track item.pedidoId) {
+              <li>Pedido {{ item.numeroPedido ?? item.pedidoId }} — R$ {{ (item.valorCentavos / 100).toFixed(2) }}</li>
+            }
+          </ul>
+          <p class="conta-mesa__total">Total: R$ {{ (conta.valorCentavos / 100).toFixed(2) }}</p>
+          <button type="button" [disabled]="conta.pedidos.length === 0" (click)="cm.fechar()">
+            Pagar com PIX
+          </button>
+        }
+        @if (cm.etapa() === 'pagando' && cm.cobranca(); as cobranca) {
+          <h2>Pague a conta com PIX</h2>
+          <img class="conta-mesa__qr" [src]="cobranca.qrCodeBase64" alt="QR Code PIX" />
+          <button type="button" (click)="copiarPix(cobranca.copiaECola)">Copiar código PIX</button>
+        }
+        @if (cm.etapa() === 'aprovado') {
+          <p class="conta-mesa__ok">Conta paga! Obrigado.</p>
+        }
+        @if (cm.etapa() === 'expirado') {
+          <p class="conta-mesa__erro">O PIX expirou. Toque em "Ver conta" para gerar outro.</p>
+        }
+        @if (cm.erro(); as msg) {
+          <p class="conta-mesa__erro">{{ msg }}</p>
         }
       </section>
     }

@@ -39,6 +39,7 @@ import {
   useCardapio,
   useCarrinho,
   useChatIA,
+  useContaMesa,
   useFavoritos,
   useGoogleAuth,
   useIdentificacaoCliente,
@@ -218,6 +219,13 @@ export class PedidoClienteMesaComponent
   readonly pixPrePagoDisponivel = computed(
     () => this.pagamentoConfig.pixMesaAtivo() && this.pagamentoConfig.modoMesa() === 'PRE_PAGO'
   );
+
+  readonly contaDisponivel = computed(
+    () => this.pagamentoConfig.pixMesaAtivo() && this.pagamentoConfig.modoMesa() === 'POS_PAGO'
+  );
+
+  // ========== Conta pós-paga (mesa) ==========
+  contaMesa: ReturnType<typeof useContaMesa> | null = null;
 
   readonly podeEnviarPedido = computed(
     () =>
@@ -429,6 +437,7 @@ export class PedidoClienteMesaComponent
     this.identificacao.destroy();
     this.sucesso.destroy();
     this.pagamentoDigital.encerrar();
+    this.contaMesa?.encerrar();
     if (this.isBrowser) {
       window.removeEventListener('popstate', this.boundHandlePopState);
     }
@@ -933,6 +942,15 @@ export class PedidoClienteMesaComponent
     const request = this.montarRequestPedidoMesa();
     if (!request) return;
     this.pagamentoDigital.regenerar(request);
+  }
+
+  /** Abre a aba "Conta" (pós-pago) e carrega a prévia dos pedidos em aberto. */
+  abrirConta(): void {
+    const token = this.mesaToken();
+    const clienteId = this.identificacao.clienteIdentificado()?.id;
+    if (!token || !clienteId) return;
+    this.contaMesa = useContaMesa(this.pagamentoService, token, clienteId);
+    this.contaMesa.carregarPrevia();
   }
 
   novoPedido(): void {

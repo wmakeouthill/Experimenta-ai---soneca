@@ -84,6 +84,25 @@ export interface PedidoMesaComPix {
   pagamento: PixCobrancaCriadaDTO;
 }
 
+export interface ItemConta {
+  pedidoId: string;
+  numeroPedido: string | null;
+  valorCentavos: number;
+}
+
+export interface ContaMesa {
+  id: string | null;
+  numeroMesa: number;
+  status: string;
+  valorCentavos: number;
+  pedidos: ItemConta[];
+}
+
+export interface ContaMesaComPix {
+  conta: ContaMesa;
+  pagamento: PixCobrancaCriadaDTO;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -126,5 +145,22 @@ export class PagamentoService {
       txid,
       endToEndId: `E2E${Date.now()}`,
     });
+  }
+
+  /** Consulta a prévia da conta pós-paga em aberto (pedidos ainda não fechados). */
+  consultarConta(mesaToken: string, clienteId: string): Observable<ContaMesa> {
+    return this.http.get<ContaMesa>('/api/cliente/conta', {
+      params: { mesaToken },
+      headers: { 'X-Cliente-Id': clienteId },
+    });
+  }
+
+  /** Fecha a conta pós-paga da mesa e gera uma cobrança PIX única. */
+  fecharConta(mesaToken: string, clienteId: string, correlationId: string): Observable<ContaMesaComPix> {
+    return this.http.post<ContaMesaComPix>(
+      '/api/cliente/conta/fechar',
+      { mesaToken },
+      { headers: { 'X-Cliente-Id': clienteId, 'X-Correlation-Id': correlationId } },
+    );
   }
 }
