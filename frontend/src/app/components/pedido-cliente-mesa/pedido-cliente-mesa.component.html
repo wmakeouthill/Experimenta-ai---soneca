@@ -1892,6 +1892,10 @@
               </div>
             </div>
 
+            @if (erroFinalizacao(); as msg) {
+              <p class="erro-msg" style="padding: 0 16px 8px; text-align: center;">{{ msg }}</p>
+            }
+
             <div class="carrinho-footer confirmacao-footer">
               <button class="btn-editar-pedido" (click)="pagamento.voltarParaPagamento()">
                 ✏️ Editar

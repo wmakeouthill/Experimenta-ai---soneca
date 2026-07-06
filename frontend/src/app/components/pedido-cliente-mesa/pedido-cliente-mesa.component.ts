@@ -115,6 +115,8 @@ export class PedidoClienteMesaComponent
   readonly mesa = signal<Mesa | null>(null);
   readonly carregando = signal(true);
   readonly erro = signal<string | null>(null);
+  // Erro inline exibido na etapa de confirmação (não é a tela cheia de `erro`).
+  readonly erroFinalizacao = signal<string | null>(null);
   readonly etapaAtual = signal<EtapaPrincipal>('identificacao');
   readonly abaAtual = signal<AbaCliente>('inicio');
   readonly enviando = signal(false);
@@ -312,6 +314,10 @@ export class PedidoClienteMesaComponent
           if (id) {
             this.sucesso.iniciarAcompanhamento(id);
           }
+
+          // Limpa o estado do PIX (timers ja parados; zera etapa/cobranca/correlationId/pedidoId)
+          // para nao deixar estado "aprovado" residual ao voltar/novo pedido.
+          this.pagamentoDigital.encerrar();
         }
       },
       { allowSignalWrites: true }
@@ -876,6 +882,8 @@ export class PedidoClienteMesaComponent
     )
       return;
 
+    this.erroFinalizacao.set(null);
+
     // Fluxo pré-pago via PIX: cria o pedido oculto e aguarda a aprovação do pagamento
     // antes de liberar para a cozinha. O valor cobrado é sempre calculado pelo backend.
     if (
@@ -887,6 +895,16 @@ export class PedidoClienteMesaComponent
       if (!requestPix) return;
       this.carrinho.fecharCarrinho();
       this.pagamentoDigital.iniciar(requestPix);
+      return;
+    }
+
+    // PRE_PAGO: o self-order do cliente so pode finalizar via PIX. Qualquer outro meio
+    // (dinheiro, cartao, dividido) exigiria liberar o pedido sem pagamento — furando a
+    // garantia de que nada vai a cozinha sem estar pago. Bloqueia aqui.
+    if (this.pixPrePagoDisponivel()) {
+      this.erroFinalizacao.set(
+        'No modo pré-pago, o pedido só pode ser finalizado via PIX. Volte e selecione PIX para continuar.'
+      );
       return;
     }
 
