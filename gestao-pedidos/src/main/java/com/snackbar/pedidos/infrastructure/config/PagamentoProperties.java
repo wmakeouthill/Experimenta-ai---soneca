@@ -27,6 +27,8 @@ public class PagamentoProperties {
     public static class Gateway {
         /** Gateway usado para PIX digital. */
         private GatewayPagamento pix = GatewayPagamento.SIMULADO;
+        /** Gateway usado para cartao digital de credito. */
+        private GatewayPagamento cartaoDigital = GatewayPagamento.SIMULADO;
     }
 
     @Getter
