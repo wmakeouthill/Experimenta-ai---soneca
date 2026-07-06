@@ -9,6 +9,7 @@ import com.snackbar.cardapio.domain.valueobjects.Preco;
 import com.snackbar.kernel.domain.exceptions.ValidationException;
 import com.snackbar.pedidos.application.dto.PagamentoDTO;
 import com.snackbar.pedidos.application.ports.PagamentoRepositoryPort;
+import com.snackbar.pedidos.application.ports.PedidoPendenteRepositoryPort;
 import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
 import com.snackbar.pedidos.domain.entities.CanalPagamento;
 import com.snackbar.pedidos.domain.entities.MeioPagamento;
@@ -24,6 +25,7 @@ public class ConfirmarPagamentoPixUseCase {
 
     private final PagamentoRepositoryPort pagamentoRepository;
     private final PedidoRepositoryPort pedidoRepository;
+    private final PedidoPendenteRepositoryPort pedidoPendenteRepository;
 
     @Transactional
     public PagamentoDTO executar(String txid, String endToEndId) {
@@ -41,9 +43,13 @@ public class ConfirmarPagamentoPixUseCase {
 
         if (pagamento.getCanal() == CanalPagamento.TOTEM) {
             registrarPixNoPedido(pagamento.getPedidoId(), pagamento.getValorCentavos());
+        } else if (pagamento.getPedidoPendenteId() != null) {
+            liberarPedidoPendente(pagamento.getPedidoPendenteId());
+        } else if (pagamento.getContaMesaId() != null) {
+            // Conta pos-paga de mesa e tratada na Task 7 deste plano.
+            throw new ValidationException("Pagamento de conta de mesa ainda nao suportado");
         } else {
-            // Canal MESA (pedido pendente pre-pago / conta pos-paga) e tratado no Plano 2.
-            throw new ValidationException("Pagamento PIX de mesa ainda nao suportado");
+            throw new ValidationException("Pagamento de mesa sem referencia valida");
         }
 
         var salvo = pagamentoRepository.salvar(pagamento);
@@ -64,6 +70,11 @@ public class ConfirmarPagamentoPixUseCase {
                 MeioPagamento.PIX,
                 Preco.of(BigDecimal.valueOf(valorCentavos, 2))));
         pedidoRepository.salvar(pedido);
+    }
+
+    private void liberarPedidoPendente(String pedidoPendenteId) {
+        pedidoPendenteRepository.liberarPagamento(pedidoPendenteId);
+        log.info("Pedido pendente {} liberado para a fila apos PIX aprovado", pedidoPendenteId);
     }
 
     private static void validarObrigatorio(String valor, String campo) {
