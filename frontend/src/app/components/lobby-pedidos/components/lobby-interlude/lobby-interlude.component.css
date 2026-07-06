@@ -20,35 +20,48 @@
 }
 
 .lobby-interlude__bar {
+  position: relative;
   flex: 1;
-  height: 6px;
+  height: 8px;
   border-radius: 4px;
   background: var(--lobby-interlude-bar-bg);
   overflow: hidden;
+  min-width: 0;
 }
 
 .lobby-interlude__bar-fill {
-  height: 100%;
-  width: 0;
-  border-radius: 4px;
-  background: #e8b84b;
-}
-
-.lobby-interlude__bar-fill--done {
+  position: absolute;
+  inset: 0 auto 0 0;
   width: 100%;
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #e8b84b, #f5c374);
+  box-shadow: 0 0 10px rgba(232, 184, 75, 0.65);
+  transform: scaleX(0);
+  transform-origin: left center;
 }
 
-.lobby-interlude__bar-fill--active {
-  width: 0;
-  animation: lobby-fill-bar var(--lobby-slide-duration, 4s) linear forwards;
+.lobby-interlude__bar-fill--completo {
+  transform: scaleX(1);
 }
 
-@keyframes lobby-fill-bar {
+.lobby-interlude__bar-fill--ativo {
+  transition: transform 0.05s linear;
+}
+
+.lobby-interlude__bar-fill--css {
+  animation-name: lobby-interlude-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+  animation-duration: var(--bar-duracao, 4s);
+}
+
+@keyframes lobby-interlude-progress {
   from {
-    width: 0%;
+    transform: scaleX(0);
   }
   to {
-    width: 100%;
+    transform: scaleX(1);
   }
 }
 

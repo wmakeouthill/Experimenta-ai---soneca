@@ -8,14 +8,22 @@
     <div class="lobby-interlude__progress">
       @for (reel of reelsAtivos(); track reel.id; let i = $index) {
         <div class="lobby-interlude__bar">
-          @if (indiceBarraPreenchida(i)) {
-            <div class="lobby-interlude__bar-fill lobby-interlude__bar-fill--done"></div>
-          } @else if (indiceBarraAtiva(i) && barPronta()) {
+          @if (i < slideIndex()) {
+            <div class="lobby-interlude__bar-fill lobby-interlude__bar-fill--completo"></div>
+          } @else if (i === slideIndex() && tipoSlideAtual() === 'video') {
             <div
-              class="lobby-interlude__bar-fill lobby-interlude__bar-fill--active"
-              [style.--lobby-slide-duration]="barDurationCss()"
-              (animationend)="onBarAnimationEnd(i, $event)"
+              class="lobby-interlude__bar-fill lobby-interlude__bar-fill--ativo"
+              [style.transform]="'scaleX(' + (barProgresso() / 100) + ')'"
             ></div>
+          } @else if (i === slideIndex()) {
+            <div
+              class="lobby-interlude__bar-fill lobby-interlude__bar-fill--css"
+              [style.animation-duration]="duracaoBarraCss()"
+              [attr.data-ciclo]="cicloBarra()"
+              (animationend)="onBarAnimacaoFim($event)"
+            ></div>
+          } @else {
+            <div class="lobby-interlude__bar-fill"></div>
           }
         </div>
       }
@@ -39,7 +47,8 @@
                     muted
                     playsinline
                     preload="auto"
-                    (loadedmetadata)="onVideoMetadata($event)"
+                    (loadeddata)="onVideoLoaded($event)"
+                    (timeupdate)="onVideoTimeUpdate($event)"
                     (ended)="onVideoEnded()"
                     (error)="onVideoErro()"
                   ></video>
