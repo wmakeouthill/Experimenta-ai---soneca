@@ -249,6 +249,18 @@ export class PedidoClienteMesaComponent
     );
   });
 
+  /** Sobe o botão do chat quando há CTAs fixos acima do footer */
+  readonly offsetChatFlutuante = computed(() => {
+    const aba = this.abaAtual();
+    if (aba !== 'inicio' && aba !== 'perfil') return 0;
+    if (aba === 'perfil' && this.secaoPerfil() !== 'principal') return 0;
+
+    let offset = 0;
+    if (this.temPedidosNaoAvaliados()) offset += 48;
+    if (!this.googleAuth.clienteAuth.cliente()?.telefone) offset += 48;
+    return offset;
+  });
+
   // Verifica se há pedido ativo (não finalizado/cancelado)
   readonly pedidoAtivoNaoFinalizado = computed(() => {
     const pedidos = this.meusPedidos.pedidos();

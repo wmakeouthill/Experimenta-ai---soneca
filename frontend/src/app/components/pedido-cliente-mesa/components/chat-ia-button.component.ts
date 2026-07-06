@@ -14,6 +14,7 @@ import { CommonModule } from '@angular/common';
     <button 
       class="chat-ia-btn" 
       [class.pulse]="pulse()"
+      [style.--elevacao-extra.px]="elevacaoExtra()"
       (click)="onClick.emit()"
       [attr.aria-label]="'Abrir chat com Soneca IA'">
       <img 
@@ -28,16 +29,17 @@ import { CommonModule } from '@angular/common';
   `,
     styles: [`
     :host {
-      --espacamento: 1rem;
-      --footer-altura: 70px;
+      --espacamento: 12px;
+      --footer-altura: 76px;
+      --elevacao-extra: 0px;
     }
 
     .chat-ia-btn {
       position: fixed;
-      bottom: calc(var(--footer-altura) + var(--espacamento));
+      bottom: calc(var(--footer-altura) + var(--espacamento) + var(--elevacao-extra) + env(safe-area-inset-bottom, 0px));
       right: var(--espacamento);
-      width: 100px;
-      height: 100px;
+      width: 72px;
+      height: 72px;
       border-radius: 50%;
       background: transparent;
       border: none;
@@ -75,8 +77,8 @@ import { CommonModule } from '@angular/common';
     }
 
     .chat-ia-btn-icon {
-      width: 100px;
-      height: 100px;
+      width: 72px;
+      height: 72px;
       border-radius: 50%;
       object-fit: contain;
     }
@@ -119,13 +121,13 @@ import { CommonModule } from '@angular/common';
     /* Responsivo - tablets */
     @media (max-width: 768px) {
       .chat-ia-btn {
-        width: 88px;
-        height: 88px;
+        width: 64px;
+        height: 64px;
       }
 
       .chat-ia-btn-icon {
-        width: 88px;
-        height: 88px;
+        width: 64px;
+        height: 64px;
       }
 
       .chat-ia-tooltip {
@@ -136,25 +138,27 @@ import { CommonModule } from '@angular/common';
     /* Responsivo - mobile */
     @media (max-width: 480px) {
       .chat-ia-btn {
-        width: 80px;
-        height: 80px;
+        width: 58px;
+        height: 58px;
+        right: 10px;
       }
 
       .chat-ia-btn-icon {
-        width: 80px;
-        height: 80px;
+        width: 58px;
+        height: 58px;
       }
     }
 
-    /* Safe area para iPhones com notch */
+    /* Safe area para iPhones com notch — elevacao já incluída no bottom acima */
     @supports (padding-bottom: env(safe-area-inset-bottom)) {
       .chat-ia-btn {
-        bottom: calc(var(--footer-altura) + var(--espacamento) + env(safe-area-inset-bottom));
+        bottom: calc(var(--footer-altura) + var(--espacamento) + var(--elevacao-extra) + env(safe-area-inset-bottom, 0px));
       }
     }
   `]
 })
 export class ChatIAButtonComponent {
     readonly pulse = input<boolean>(true);
+    readonly elevacaoExtra = input(0);
     readonly onClick = output<void>();
 }

@@ -2024,7 +2024,11 @@
 
     <!-- ========== CHAT IA - Botão flutuante e Chat fullscreen ========== -->
     @if (etapaAtual() === 'cardapio' && !chatIA.isOpen()) {
-      <app-chat-ia-button [pulse]="true" (onClick)="chatIA.abrirChat()" />
+      <app-chat-ia-button
+        [pulse]="true"
+        [elevacaoExtra]="offsetChatFlutuante()"
+        (onClick)="chatIA.abrirChat()"
+      />
     }
 
     <app-chat-ia-fullscreen

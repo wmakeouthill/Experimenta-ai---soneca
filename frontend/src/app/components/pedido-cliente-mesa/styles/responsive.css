@@ -1,5 +1,33 @@
 /* Otimizações específicas para mobile (telas pequenas) */
 @media (max-width: 767px) {
+  .header-cliente {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .logo-mini {
+    width: 42px;
+    height: 42px;
+  }
+
+  .cliente-nome {
+    font-size: 15px;
+  }
+
+  .mesa-label {
+    font-size: 12px;
+  }
+
+  .cta-avaliacao,
+  .cta-telefone {
+    padding-left: 14px;
+    padding-right: 4.75rem;
+  }
+
+  .cta-texto {
+    font-size: 0.8125rem;
+  }
+
   /* Tamanhos de fonte otimizados para legibilidade mobile */
   .produto-nome {
     font-size: 0.95rem;

@@ -1,7 +1,7 @@
 /* Perfil do cliente — pedido-mesa */
 
 .aba-perfil {
-  padding: 32px 20px 120px;
+  padding: 12px 20px calc(var(--delivery-footer-height-mesa, 76px) + env(safe-area-inset-bottom, 0px) + 120px);
   max-width: 520px;
   width: 100%;
   margin: 0 auto;
