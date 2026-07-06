@@ -76,7 +76,7 @@ public class PedidoPendenteEntity implements Persistable<String> {
     @Builder.Default
     private boolean aguardandoPagamento = false;
 
-    @Column(name = "pagamento_correlation_id", length = 36)
+    @Column(name = "pagamento_correlation_id", length = 100)
     private String pagamentoCorrelationId;
 
     @OneToMany(mappedBy = "pedidoPendente", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)

@@ -12,7 +12,7 @@ ALTER TABLE pedidos_pendentes_mesa
 --preconditions onFail:MARK_RAN
 --precondition-sql-check expectedResult:0 SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'pedidos_pendentes_mesa' AND column_name = 'pagamento_correlation_id'
 ALTER TABLE pedidos_pendentes_mesa
-    ADD COLUMN pagamento_correlation_id VARCHAR(36) NULL;
+    ADD COLUMN pagamento_correlation_id VARCHAR(100) NULL;
 
 --changeset snackbar:046-add-idx-aguardando-pagamento-pendentes-mesa
 --comment: Adiciona indice para filtrar pedidos pendentes aguardando pagamento
