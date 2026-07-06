@@ -1375,6 +1375,29 @@
       />
     }
 
+    <!-- ========== PIX PRÉ-PAGO (MESA) ========== -->
+    @if (pagamentoDigital.etapa() !== 'oculto') {
+      <section class="pix-mesa">
+        @if (pagamentoDigital.etapa() === 'aguardando' && pagamentoDigital.cobranca(); as cobranca) {
+          <h2>Pague com PIX para enviar seu pedido</h2>
+          <img class="pix-mesa__qr" [src]="cobranca.qrCodeBase64" alt="QR Code PIX" />
+          <p class="pix-mesa__timer">
+            Expira em {{ pagamentoDigital.formatarTempo(pagamentoDigital.tempoRestante()) }}
+          </p>
+          <button type="button" (click)="copiarPix(cobranca.copiaECola)">Copiar código PIX</button>
+        }
+        @if (pagamentoDigital.expirado()) {
+          <div class="pix-mesa__expirado">
+            <p>O QR Code expirou.</p>
+            <button type="button" (click)="regenerarPixMesa()">Gerar novo QR Code</button>
+          </div>
+        }
+        @if (pagamentoDigital.erro(); as msg) {
+          <p class="pix-mesa__erro">{{ msg }}</p>
+        }
+      </section>
+    }
+
     <!-- ========== MODAL: CARRINHO ========== -->
     @if (carrinho.mostrarCarrinho()) {
       <div class="modal-overlay carrinho-overlay" (click)="fecharCarrinho()">

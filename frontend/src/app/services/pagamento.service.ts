@@ -79,6 +79,11 @@ export interface ConfirmarPagamentoCartaoRequest {
   motivo?: string;
 }
 
+export interface PedidoMesaComPix {
+  pedido: { id: string; valorTotal: number; aguardandoPagamento: boolean };
+  pagamento: PixCobrancaCriadaDTO;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -100,6 +105,15 @@ export class PagamentoService {
 
   buscarStatus(correlationId: string): Observable<PagamentoDTO> {
     return this.http.get<PagamentoDTO>(`${this.apiUrl}/${correlationId}`);
+  }
+
+  /** Cria um pedido de mesa pré-pago via PIX (o pedido só é liberado à cozinha após a aprovação). */
+  criarPedidoMesaComPix(request: unknown, correlationId: string): Observable<PedidoMesaComPix> {
+    return this.http.post<PedidoMesaComPix>(
+      '/api/public/mesa/pedido/pix',
+      request,
+      { headers: { 'X-Correlation-Id': correlationId } },
+    );
   }
 
   cancelar(correlationId: string, motivo?: string): Observable<PagamentoDTO> {

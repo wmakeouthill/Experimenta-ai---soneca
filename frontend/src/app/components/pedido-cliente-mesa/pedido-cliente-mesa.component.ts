@@ -29,6 +29,8 @@ import {
 import { Produto } from '../../services/produto.service';
 import { PwaInstallService } from '../../services/pwa-install.service';
 import { StatusLoja, StatusLojaService } from '../../services/status-loja.service';
+import { PagamentoConfigService } from '../../services/pagamento-config.service';
+import { PagamentoService } from '../../services/pagamento.service';
 import { ImageProxyUtil } from '../../utils/image-proxy.util';
 import { DraggableScrollDirective } from './directives/draggable-scroll.directive';
 
@@ -43,6 +45,7 @@ import {
   useInicio,
   useMeusPedidos,
   usePagamento,
+  usePagamentoDigital,
   useSucessoPedido,
 } from './composables';
 
@@ -97,6 +100,8 @@ export class PedidoClienteMesaComponent
   private readonly pwaInstallService = inject(PwaInstallService);
   private readonly adicionalService = inject(AdicionalService);
   private readonly statusLojaService = inject(StatusLojaService);
+  private readonly pagamentoService = inject(PagamentoService);
+  readonly pagamentoConfig = inject(PagamentoConfigService);
 
   protected readonly Math = Math;
 
@@ -169,6 +174,7 @@ export class PedidoClienteMesaComponent
   readonly identificacao = useIdentificacaoCliente(this.mesaToken);
   readonly carrinho = useCarrinho();
   readonly pagamento = usePagamento(() => this.carrinho.totalValor());
+  readonly pagamentoDigital = usePagamentoDigital(this.pagamentoService);
   readonly cardapio = useCardapio(this.mesaToken);
   readonly favoritos = useFavoritos(
     () => this.identificacao.clienteIdentificado()?.id,
@@ -209,6 +215,10 @@ export class PedidoClienteMesaComponent
   readonly salvandoSenha = signal(false);
 
   // ========== Computed ==========
+  readonly pixPrePagoDisponivel = computed(
+    () => this.pagamentoConfig.pixMesaAtivo() && this.pagamentoConfig.modoMesa() === 'PRE_PAGO'
+  );
+
   readonly podeEnviarPedido = computed(
     () =>
       !this.carrinho.carrinhoVazio() &&
@@ -279,6 +289,25 @@ export class PedidoClienteMesaComponent
       },
       { allowSignalWrites: true }
     );
+
+    // Effect: quando o PIX pré-pago da mesa é aprovado, segue para a tela de sucesso
+    // do mesmo jeito que o fluxo tradicional (enviarPedido) faz.
+    effect(
+      () => {
+        if (this.pagamentoDigital.aprovado()) {
+          this.etapaAtual.set('sucesso');
+          this.carrinho.limparCarrinho();
+          this.pagamento.limparPagamentos();
+          this.carrinho.fecharCarrinho();
+
+          const id = this.pagamentoDigital.pedidoId();
+          if (id) {
+            this.sucesso.iniciarAcompanhamento(id);
+          }
+        }
+      },
+      { allowSignalWrites: true }
+    );
   }
 
   /**
@@ -308,6 +337,9 @@ export class PedidoClienteMesaComponent
     // Verifica status da loja ANTES de carregar a mesa
     this.verificarStatusLoja();
     this.conectarStatusLojaSSE();
+
+    // Carrega a configuração pública de pagamentos (PIX/cartão, modo pré-pago x pós-pago)
+    this.pagamentoConfig.carregar();
 
     const token = this.route.snapshot.paramMap.get('token');
     if (!token) {
@@ -396,6 +428,7 @@ export class PedidoClienteMesaComponent
     this.googleAuth.destroy();
     this.identificacao.destroy();
     this.sucesso.destroy();
+    this.pagamentoDigital.encerrar();
     if (this.isBrowser) {
       window.removeEventListener('popstate', this.boundHandlePopState);
     }
@@ -793,6 +826,35 @@ export class PedidoClienteMesaComponent
   }
 
   // ========== Envio do Pedido ==========
+  /**
+   * Monta o corpo do `CriarPedidoMesaRequest` (mesaToken, cliente, itens) comum aos
+   * dois fluxos de envio (tradicional e PIX pré-pago). `meiosPagamento` fica de fora:
+   * no fluxo tradicional é adicionado pelo chamador; no fluxo PIX pré-pago o valor
+   * cobrado é sempre calculado pelo backend, então o campo não é enviado.
+   */
+  private montarRequestPedidoMesa(): CriarPedidoMesaRequest | null {
+    const mesa = this.mesa();
+    const cliente = this.identificacao.clienteIdentificado();
+    if (!mesa || !cliente) return null;
+
+    const itens: ItemPedidoMesaRequest[] = this.carrinho.itens().map(item => ({
+      produtoId: item.produto.id,
+      quantidade: item.quantidade,
+      observacoes: item.observacao || undefined,
+      adicionais:
+        item.adicionais && item.adicionais.length > 0
+          ? item.adicionais.map(ad => ({ adicionalId: ad.adicional.id, quantidade: ad.quantidade }))
+          : undefined,
+    }));
+
+    return {
+      mesaToken: mesa.qrCodeToken,
+      clienteId: cliente.id,
+      nomeCliente: cliente.nome,
+      itens,
+    };
+  }
+
   enviarPedido(): void {
     const mesa = this.mesa();
     const cliente = this.identificacao.clienteIdentificado();
@@ -805,6 +867,20 @@ export class PedidoClienteMesaComponent
     )
       return;
 
+    // Fluxo pré-pago via PIX: cria o pedido oculto e aguarda a aprovação do pagamento
+    // antes de liberar para a cozinha. O valor cobrado é sempre calculado pelo backend.
+    if (
+      this.pixPrePagoDisponivel() &&
+      !this.pagamento.dividido() &&
+      this.pagamento.meioPagamentoSelecionado('PIX')
+    ) {
+      const requestPix = this.montarRequestPedidoMesa();
+      if (!requestPix) return;
+      this.carrinho.fecharCarrinho();
+      this.pagamentoDigital.iniciar(requestPix);
+      return;
+    }
+
     this.enviando.set(true);
 
     // Gera chave de idempotência UMA VEZ por tentativa de envio.
@@ -812,29 +888,17 @@ export class PedidoClienteMesaComponent
     // Se houver retry HTTP, a mesma chave será reutilizada.
     const idempotencyKey = this.pedidoMesaService.gerarChaveIdempotencia();
 
-    const itens: ItemPedidoMesaRequest[] = this.carrinho.itens().map(item => ({
-      produtoId: item.produto.id,
-      quantidade: item.quantidade,
-      observacoes: item.observacao || undefined,
-      adicionais:
-        item.adicionais && item.adicionais.length > 0
-          ? item.adicionais.map(ad => ({ adicionalId: ad.adicional.id, quantidade: ad.quantidade }))
-          : undefined,
-    }));
+    const request = this.montarRequestPedidoMesa();
+    if (!request) {
+      this.enviando.set(false);
+      return;
+    }
 
-    const meiosPagamento = this.pagamento.getMeiosComTroco().map(m => ({
+    request.meiosPagamento = this.pagamento.getMeiosComTroco().map(m => ({
       meioPagamento: m.tipo,
       valor: m.valor,
       valorPagoDinheiro: m.valorPagoDinheiro,
     }));
-
-    const request: CriarPedidoMesaRequest = {
-      mesaToken: mesa.qrCodeToken,
-      clienteId: cliente.id,
-      nomeCliente: cliente.nome,
-      itens,
-      meiosPagamento,
-    };
 
     this.pedidoMesaService.criarPedido(request, idempotencyKey).subscribe({
       next: response => {
@@ -854,6 +918,21 @@ export class PedidoClienteMesaComponent
         this.erro.set('Erro ao enviar o pedido. Tente novamente.');
       },
     });
+  }
+
+  /**
+   * Copia o "copia e cola" do PIX para a área de transferência.
+   * NUNCA loga o conteúdo copiado (dado sensível de cobrança).
+   */
+  copiarPix(texto: string): void {
+    navigator.clipboard?.writeText(texto);
+  }
+
+  /** Remonta o request do pedido e solicita uma nova cobrança PIX (QR expirado). */
+  regenerarPixMesa(): void {
+    const request = this.montarRequestPedidoMesa();
+    if (!request) return;
+    this.pagamentoDigital.regenerar(request);
   }
 
   novoPedido(): void {
