@@ -5,6 +5,7 @@ import java.util.EnumSet;
 
 import com.snackbar.kernel.domain.entities.BaseEntity;
 import com.snackbar.kernel.domain.exceptions.ValidationException;
+import com.snackbar.pedidos.domain.valueobjects.DadosCartaoDigital;
 import com.snackbar.pedidos.domain.valueobjects.DadosPix;
 import com.snackbar.pedidos.domain.valueobjects.DadosTef;
 
@@ -226,6 +227,18 @@ public class Pagamento extends BaseEntity {
         this.codigoAutorizacao = dadosTef.codigoAutorizacao();
         this.codigoAdquirente = dadosTef.codigoAdquirente();
         this.comprovanteCliente = dadosTef.comprovanteCliente();
+        finalizar(StatusPagamento.APROVADO, null);
+    }
+
+    public void aprovarCartaoDigital(DadosCartaoDigital dados) {
+        exigirStatus(StatusPagamento.INICIADO);
+        if (!meioPagamento.isCartao()) {
+            throw new ValidationException("apenas cartao pode ser aprovado como cartao digital");
+        }
+        validarObrigatorio(dados.gatewayPaymentId(), "gatewayPaymentId");
+        this.gatewayPaymentId = dados.gatewayPaymentId().trim();
+        this.bandeira = dados.bandeira();
+        this.codigoAutorizacao = dados.codigoAutorizacao();
         finalizar(StatusPagamento.APROVADO, null);
     }
 
