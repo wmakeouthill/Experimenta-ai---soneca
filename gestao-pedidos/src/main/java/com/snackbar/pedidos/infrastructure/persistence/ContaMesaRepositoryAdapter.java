@@ -23,7 +23,7 @@ public class ContaMesaRepositoryAdapter implements ContaMesaRepositoryPort {
     @Transactional
     public ContaMesa salvar(ContaMesa conta) {
         ContaMesaEntity entity = toEntity(conta);
-        return toDomain(jpaRepository.save(entity));
+        return toDomain(jpaRepository.saveAndFlush(entity));
     }
 
     @Override

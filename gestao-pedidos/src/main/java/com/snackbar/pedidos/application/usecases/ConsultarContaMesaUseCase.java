@@ -7,11 +7,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.snackbar.kernel.domain.exceptions.ValidationException;
+import com.snackbar.pedidos.application.dto.ConfiguracaoPagamentoDTO;
 import com.snackbar.pedidos.application.dto.ContaMesaDTO;
 import com.snackbar.pedidos.application.dto.ContaMesaDTO.ItemContaDTO;
+import com.snackbar.pedidos.application.ports.ConfiguracaoPagamentoRepositoryPort;
 import com.snackbar.pedidos.application.ports.MesaRepositoryPort;
 import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
 import com.snackbar.pedidos.domain.entities.Mesa;
+import com.snackbar.pedidos.domain.entities.ModoPagamentoMesa;
 import com.snackbar.pedidos.domain.entities.Pedido;
 
 import lombok.RequiredArgsConstructor;
@@ -25,12 +28,22 @@ public class ConsultarContaMesaUseCase {
 
     private final PedidoRepositoryPort pedidoRepository;
     private final MesaRepositoryPort mesaRepository;
+    private final ConfiguracaoPagamentoRepositoryPort configuracaoRepository;
 
     @Transactional(readOnly = true)
     public ContaMesaDTO executar(String mesaToken, String clienteId) {
         if (clienteId == null || clienteId.isBlank()) {
             throw new ValidationException("Identificacao do cliente e obrigatoria");
         }
+
+        ConfiguracaoPagamentoDTO config = configuracaoRepository.buscar();
+        if (!config.pixMesaAtivo()) {
+            throw new ValidationException("PIX na mesa nao esta habilitado");
+        }
+        if (config.modoMesa() != ModoPagamentoMesa.POS_PAGO) {
+            throw new ValidationException("Conta pos-paga so esta disponivel no modo POS_PAGO");
+        }
+
         Mesa mesa = mesaRepository.buscarPorQrCodeToken(mesaToken)
                 .orElseThrow(() -> new ValidationException("Mesa nao encontrada"));
 

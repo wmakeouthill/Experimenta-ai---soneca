@@ -154,6 +154,9 @@
     <!-- Migration: Cria as tabelas de conta pos-paga de mesa (contas_mesa e conta_mesa_pedidos) -->
     <include file="changes/047-create-contas-mesa-table.sql" relativeToChangelogFile="true"/>
 
+    <!-- Migration: Garante no maximo uma conta ABERTA por (mesa, cliente) -->
+    <include file="changes/048-add-unique-conta-aberta.sql" relativeToChangelogFile="true"/>
+
     <!--
     NOTA: O usuário administrador inicial é criado automaticamente via CommandLineRunner
     (UsuarioInicialConfig) na primeira execução da aplicação.

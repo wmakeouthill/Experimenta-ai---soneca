@@ -18,6 +18,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.snackbar.kernel.domain.exceptions.ValidationException;
+import com.snackbar.pedidos.application.dto.ConfiguracaoPagamentoDTO;
+import com.snackbar.pedidos.application.ports.ConfiguracaoPagamentoRepositoryPort;
 import com.snackbar.pedidos.application.ports.ContaMesaRepositoryPort;
 import com.snackbar.pedidos.application.ports.MesaRepositoryPort;
 import com.snackbar.pedidos.application.ports.PagamentoRepositoryPort;
@@ -26,6 +28,7 @@ import com.snackbar.pedidos.application.ports.PixGatewayPort;
 import com.snackbar.pedidos.application.ports.PixGatewayPort.CobrancaPixCriada;
 import com.snackbar.pedidos.domain.entities.GatewayPagamento;
 import com.snackbar.pedidos.domain.entities.Mesa;
+import com.snackbar.pedidos.domain.entities.ModoPagamentoMesa;
 import com.snackbar.pedidos.domain.entities.Pedido;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,6 +39,7 @@ class FecharContaMesaUseCaseTest {
     @Mock private PixGatewayPort pixGateway;
     @Mock private PagamentoRepositoryPort pagamentoRepository;
     @Mock private MesaRepositoryPort mesaRepository;
+    @Mock private ConfiguracaoPagamentoRepositoryPort configuracaoRepository;
 
     @InjectMocks private FecharContaMesaUseCase useCase;
 
@@ -44,6 +48,10 @@ class FecharContaMesaUseCaseTest {
         when(mesa.getId()).thenReturn("mesa-1");
         lenient().when(mesa.getNumero()).thenReturn(7);
         return mesa;
+    }
+
+    private ConfiguracaoPagamentoDTO configPosPago() {
+        return new ConfiguracaoPagamentoDTO(false, false, true, false, ModoPagamentoMesa.POS_PAGO);
     }
 
     private Pedido pedido(String id, String valor) {
@@ -61,6 +69,7 @@ class FecharContaMesaUseCaseTest {
         Pedido pedido2 = pedido("p2", "20.00");
 
         when(mesaRepository.buscarPorQrCodeToken("token-1")).thenReturn(Optional.of(mesa));
+        when(configuracaoRepository.buscar()).thenReturn(configPosPago());
         when(contaRepository.buscarAbertaPorMesaECliente("mesa-1", "cliente-1"))
                 .thenReturn(Optional.empty());
         when(pedidoRepository.buscarAbertosPorMesaESemPagamento("mesa-1", "cliente-1"))
@@ -83,11 +92,36 @@ class FecharContaMesaUseCaseTest {
         Mesa mesa = mesa();
 
         when(mesaRepository.buscarPorQrCodeToken("token-1")).thenReturn(Optional.of(mesa));
+        when(configuracaoRepository.buscar()).thenReturn(configPosPago());
         when(contaRepository.buscarAbertaPorMesaECliente("mesa-1", "cliente-1"))
                 .thenReturn(Optional.empty());
         when(pedidoRepository.buscarAbertosPorMesaESemPagamento("mesa-1", "cliente-1"))
                 .thenReturn(List.of());
 
+        assertThrows(ValidationException.class,
+                () -> useCase.executar("corr-1", "token-1", "cliente-1"));
+    }
+
+    @Test
+    void deveRejeitarQuandoModoNaoEPosPago() {
+        when(configuracaoRepository.buscar()).thenReturn(
+                new ConfiguracaoPagamentoDTO(false, false, true, false, ModoPagamentoMesa.PRE_PAGO));
+        assertThrows(ValidationException.class,
+                () -> useCase.executar("corr-1", "token-1", "cliente-1"));
+    }
+
+    @Test
+    void deveTraduzirViolacaoDeConcorrenciaEmValidationException() {
+        Mesa mesa = mesa();
+        when(mesaRepository.buscarPorQrCodeToken("token-1")).thenReturn(Optional.of(mesa));
+        when(configuracaoRepository.buscar()).thenReturn(configPosPago());
+        when(contaRepository.buscarAbertaPorMesaECliente("mesa-1", "cliente-1"))
+                .thenReturn(Optional.empty());
+        Pedido pedido1 = pedido("p1", "30.00");
+        when(pedidoRepository.buscarAbertosPorMesaESemPagamento("mesa-1", "cliente-1"))
+                .thenReturn(List.of(pedido1));
+        when(contaRepository.salvar(any()))
+                .thenThrow(new org.springframework.dao.DataIntegrityViolationException("dup"));
         assertThrows(ValidationException.class,
                 () -> useCase.executar("corr-1", "token-1", "cliente-1"));
     }

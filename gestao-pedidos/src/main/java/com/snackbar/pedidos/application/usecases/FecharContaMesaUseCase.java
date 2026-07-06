@@ -7,10 +7,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.snackbar.kernel.domain.exceptions.ValidationException;
+import com.snackbar.pedidos.application.dto.ConfiguracaoPagamentoDTO;
 import com.snackbar.pedidos.application.dto.ContaMesaComPixDTO;
 import com.snackbar.pedidos.application.dto.ContaMesaDTO;
 import com.snackbar.pedidos.application.dto.ContaMesaDTO.ItemContaDTO;
 import com.snackbar.pedidos.application.dto.PixCobrancaCriadaDTO;
+import com.snackbar.pedidos.application.ports.ConfiguracaoPagamentoRepositoryPort;
 import com.snackbar.pedidos.application.ports.ContaMesaRepositoryPort;
 import com.snackbar.pedidos.application.ports.MesaRepositoryPort;
 import com.snackbar.pedidos.application.ports.PagamentoRepositoryPort;
@@ -21,6 +23,7 @@ import com.snackbar.pedidos.domain.entities.CanalPagamento;
 import com.snackbar.pedidos.domain.entities.ContaMesa;
 import com.snackbar.pedidos.domain.entities.Mesa;
 import com.snackbar.pedidos.domain.entities.MeioPagamentoGateway;
+import com.snackbar.pedidos.domain.entities.ModoPagamentoMesa;
 import com.snackbar.pedidos.domain.entities.Pagamento;
 import com.snackbar.pedidos.domain.entities.Pedido;
 import com.snackbar.pedidos.domain.valueobjects.DadosPix;
@@ -42,6 +45,7 @@ public class FecharContaMesaUseCase {
     private final PixGatewayPort pixGateway;
     private final PagamentoRepositoryPort pagamentoRepository;
     private final MesaRepositoryPort mesaRepository;
+    private final ConfiguracaoPagamentoRepositoryPort configuracaoRepository;
 
     @Transactional
     public ContaMesaComPixDTO executar(String correlationId, String mesaToken, String clienteId) {
@@ -50,6 +54,14 @@ public class FecharContaMesaUseCase {
         }
         if (clienteId == null || clienteId.isBlank()) {
             throw new ValidationException("Identificacao do cliente e obrigatoria");
+        }
+
+        ConfiguracaoPagamentoDTO config = configuracaoRepository.buscar();
+        if (!config.pixMesaAtivo()) {
+            throw new ValidationException("PIX na mesa nao esta habilitado");
+        }
+        if (config.modoMesa() != ModoPagamentoMesa.POS_PAGO) {
+            throw new ValidationException("Conta pos-paga so esta disponivel no modo POS_PAGO");
         }
 
         Mesa mesa = mesaRepository.buscarPorQrCodeToken(mesaToken)
@@ -78,7 +90,12 @@ public class FecharContaMesaUseCase {
 
         ContaMesa conta = ContaMesa.abrir(mesa.getId(), mesa.getNumero(), clienteId,
                 pedidoIds, valorCentavos, correlationId);
-        ContaMesa contaSalva = contaRepository.salvar(conta);
+        ContaMesa contaSalva;
+        try {
+            contaSalva = contaRepository.salvar(conta);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            throw new ValidationException("Conta ja esta sendo processada. Tente novamente.");
+        }
 
         var pagamento = Pagamento.iniciarParaContaMesa(
                 contaSalva.getId(),
