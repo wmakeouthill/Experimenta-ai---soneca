@@ -8,12 +8,15 @@ import org.springframework.transaction.annotation.Transactional;
 import com.snackbar.cardapio.domain.valueobjects.Preco;
 import com.snackbar.kernel.domain.exceptions.ValidationException;
 import com.snackbar.pedidos.application.dto.PagamentoDTO;
+import com.snackbar.pedidos.application.ports.ContaMesaRepositoryPort;
 import com.snackbar.pedidos.application.ports.PagamentoRepositoryPort;
 import com.snackbar.pedidos.application.ports.PedidoPendenteRepositoryPort;
 import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
 import com.snackbar.pedidos.domain.entities.CanalPagamento;
+import com.snackbar.pedidos.domain.entities.ContaMesa;
 import com.snackbar.pedidos.domain.entities.MeioPagamento;
 import com.snackbar.pedidos.domain.entities.MeioPagamentoPedido;
+import com.snackbar.pedidos.domain.entities.Pedido;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +29,7 @@ public class ConfirmarPagamentoPixUseCase {
     private final PagamentoRepositoryPort pagamentoRepository;
     private final PedidoRepositoryPort pedidoRepository;
     private final PedidoPendenteRepositoryPort pedidoPendenteRepository;
+    private final ContaMesaRepositoryPort contaMesaRepository;
 
     @Transactional
     public PagamentoDTO executar(String txid, String endToEndId) {
@@ -46,8 +50,7 @@ public class ConfirmarPagamentoPixUseCase {
         } else if (pagamento.getPedidoPendenteId() != null) {
             liberarPedidoPendente(pagamento.getPedidoPendenteId());
         } else if (pagamento.getContaMesaId() != null) {
-            // Conta pos-paga de mesa e tratada na Task 7 deste plano.
-            throw new ValidationException("Pagamento de conta de mesa ainda nao suportado");
+            pagarContaMesa(pagamento.getContaMesaId());
         } else {
             throw new ValidationException("Pagamento de mesa sem referencia valida");
         }
@@ -70,6 +73,30 @@ public class ConfirmarPagamentoPixUseCase {
                 MeioPagamento.PIX,
                 Preco.of(BigDecimal.valueOf(valorCentavos, 2))));
         pedidoRepository.salvar(pedido);
+    }
+
+    private void pagarContaMesa(String contaMesaId) {
+        ContaMesa conta = contaMesaRepository.buscarPorId(contaMesaId)
+                .orElseThrow(() -> new ValidationException(
+                        "Conta de mesa nao encontrada: " + contaMesaId));
+
+        conta.pagar();
+        contaMesaRepository.salvar(conta);
+
+        for (String pedidoId : conta.getPedidoIds()) {
+            Pedido pedido = pedidoRepository.buscarPorId(pedidoId).orElse(null);
+            if (pedido == null) {
+                log.warn("Pedido {} da conta {} nao encontrado ao registrar PIX", pedidoId, contaMesaId);
+                continue;
+            }
+            if (pedido.getMeiosPagamento() != null && !pedido.getMeiosPagamento().isEmpty()) {
+                continue; // ja carimbado (idempotencia)
+            }
+            pedido.adicionarMeioPagamento(
+                    MeioPagamentoPedido.criar(MeioPagamento.PIX, Preco.of(pedido.getValorTotal().getAmount())));
+            pedidoRepository.salvar(pedido);
+        }
+        log.info("Conta de mesa {} marcada como PAGA e pedidos carimbados com PIX", contaMesaId);
     }
 
     private void liberarPedidoPendente(String pedidoPendenteId) {

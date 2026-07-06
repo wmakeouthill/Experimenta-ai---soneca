@@ -17,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.snackbar.kernel.domain.exceptions.ValidationException;
+import com.snackbar.pedidos.application.ports.ContaMesaRepositoryPort;
 import com.snackbar.pedidos.application.ports.PagamentoRepositoryPort;
 import com.snackbar.pedidos.application.ports.PedidoPendenteRepositoryPort;
 import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
@@ -37,6 +38,9 @@ class ConfirmarPagamentoPixMesaUseCaseTest {
 
     @Mock
     private PedidoPendenteRepositoryPort pedidoPendenteRepository;
+
+    @Mock
+    private ContaMesaRepositoryPort contaMesaRepository;
 
     @InjectMocks
     private ConfirmarPagamentoPixUseCase useCase;
