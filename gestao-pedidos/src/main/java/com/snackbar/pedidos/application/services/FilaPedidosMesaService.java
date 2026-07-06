@@ -132,7 +132,6 @@ public class FilaPedidosMesaService {
      */
     @Transactional
     public List<PedidoPendenteDTO> listarPedidosPendentes() {
-        // Remove expirados em background
         pedidoPendenteRepository.removerExpirados(TEMPO_MAXIMO_FILA_MINUTOS);
 
         return pedidoPendenteRepository.listarPendentesPorTipo(PedidoPendenteDTO.TIPO_MESA).stream()
@@ -142,7 +141,8 @@ public class FilaPedidosMesaService {
     }
 
     /**
-     * Busca um pedido pendente pelo ID.
+     * Busca um pedido pendente pelo ID para fluxos publicos de status/pagamento.
+     * Pedidos ocultos aguardando PIX continuam acessiveis aqui.
      */
     @Transactional(readOnly = true)
     public Optional<PedidoPendenteDTO> buscarPorId(String pedidoId) {
@@ -151,6 +151,15 @@ public class FilaPedidosMesaService {
                     pedido.atualizarTempoEspera();
                     return pedido;
                 });
+    }
+
+    /**
+     * Busca um pedido visivel na fila operacional de funcionarios.
+     */
+    @Transactional(readOnly = true)
+    public Optional<PedidoPendenteDTO> buscarVisivelPorId(String pedidoId) {
+        return buscarPorId(pedidoId)
+                .filter(pedido -> !pedido.isAguardandoPagamento());
     }
 
     /**
@@ -173,8 +182,6 @@ public class FilaPedidosMesaService {
      */
     @Transactional
     public Optional<PedidoPendenteDTO> buscarERemoverAtomicamente(String pedidoId) {
-        // Usa lock pessimista para garantir que apenas uma transação processe este
-        // pedido
         Optional<PedidoPendenteDTO> pedidoOpt = pedidoPendenteRepository.buscarPendentePorIdComLock(pedidoId);
 
         if (pedidoOpt.isPresent()) {
@@ -245,7 +252,6 @@ public class FilaPedidosMesaService {
      */
     @Transactional
     public void limparFila() {
-        // Remove todos os pendentes (tempoLimite = 0 remove tudo)
         int removidos = pedidoPendenteRepository.removerExpirados(0);
         log.info("Fila de pedidos limpa - {} pedidos removidos", removidos);
     }

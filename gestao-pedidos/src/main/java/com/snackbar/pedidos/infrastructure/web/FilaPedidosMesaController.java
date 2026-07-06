@@ -115,7 +115,7 @@ public class FilaPedidosMesaController {
      */
     @GetMapping("/{pedidoId}")
     public ResponseEntity<PedidoPendenteDTO> buscarPedidoPendente(@PathVariable String pedidoId) {
-        return filaPedidosMesa.buscarPorId(pedidoId)
+        return filaPedidosMesa.buscarVisivelPorId(pedidoId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }

@@ -23,7 +23,7 @@ public class RejeitarPedidoMesaUseCase {
             throw new ValidationException("ID do pedido pendente é obrigatório");
         }
 
-        PedidoPendenteDTO pedidoPendente = filaPedidosMesa.buscarPorId(pedidoPendenteId)
+        PedidoPendenteDTO pedidoPendente = filaPedidosMesa.buscarVisivelPorId(pedidoPendenteId)
                 .orElseThrow(() -> new ValidationException(
                         "Pedido pendente não encontrado ou já foi processado: " + pedidoPendenteId));
 
