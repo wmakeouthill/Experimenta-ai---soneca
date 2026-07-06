@@ -1,0 +1,234 @@
+/* Perfil do cliente — pedido-mesa */
+
+.aba-perfil {
+  padding: 32px 20px 120px;
+  max-width: 520px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.perfil-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 22px;
+}
+
+.perfil-avatar {
+  width: 80px;
+  height: 80px;
+  background: var(--delivery-gradient-primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  color: #ffffff;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.perfil-nome {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--delivery-text, #241c15);
+  margin: 0 0 3px;
+}
+
+.perfil-telefone {
+  font-size: 13.5px;
+  color: var(--delivery-text-muted, #9c8f86);
+  margin: 0;
+}
+
+.perfil-email {
+  font-size: 13px;
+  color: var(--delivery-text-muted, #9c8f86);
+  margin: 4px 0 0;
+}
+
+.perfil-menu {
+  background: var(--delivery-surface, #ffffff);
+  border-radius: var(--delivery-radius-lg, 18px);
+  overflow: hidden;
+  box-shadow: var(--delivery-shadow-md);
+}
+
+.perfil-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 16px;
+  background: var(--delivery-surface, #ffffff);
+  border: none;
+  border-bottom: 1px solid var(--delivery-border-light, #f5ede6);
+  cursor: pointer;
+  transition: background 0.2s;
+  text-align: left;
+  font-family: inherit;
+}
+
+.perfil-item:last-child {
+  border-bottom: none;
+}
+
+.perfil-item:active:not(.disabled):not(.instalar-instrucao) {
+  background: #fafaf8;
+}
+
+.perfil-item.sair {
+  background: #fff5f4;
+}
+
+.perfil-item.sair .item-texto {
+  color: var(--delivery-error, #e5483a);
+}
+
+.perfil-item.sair .item-icon {
+  color: var(--delivery-error, #e5483a);
+}
+
+.perfil-item.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.item-icon {
+  flex-shrink: 0;
+  width: 19px;
+  height: 19px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--delivery-primary, #ff6b35);
+  margin-right: 0;
+  font-size: inherit;
+}
+
+.item-texto {
+  flex: 1;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--delivery-text, #241c15);
+}
+
+.item-arrow {
+  flex-shrink: 0;
+  color: var(--delivery-text-dim, #b8a99c);
+  display: flex;
+  align-items: center;
+}
+
+.item-count,
+.item-badge {
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 10px;
+  margin-right: 2px;
+}
+
+.item-badge.telefone {
+  background: var(--delivery-accent-pill, #fff1e9);
+  color: var(--delivery-primary, #ff6b35);
+}
+
+.item-count {
+  background: var(--delivery-primary, #ff6b35);
+  color: #ffffff;
+}
+
+.item-badge.destaque {
+  background: var(--delivery-gradient-primary);
+  color: #ffffff;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 8px;
+}
+
+.item-badge.vinculado {
+  background: #e8f5e9;
+  color: #4caf50;
+}
+
+.perfil-item.instalar-instrucao {
+  background: #fff7ed;
+  cursor: default;
+}
+
+.perfil-item .item-icon svg {
+  display: block;
+}
+
+.perfil-item.instalar {
+  background: linear-gradient(to right, #fff7ed, #ffedd5);
+}
+
+.perfil-item.google-vincular,
+.perfil-item.google-vinculado {
+  background: #fafaf8;
+}
+
+.perfil-item.google-vincular:active:not(:disabled) {
+  background: #f0f0f0;
+}
+
+.perfil-item.pwa-instalar:active {
+  background: #ffe9df;
+}
+
+
+.perfil-info {
+  text-align: center;
+  color: var(--delivery-text-muted, #9c8f86);
+  font-size: 13px;
+  margin-top: 16px;
+}
+
+.secao-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px;
+  background: var(--delivery-surface, #ffffff);
+  border-bottom: 1px solid var(--delivery-border, #f0e6de);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  margin: -32px -20px 1rem;
+}
+
+.secao-header .btn-voltar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--delivery-border, #f0e6de);
+  background: var(--delivery-surface, #ffffff);
+  color: var(--delivery-text-secondary, #6b5d53);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  font-size: inherit;
+}
+
+.secao-titulo {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--delivery-text, #241c15);
+  margin: 0;
+  flex: 1;
+}

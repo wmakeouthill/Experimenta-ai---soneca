@@ -1,0 +1,102 @@
+/* Bloqueio loja fechada/pausada — pedido-mesa e totem */
+
+.bloqueio-screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 40px 28px;
+  background: linear-gradient(170deg, #fff3ec 0%, var(--delivery-bg, #fbf7f4) 55%);
+  text-align: center;
+  z-index: 9999;
+}
+
+.bloqueio-content {
+  text-align: center;
+  max-width: 400px;
+  width: 100%;
+}
+
+.bloqueio-icon-wrap {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: var(--delivery-surface, #ffffff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12px 30px rgba(36, 20, 10, 0.1);
+  margin: 0 auto 14px;
+  color: var(--delivery-primary, #ff6b35);
+}
+
+.bloqueio-titulo {
+  margin: 0 0 10px;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--delivery-text, #241c15);
+}
+
+.bloqueio-mensagem {
+  margin: 0 0 22px;
+  font-size: 15px;
+  color: var(--delivery-text-secondary, #6b5d53);
+  line-height: 1.55;
+  max-width: 340px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.bloqueio-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  background: var(--delivery-accent-pill, #fff1e9);
+  border-radius: 100px;
+  margin-bottom: 26px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #b4501f;
+}
+
+.bloqueio-info svg {
+  flex-shrink: 0;
+  color: var(--delivery-primary, #ff6b35);
+}
+
+.bloqueio-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  color: var(--delivery-text-muted, #9c8f86);
+}
+
+.btn-verificar-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 15px 28px;
+  background: var(--delivery-surface, #ffffff);
+  color: var(--delivery-primary, #ff6b35);
+  border: 1.5px solid var(--delivery-primary, #ff6b35);
+  border-radius: var(--delivery-radius-sm, 14px);
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: auto;
+  max-width: none;
+}
+
+.btn-verificar-status:hover {
+  background: var(--delivery-accent-pill, #fff1e9);
+  transform: none;
+  box-shadow: none;
+}

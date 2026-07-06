@@ -1,0 +1,241 @@
+/* Extensões delivery para totem — início, cardápio e carrinho */
+
+/* Botões (compartilhados com mesa) */
+.btn-primary {
+  background: var(--delivery-gradient-primary);
+  color: #ffffff;
+  border: none;
+  padding: 15px 1.5rem;
+  border-radius: var(--delivery-radius-sm, 14px);
+  font-size: 14.5px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: var(--delivery-shadow-lg);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary.btn-large {
+  width: 100%;
+  padding: 16px 1.5rem;
+  font-size: 15px;
+}
+
+.btn-secondary {
+  background: var(--delivery-surface, #ffffff);
+  color: var(--delivery-text, #241c15);
+  border: 1.5px solid var(--delivery-border, #f0e6de);
+  padding: 15px 1.5rem;
+  border-radius: var(--delivery-radius-sm, 14px);
+  font-size: 14.5px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #fafaf8;
+  border-color: var(--delivery-primary, #ff6b35);
+}
+
+.inicio-cta {
+  padding: 8px 0 0;
+}
+
+.btn-ver-cardapio {
+  width: 100%;
+}
+
+.carrossel-loading {
+  text-align: center;
+  padding: 1.5rem;
+  color: var(--delivery-text-muted, #9c8f86);
+  font-size: 14px;
+}
+
+.loading-spinner-mini {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--delivery-border, #f0e6de);
+  border-top-color: var(--delivery-primary, #ff6b35);
+  border-radius: 50%;
+  animation: totem-spin 1s linear infinite;
+}
+
+@keyframes totem-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.produto-pedidos,
+.produto-avaliacao {
+  font-size: 11px;
+  color: var(--delivery-text-muted, #9c8f86);
+  font-weight: 600;
+}
+
+/* Carrinho totem — footer acima da nav maior */
+.autoatendimento-container .aba-carrinho {
+  padding-bottom: calc(var(--delivery-footer-height-totem, 92px) + 150px);
+}
+
+.autoatendimento-container .aba-carrinho .carrinho-footer {
+  bottom: var(--delivery-footer-height-totem, 92px);
+}
+
+/* Item com imagem (específico do totem) */
+.carrinho-item--totem {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.carrinho-item--totem .item-controls {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.item-imagem-carrinho {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--delivery-radius-sm, 14px);
+  overflow: hidden;
+  background: var(--delivery-placeholder-bg, #f5ede6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--delivery-text-dim, #b8a99c);
+  font-size: 1.4rem;
+}
+
+.item-imagem-carrinho img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.item-preco-unitario {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--delivery-text-muted, #9c8f86);
+}
+
+.carrinho-item--totem .item-adicionais {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.carrinho-item--totem .item-adicionais span {
+  background: var(--delivery-accent-pill, #fff1e9);
+  color: #b4501f;
+  border-radius: 8px;
+  padding: 2px 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.carrinho-item--totem .item-preco {
+  margin-left: auto;
+  font-size: 14px;
+}
+
+.btn-remover-item {
+  border: none;
+  background: transparent;
+  color: var(--delivery-text-muted, #9c8f86);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 4px 6px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.btn-remover-item:active {
+  color: var(--delivery-error, #e5483a);
+}
+
+/* Identificação opcional no carrinho */
+.identificacao-cliente {
+  margin: 8px 20px 16px;
+  padding: 14px;
+  background: var(--delivery-surface, #ffffff);
+  border-radius: var(--delivery-radius-md, 16px);
+  box-shadow: var(--delivery-shadow-sm);
+}
+
+.identificacao-cliente label {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--delivery-text-secondary, #6b5d53);
+  margin-bottom: 8px;
+}
+
+.identificacao-cliente input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--delivery-border, #f0e6de);
+  border-radius: var(--delivery-radius-sm, 14px);
+  font-size: 15px;
+  font-family: inherit;
+  background: var(--delivery-input-bg, #fbf7f4);
+  color: var(--delivery-text, #241c15);
+  box-sizing: border-box;
+}
+
+.identificacao-cliente input:focus {
+  outline: none;
+  border-color: var(--delivery-primary, #ff6b35);
+}
+
+/* Totem: alvos de toque maiores */
+.autoatendimento-container .quantidade-mini button {
+  width: 34px;
+  height: 34px;
+}
+
+.autoatendimento-container .produtos-container {
+  padding-bottom: calc(var(--delivery-footer-height-totem, 92px) + 48px);
+}
+
+@media (min-width: 768px) {
+  .aba-inicio,
+  .aba-carrinho {
+    max-width: 720px;
+  }
+
+  .produto-card-mini {
+    width: 140px;
+  }
+
+  .autoatendimento-container .aba-carrinho .carrinho-footer {
+    left: 50%;
+    right: auto;
+    width: min(720px, 100%);
+    transform: translateX(-50%);
+  }
+}

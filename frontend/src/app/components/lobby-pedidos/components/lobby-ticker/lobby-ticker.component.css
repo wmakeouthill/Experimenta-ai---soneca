@@ -1,0 +1,50 @@
+.lobby-ticker {
+  flex-shrink: 0;
+  height: 60px;
+  display: flex;
+  align-items: stretch;
+  background: var(--lobby-ticker-bg);
+  border-top: 1px solid var(--lobby-panel-border);
+  position: relative;
+  z-index: 2;
+}
+
+.lobby-ticker__label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 26px;
+  background: linear-gradient(135deg, #e8b84b, #d9963a);
+  flex-shrink: 0;
+  box-shadow: 4px 0 18px rgba(217, 150, 58, 0.35);
+  color: #3a1f05;
+}
+
+.lobby-ticker__label span {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.lobby-ticker__track {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.lobby-ticker__marquee {
+  display: flex;
+  white-space: nowrap;
+  animation: lobby-marquee 26s linear infinite;
+}
+
+.lobby-ticker__marquee span {
+  display: inline-flex;
+  align-items: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--lobby-ticker-text);
+  padding-left: 30px;
+}

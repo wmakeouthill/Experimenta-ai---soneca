@@ -87,11 +87,13 @@ interface TotemApi {
   templateUrl: './autoatendimento.component.html',
   styleUrls: [
     './styles/base.css',
-    './styles/cardapio.css',
     './styles/modal.css',
-    './styles/carrinho.css',
     './styles/pagamento.css',
-    './styles/abas.css',
+    '../pedido-cliente-mesa/styles/delivery-inicio-carrinho-tab.css',
+    '../pedido-cliente-mesa/styles/cardapio.css',
+    './styles/totem-delivery-extensions.css',
+    '../../../styles/delivery-bloqueio.css',
+    '../../../styles/delivery-totem-header.css',
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

@@ -9,28 +9,49 @@
             <p>Verificando disponibilidade...</p>
           </div>
         } @else if (statusLoja() === 'FECHADA') {
-          <div class="bloqueio-icon">🏪</div>
+          <div class="bloqueio-icon-wrap" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="42" height="42" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9h18v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9z" />
+              <path d="M3 9l2-5h14l2 5" />
+              <path d="M10 13h4" />
+            </svg>
+          </div>
           <h1 class="bloqueio-titulo">Loja Fechada</h1>
           <p class="bloqueio-mensagem">
             {{ mensagemStatusLoja() || 'Estamos fechados no momento. Volte em breve!' }}
           </p>
           <div class="bloqueio-info">
-            <span>🕐</span>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 7v5l3 2" />
+            </svg>
             <span>Fique atento aos nossos horários de funcionamento</span>
           </div>
         } @else if (statusLoja() === 'PAUSADA') {
-          <div class="bloqueio-icon">⏸️</div>
+          <div class="bloqueio-icon-wrap" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="42" height="42" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M10 8v8M14 8v8" />
+            </svg>
+          </div>
           <h1 class="bloqueio-titulo">Temporariamente Indisponível</h1>
           <p class="bloqueio-mensagem">
             {{ mensagemStatusLoja() || 'Estamos com alta demanda. Aguarde um momento!' }}
           </p>
           <div class="bloqueio-info">
-            <span>⏳</span>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M6 2v6M18 2v6" />
+              <path d="M4 8h16v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V8z" />
+            </svg>
             <span>Voltamos em breve!</span>
           </div>
         }
         <button class="btn-verificar-status" (click)="verificarStatusLoja()">
-          🔄 Verificar novamente
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+            <path d="M21 3v6h-6" />
+          </svg>
+          Verificar novamente
         </button>
       </div>
     </div>
@@ -198,7 +219,8 @@
           </div>
         </div>
       }
-      <!-- Header fixo -->
+      <!-- Header fixo (oculto na aba cardápio — protótipo usa só chips) -->
+      @if (abaAtual() !== 'cardapio') {
       <header class="header-cliente">
         <div class="header-content">
           <img src="/assets/experimenta_ai_banner_circular.webp" alt="Logo" class="logo-mini" />
@@ -210,6 +232,7 @@
           </div>
         </div>
       </header>
+      }
 
       <!-- Carregando cardápio -->
       @if (cardapio.carregando()) {
@@ -223,13 +246,13 @@
           <div class="aba-inicio">
             <!-- Bem-vindo -->
             <div class="inicio-welcome">
-              <h2>Olá, {{ identificacao.clienteIdentificado()!.nome.split(' ')[0] }}! 👋</h2>
+              <h2>Olá, {{ identificacao.clienteIdentificado()!.nome.split(' ')[0] }}!</h2>
               <p>O que você deseja pedir hoje?</p>
             </div>
 
             <!-- Destaques / Mais Populares -->
             <div class="inicio-section">
-              <h2 class="section-titulo">🔥 Mais Populares</h2>
+              <h2 class="section-titulo">Mais pedidos</h2>
               @if (inicio.carregando()) {
                 <div class="carrossel-loading">Carregando...</div>
               } @else if (inicio.produtosMaisPedidos().length > 0) {
@@ -435,8 +458,13 @@
 
             <!-- Ver Cardápio Completo -->
             <div class="inicio-cta">
-              <button class="btn-primary btn-large" (click)="navegarPara('cardapio')">
-                📋 Ver Cardápio Completo
+              <button class="btn-primary btn-large btn-ver-cardapio" (click)="navegarPara('cardapio')">
+                <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="5" y="4" width="14" height="17" rx="2" />
+                  <path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1" />
+                  <path d="M8 10h8M8 14h8M8 18h5" />
+                </svg>
+                Ver cardápio completo
               </button>
             </div>
           </div>
@@ -451,7 +479,7 @@
               [class.ativa]="cardapio.categoriaSelecionada() === null"
               (click)="cardapio.selecionarCategoria(null)"
             >
-              🍽️ Todos
+              Todos
             </button>
             @for (categoria of cardapio.categorias(); track categoria.id) {
               <button
@@ -488,27 +516,33 @@
                           @if (produto.descricao) {
                             <p class="produto-descricao">{{ produto.descricao }}</p>
                           }
-                          <div class="produto-preco">{{ formatarPreco(produto.preco) }}</div>
-                          <div class="produto-acoes">
-                            <button
-                              class="btn-favorito btn-favorito-inline"
-                              [class.ativo]="favoritos.isFavorito(produto.id)"
-                              (click)="toggleFavorito(produto.id, $event)"
-                              [title]="
-                                favoritos.isFavorito(produto.id)
-                                  ? 'Remover dos favoritos'
-                                  : 'Adicionar aos favoritos'
-                              "
-                            >
-                              {{ favoritos.isFavorito(produto.id) ? '❤️' : '🤍' }}
-                            </button>
-                            <button
-                              class="btn-adicionar"
-                              (click)="adicionarAoCarrinhoRapido(produto); $event.stopPropagation()"
-                              aria-label="Adicionar ao carrinho"
-                            >
-                              +
-                            </button>
+                          <div class="produto-card-footer">
+                            <div class="produto-preco">{{ formatarPreco(produto.preco) }}</div>
+                            <div class="produto-acoes">
+                              <button
+                                class="btn-favorito btn-favorito-inline"
+                                [class.ativo]="favoritos.isFavorito(produto.id)"
+                                (click)="toggleFavorito(produto.id, $event)"
+                                [title]="
+                                  favoritos.isFavorito(produto.id)
+                                    ? 'Remover dos favoritos'
+                                    : 'Adicionar aos favoritos'
+                                "
+                              >
+                                <svg viewBox="0 0 24 24" width="16" height="16" [attr.fill]="favoritos.isFavorito(produto.id) ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                  <path d="M12 20.5s-7.5-4.6-10-9.4C.5 7.8 2 4.5 5.3 4a4.8 4.8 0 0 1 6.7 1.7A4.8 4.8 0 0 1 18.7 4C22 4.5 23.5 7.8 22 11.1c-2.5 4.8-10 9.4-10 9.4Z" />
+                                </svg>
+                              </button>
+                              <button
+                                class="btn-adicionar"
+                                (click)="adicionarAoCarrinhoRapido(produto); $event.stopPropagation()"
+                                aria-label="Adicionar ao carrinho"
+                              >
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                  <path d="M12 5v14M5 12h14" />
+                                </svg>
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -539,27 +573,33 @@
                       @if (produto.descricao) {
                         <p class="produto-descricao">{{ produto.descricao }}</p>
                       }
-                      <div class="produto-preco">{{ formatarPreco(produto.preco) }}</div>
-                      <div class="produto-acoes">
-                        <button
-                          class="btn-favorito btn-favorito-inline"
-                          [class.ativo]="favoritos.isFavorito(produto.id)"
-                          (click)="toggleFavorito(produto.id, $event)"
-                          [title]="
-                            favoritos.isFavorito(produto.id)
-                              ? 'Remover dos favoritos'
-                              : 'Adicionar aos favoritos'
-                          "
-                        >
-                          {{ favoritos.isFavorito(produto.id) ? '❤️' : '🤍' }}
-                        </button>
-                        <button
-                          class="btn-adicionar"
-                          (click)="adicionarAoCarrinhoRapido(produto); $event.stopPropagation()"
-                          aria-label="Adicionar ao carrinho"
-                        >
-                          +
-                        </button>
+                      <div class="produto-card-footer">
+                        <div class="produto-preco">{{ formatarPreco(produto.preco) }}</div>
+                        <div class="produto-acoes">
+                          <button
+                            class="btn-favorito btn-favorito-inline"
+                            [class.ativo]="favoritos.isFavorito(produto.id)"
+                            (click)="toggleFavorito(produto.id, $event)"
+                            [title]="
+                              favoritos.isFavorito(produto.id)
+                                ? 'Remover dos favoritos'
+                                : 'Adicionar aos favoritos'
+                            "
+                          >
+                            <svg viewBox="0 0 24 24" width="16" height="16" [attr.fill]="favoritos.isFavorito(produto.id) ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                              <path d="M12 20.5s-7.5-4.6-10-9.4C.5 7.8 2 4.5 5.3 4a4.8 4.8 0 0 1 6.7 1.7A4.8 4.8 0 0 1 18.7 4C22 4.5 23.5 7.8 22 11.1c-2.5 4.8-10 9.4-10 9.4Z" />
+                            </svg>
+                          </button>
+                          <button
+                            class="btn-adicionar"
+                            (click)="adicionarAoCarrinhoRapido(produto); $event.stopPropagation()"
+                            aria-label="Adicionar ao carrinho"
+                          >
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                              <path d="M12 5v14M5 12h14" />
+                            </svg>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -577,13 +617,19 @@
         <!-- ========== ABA: CARRINHO ========== -->
         @if (abaAtual() === 'carrinho') {
           <div class="aba-carrinho">
-            <div class="aba-header">
-              <h2>🛒 Seu Carrinho</h2>
+            <div class="carrinho-page-header">
+              <h2>Seu carrinho</h2>
             </div>
 
             @if (carrinho.itens().length === 0) {
               <div class="carrinho-vazio">
-                <span class="vazio-icon">🛒</span>
+                <span class="vazio-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="9" cy="20" r="1.4" />
+                    <circle cx="18" cy="20" r="1.4" />
+                    <path d="M2.5 3h2l2.2 11.4a2 2 0 0 0 2 1.6h8.3a2 2 0 0 0 2-1.6L21 7H6" />
+                  </svg>
+                </span>
                 <p>Seu carrinho está vazio</p>
                 <button class="btn-secondary" (click)="navegarPara('cardapio')">
                   Ver cardápio
@@ -599,18 +645,20 @@
                         <p class="item-adicionais">+ {{ formatarAdicionais(item.adicionais) }}</p>
                       }
                       @if (item.observacao) {
-                        <p class="item-obs">📝 {{ item.observacao }}</p>
+                        <p class="item-obs">{{ item.observacao }}</p>
                       }
+                      <span class="item-preco">{{ calcularTotalItemCarrinho(item) | currency: 'BRL' }}</span>
                     </div>
                     <div class="item-controls">
                       <div class="quantidade-mini">
-                        <button (click)="carrinho.alterarQuantidade(item.produto.id, -1)">−</button>
+                        <button type="button" (click)="carrinho.alterarQuantidade(item.produto.id, -1)" aria-label="Diminuir quantidade">
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14" /></svg>
+                        </button>
                         <span>{{ item.quantidade }}</span>
-                        <button (click)="carrinho.alterarQuantidade(item.produto.id, 1)">+</button>
+                        <button type="button" (click)="carrinho.alterarQuantidade(item.produto.id, 1)" aria-label="Aumentar quantidade">
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+                        </button>
                       </div>
-                      <span class="item-preco">{{
-                        calcularTotalItemCarrinho(item) | currency: 'BRL'
-                      }}</span>
                     </div>
                   </div>
                 }
@@ -622,7 +670,7 @@
                   <span class="total-valor">{{ carrinho.totalValor() | currency: 'BRL' }}</span>
                 </div>
                 <button class="btn-primary btn-large" (click)="irParaEtapaPagamento()">
-                  Continuar →
+                  Continuar
                 </button>
               </div>
             }
@@ -650,7 +698,12 @@
                       (error)="onImageError($event)"
                     />
                   } @else {
-                    <span class="avatar-placeholder">👤</span>
+                    <span class="avatar-placeholder" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="8" r="4" />
+                        <path d="M5 20a7 7 0 0 1 14 0" />
+                      </svg>
+                    </span>
                   }
                 </div>
                 <h2 class="perfil-nome">{{ identificacao.clienteIdentificado()!.nome }}</h2>
@@ -667,7 +720,12 @@
               <div class="perfil-menu">
                 <!-- Adicionar/Editar Celular -->
                 <button class="perfil-item" (click)="secaoPerfil.set('celular')">
-                  <span class="item-icon">📱</span>
+                  <span class="item-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="7" y="2" width="10" height="20" rx="2" />
+                      <path d="M11 18h2" />
+                    </svg>
+                  </span>
                   <span class="item-texto">
                     @if (googleAuth.clienteAuth.cliente()?.telefone) {
                       Meu celular
@@ -680,24 +738,40 @@
                       googleAuth.clienteAuth.cliente()!.telefone
                     }}</span>
                   }
-                  <span class="item-arrow">›</span>
+                  <span class="item-arrow" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6" /></svg>
+                  </span>
                 </button>
 
                 <!-- Meus Pedidos -->
                 <button class="perfil-item" (click)="irParaMeusPedidos()">
-                  <span class="item-icon">📋</span>
+                  <span class="item-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+                      <rect x="9" y="3" width="6" height="4" rx="1" />
+                      <path d="M9 12h6M9 16h4" />
+                    </svg>
+                  </span>
                   <span class="item-texto">Meus Pedidos</span>
-                  <span class="item-arrow">›</span>
+                  <span class="item-arrow" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6" /></svg>
+                  </span>
                 </button>
 
                 <!-- Favoritos -->
                 <button class="perfil-item" (click)="secaoPerfil.set('favoritos')">
-                  <span class="item-icon">❤️</span>
+                  <span class="item-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 20.5 10.1 18.7C5.4 14.4 2.5 11.7 2.5 8.3A4.8 4.8 0 0 1 7.3 3.5c1.5 0 2.9.7 3.7 1.8.8-1.1 2.2-1.8 3.7-1.8A4.8 4.8 0 0 1 21.5 8.3c0 3.4-2.9 6.1-7.6 10.4L12 20.5z" />
+                    </svg>
+                  </span>
                   <span class="item-texto">Favoritos</span>
                   @if (favoritos.produtosFavoritos().length > 0) {
                     <span class="item-count">{{ favoritos.produtosFavoritos().length }}</span>
                   }
-                  <span class="item-arrow">›</span>
+                  <span class="item-arrow" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6" /></svg>
+                  </span>
                 </button>
 
                 <!-- Vincular/Desvincular Google -->
@@ -753,13 +827,20 @@
                       </svg>
                     </span>
                     <span class="item-texto">Vincular com Google</span>
-                    <span class="item-arrow">›</span>
+                    <span class="item-arrow" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6" /></svg>
+                    </span>
                   </button>
                 }
 
                 <!-- Criar/Alterar Senha -->
                 <button class="perfil-item" (click)="secaoPerfil.set('senha')">
-                  <span class="item-icon">🔒</span>
+                  <span class="item-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="5" y="11" width="14" height="10" rx="2" />
+                      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+                    </svg>
+                  </span>
                   <span class="item-texto">
                     @if (identificacao.clienteIdentificado()?.temSenha) {
                       Alterar Senha
@@ -767,29 +848,53 @@
                       Criar Senha
                     }
                   </span>
-                  <span class="item-arrow">›</span>
+                  <span class="item-arrow" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6" /></svg>
+                  </span>
                 </button>
 
                 <!-- Instalar App (só aparece quando no navegador, não no PWA instalado) -->
                 @if (!isStandalone() && pwaPromptDisponivel()) {
                   <button class="perfil-item instalar" (click)="instalarPwa($event)">
-                    <span class="item-icon">📲</span>
+                    <span class="item-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 3v10" />
+                        <path d="m8 9 4 4 4-4" />
+                        <path d="M5 20h14" />
+                      </svg>
+                    </span>
                     <span class="item-texto">Instalar o App</span>
                     <span class="item-badge destaque">Recomendado</span>
-                    <span class="item-arrow">›</span>
+                    <span class="item-arrow" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6" /></svg>
+                    </span>
                   </button>
                 } @else if (!isStandalone() && pwaInstrucao()) {
                   <div class="perfil-item instalar-instrucao">
-                    <span class="item-icon">📲</span>
+                    <span class="item-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 3v10" />
+                        <path d="m8 9 4 4 4-4" />
+                        <path d="M5 20h14" />
+                      </svg>
+                    </span>
                     <span class="item-texto">{{ pwaInstrucao() }}</span>
                   </div>
                 }
 
                 <!-- Trocar conta / Sair -->
                 <button class="perfil-item sair" (click)="trocarCliente()">
-                  <span class="item-icon">🚪</span>
+                  <span class="item-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M10 17l5-5-5-5" />
+                      <path d="M15 12H4" />
+                      <path d="M20 4v16" />
+                    </svg>
+                  </span>
                   <span class="item-texto">Sair da conta</span>
-                  <span class="item-arrow">›</span>
+                  <span class="item-arrow" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6" /></svg>
+                  </span>
                 </button>
               </div>
 
@@ -803,8 +908,8 @@
             <!-- Seção Favoritos -->
             @if (secaoPerfil() === 'favoritos') {
               <div class="secao-header">
-                <button class="btn-voltar" (click)="secaoPerfil.set('principal')">
-                  <span>‹</span>
+                <button class="btn-voltar" (click)="secaoPerfil.set('principal')" aria-label="Voltar">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6" /></svg>
                 </button>
                 <h2 class="secao-titulo">Favoritos</h2>
               </div>
@@ -850,8 +955,8 @@
             <!-- Seção Meus Pedidos -->
             @if (secaoPerfil() === 'pedidos') {
               <div class="secao-header">
-                <button class="btn-voltar" (click)="secaoPerfil.set('principal')">
-                  <span>‹</span>
+                <button class="btn-voltar" (click)="secaoPerfil.set('principal')" aria-label="Voltar">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6" /></svg>
                 </button>
                 <h2 class="secao-titulo">Meus Pedidos</h2>
               </div>
@@ -1181,8 +1286,8 @@
             <!-- Seção Criar/Alterar Senha -->
             @if (secaoPerfil() === 'senha') {
               <div class="secao-header">
-                <button class="btn-voltar" (click)="secaoPerfil.set('principal')">
-                  <span>‹</span>
+                <button class="btn-voltar" (click)="secaoPerfil.set('principal')" aria-label="Voltar">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6" /></svg>
                 </button>
                 <h2 class="secao-titulo">
                   @if (identificacao.clienteIdentificado()?.temSenha) {
@@ -1259,8 +1364,8 @@
             <!-- Seção Adicionar/Editar Celular -->
             @if (secaoPerfil() === 'celular') {
               <div class="secao-header">
-                <button class="btn-voltar" (click)="secaoPerfil.set('principal')">
-                  <span>‹</span>
+                <button class="btn-voltar" (click)="secaoPerfil.set('principal')" aria-label="Voltar">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6" /></svg>
                 </button>
                 <h2 class="secao-titulo">
                   @if (googleAuth.clienteAuth.cliente()?.telefone) {

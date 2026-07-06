@@ -3,13 +3,14 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { StatusPedido, Pedido } from '../../services/pedido.service';
 import { useLobbyPedidos } from './composables/use-lobby-pedidos';
 import { useAnimations } from './composables/use-animations';
-import { SurferAnimationComponent } from './components/surfer-animation/surfer-animation.component';
-import { FullscreenAnimationComponent } from './components/fullscreen-animation/fullscreen-animation.component';
 import { OrderListComponent } from './components/order-list/order-list.component';
 import { LobbyHeaderComponent } from './components/header/header.component';
+import { LobbyTickerComponent } from './components/lobby-ticker/lobby-ticker.component';
+import { LobbyInterludeComponent } from './components/lobby-interlude/lobby-interlude.component';
 import { ConfigAnimacaoModalComponent, ConfigAnimacao } from './components/config-animacao-modal/config-animacao-modal.component';
 import { ConfigAnimacaoService } from '../../services/config-animacao.service';
 import { AuthService } from '../../services/auth.service';
+import { LobbyPiso, LobbyTema } from './models/lobby-ui.types';
 
 @Component({
   selector: 'app-lobby-pedidos',
@@ -17,10 +18,10 @@ import { AuthService } from '../../services/auth.service';
   imports: [
     CommonModule,
     LobbyHeaderComponent,
-    SurferAnimationComponent,
-    FullscreenAnimationComponent,
+    LobbyInterludeComponent,
     OrderListComponent,
-    ConfigAnimacaoModalComponent
+    LobbyTickerComponent,
+    ConfigAnimacaoModalComponent,
   ],
   templateUrl: './lobby-pedidos.component.html',
   styleUrl: './lobby-pedidos.component.css',
@@ -39,15 +40,23 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
   readonly animations = useAnimations();
 
   readonly isAnimating = computed(() => this.animations.isAnimating());
+  readonly mostrarInterludio = computed(() => this.animations.mostrarInterludio());
   readonly mostrarConfigModal = signal<boolean>(false);
+  readonly tema = signal<LobbyTema>('escuro');
+  readonly piso = signal<LobbyPiso>('terreo');
   readonly isAdministrador = this.authService.isAdministrador;
+  readonly horaAtual = signal(this.formatarHora(new Date()));
+  readonly relogioMs = signal(Date.now());
 
   // Expor StatusPedido para o template
   readonly StatusPedido = StatusPedido;
 
-  private pollingInterval: any = null;
+  private pollingInterval: ReturnType<typeof setInterval> | null = null;
   private readonly intervaloPolling = 3000; // 3 segundos
-  private animacaoPeriodicaInterval: any = null;
+  private animacaoPeriodicaInterval: ReturnType<typeof setInterval> | null = null;
+  private relogioInterval: ReturnType<typeof setInterval> | null = null;
+  private readonly storageTemaKey = 'lobby-tema';
+  private readonly storagePisoKey = 'lobby-piso';
 
   private get isBrowser(): boolean {
     return isPlatformBrowser(this.platformId);
@@ -78,7 +87,57 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
       this.iniciarPolling();
       this.carregarConfigAnimacao();
       this.iniciarAnimacaoPeriodica();
+      this.iniciarRelogio();
+      this.carregarPreferenciasUi();
     });
+  }
+
+  private carregarPreferenciasUi(): void {
+    if (!this.isBrowser) return;
+
+    const temaSalvo = localStorage.getItem(this.storageTemaKey);
+    if (temaSalvo === 'claro' || temaSalvo === 'escuro') {
+      this.tema.set(temaSalvo);
+    }
+
+    const pisoSalvo = localStorage.getItem(this.storagePisoKey);
+    if (pisoSalvo === 'terreo' || pisoSalvo === 'andar') {
+      this.piso.set(pisoSalvo);
+    }
+  }
+
+  private persistirTema(valor: LobbyTema): void {
+    if (this.isBrowser) {
+      localStorage.setItem(this.storageTemaKey, valor);
+    }
+  }
+
+  private persistirPiso(valor: LobbyPiso): void {
+    if (this.isBrowser) {
+      localStorage.setItem(this.storagePisoKey, valor);
+    }
+  }
+
+  private iniciarRelogio(): void {
+    this.ngZone.runOutsideAngular(() => {
+      this.relogioInterval = setInterval(() => {
+        this.ngZone.run(() => {
+          const agora = new Date();
+          this.horaAtual.set(this.formatarHora(agora));
+          this.relogioMs.set(agora.getTime());
+        });
+      }, 1000);
+    });
+    this.horaAtual.set(this.formatarHora(new Date()));
+    this.relogioMs.set(Date.now());
+  }
+
+  private formatarHora(data: Date): string {
+    return `${this.pad2(data.getHours())}:${this.pad2(data.getMinutes())}`;
+  }
+
+  private pad2(valor: number): string {
+    return valor < 10 ? `0${valor}` : `${valor}`;
   }
 
   ngOnInit() {
@@ -108,6 +167,9 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
     }
     if (this.animacaoPeriodicaInterval) {
       clearInterval(this.animacaoPeriodicaInterval);
+    }
+    if (this.relogioInterval) {
+      clearInterval(this.relogioInterval);
     }
   }
 
@@ -149,37 +211,24 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
   }
 
   handleAnimacaoManual() {
-    // Disparar animação manualmente - funciona sempre, mesmo sem pedidos
-    // O botão "Animar" sempre funciona, independente da configuração animacaoAtivada
-    const pedidos = this.lobbyPedidos.pedidos();
-    const pedidosPreparando = pedidos.filter(p => p.status === StatusPedido.PREPARANDO);
-    const pedidosPronto = pedidos.filter(p => p.status === StatusPedido.PRONTO);
+    if (this.mostrarInterludio()) return;
+    this.animations.abrirInterludio();
+  }
 
-    if (pedidosPreparando.length > 0 && pedidosPronto.length > 0) {
-      // Animar o primeiro pedido pronto
-      const pedidoPronto = pedidosPronto[0];
-      this.animations.animarTransicaoStatus(
-        pedidoPronto,
-        StatusPedido.PREPARANDO,
-        this.animations.animacaoConfig().duracaoAnimacao
-      );
-    } else if (pedidosPreparando.length > 0) {
-      // Se não há pedidos prontos, criar uma animação simulada do primeiro preparando
-      const pedidoPreparando = pedidosPreparando[0];
-      // Simular transição: criar um pedido "fantasma" que vai para pronto
-      const pedidoFantasma: Pedido = {
-        ...pedidoPreparando,
-        status: StatusPedido.PRONTO
-      };
-      this.animations.animarTransicaoStatus(
-        pedidoFantasma,
-        StatusPedido.PREPARANDO,
-        this.animations.animacaoConfig().duracaoAnimacao
-      );
-    } else {
-      // Sem pedidos: animar apenas a tela fullscreen global
-      this.animations.animarGlobal(this.animations.animacaoConfig().duracaoAnimacao);
-    }
+  handleFecharInterludio() {
+    this.animations.fecharInterludio();
+  }
+
+  handleToggleTema() {
+    const proximo: LobbyTema = this.tema() === 'escuro' ? 'claro' : 'escuro';
+    this.tema.set(proximo);
+    this.persistirTema(proximo);
+  }
+
+  handleTogglePiso() {
+    const proximo: LobbyPiso = this.piso() === 'terreo' ? 'andar' : 'terreo';
+    this.piso.set(proximo);
+    this.persistirPiso(proximo);
   }
 
   handleAbrirConfig() {
@@ -250,13 +299,11 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
             return;
           }
 
-          // Não animar se já estiver animando
-          if (this.animations.isAnimating()) {
+          if (this.animations.mostrarInterludio() || this.animations.isAnimating()) {
             return;
           }
 
-          // Disparar animação global
-          this.animations.animarGlobal(configAtual.duracaoAnimacao);
+          this.animations.abrirInterludio();
         });
       }, intervaloMs);
     });
@@ -265,6 +312,10 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
   handleFecharConfig() {
     this.mostrarConfigModal.set(false);
   }
+
+  readonly tickerTexto = computed(() =>
+    '★ Combo Duplo Bacon — só hoje ★ Sobremesa grátis acima de R$ 60 ★ Novo: Milkshake de Paçoca ★ Experimenta aí do Soneca — Peça pelo app e retire com praticidade!'
+  );
 
   readonly configAtual = computed(() => ({
     animacaoAtivada: this.animations.animacaoConfig().animacaoAtivada,

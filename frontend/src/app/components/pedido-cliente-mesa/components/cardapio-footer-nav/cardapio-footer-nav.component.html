@@ -1,21 +1,66 @@
-<nav class="footer-nav">
-    <button class="nav-item" [class.ativo]="abaAtual() === 'inicio'" (click)="abaMudou.emit('inicio')">
-        <span class="nav-icon">🏠</span>
-        <span class="nav-label">Início</span>
-    </button>
-    <button class="nav-item" [class.ativo]="abaAtual() === 'cardapio'" (click)="abaMudou.emit('cardapio')">
-        <span class="nav-icon">📋</span>
-        <span class="nav-label">Cardápio</span>
-    </button>
-    <button class="nav-item carrinho-nav" [class.ativo]="abaAtual() === 'carrinho'" (click)="abaMudou.emit('carrinho')">
-        <span class="nav-icon">🛒</span>
-        @if (temItensCarrinho()) {
-        <span class="carrinho-badge">{{ totalCarrinho() }}</span>
-        }
-        <span class="nav-label">Carrinho</span>
-    </button>
-    <button class="nav-item" [class.ativo]="abaAtual() === 'perfil'" (click)="abaMudou.emit('perfil')">
-        <span class="nav-icon">👤</span>
-        <span class="nav-label">Perfil</span>
-    </button>
+<nav class="delivery-footer-nav delivery-footer-nav--mesa">
+  <button
+    type="button"
+    class="delivery-footer-nav__item"
+    [class.delivery-footer-nav__item--ativo]="abaAtual() === 'inicio'"
+    (click)="abaMudou.emit('inicio')"
+  >
+    <span class="delivery-footer-nav__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 11.5 12 4l8 7.5" />
+        <path d="M6 10v9a1 1 0 0 0 1 1h4v-6h2v6h4a1 1 0 0 0 1-1v-9" />
+      </svg>
+    </span>
+    <span class="delivery-footer-nav__label">Início</span>
+  </button>
+
+  <button
+    type="button"
+    class="delivery-footer-nav__item"
+    [class.delivery-footer-nav__item--ativo]="abaAtual() === 'cardapio'"
+    (click)="abaMudou.emit('cardapio')"
+  >
+    <span class="delivery-footer-nav__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="5" y="4" width="14" height="17" rx="2" />
+        <path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1" />
+        <path d="M8 10h8M8 14h8M8 18h5" />
+      </svg>
+    </span>
+    <span class="delivery-footer-nav__label">Cardápio</span>
+  </button>
+
+  <button
+    type="button"
+    class="delivery-footer-nav__item"
+    [class.delivery-footer-nav__item--ativo]="abaAtual() === 'carrinho'"
+    (click)="abaMudou.emit('carrinho')"
+  >
+    <span class="delivery-footer-nav__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="9" cy="20" r="1.4" />
+        <circle cx="18" cy="20" r="1.4" />
+        <path d="M2.5 3h2l2.2 11.4a2 2 0 0 0 2 1.6h8.3a2 2 0 0 0 2-1.6L21 7H6" />
+      </svg>
+    </span>
+    @if (temItensCarrinho()) {
+      <span class="delivery-footer-nav__badge">{{ totalCarrinho() }}</span>
+    }
+    <span class="delivery-footer-nav__label">Carrinho</span>
+  </button>
+
+  <button
+    type="button"
+    class="delivery-footer-nav__item"
+    [class.delivery-footer-nav__item--ativo]="abaAtual() === 'perfil'"
+    (click)="abaMudou.emit('perfil')"
+  >
+    <span class="delivery-footer-nav__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8" r="3.5" />
+        <path d="M5 20c1.2-3.8 4-5.5 7-5.5s5.8 1.7 7 5.5" />
+      </svg>
+    </span>
+    <span class="delivery-footer-nav__label">Perfil</span>
+  </button>
 </nav>

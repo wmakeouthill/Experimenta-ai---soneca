@@ -366,18 +366,20 @@
 
 .btn-enviar-pedido {
   width: 100%;
-  padding: 1rem;
-  background: #ff6b35;
-  color: white;
+  max-width: 480px;
+  margin: 0 auto;
+  display: block;
+  padding: 16px;
+  background: var(--delivery-gradient-primary);
+  color: #ffffff;
   border: none;
-  border-radius: 10px;
-  font-size: 1rem;
+  border-radius: var(--delivery-radius-sm, 14px);
+  font-size: 15.5px;
   font-weight: 700;
+  font-family: inherit;
   cursor: pointer;
-  transition:
-    opacity 0.2s,
-    transform 0.1s;
-  -webkit-tap-highlight-color: transparent;
+  box-shadow: var(--delivery-shadow-lg);
+  transition: opacity 0.2s, transform 0.1s;
   min-height: 48px;
 }
 

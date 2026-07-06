@@ -1,0 +1,54 @@
+/**
+ * Design tokens — telas delivery (pedido-mesa, totem, lobby).
+ * Referência: Refinamento design telas delivery/
+ */
+:root {
+  --delivery-font: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+
+  --delivery-primary: #ff6b35;
+  --delivery-secondary: #f7931e;
+  --delivery-bg: #fbf7f4;
+  --delivery-surface: #ffffff;
+
+  --delivery-text: #241c15;
+  --delivery-text-secondary: #6b5d53;
+  --delivery-text-muted: #9c8f86;
+  --delivery-text-dim: #b8a99c;
+
+  --delivery-border: #f0e6de;
+  --delivery-border-light: #f5ede6;
+  --delivery-input-bg: #fbf7f4;
+  --delivery-disabled-bg: #f5efe9;
+
+  --delivery-accent-light: #fff3ec;
+  --delivery-accent-pill: #fff1e9;
+  --delivery-error: #e5483a;
+  --delivery-success: #1fa971;
+
+  --delivery-shadow-sm: 0 4px 12px rgba(36, 20, 10, 0.06);
+  --delivery-shadow-md: 0 6px 16px rgba(36, 20, 10, 0.07);
+  --delivery-shadow-lg: 0 10px 22px rgba(255, 107, 53, 0.28);
+  --delivery-shadow-footer: 0 -6px 18px rgba(36, 20, 10, 0.06);
+
+  --delivery-radius-sm: 14px;
+  --delivery-radius-md: 16px;
+  --delivery-radius-lg: 18px;
+  --delivery-radius-xl: 28px;
+
+  --delivery-gradient-primary: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  --delivery-gradient-ident: linear-gradient(180deg, #ff6b35 0%, #f7931e 40%, #fbf7f4 40%);
+  --delivery-gradient-welcome: linear-gradient(135deg, #fff3ec 0%, #ffffff 100%);
+  --delivery-placeholder-bg: repeating-linear-gradient(
+    135deg,
+    #f1e4da,
+    #f1e4da 8px,
+    #fbf7f4 8px,
+    #fbf7f4 16px
+  );
+
+  --delivery-nav-active: #ff6b35;
+  --delivery-nav-inactive: #b8a99c;
+
+  --delivery-footer-height-mesa: 76px;
+  --delivery-footer-height-totem: 92px;
+}

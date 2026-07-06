@@ -1,33 +1,36 @@
+@import '../../../../styles/delivery-design-tokens.css';
+
 /* ========== VARIÁVEIS E RESET ========== */
 :host {
-  --primary-color: #ff6b35;
+  --primary-color: var(--delivery-primary, #ff6b35);
   --primary-hover: #e55a2b;
-  --secondary-color: #2d3436;
-  --background: #f8f9fa;
-  --surface: #ffffff;
-  --text-primary: #2d3436;
-  --text-secondary: #636e72;
-  --border-color: #dfe6e9;
+  --secondary-color: var(--delivery-secondary, #f7931e);
+  --background: var(--delivery-bg, #fbf7f4);
+  --surface: var(--delivery-surface, #ffffff);
+  --text-primary: var(--delivery-text, #241c15);
+  --text-secondary: var(--delivery-text-secondary, #6b5d53);
+  --border-color: var(--delivery-border, #f0e6de);
   --success-color: #00b894;
-  --error-color: #d63031;
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 20px;
+  --error-color: var(--delivery-error, #d63031);
+  --shadow-sm: var(--delivery-shadow-sm);
+  --shadow-md: var(--delivery-shadow-md);
+  --shadow-lg: 0 8px 24px rgba(36, 20, 10, 0.12);
+  --radius-sm: 10px;
+  --radius-md: var(--delivery-radius-sm, 14px);
+  --radius-lg: var(--delivery-radius-md, 16px);
   --transition: all 0.2s ease;
 
   display: block;
   height: 100vh;
   width: 100vw;
   overflow: hidden;
+  font-family: var(--delivery-font, 'Plus Jakarta Sans', system-ui, sans-serif);
 }
 
 .autoatendimento-container {
   height: 100%;
   width: 100%;
-  background: var(--background);
+  background: var(--delivery-bg, #fbf7f4);
   display: flex;
   flex-direction: column;
   position: relative;
@@ -580,95 +583,5 @@
 
   .sucesso-nome {
     font-size: 1.5rem;
-  }
-}
-
-/* ========== Bloqueio: Loja Fechada / Pausada ========== */
-.bloqueio-screen {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(180deg, #fff9f5 0%, #ffffff 50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  padding: 2rem;
-}
-
-.bloqueio-content {
-  text-align: center;
-  max-width: 500px;
-  width: 100%;
-}
-
-.bloqueio-icon {
-  font-size: 6rem;
-  margin-bottom: 2rem;
-  animation: bloqueio-pulse 2s ease-in-out infinite;
-}
-
-.bloqueio-titulo {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 1rem;
-}
-
-.bloqueio-mensagem {
-  font-size: 1.25rem;
-  color: var(--text-secondary);
-  margin: 0 0 2rem;
-  line-height: 1.5;
-}
-
-.bloqueio-info {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  padding: 1.25rem;
-  background: var(--background);
-  border-radius: var(--radius-md);
-  margin-bottom: 2rem;
-  font-size: 1.1rem;
-  color: var(--text-secondary);
-}
-
-.bloqueio-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.5rem;
-}
-
-.btn-verificar-status {
-  background: linear-gradient(135deg, var(--primary-color) 0%, #f7931e 100%);
-  color: white;
-  border: none;
-  padding: 1.25rem 2.5rem;
-  border-radius: var(--radius-md);
-  font-size: 1.25rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  width: 100%;
-  max-width: 350px;
-}
-
-.btn-verificar-status:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(255, 107, 53, 0.4);
-}
-
-@keyframes bloqueio-pulse {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
   }
 }

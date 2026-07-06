@@ -11,6 +11,7 @@ interface AnimationConfig {
 
 export function useAnimations() {
   const isAnimating = signal(false);
+  const mostrarInterludio = signal(false);
   const pedidoAnimando = signal<string | null>(null);
   const pedidoAnimandoDados = signal<Pedido | null>(null);
   const pedidoAnimandoStatus = signal<StatusPedido | null>(null);
@@ -82,25 +83,26 @@ export function useAnimations() {
     }
   };
 
-  const animarGlobal = (duracao: number) => {
-    // Anima apenas a tela fullscreen, sem precisar de pedido
-    isAnimating.set(true);
-    
-    setTimeout(() => {
-      isAnimating.set(false);
-    }, duracao * 1000);
+  const abrirInterludio = () => {
+    mostrarInterludio.set(true);
+  };
+
+  const fecharInterludio = () => {
+    mostrarInterludio.set(false);
   };
 
   return {
     isAnimating,
+    mostrarInterludio,
+    abrirInterludio,
+    fecharInterludio,
     pedidoAnimando,
     pedidoAnimandoDados,
     pedidoAnimandoStatus,
     animacaoConfig,
     detectarMudancaStatus,
     animarTransicaoStatus,
-    iniciarAnimacaoPeriodica,
-    animarGlobal
+    iniciarAnimacaoPeriodica
   };
 }
 

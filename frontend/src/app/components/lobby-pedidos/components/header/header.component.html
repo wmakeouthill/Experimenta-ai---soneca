@@ -1,44 +1,77 @@
-<header [class]="'header ' + (isAnimating() ? 'animating' : '')">
-  <div class="logo-container">
-    @if (!isAnimating()) {
-      <img
-        src="assets/experimenta_ai_banner_circular.png"
-        alt="Experimenta aí"
-        class="logo-imagem"
-      />
+<header class="lobby-topbar">
+  <div class="lobby-topbar__left">
+    <img
+      src="assets/experimenta_ai_banner_circular.png"
+      alt="Experimenta aí do Soneca"
+      class="lobby-topbar__logo"
+    />
+    <span class="lobby-topbar__titulo">Painel de Pedidos</span>
+  </div>
+
+  <div
+    class="lobby-topbar__floor"
+    [class.lobby-topbar__floor--terreo]="piso() === 'terreo'"
+    [class.lobby-topbar__floor--andar]="piso() === 'andar'"
+  >
+    @if (piso() === 'terreo') {
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 21V9l8-6 8 6v12" />
+        <path d="M9 21v-6h6v6" />
+      </svg>
+    } @else {
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 21V11l8-6 8 6v10" />
+        <path d="M9 21v-6h6v6" />
+        <path d="M4 14h16" />
+      </svg>
+    }
+    <span>{{ rotuloPiso() }}</span>
+  </div>
+
+  <div class="lobby-topbar__right">
+    <div class="lobby-topbar__aovivo">
+      <span class="lobby-topbar__live-dot" aria-hidden="true"></span>
+      <span>AO VIVO</span>
+    </div>
+    <span class="lobby-topbar__hora">{{ horaAtual() }}</span>
+
+    @if (podeConfigurarAnimacao()) {
+      <div class="lobby-topbar__menu-wrap">
+        <button
+          type="button"
+          class="lobby-topbar__gear"
+          [class.lobby-topbar__gear--aberto]="menuAberto()"
+          (click)="toggleMenu()"
+          [attr.aria-expanded]="menuAberto()"
+          aria-label="Menu administrativo"
+        >
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </svg>
+        </button>
+        @if (menuAberto()) {
+          <div class="lobby-topbar__menu" role="menu">
+            <button type="button" role="menuitem" (click)="handleToggleTema(); fecharMenu()">
+              {{ rotuloToggleTema() }}
+            </button>
+            <button type="button" role="menuitem" (click)="handleTogglePiso(); fecharMenu()">
+              Trocar piso ({{ rotuloPiso() }})
+            </button>
+            <button type="button" role="menuitem" (click)="handleAnimacaoManual(); fecharMenu()">
+              Simular interlúdio
+            </button>
+            <button type="button" role="menuitem" (click)="handleAbrirConfig(); fecharMenu()">
+              Configurar anúncios
+            </button>
+            @if (isModoGestor()) {
+              <button type="button" role="menuitem" (click)="handleTrocarModo(); fecharMenu()">
+                Trocar modo
+              </button>
+            }
+          </div>
+        }
+      </div>
     }
   </div>
-  <h2 [class]="'titulo-fila ' + (isAnimating() ? 'escondido' : '')">
-    Fila de Pedidos
-  </h2>
-  <button
-    type="button"
-    [class]="'btn-animacao-manual ' + (isAnimating() ? 'escondido' : '')"
-    (click)="handleAnimacaoManual()"
-    [disabled]="isAnimating()"
-    title="Reproduzir animação manualmente"
-  >
-    ✨ Animar
-  </button>
-  @if (podeConfigurarAnimacao()) {
-    <button
-      type="button"
-      [class]="'btn-config-animacao ' + (isAnimating() ? 'escondido' : '')"
-      (click)="handleAbrirConfig()"
-      title="Configurar animação"
-    >
-      ⚙️ Configurar Animação
-    </button>
-  }
-  @if (isModoGestor()) {
-    <button
-      type="button"
-      [class]="'btn-trocar-modo ' + (isAnimating() ? 'escondido' : '')"
-      (click)="handleTrocarModo()"
-      title="Trocar modo de acesso"
-    >
-      🔄 Trocar Modo
-    </button>
-  }
 </header>
-

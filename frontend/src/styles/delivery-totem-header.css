@@ -1,0 +1,102 @@
+/* Header principal do totem — abas início, cardápio e carrinho */
+
+.header-totem-principal {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 14px 18px;
+  background: var(--delivery-bg, #fbf7f4);
+  border-bottom: 1px solid var(--delivery-border, #f0e6de);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  min-height: 58px;
+}
+
+.header-totem-principal h1 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--delivery-text, #241c15);
+  text-align: center;
+  justify-self: center;
+}
+
+.header-totem-principal__spacer {
+  justify-self: start;
+}
+
+.btn-voltar-header-principal {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  justify-self: start;
+  padding: 8px 12px 8px 8px;
+  background: var(--delivery-surface, #ffffff);
+  border: 1px solid var(--delivery-border, #f0e6de);
+  border-radius: var(--delivery-radius-sm, 14px);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--delivery-text-secondary, #6b5d53);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-voltar-header-principal:active {
+  background: #fafaf8;
+}
+
+.btn-voltar-header-principal svg {
+  flex-shrink: 0;
+}
+
+.btn-carrinho-header-principal {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  justify-self: end;
+  background: var(--delivery-surface, #ffffff);
+  border: 1px solid var(--delivery-border, #f0e6de);
+  border-radius: 50%;
+  color: var(--delivery-text, #241c15);
+  cursor: pointer;
+  transition: background 0.2s;
+  padding: 0;
+}
+
+.btn-carrinho-header-principal:active {
+  background: #fafaf8;
+}
+
+.badge-carrinho-principal {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: var(--delivery-primary, #ff6b35);
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 700;
+  border-radius: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--delivery-bg, #fbf7f4);
+}
+
+@media (min-width: 768px) {
+  .header-totem-principal {
+    padding: 16px 24px;
+    min-height: 64px;
+  }
+
+  .header-totem-principal h1 {
+    font-size: 19px;
+  }
+}

@@ -1,0 +1,46 @@
+@if (ativo()) {
+  <div
+    class="lobby-interlude"
+    role="dialog"
+    aria-label="Interlúdio promocional"
+    [attr.data-lobby-tema]="tema()"
+  >
+    <div class="lobby-interlude__progress">
+      @for (slide of slides(); track $index) {
+        <div class="lobby-interlude__bar">
+          <div
+            class="lobby-interlude__bar-fill"
+            [class.lobby-interlude__bar-fill--done]="indiceBarraPreenchida($index)"
+            [class.lobby-interlude__bar-fill--active]="indiceBarraAtiva($index)"
+          ></div>
+        </div>
+      }
+    </div>
+
+    <div class="lobby-interlude__stage">
+      <div class="lobby-interlude__media">
+        @if (videoAtual(); as videoUrl) {
+          <video
+            class="lobby-interlude__video"
+            [src]="videoUrl"
+            autoplay
+            loop
+            muted
+            playsinline
+          ></video>
+        } @else {
+          <span class="lobby-interlude__placeholder">vídeo / imagem promocional</span>
+        }
+        <h2 class="lobby-interlude__titulo">{{ slideAtual().titulo }}</h2>
+      </div>
+    </div>
+
+    <div class="lobby-interlude__footer">
+      <img src="assets/soneca_ai.png" alt="Soneca" class="lobby-interlude__avatar" />
+      <span class="lobby-interlude__voltamos">Voltamos com a fila em instantes</span>
+      @if (permitirFechar()) {
+        <button type="button" class="lobby-interlude__fechar" (click)="fechar()">Fechar</button>
+      }
+    </div>
+  </div>
+}

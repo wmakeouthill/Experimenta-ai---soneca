@@ -9,28 +9,49 @@
             <p>Verificando disponibilidade...</p>
           </div>
         } @else if (statusLoja() === 'FECHADA') {
-          <div class="bloqueio-icon">🏪</div>
+          <div class="bloqueio-icon-wrap" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="42" height="42" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9h18v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9z" />
+              <path d="M3 9l2-5h14l2 5" />
+              <path d="M10 13h4" />
+            </svg>
+          </div>
           <h1 class="bloqueio-titulo">Loja Fechada</h1>
           <p class="bloqueio-mensagem">
             {{ mensagemStatusLoja() || 'Estamos fechados no momento. Volte em breve!' }}
           </p>
           <div class="bloqueio-info">
-            <span>🕐</span>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 7v5l3 2" />
+            </svg>
             <span>Fique atento aos nossos horários de funcionamento</span>
           </div>
         } @else if (statusLoja() === 'PAUSADA') {
-          <div class="bloqueio-icon">⏸️</div>
+          <div class="bloqueio-icon-wrap" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="42" height="42" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M10 8v8M14 8v8" />
+            </svg>
+          </div>
           <h1 class="bloqueio-titulo">Temporariamente Indisponível</h1>
           <p class="bloqueio-mensagem">
             {{ mensagemStatusLoja() || 'Estamos com alta demanda. Aguarde um momento!' }}
           </p>
           <div class="bloqueio-info">
-            <span>⏳</span>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M6 2v6M18 2v6" />
+              <path d="M4 8h16v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V8z" />
+            </svg>
             <span>Voltamos em breve!</span>
           </div>
         }
         <button class="btn-verificar-status" (click)="verificarStatusLoja()">
-          🔄 Verificar novamente
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+            <path d="M21 3v6h-6" />
+          </svg>
+          Verificar novamente
         </button>
       </div>
     </div>
@@ -67,18 +88,75 @@
       </div>
     }
 
+    <!-- Header principal das abas -->
+    @if (!carregando() && !erro() && !etapaAtual()) {
+      <header class="header-totem-principal">
+        @switch (abaAtual()) {
+          @case ('inicio') {
+            <span class="header-totem-principal__spacer" aria-hidden="true"></span>
+            <h1>Autoatendimento</h1>
+            <button
+              type="button"
+              class="btn-carrinho-header-principal"
+              (click)="navegarPara('carrinho')"
+              aria-label="Abrir carrinho"
+            >
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="9" cy="20" r="1.4" />
+                <circle cx="18" cy="20" r="1.4" />
+                <path d="M2.5 3h2l2.2 11.4a2 2 0 0 0 2 1.6h8.3a2 2 0 0 0 2-1.6L21 7H6" />
+              </svg>
+              @if (carrinho.totalItens() > 0) {
+                <span class="badge-carrinho-principal">{{ carrinho.totalItens() }}</span>
+              }
+            </button>
+          }
+          @case ('cardapio') {
+            <button type="button" class="btn-voltar-header-principal" (click)="navegarPara('inicio')">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6" /></svg>
+              Início
+            </button>
+            <h1>Cardápio</h1>
+            <button
+              type="button"
+              class="btn-carrinho-header-principal"
+              (click)="navegarPara('carrinho')"
+              aria-label="Abrir carrinho"
+            >
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="9" cy="20" r="1.4" />
+                <circle cx="18" cy="20" r="1.4" />
+                <path d="M2.5 3h2l2.2 11.4a2 2 0 0 0 2 1.6h8.3a2 2 0 0 0 2-1.6L21 7H6" />
+              </svg>
+              @if (carrinho.totalItens() > 0) {
+                <span class="badge-carrinho-principal">{{ carrinho.totalItens() }}</span>
+              }
+            </button>
+          }
+          @case ('carrinho') {
+            <button type="button" class="btn-voltar-header-principal" (click)="navegarPara('cardapio')">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6" /></svg>
+              Voltar
+            </button>
+            <h1>Seu carrinho</h1>
+            <span class="header-totem-principal__spacer" aria-hidden="true"></span>
+          }
+        }
+      </header>
+    }
+
     <!-- ========== ABA: INÍCIO ========== -->
     @if (!carregando() && !erro() && !etapaAtual() && abaAtual() === 'inicio') {
       <div class="aba-inicio">
         <!-- Bem-vindo -->
         <div class="inicio-welcome">
-          <h2>Bem-vindo! 👋</h2>
+          <h2>Bem-vindo!</h2>
           <p>O que você deseja pedir hoje?</p>
         </div>
 
-        <!-- Mais Populares -->
+        <!-- Mais pedidos -->
         <div class="inicio-section">
-          <h2 class="section-titulo">🔥 Mais Populares</h2>
+          <h2 class="section-titulo">Mais pedidos</h2>
           @if (inicio.carregando()) {
             <div class="carrossel-vazio-container">
               <div class="loading-spinner-mini"></div>
@@ -116,7 +194,7 @@
 
         <!-- Favoritos da Galera -->
         <div class="inicio-section">
-          <h2 class="section-titulo">❤️ Favoritos da Galera</h2>
+          <h2 class="section-titulo">Favoritos da galera</h2>
           @if (inicio.produtosMaisFavoritados().length > 0) {
             <div class="carrossel-horizontal">
               @for (produto of inicio.produtosMaisFavoritados(); track produto.id) {
@@ -133,7 +211,7 @@
                   <div class="produto-info-mini">
                     <span class="produto-nome-mini">{{ produto.nome }}</span>
                     @if (produto.quantidadeFavoritos) {
-                      <span class="produto-pedidos">{{ produto.quantidadeFavoritos }} ❤️</span>
+                      <span class="produto-pedidos">{{ produto.quantidadeFavoritos }} favoritos</span>
                     }
                     <span class="produto-preco-mini">{{ formatarPreco(produto.preco) }}</span>
                   </div>
@@ -150,7 +228,7 @@
 
         <!-- Bem Avaliados -->
         <div class="inicio-section">
-          <h2 class="section-titulo">⭐ Bem Avaliados</h2>
+          <h2 class="section-titulo">Bem avaliados</h2>
           @if (inicio.carregando()) {
             <div class="carrossel-vazio-container">
               <div class="loading-spinner-mini"></div>
@@ -172,9 +250,7 @@
                   <div class="produto-info-mini">
                     <span class="produto-nome-mini">{{ produto.nome }}</span>
                     @if (produto.mediaAvaliacao) {
-                      <span class="produto-avaliacao"
-                        >⭐ {{ produto.mediaAvaliacao.toFixed(1) }}</span
-                      >
+                      <span class="produto-avaliacao">{{ produto.mediaAvaliacao.toFixed(1) }}</span>
                     }
                     <span class="produto-preco-mini">{{ formatarPreco(produto.preco) }}</span>
                   </div>
@@ -191,7 +267,7 @@
 
         <!-- Categorias -->
         <div class="inicio-categorias">
-          <h2 class="section-titulo">📂 Categorias</h2>
+          <h2 class="section-titulo">Categorias</h2>
           <div class="categorias-grid">
             @for (categoria of cardapio.categorias(); track categoria.id) {
               <button
@@ -206,8 +282,13 @@
 
         <!-- Ver Cardápio Completo -->
         <div class="inicio-cta">
-          <button class="btn-primary btn-large" (click)="navegarPara('cardapio')">
-            📋 Ver Cardápio Completo
+          <button class="btn-primary btn-large btn-ver-cardapio" (click)="navegarPara('cardapio')">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="5" y="4" width="14" height="17" rx="2" />
+              <path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1" />
+              <path d="M8 10h8M8 14h8M8 18h5" />
+            </svg>
+            Ver cardápio completo
           </button>
         </div>
       </div>
@@ -222,7 +303,7 @@
           [class.ativa]="cardapio.categoriaSelecionada() === null"
           (click)="cardapio.selecionarCategoria(null)"
         >
-          🍽️ Todos
+          Todos
         </button>
         @for (categoria of cardapio.categorias(); track categoria.id) {
           <button
@@ -258,13 +339,20 @@
                       @if (produto.descricao) {
                         <p class="produto-descricao">{{ produto.descricao }}</p>
                       }
-                      <div class="produto-preco">{{ formatarPreco(produto.preco) }}</div>
-                      <button
-                        class="btn-adicionar"
-                        (click)="adicionarAoCarrinhoRapido(produto); $event.stopPropagation()"
-                      >
-                        +
-                      </button>
+                      <div class="produto-card-footer">
+                        <div class="produto-preco">{{ formatarPreco(produto.preco) }}</div>
+                        <div class="produto-acoes">
+                          <button
+                            class="btn-adicionar"
+                            (click)="adicionarAoCarrinhoRapido(produto); $event.stopPropagation()"
+                            aria-label="Adicionar ao carrinho"
+                          >
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                              <path d="M12 5v14M5 12h14" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 }
@@ -293,13 +381,20 @@
                   @if (produto.descricao) {
                     <p class="produto-descricao">{{ produto.descricao }}</p>
                   }
-                  <div class="produto-preco">{{ formatarPreco(produto.preco) }}</div>
-                  <button
-                    class="btn-adicionar"
-                    (click)="adicionarAoCarrinhoRapido(produto); $event.stopPropagation()"
-                  >
-                    +
-                  </button>
+                  <div class="produto-card-footer">
+                    <div class="produto-preco">{{ formatarPreco(produto.preco) }}</div>
+                    <div class="produto-acoes">
+                      <button
+                        class="btn-adicionar"
+                        (click)="adicionarAoCarrinhoRapido(produto); $event.stopPropagation()"
+                        aria-label="Adicionar ao carrinho"
+                      >
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M12 5v14M5 12h14" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             } @empty {
@@ -315,30 +410,27 @@
     <!-- ========== ABA: CARRINHO ========== -->
     @if (!carregando() && !erro() && !etapaAtual() && abaAtual() === 'carrinho') {
       <div class="aba-carrinho">
-        <div class="aba-header">
-          <h2>🛒 Seu Carrinho</h2>
-        </div>
-
         @if (carrinho.carrinhoVazio()) {
           <div class="carrinho-vazio">
-            <span class="vazio-icon">🛒</span>
+            <span class="vazio-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="9" cy="20" r="1.4" />
+                <circle cx="18" cy="20" r="1.4" />
+                <path d="M2.5 3h2l2.2 11.4a2 2 0 0 0 2 1.6h8.3a2 2 0 0 0 2-1.6L21 7H6" />
+              </svg>
+            </span>
             <p>Seu carrinho está vazio</p>
             <button class="btn-secondary" (click)="navegarPara('cardapio')">Ver cardápio</button>
           </div>
         } @else {
-          <div class="carrinho-lista-header">
-            <span>{{ carrinho.totalItens() }} item(ns)</span>
-            <strong>{{ formatarPreco(carrinho.totalValor()) }}</strong>
-          </div>
-
           <div class="carrinho-items">
             @for (item of carrinho.itens(); track item.produto.id) {
-              <div class="carrinho-item">
+              <div class="carrinho-item carrinho-item--totem">
                 <div class="item-imagem-carrinho">
                   @if (item.produto.foto) {
                     <img [src]="getImagemProduto(item.produto)" [alt]="item.produto.nome" />
                   } @else {
-                    <span>🍽️</span>
+                    <span aria-hidden="true">🍽️</span>
                   }
                 </div>
                 <div class="item-info">
@@ -352,32 +444,34 @@
                     </div>
                   }
                   @if (item.observacao) {
-                    <p class="item-obs">📝 {{ item.observacao }}</p>
+                    <p class="item-obs">{{ item.observacao }}</p>
                   }
                 </div>
                 <div class="item-controls">
                   <div class="quantidade-mini">
                     <button
+                      type="button"
                       (click)="
                         carrinho.atualizarQuantidadeItem(
                           item.produto.id,
                           Math.max(1, item.quantidade - 1)
                         )
                       "
+                      aria-label="Diminuir quantidade"
                     >
-                      −
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14" /></svg>
                     </button>
                     <span>{{ item.quantidade }}</span>
                     <button
-                      (click)="
-                        carrinho.atualizarQuantidadeItem(item.produto.id, item.quantidade + 1)
-                      "
+                      type="button"
+                      (click)="carrinho.atualizarQuantidadeItem(item.produto.id, item.quantidade + 1)"
+                      aria-label="Aumentar quantidade"
                     >
-                      +
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
                     </button>
                   </div>
                   <span class="item-preco">{{ formatarPreco(calcularSubtotalItem(item)) }}</span>
-                  <button class="btn-remover-item" (click)="carrinho.removerItem(item.produto.id)">
+                  <button type="button" class="btn-remover-item" (click)="carrinho.removerItem(item.produto.id)">
                     Remover
                   </button>
                 </div>
@@ -385,10 +479,10 @@
             }
           </div>
 
-          <!-- Identificação do Cliente (opcional) -->
           <div class="identificacao-cliente">
-            <label>Seu nome (para chamar na entrega)</label>
+            <label for="totem-nome-cliente">Seu nome (para chamar na entrega)</label>
             <input
+              id="totem-nome-cliente"
               type="text"
               [(ngModel)]="nomeClienteInput"
               placeholder="Digite seu nome (opcional)"
@@ -402,7 +496,7 @@
               <span class="total-valor">{{ formatarPreco(carrinho.totalValor()) }}</span>
             </div>
             <button class="btn-primary btn-large" (click)="irParaPagamento()">
-              Continuar para Pagamento →
+              Continuar para pagamento
             </button>
           </div>
         }

@@ -1,52 +1,65 @@
-<!-- Componente de animação fullscreen (fora do grid para não quebrar layout) -->
-<app-fullscreen-animation
-  [isAnimating]="isAnimating()"
+<app-lobby-interlude
+  [ativo]="mostrarInterludio()"
+  [duracaoSegundos]="configAtual().duracaoAnimacao"
   [video1Url]="configAtual().video1Url"
   [video2Url]="configAtual().video2Url"
+  [permitirFechar]="isAdministrador()"
+  [tema]="tema()"
+  (onFechar)="handleFecharInterludio()"
 />
 
-<div [class]="'fila-pedidos-container ' + (isAnimating() ? 'animando' : '')">
-  <div [class]="'coluna-lateral ' + (isAnimating() ? 'escondido' : '')">
-    <app-lobby-header
-      [isAnimating]="isAnimating()"
+<div
+  class="lobby-tv"
+  [attr.data-lobby-tema]="tema()"
+  [class.lobby-tv--interludio]="mostrarInterludio()"
+>
+  <div class="lobby-tv__glow lobby-tv__glow--a" aria-hidden="true"></div>
+  <div class="lobby-tv__glow lobby-tv__glow--b" aria-hidden="true"></div>
+
+  <app-lobby-header
+    [isModoGestor]="false"
+    [podeConfigurarAnimacao]="isAdministrador()"
+    [horaAtual]="horaAtual()"
+    [tema]="tema()"
+    [piso]="piso()"
+    (onTrocarModo)="handleTrocarModo()"
+    (onAnimacaoManual)="handleAnimacaoManual()"
+    (onAbrirConfig)="handleAbrirConfig()"
+    (onToggleTema)="handleToggleTema()"
+    (onTogglePiso)="handleTogglePiso()"
+  />
+
+  <div class="lobby-tv__columns">
+    <app-order-list
+      title="PREPARANDO"
+      [status]="StatusPedido.PREPARANDO"
+      [pedidos]="lobbyPedidos.pedidos()"
       [isModoGestor]="false"
-      [podeConfigurarAnimacao]="isAdministrador()"
-      (onTrocarModo)="handleTrocarModo()"
-      (onAnimacaoManual)="handleAnimacaoManual()"
-      (onAbrirConfig)="handleAbrirConfig()"
+      [isAnimating]="isAnimating()"
+      [pedidoAnimando]="animations.pedidoAnimando()"
+      [pedidoAnimandoDados]="animations.pedidoAnimandoDados()"
+      [pedidoAnimandoStatus]="animations.pedidoAnimandoStatus()"
+      [relogioMs]="relogioMs()"
+      (onMarcarComoPronto)="handleMarcarComoPronto($event)"
+      (onRemover)="handleRemover($event)"
     />
 
-    <app-surfer-animation
+    <app-order-list
+      title="PRONTO"
+      [status]="StatusPedido.PRONTO"
+      [pedidos]="lobbyPedidos.pedidos()"
       [isModoGestor]="false"
       [isAnimating]="isAnimating()"
+      [pedidoAnimando]="animations.pedidoAnimando()"
+      [pedidoAnimandoDados]="animations.pedidoAnimandoDados()"
+      [pedidoAnimandoStatus]="animations.pedidoAnimandoStatus()"
+      [relogioMs]="relogioMs()"
+      (onMarcarComoPronto)="handleMarcarComoPronto($event)"
+      (onRemover)="handleRemover($event)"
     />
   </div>
 
-  <app-order-list
-    title="PREPARANDO"
-    [status]="StatusPedido.PREPARANDO"
-    [pedidos]="lobbyPedidos.pedidos()"
-    [isModoGestor]="false"
-    [isAnimating]="isAnimating()"
-    [pedidoAnimando]="animations.pedidoAnimando()"
-    [pedidoAnimandoDados]="animations.pedidoAnimandoDados()"
-    [pedidoAnimandoStatus]="animations.pedidoAnimandoStatus()"
-    (onMarcarComoPronto)="handleMarcarComoPronto($event)"
-    (onRemover)="handleRemover($event)"
-  />
-
-  <app-order-list
-    title="PRONTO"
-    [status]="StatusPedido.PRONTO"
-    [pedidos]="lobbyPedidos.pedidos()"
-    [isModoGestor]="false"
-    [isAnimating]="isAnimating()"
-    [pedidoAnimando]="animations.pedidoAnimando()"
-    [pedidoAnimandoDados]="animations.pedidoAnimandoDados()"
-    [pedidoAnimandoStatus]="animations.pedidoAnimandoStatus()"
-    (onMarcarComoPronto)="handleMarcarComoPronto($event)"
-    (onRemover)="handleRemover($event)"
-  />
+  <app-lobby-ticker [texto]="tickerTexto()" />
 </div>
 
 <app-config-animacao-modal
@@ -55,4 +68,3 @@
   (onSalvar)="handleSalvarConfig($event)"
   (onFechar)="handleFecharConfig()"
 />
-

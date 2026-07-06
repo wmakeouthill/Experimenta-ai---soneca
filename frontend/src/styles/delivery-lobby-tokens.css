@@ -1,0 +1,220 @@
+/**
+ * Tokens — Lobby / Painel de Pedidos (TV)
+ * Referência: Refinamento design telas delivery/Lobby de Pedidos - TV.dc.html
+ */
+
+/* ========== Tema escuro (padrão) ========== */
+.lobby-tv,
+.lobby-interlude {
+  --lobby-page-bg: radial-gradient(1200px 820px at 16% 118%, rgba(232, 184, 75, 0.14), transparent 58%),
+    radial-gradient(1100px 760px at 98% -12%, rgba(46, 125, 176, 0.28), transparent 56%),
+    linear-gradient(160deg, #0b2143 0%, #071528 60%, #050f1e 100%);
+  --lobby-body-bg: #071528;
+  --lobby-panel-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02));
+  --lobby-panel-border: rgba(255, 255, 255, 0.08);
+  --lobby-head-text: #ffffff;
+  --lobby-name-text: #f2f6fb;
+  --lobby-muted: #5e7189;
+  --lobby-dim: #41597a;
+  --lobby-card-prep: rgba(255, 255, 255, 0.045);
+  --lobby-card-prep-border: rgba(255, 255, 255, 0.055);
+  --lobby-card-pronto: rgba(53, 208, 127, 0.06);
+  --lobby-chrome-text: #eaf1f9;
+  --lobby-aovivo-bg: rgba(255, 255, 255, 0.06);
+  --lobby-aovivo-border: rgba(255, 255, 255, 0.1);
+  --lobby-aovivo-text: #9fb2c8;
+  --lobby-ticker-bg: linear-gradient(90deg, rgba(11, 33, 67, 0.9), rgba(5, 15, 30, 0.9));
+  --lobby-ticker-text: #eaf1f9;
+  --lobby-menu-bg: #0e2647;
+  --lobby-menu-text: #cfdbea;
+  --lobby-gear: #5e7189;
+  --lobby-hero-bg: linear-gradient(135deg, rgba(53, 208, 127, 0.2), rgba(31, 169, 113, 0.08));
+  --lobby-hero-name: #ffffff;
+  --lobby-hero-eyebrow: #6beba6;
+  --lobby-hero-sub: #8fc7a8;
+  --lobby-hero-agora-bg: rgba(53, 208, 127, 0.16);
+  --lobby-hero-agora-text: #1fa971;
+  --lobby-hero-agora-border: rgba(53, 208, 127, 0.35);
+  --lobby-hero-ring-border: rgba(53, 208, 127, 0.5);
+  --lobby-prep-accent: #f0a93b;
+  --lobby-pronto-accent: #35d07f;
+  --lobby-dot-inativo: rgba(255, 255, 255, 0.22);
+  --lobby-dot-ativo-prep: #f0a93b;
+  --lobby-dot-ativo-pronto: #35d07f;
+  --lobby-prep-header-bg: linear-gradient(180deg, rgba(232, 184, 75, 0.1), transparent);
+  --lobby-pronto-header-bg: linear-gradient(180deg, rgba(53, 208, 127, 0.12), transparent);
+  --lobby-prep-count-color: #f5c374;
+  --lobby-prep-count-bg: rgba(240, 169, 59, 0.16);
+  --lobby-prep-count-border: rgba(240, 169, 59, 0.28);
+  --lobby-pronto-count-color: #6beba6;
+  --lobby-pronto-count-bg: rgba(53, 208, 127, 0.16);
+  --lobby-pronto-count-border: rgba(53, 208, 127, 0.3);
+  --lobby-prep-numero-bg: linear-gradient(140deg, #f5be55, #e88a2e);
+  --lobby-prep-numero-text: #3a1f05;
+  --lobby-pronto-numero-bg: linear-gradient(140deg, #35d07f, #1fa971);
+  --lobby-pronto-numero-text: #062012;
+  --lobby-glow-a: radial-gradient(circle, rgba(232, 184, 75, 0.16), transparent 65%);
+  --lobby-glow-b: radial-gradient(circle, rgba(58, 155, 212, 0.2), transparent 65%);
+  --lobby-interlude-bg: radial-gradient(900px 700px at 50% 40%, rgba(46, 125, 176, 0.22), transparent 60%),
+    linear-gradient(160deg, #0b2143, #050f1e);
+  --lobby-interlude-bar-bg: rgba(255, 255, 255, 0.16);
+  --lobby-interlude-media-bg: repeating-linear-gradient(
+    135deg,
+    #0e2647,
+    #0e2647 24px,
+    #0a1d38 24px,
+    #0a1d38 48px
+  );
+  --lobby-interlude-media-border: rgba(255, 255, 255, 0.07);
+  --lobby-interlude-placeholder: #4e6684;
+  --lobby-interlude-titulo: #f2f6fb;
+  --lobby-interlude-footer-text: #6e82a0;
+  --lobby-interlude-fechar-border: rgba(255, 255, 255, 0.15);
+  --lobby-interlude-fechar-text: #8fa2bc;
+  --lobby-floor-terreo-bg: linear-gradient(135deg, #e8b84b, #d9963a);
+  --lobby-floor-terreo-shadow: rgba(217, 150, 58, 0.35);
+  --lobby-floor-andar-bg: linear-gradient(135deg, #2e7db0, #1e5a8c);
+  --lobby-floor-andar-shadow: rgba(46, 125, 176, 0.4);
+  --lobby-topbar-titulo: #e8b84b;
+  --lobby-font: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+
+/* ========== Tema claro ========== */
+.lobby-tv[data-lobby-tema='claro'],
+.lobby-interlude[data-lobby-tema='claro'] {
+  --lobby-page-bg: linear-gradient(160deg, #fff7ee 0%, #fdeee2 55%, #fff3e9 100%);
+  --lobby-body-bg: #fdeee2;
+  --lobby-panel-bg: #ffffff;
+  --lobby-panel-border: rgba(36, 20, 10, 0.09);
+  --lobby-head-text: #241c15;
+  --lobby-name-text: #241c15;
+  --lobby-muted: #9c8f86;
+  --lobby-dim: #b8a99c;
+  --lobby-card-prep: #fff8f0;
+  --lobby-card-prep-border: rgba(240, 169, 59, 0.2);
+  --lobby-card-pronto: #f0fbf4;
+  --lobby-chrome-text: #241c15;
+  --lobby-aovivo-bg: #ffffff;
+  --lobby-aovivo-border: rgba(36, 20, 10, 0.08);
+  --lobby-aovivo-text: #6b5d53;
+  --lobby-ticker-bg: linear-gradient(90deg, #fff3e4, #ffe9d6);
+  --lobby-ticker-text: #3a1f05;
+  --lobby-menu-bg: #ffffff;
+  --lobby-menu-text: #241c15;
+  --lobby-gear: #b8a99c;
+  --lobby-hero-bg: linear-gradient(135deg, #e6fbf0, #cff4e0);
+  --lobby-hero-name: #0b3d28;
+  --lobby-hero-eyebrow: #1fa971;
+  --lobby-hero-sub: #4e9b76;
+  --lobby-hero-agora-bg: rgba(31, 169, 113, 0.12);
+  --lobby-hero-agora-text: #1fa971;
+  --lobby-hero-agora-border: rgba(31, 169, 113, 0.28);
+  --lobby-hero-ring-border: rgba(31, 169, 113, 0.45);
+  --lobby-dot-inativo: rgba(36, 20, 10, 0.15);
+  --lobby-prep-header-bg: linear-gradient(180deg, rgba(240, 169, 59, 0.12), transparent);
+  --lobby-pronto-header-bg: linear-gradient(180deg, rgba(53, 208, 127, 0.1), transparent);
+  --lobby-glow-a: radial-gradient(circle, rgba(255, 107, 53, 0.08), transparent 65%);
+  --lobby-glow-b: radial-gradient(circle, rgba(46, 125, 176, 0.1), transparent 65%);
+  --lobby-interlude-bg: linear-gradient(160deg, #fff7ee 0%, #fdeee2 100%);
+  --lobby-interlude-bar-bg: rgba(36, 20, 10, 0.1);
+  --lobby-interlude-media-bg: repeating-linear-gradient(
+    135deg,
+    #fff8f0,
+    #fff8f0 24px,
+    #fff3e6 24px,
+    #fff3e6 48px
+  );
+  --lobby-interlude-media-border: rgba(36, 20, 10, 0.08);
+  --lobby-interlude-placeholder: #9c8f86;
+  --lobby-interlude-titulo: #241c15;
+  --lobby-interlude-footer-text: #6b5d53;
+  --lobby-interlude-fechar-border: rgba(36, 20, 10, 0.12);
+  --lobby-interlude-fechar-text: #6b5d53;
+  --lobby-topbar-titulo: #b4501f;
+  --lobby-prep-count-color: #c47a1a;
+  --lobby-prep-count-bg: rgba(240, 169, 59, 0.14);
+  --lobby-prep-count-border: rgba(240, 169, 59, 0.25);
+  --lobby-pronto-count-color: #1fa971;
+  --lobby-pronto-count-bg: rgba(31, 169, 113, 0.12);
+  --lobby-pronto-count-border: rgba(31, 169, 113, 0.22);
+}
+
+@keyframes lobby-live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.82);
+  }
+}
+
+@keyframes lobby-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes lobby-hero-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 1px rgba(53, 208, 127, 0.35), 0 20px 50px rgba(31, 169, 113, 0.28),
+      0 0 50px rgba(53, 208, 127, 0.18);
+  }
+  50% {
+    box-shadow: 0 0 0 1px rgba(53, 208, 127, 0.6), 0 20px 70px rgba(31, 169, 113, 0.45),
+      0 0 90px rgba(53, 208, 127, 0.38);
+  }
+}
+
+.lobby-tv[data-lobby-tema='claro'] .lobby-hero {
+  animation: none;
+  box-shadow: 0 8px 24px rgba(31, 169, 113, 0.15);
+}
+
+@keyframes lobby-hero-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes lobby-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes lobby-drift-a {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(60px, -40px) scale(1.15);
+  }
+}
+
+@keyframes lobby-drift-b {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1.1);
+  }
+  50% {
+    transform: translate(-50px, 30px) scale(1);
+  }
+}

@@ -1,46 +1,53 @@
+@import '../../../../styles/delivery-design-tokens.css';
+
 /* ========== CSS Variables ========== */
 :host {
-  --primary-color: #ff6b35;
+  --primary-color: var(--delivery-primary, #ff6b35);
   --primary-hover: #e85a27;
-  --primary-light: #fff4f0;
-  --secondary-color: #f7931e;
+  --primary-light: var(--delivery-accent-pill, #fff1e9);
+  --secondary-color: var(--delivery-secondary, #f7931e);
   --success-color: #4caf50;
-  --error-color: #e53935;
+  --error-color: var(--delivery-error, #e53935);
   --warning-color: #f59e0b;
-  --background: #f5f5f5;
-  --surface: #ffffff;
-  --border-color: #e0e0e0;
-  --text-primary: #333;
-  --text-secondary: #666;
-  --text-muted: #888;
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  --background: var(--delivery-bg, #fbf7f4);
+  --surface: var(--delivery-surface, #ffffff);
+  --border-color: var(--delivery-border, #f0e6de);
+  --text-primary: var(--delivery-text, #241c15);
+  --text-secondary: var(--delivery-text-secondary, #6b5d53);
+  --text-muted: var(--delivery-text-muted, #9c8f86);
+  --shadow-sm: var(--delivery-shadow-sm);
+  --shadow-md: var(--delivery-shadow-md);
+  --shadow-lg: 0 8px 24px rgba(36, 20, 10, 0.12);
+  --radius-sm: 10px;
+  --radius-md: var(--delivery-radius-sm, 14px);
+  --radius-lg: var(--delivery-radius-md, 16px);
   --radius-full: 9999px;
+
+  font-family: var(--delivery-font, 'Plus Jakarta Sans', system-ui, sans-serif);
 }
 
 /* ========== Buttons ========== */
 .btn-primary {
-  background: linear-gradient(
-    135deg,
-    var(--primary-color, #ff6b35) 0%,
-    var(--secondary-color, #f7931e) 100%
-  );
-  color: white;
+  background: var(--delivery-gradient-primary);
+  color: #ffffff;
   border: none;
-  padding: 0.875rem 1.5rem;
-  border-radius: var(--radius-md, 12px);
-  font-size: 1rem;
-  font-weight: 600;
+  padding: 16px 1.5rem;
+  border-radius: var(--delivery-radius-sm, 14px);
+  font-size: 15.5px;
+  font-weight: 700;
+  font-family: inherit;
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 8px;
+  box-shadow: var(--delivery-shadow-lg);
+}
+
+.btn-ver-cardapio {
+  width: 100%;
+  margin-top: 24px;
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -54,13 +61,14 @@
 }
 
 .btn-secondary {
-  background: var(--surface, #ffffff);
-  color: var(--text-primary, #333);
-  border: 1px solid var(--border-color, #e0e0e0);
-  padding: 0.875rem 1.5rem;
-  border-radius: var(--radius-md, 12px);
-  font-size: 1rem;
-  font-weight: 500;
+  background: var(--delivery-surface, #ffffff);
+  color: var(--delivery-text, #241c15);
+  border: 1.5px solid var(--delivery-border, #f0e6de);
+  padding: 15px 1.5rem;
+  border-radius: var(--delivery-radius-sm, 14px);
+  font-size: 14.5px;
+  font-weight: 700;
+  font-family: inherit;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -83,21 +91,10 @@
 
 /* Reset e Base */
 .pedido-cliente-container {
-  /* Usa viewport dinâmica para não cortar em mobile com barras/teclado */
   min-height: 100dvh;
-  background: #f5f5f5;
-  /* Font stack otimizada para mobile - prioriza fontes do sistema para melhor legibilidade */
-  font-family:
-    system-ui,
-    /* Moderno - usa fonte nativa do sistema */ -apple-system,
-    /* iOS/macOS Safari */ BlinkMacSystemFont,
-    /* macOS Chrome */ 'Segoe UI',
-    /* Windows */ 'Roboto',
-    /* Android */ 'Noto Sans',
-    /* Linux */ 'Helvetica Neue',
-    Arial,
-    /* Fallbacks clássicos */ sans-serif;
-  padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+  background: var(--delivery-bg, #fbf7f4);
+  font-family: var(--delivery-font, 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif);
+  padding-bottom: calc(var(--delivery-footer-height-mesa, 76px) + env(safe-area-inset-bottom, 0px));
   /* Melhora renderização de texto em mobile */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -759,95 +756,5 @@
 
   50% {
     opacity: 0.3;
-  }
-}
-
-/* ========== Bloqueio: Loja Fechada / Pausada ========== */
-.bloqueio-screen {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(180deg, #fff9f5 0%, #ffffff 50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  padding: 2rem;
-}
-
-.bloqueio-content {
-  text-align: center;
-  max-width: 400px;
-  width: 100%;
-}
-
-.bloqueio-icon {
-  font-size: 5rem;
-  margin-bottom: 1.5rem;
-  animation: bloqueio-pulse 2s ease-in-out infinite;
-}
-
-.bloqueio-titulo {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 1rem;
-}
-
-.bloqueio-mensagem {
-  font-size: 1rem;
-  color: var(--text-secondary);
-  margin: 0 0 2rem;
-  line-height: 1.5;
-}
-
-.bloqueio-info {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 1rem;
-  background: var(--background);
-  border-radius: var(--radius-md);
-  margin-bottom: 2rem;
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-}
-
-.bloqueio-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-}
-
-.btn-verificar-status {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-  color: white;
-  border: none;
-  padding: 1rem 2rem;
-  border-radius: var(--radius-md);
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  width: 100%;
-  max-width: 300px;
-}
-
-.btn-verificar-status:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
-}
-
-@keyframes bloqueio-pulse {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
   }
 }

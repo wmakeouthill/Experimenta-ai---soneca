@@ -1,67 +1,73 @@
 /* ========== TELA DE IDENTIFICAÇÃO ========== */
 .identificacao-screen {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    background: linear-gradient(180deg, #FF6B35 0%, #F7931E 50%, #f5f5f5 50%);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--delivery-gradient-ident);
 }
 
 .identificacao-header {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 3rem 2rem 2rem;
-    color: white;
-    text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 64px 32px 28px;
+  color: #ffffff;
+  text-align: center;
 }
 
 .logo-grande {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 4px solid white;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-    margin-bottom: 1.5rem;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #ffffff;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+  margin-bottom: 18px;
+  border: none;
 }
 
 .identificacao-header h1 {
-    margin: 0 0 0.5rem;
-    font-size: 1.75rem;
-    font-weight: 700;
+  margin: 0 0 10px;
+  font-size: 26px;
+  font-weight: 800;
 }
 
 .mesa-badge {
-    display: inline-block;
-    padding: 0.5rem 1.25rem;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 20px;
-    font-size: 1rem;
-    font-weight: 600;
-    backdrop-filter: blur(10px);
+  display: inline-block;
+  padding: 7px 18px;
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 100px;
+  font-size: 14px;
+  font-weight: 700;
+  backdrop-filter: blur(6px);
 }
 
 .identificacao-form {
-    flex: 1;
-    background: white;
-    border-radius: 24px 24px 0 0;
-    padding: 2rem 1.5rem;
-    margin-top: -24px;
-    box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.1);
+  flex: 1;
+  background: var(--delivery-surface, #ffffff);
+  border-radius: var(--delivery-radius-xl, 28px) var(--delivery-radius-xl, 28px) 0 0;
+  padding: 34px 24px 48px;
+  margin-top: -20px;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.06);
+  max-width: 460px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .identificacao-form h2 {
-    margin: 0 0 0.5rem;
-    font-size: 1.5rem;
-    color: #333;
-    text-align: center;
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--delivery-text, #241c15);
+  text-align: center;
 }
 
 .form-hint {
-    color: #888;
-    text-align: center;
-    margin: 0 0 2rem;
-    font-size: 0.9rem;
+  color: var(--delivery-text-muted, #9c8f86);
+  text-align: center;
+  margin: 0 0 26px;
+  font-size: 14px;
 }
 
 .input-group {
@@ -69,102 +75,102 @@
 }
 
 .input-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #555;
+  display: block;
+  margin-bottom: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--delivery-text-secondary, #6b5d53);
 }
 
 .input-telefone,
 .input-nome {
-    width: 100%;
-    padding: 1rem 1.25rem;
-    /* Font size 16px ou maior previne zoom automático no iOS */
-    font-size: 1rem;
-    font-size: max(1rem, 16px);
-    border: 2px solid #e0e0e0;
-    border-radius: 12px;
-    background: #fafafa;
-    transition: all 0.2s;
-    text-align: center;
-    letter-spacing: 1px;
-    box-sizing: border-box;
-    /* Herda a fonte do container para consistência */
-    font-family: inherit;
+  width: 100%;
+  padding: 15px 16px;
+  font-size: max(1rem, 16px);
+  border: 1.5px solid var(--delivery-border, #f0e6de);
+  border-radius: var(--delivery-radius-sm, 14px);
+  background: var(--delivery-input-bg, #fbf7f4);
+  transition: all 0.2s;
+  text-align: left;
+  letter-spacing: 0.3px;
+  box-sizing: border-box;
+  font-family: inherit;
 }
 
 .input-nome {
-    text-align: left;
-    letter-spacing: normal;
+  text-align: left;
+  letter-spacing: normal;
 }
 
 .input-telefone:focus,
 .input-nome:focus {
-    outline: none;
-    border-color: #FF6B35;
-    background: white;
-    box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.1);
+  outline: none;
+  border-color: var(--delivery-primary, #ff6b35);
+  background: var(--delivery-surface, #ffffff);
+  box-shadow: none;
 }
 
 .input-telefone.valido,
 .input-nome.valido {
-    border-color: #4CAF50;
+  border-color: var(--delivery-success, #1fa971);
 }
 
 .input-telefone.disabled {
-    background: #f0f0f0;
-    color: #666;
-    cursor: not-allowed;
-}
-
-.erro-msg {
-    color: #e53935;
-    text-align: center;
-    margin: 1rem 0;
-    font-size: 0.9rem;
+  background: var(--delivery-disabled-bg, #f5efe9);
+  color: var(--delivery-text-muted, #9c8f86);
+  cursor: not-allowed;
 }
 
 .btn-continuar {
-    width: 100%;
-    padding: 1rem;
-    background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    margin-top: 1.5rem;
+  width: 100%;
+  padding: 16px;
+  background: var(--delivery-gradient-primary);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--delivery-radius-sm, 14px);
+  font-size: 15.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0;
+  box-shadow: var(--delivery-shadow-lg);
 }
 
 .btn-continuar:disabled {
-    background: #ccc;
-    cursor: not-allowed;
+  background: #ccc;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 .btn-continuar:not(:disabled):active {
-    transform: scale(0.98);
+  transform: scale(0.98);
+}
+
+.erro-msg {
+  color: var(--delivery-error, #e5483a);
+  text-align: center;
+  margin: 1rem 0;
+  font-size: 0.9rem;
 }
 
 .btn-voltar {
-    width: 100%;
-    padding: 1rem;
-    background: transparent;
-    color: #666;
-    border: none;
-    font-size: 1rem;
-    cursor: pointer;
-    margin-top: 1rem;
+  width: 100%;
+  padding: 14px;
+  background: transparent;
+  color: var(--delivery-text-secondary, #6b5d53);
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 6px;
 }
 
 .btn-voltar:active {
-    color: #333;
+  color: var(--delivery-text, #241c15);
 }
 
 /* ========== DIVISOR "OU" ========== */

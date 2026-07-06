@@ -1,0 +1,115 @@
+/**
+ * Footer de navegação — pedido-mesa e totem (protótipo MesaFooterNav / TotemFooterNav).
+ */
+.delivery-footer-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: var(--delivery-surface, #ffffff);
+  border-top: 1px solid var(--delivery-border, #f0e6de);
+  box-shadow: var(--delivery-shadow-footer, 0 -6px 18px rgba(36, 20, 10, 0.06));
+  z-index: 50;
+  font-family: var(--delivery-font, 'Plus Jakarta Sans', system-ui, sans-serif);
+}
+
+.delivery-footer-nav--mesa {
+  padding: 10px 0 calc(14px + env(safe-area-inset-bottom, 0px));
+}
+
+.delivery-footer-nav--totem {
+  padding: 14px 0 calc(18px + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -8px 20px rgba(36, 20, 10, 0.07);
+}
+
+.delivery-footer-nav__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--delivery-nav-inactive, #b8a99c);
+  transition: color 0.2s;
+  position: relative;
+}
+
+.delivery-footer-nav--mesa .delivery-footer-nav__item {
+  gap: 3px;
+  padding: 6px 14px;
+}
+
+.delivery-footer-nav--totem .delivery-footer-nav__item {
+  gap: 5px;
+  padding: 8px 22px;
+}
+
+.delivery-footer-nav__item--ativo {
+  color: var(--delivery-nav-active, #ff6b35);
+}
+
+.delivery-footer-nav__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.delivery-footer-nav--mesa .delivery-footer-nav__icon {
+  width: 21px;
+  height: 21px;
+}
+
+.delivery-footer-nav--totem .delivery-footer-nav__icon {
+  width: 26px;
+  height: 26px;
+}
+
+.delivery-footer-nav__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.delivery-footer-nav--mesa .delivery-footer-nav__label {
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.delivery-footer-nav--totem .delivery-footer-nav__label {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.delivery-footer-nav__badge {
+  position: absolute;
+  background: var(--delivery-primary, #ff6b35);
+  color: #ffffff;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.delivery-footer-nav--mesa .delivery-footer-nav__badge {
+  top: 0;
+  right: 6px;
+  min-width: 16px;
+  height: 16px;
+  font-size: 10px;
+  padding: 0 4px;
+  border-radius: 8px;
+}
+
+.delivery-footer-nav--totem .delivery-footer-nav__badge {
+  top: 2px;
+  right: 14px;
+  min-width: 19px;
+  height: 19px;
+  font-size: 11.5px;
+  padding: 0 5px;
+  border-radius: 10px;
+}
