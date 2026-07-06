@@ -8,11 +8,13 @@
   </div>
   <div class="lobby-ticker__track">
     <div
+      #marquee
       class="lobby-ticker__marquee"
+      [class.lobby-ticker__marquee--pronto]="larguraSegmentoPx() > 0"
       [style.--ticker-duration]="duracaoAnimacaoCss()"
+      [style.--ticker-shift.px]="deslocamentoPx()"
     >
       <span class="lobby-ticker__item">{{ textoMarquee() }}</span>
-      <span class="lobby-ticker__item" aria-hidden="true">{{ textoMarquee() }}</span>
       <span class="lobby-ticker__item" aria-hidden="true">{{ textoMarquee() }}</span>
     </div>
   </div>

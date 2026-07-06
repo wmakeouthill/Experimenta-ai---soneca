@@ -70,17 +70,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px 46px 28px;
+  padding: 12px 40px 32px;
   min-height: 0;
 }
 
 .lobby-interlude__viewport {
-  width: 100%;
-  height: 100%;
-  min-height: 420px;
-  max-width: 520px;
+  height: min(100%, calc(100vh - 100px));
+  width: auto;
+  aspect-ratio: 9 / 16;
+  max-width: min(720px, 42vw, calc((100vh - 100px) * 9 / 16));
+  min-height: 360px;
   overflow: hidden;
-  border-radius: 32px;
+  border-radius: 28px;
   border: 1px solid var(--lobby-interlude-media-border);
   box-shadow: 0 28px 80px rgba(0, 0, 0, 0.45);
 }
@@ -160,33 +161,45 @@
   color: #ffffff;
 }
 
-.lobby-interlude__footer {
+.lobby-interlude__marca-dagua {
+  position: absolute;
+  left: 32px;
+  bottom: 28px;
+  z-index: 4;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 16px;
-  padding: 0 0 36px;
-  flex-shrink: 0;
+  gap: 12px;
+  opacity: 0.42;
+  pointer-events: none;
+  user-select: none;
 }
 
-.lobby-interlude__avatar {
-  width: 40px;
-  height: 40px;
+.lobby-interlude__marca-avatar {
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
+  filter: grayscale(0.15);
 }
 
-.lobby-interlude__voltamos {
-  font-size: 15px;
+.lobby-interlude__marca-texto {
+  font-size: 14px;
   font-weight: 600;
   color: var(--lobby-interlude-footer-text);
+  letter-spacing: 0.2px;
+  max-width: 220px;
+  line-height: 1.25;
 }
 
 .lobby-interlude__fechar {
-  margin-left: 20px;
+  position: absolute;
+  top: 22px;
+  right: 32px;
+  z-index: 5;
   padding: 9px 18px;
   border-radius: 100px;
   border: 1px solid var(--lobby-interlude-fechar-border);
-  background: none;
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(8px);
   color: var(--lobby-interlude-fechar-text);
   font-family: inherit;
   font-size: 12.5px;
@@ -208,11 +221,27 @@
   }
 
   .lobby-interlude__stage {
-    padding: 14px 20px 20px;
+    padding: 10px 16px 24px;
   }
 
   .lobby-interlude__viewport {
-    max-width: 100%;
-    border-radius: 24px;
+    max-width: min(92vw, calc((100vh - 88px) * 9 / 16));
+    border-radius: 22px;
+  }
+
+  .lobby-interlude__marca-dagua {
+    left: 18px;
+    bottom: 18px;
+    gap: 10px;
+  }
+
+  .lobby-interlude__marca-texto {
+    font-size: 12px;
+    max-width: 160px;
+  }
+
+  .lobby-interlude__fechar {
+    top: 16px;
+    right: 16px;
   }
 }

@@ -29,6 +29,10 @@
       }
     </div>
 
+    @if (permitirFechar()) {
+      <button type="button" class="lobby-interlude__fechar" (click)="fechar()">Fechar</button>
+    }
+
     <div class="lobby-interlude__stage">
       <div class="lobby-interlude__viewport">
         <div
@@ -73,12 +77,9 @@
       </div>
     </div>
 
-    <div class="lobby-interlude__footer">
-      <img src="assets/soneca_ai.png" alt="Soneca" class="lobby-interlude__avatar" />
-      <span class="lobby-interlude__voltamos">Voltamos com a fila em instantes</span>
-      @if (permitirFechar()) {
-        <button type="button" class="lobby-interlude__fechar" (click)="fechar()">Fechar</button>
-      }
+    <div class="lobby-interlude__marca-dagua" aria-hidden="true">
+      <img src="assets/soneca_ai.png" alt="" class="lobby-interlude__marca-avatar" />
+      <span class="lobby-interlude__marca-texto">Voltamos com a fila em instantes</span>
     </div>
   </div>
 }

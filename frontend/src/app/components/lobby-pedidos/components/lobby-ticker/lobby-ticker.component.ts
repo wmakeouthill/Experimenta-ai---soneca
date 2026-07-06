@@ -1,4 +1,18 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  ElementRef,
+  input,
+  OnDestroy,
+  signal,
+  viewChild,
+} from '@angular/core';
+
+/** ~72px/s — rolagem contínua estilo canal de TV */
+const VELOCIDADE_TICKER_PX_S = 72;
 
 @Component({
   selector: 'app-lobby-ticker',
@@ -7,10 +21,12 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
   styleUrl: './lobby-ticker.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LobbyTickerComponent {
+export class LobbyTickerComponent implements OnDestroy {
   readonly texto = input<string>(
     'Experimenta aí do Soneca — Peça pelo app, acompanhe aqui e retire com praticidade!'
   );
+
+  readonly marqueeRef = viewChild<ElementRef<HTMLElement>>('marquee');
 
   readonly segmentos = computed(() => {
     const bruto = this.texto().trim();
@@ -23,10 +39,56 @@ export class LobbyTickerComponent {
     return partes.map((p) => `★ ${p}`).join('    ');
   });
 
-  /** Velocidade estilo canal de TV: ~10 caracteres por segundo */
+  /** Largura de um segmento em px — loop sem salto na animação */
+  readonly larguraSegmentoPx = signal(0);
+
   readonly duracaoAnimacaoCss = computed(() => {
-    const chars = Math.max(this.textoMarquee().length, 24);
-    const segundos = Math.max(16, Math.min(90, chars / 10));
+    const largura = this.larguraSegmentoPx();
+    if (largura <= 0) return '40s';
+    const segundos = Math.max(14, Math.min(120, largura / VELOCIDADE_TICKER_PX_S));
     return `${segundos}s`;
   });
+
+  readonly deslocamentoPx = computed(() => -this.larguraSegmentoPx());
+
+  private resizeObserver: ResizeObserver | null = null;
+
+  constructor() {
+    afterNextRender(() => this.configurarMedicao());
+
+    effect(() => {
+      this.textoMarquee();
+      queueMicrotask(() => this.medirSegmento());
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = null;
+  }
+
+  private configurarMedicao(): void {
+    const marquee = this.marqueeRef()?.nativeElement;
+    if (!marquee) return;
+
+    this.medirSegmento();
+
+    this.resizeObserver = new ResizeObserver(() => this.medirSegmento());
+    this.resizeObserver.observe(marquee);
+    const primeiro = marquee.querySelector<HTMLElement>('.lobby-ticker__item');
+    if (primeiro) {
+      this.resizeObserver.observe(primeiro);
+    }
+  }
+
+  private medirSegmento(): void {
+    const marquee = this.marqueeRef()?.nativeElement;
+    const primeiro = marquee?.querySelector<HTMLElement>('.lobby-ticker__item');
+    if (!primeiro) return;
+
+    const largura = Math.round(primeiro.getBoundingClientRect().width);
+    if (largura > 0 && largura !== this.larguraSegmentoPx()) {
+      this.larguraSegmentoPx.set(largura);
+    }
+  }
 }
