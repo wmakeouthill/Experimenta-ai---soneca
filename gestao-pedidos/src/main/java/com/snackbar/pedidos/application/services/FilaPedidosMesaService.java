@@ -56,22 +56,33 @@ public class FilaPedidosMesaService {
     }
 
     /**
-     * Cria um pedido pendente OCULTO (aguardando aprovacao de PIX), com um unico
-     * meio de pagamento PIX pelo valor total calculado no backend.
+     * Cria um pedido pendente OCULTO aguardando pagamento digital, com um unico
+     * meio de pagamento pelo valor total calculado no backend.
      */
     @Transactional
     public PedidoPendenteDTO adicionarPedidoAguardandoPagamento(
             CriarPedidoMesaRequest request, String pagamentoCorrelationId) {
+        return adicionarPedidoAguardandoPagamento(
+                request, pagamentoCorrelationId, com.snackbar.pedidos.domain.entities.MeioPagamento.PIX);
+    }
+
+    /**
+     * Cria um pedido pendente oculto com um unico meio pelo valor total calculado
+     * no backend. O meio e definido pelo fluxo digital aprovado.
+     */
+    @Transactional
+    public PedidoPendenteDTO adicionarPedidoAguardandoPagamento(
+            CriarPedidoMesaRequest request, String pagamentoCorrelationId,
+            com.snackbar.pedidos.domain.entities.MeioPagamento meio) {
         PedidoPendenteDTO pedido = montarPedidoPendente(request, true, pagamentoCorrelationId, null);
-        // Substitui quaisquer meios enviados pelo cliente por um unico PIX do valor total.
-        MeioPagamentoRequest pix = new MeioPagamentoRequest();
-        pix.setMeioPagamento(com.snackbar.pedidos.domain.entities.MeioPagamento.PIX);
-        pix.setValor(pedido.getValorTotal());
-        pedido.setMeiosPagamento(java.util.List.of(pix));
+        MeioPagamentoRequest pagamento = new MeioPagamentoRequest();
+        pagamento.setMeioPagamento(meio);
+        pagamento.setValor(pedido.getValorTotal());
+        pedido.setMeiosPagamento(java.util.List.of(pagamento));
 
         PedidoPendenteDTO salvo = pedidoPendenteRepository.salvar(pedido);
-        log.info("Pedido pre-pago (oculto) adicionado - ID: {}, Mesa: {}, correlationId: {}",
-                salvo.getId(), salvo.getNumeroMesa(), pagamentoCorrelationId);
+        log.info("Pedido pre-pago (oculto) adicionado - ID: {}, Mesa: {}, meio: {}, correlationId: {}",
+                salvo.getId(), salvo.getNumeroMesa(), meio, pagamentoCorrelationId);
         return salvo;
     }
 

@@ -4,6 +4,8 @@ import com.snackbar.pedidos.infrastructure.idempotency.IdempotencyService;
 import com.snackbar.pedidos.application.dto.CriarPedidoMesaRequest;
 import com.snackbar.pedidos.application.dto.MesaDTO;
 import com.snackbar.pedidos.application.dto.PedidoMesaComPixDTO;
+import com.snackbar.pedidos.application.dto.PagarPedidoMesaComCartaoRequest;
+import com.snackbar.pedidos.application.dto.ResultadoPagamentoCartaoDTO;
 import com.snackbar.pedidos.application.dto.PedidoPendenteDTO;
 import com.snackbar.pedidos.application.dto.CardapioPublicoDTO;
 import com.snackbar.pedidos.application.dto.ClientePublicoDTO;
@@ -12,6 +14,7 @@ import com.snackbar.pedidos.application.dto.ProdutoPopularDTO;
 import com.snackbar.pedidos.application.dto.StatusPedidoClienteDTO;
 import com.snackbar.pedidos.application.usecases.BuscarMesaPorTokenUseCase;
 import com.snackbar.pedidos.application.usecases.CriarPedidoMesaComPixUseCase;
+import com.snackbar.pedidos.application.usecases.PagarPedidoMesaComCartaoUseCase;
 import com.snackbar.pedidos.application.usecases.CriarPedidoMesaUseCase;
 import com.snackbar.pedidos.application.usecases.BuscarCardapioPublicoUseCase;
 import com.snackbar.pedidos.application.usecases.BuscarProdutosPopularesUseCase;
@@ -49,6 +52,7 @@ public class PedidoMesaRestController {
     private final BuscarMesaPorTokenUseCase buscarMesaPorTokenUseCase;
     private final CriarPedidoMesaUseCase criarPedidoMesaUseCase;
     private final CriarPedidoMesaComPixUseCase criarPedidoMesaComPixUseCase;
+    private final PagarPedidoMesaComCartaoUseCase pagarPedidoMesaComCartaoUseCase;
     private final BuscarCardapioPublicoUseCase buscarCardapioPublicoUseCase;
     private final BuscarProdutosPopularesUseCase buscarProdutosPopularesUseCase;
     private final BuscarStatusPedidoClienteUseCase buscarStatusPedidoClienteUseCase;
@@ -154,6 +158,18 @@ public class PedidoMesaRestController {
             @RequestHeader("X-Correlation-Id") String correlationId) {
         PedidoMesaComPixDTO resposta = criarPedidoMesaComPixUseCase.executar(correlationId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(resposta);
+    }
+
+    /**
+     * Paga um pedido-mesa PRE_PAGO com cartao digital de forma sincrona.
+     */
+    @PostMapping("/pedido/cartao")
+    public ResponseEntity<ResultadoPagamentoCartaoDTO> pagarComCartao(
+            @Valid @RequestBody PagarPedidoMesaComCartaoRequest request,
+            @RequestHeader("X-Correlation-Id") String correlationId) {
+        ResultadoPagamentoCartaoDTO resposta = pagarPedidoMesaComCartaoUseCase.executar(correlationId, request);
+        HttpStatus status = resposta.aprovado() ? HttpStatus.CREATED : HttpStatus.PAYMENT_REQUIRED;
+        return ResponseEntity.status(status).body(resposta);
     }
 
     /**
