@@ -1,8 +1,69 @@
 /* Extensões delivery para totem — início, cardápio e carrinho */
 
+/* Área rolável principal (início, cardápio, carrinho) */
+.totem-main-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
+}
+
+.aba-cardapio {
+  display: flex;
+  flex-direction: column;
+  min-height: min-content;
+}
+
+.autoatendimento-container .categorias-scroll {
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  padding: 12px 16px;
+  min-height: 52px;
+  align-items: center;
+  background: var(--delivery-surface, #ffffff);
+  border-bottom: 1px solid var(--delivery-border, #f0e6de);
+  box-shadow: 0 2px 8px rgba(36, 20, 10, 0.06);
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+}
+
+.autoatendimento-container .produtos-container {
+  flex: 1;
+  position: relative;
+  z-index: 1;
+  padding: 16px 20px;
+  padding-bottom: calc(var(--delivery-footer-height-totem, 92px) + 32px);
+  max-width: 720px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.autoatendimento-container .aba-inicio {
+  padding-bottom: calc(var(--delivery-footer-height-totem, 92px) + 24px);
+}
+
+.autoatendimento-container .carrossel-horizontal {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  padding-bottom: 8px;
+}
+
 /* Botões (compartilhados com mesa) */
 .btn-primary {
-  background: var(--delivery-gradient-primary);
+  background-color: #ff6b35;
+  background-image: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
   color: #ffffff;
   border: none;
   padding: 15px 1.5rem;
@@ -17,6 +78,8 @@
   justify-content: center;
   gap: 8px;
   box-shadow: var(--delivery-shadow-lg);
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -216,10 +279,6 @@
 .autoatendimento-container .quantidade-mini button {
   width: 34px;
   height: 34px;
-}
-
-.autoatendimento-container .produtos-container {
-  padding-bottom: calc(var(--delivery-footer-height-totem, 92px) + 48px);
 }
 
 @media (min-width: 768px) {

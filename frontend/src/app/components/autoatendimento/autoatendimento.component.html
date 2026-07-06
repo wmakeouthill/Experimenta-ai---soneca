@@ -143,8 +143,8 @@
           }
         }
       </header>
-    }
 
+      <main class="totem-main-scroll">
     <!-- ========== ABA: INÍCIO ========== -->
     @if (!carregando() && !erro() && !etapaAtual() && abaAtual() === 'inicio') {
       <div class="aba-inicio">
@@ -296,6 +296,7 @@
 
     <!-- ========== ABA: CARDÁPIO ========== -->
     @if (!carregando() && !erro() && !etapaAtual() && abaAtual() === 'cardapio') {
+      <div class="aba-cardapio">
       <!-- Categorias -->
       <div class="categorias-scroll">
         <button
@@ -405,6 +406,7 @@
           </div>
         }
       </div>
+      </div>
     }
 
     <!-- ========== ABA: CARRINHO ========== -->
@@ -501,6 +503,9 @@
           </div>
         }
       </div>
+    }
+
+      </main>
     }
 
     <!-- ========== FOOTER NAVEGAÇÃO ========== -->
