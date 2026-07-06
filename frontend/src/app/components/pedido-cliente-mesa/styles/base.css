@@ -28,7 +28,8 @@
 
 /* ========== Buttons ========== */
 .btn-primary {
-  background: var(--delivery-gradient-primary);
+  background-color: #ff6b35;
+  background-image: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
   color: #ffffff;
   border: none;
   padding: 16px 1.5rem;
@@ -43,6 +44,8 @@
   justify-content: center;
   gap: 8px;
   box-shadow: var(--delivery-shadow-lg);
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .btn-ver-cardapio {

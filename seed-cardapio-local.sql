@@ -23,12 +23,12 @@ SET @agora = NOW();
 
 INSERT INTO categorias (id, nome, descricao, ativa, created_at, updated_at)
 SELECT * FROM (
-    SELECT 'cat-0001-lanches'   AS id, 'Lanches'    AS nome, 'Sanduíches, hambúrgueres e lanches tradicionais' AS descricao, TRUE AS ativa, @agora AS created_at, @agora AS updated_at UNION ALL
-    SELECT 'cat-0002-bebidas',   'Bebidas',    'Refrigerantes, sucos, água e milk-shakes' UNION ALL
-    SELECT 'cat-0003-porcoes',   'Porções',    'Acompanhamentos e petiscos para compartilhar' UNION ALL
-    SELECT 'cat-0004-sobremesas','Sobremesas', 'Doces e sobremesas da casa' UNION ALL
-    SELECT 'cat-0005-combos',    'Combos',     'Promoções com lanche + bebida + acompanhamento' UNION ALL
-    SELECT 'cat-0006-saladas',   'Saladas',    'Opções leves e saladas frescas'
+    SELECT 'cat-0001-lanches'    AS id, 'Lanches'     AS nome, 'Sanduíches, hambúrgueres e lanches tradicionais' AS descricao, TRUE AS ativa, @agora AS created_at, @agora AS updated_at UNION ALL
+    SELECT 'cat-0002-bebidas',           'Bebidas',           'Refrigerantes, sucos, água e milk-shakes',                TRUE, @agora, @agora UNION ALL
+    SELECT 'cat-0003-porcoes',           'Porções',           'Acompanhamentos e petiscos para compartilhar',            TRUE, @agora, @agora UNION ALL
+    SELECT 'cat-0004-sobremesas',        'Sobremesas',        'Doces e sobremesas da casa',                              TRUE, @agora, @agora UNION ALL
+    SELECT 'cat-0005-combos',            'Combos',            'Promoções com lanche + bebida + acompanhamento',          TRUE, @agora, @agora UNION ALL
+    SELECT 'cat-0006-saladas',           'Saladas',           'Opções leves e saladas frescas',                         TRUE, @agora, @agora
 ) AS novas
 WHERE NOT EXISTS (SELECT 1 FROM categorias c WHERE c.nome = novas.nome);
 

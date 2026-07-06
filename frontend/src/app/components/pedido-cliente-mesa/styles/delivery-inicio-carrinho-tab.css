@@ -1,13 +1,13 @@
 /* ========== ABA CARRINHO ========== */
 .aba-carrinho {
-  padding-bottom: calc(var(--delivery-footer-height-mesa, 76px) + 140px);
+  padding-bottom: calc(var(--delivery-footer-height-mesa, 76px) + env(safe-area-inset-bottom, 0px) + 160px);
   max-width: 640px;
   width: 100%;
   margin: 0 auto;
 }
 
 .carrinho-page-header {
-  padding: 22px 20px 12px;
+  padding: max(18px, env(safe-area-inset-top, 0px)) 20px 12px;
 }
 
 .carrinho-page-header h2 {
@@ -129,14 +129,14 @@
 
 .aba-carrinho .carrinho-footer {
   position: fixed;
-  bottom: var(--delivery-footer-height-mesa, 76px);
+  bottom: calc(var(--delivery-footer-height-mesa, 76px) + env(safe-area-inset-bottom, 0px));
   left: 0;
   right: 0;
   background: var(--delivery-surface, #ffffff);
-  padding: 16px 20px;
-  border-top: none;
-  box-shadow: 0 -6px 18px rgba(36, 20, 10, 0.06);
-  z-index: 40;
+  padding: 14px 20px calc(14px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--delivery-border-light, #f5ede6);
+  box-shadow: 0 -6px 18px rgba(36, 20, 10, 0.08);
+  z-index: 45;
 }
 
 .carrinho-total-row {
@@ -158,10 +158,31 @@
   font-size: 20px;
 }
 
-.aba-carrinho .carrinho-footer .btn-primary {
+.aba-carrinho .carrinho-footer .btn-primary,
+.aba-carrinho .carrinho-footer .btn-iniciar-pagamento {
+  width: 100%;
   max-width: 600px;
   margin: 0 auto;
-  display: block;
+  display: flex;
+  min-height: 52px;
+  background-color: #ff6b35;
+  background-image: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--delivery-radius-sm, 14px);
+  font-size: 16px;
+  font-weight: 800;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 10px 22px rgba(255, 107, 53, 0.32);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.aba-carrinho .carrinho-footer .btn-primary:active:not(:disabled),
+.aba-carrinho .carrinho-footer .btn-iniciar-pagamento:active:not(:disabled) {
+  transform: scale(0.98);
+  opacity: 0.95;
 }
 
 /* ========== ABA INÍCIO ========== */
@@ -384,4 +405,4 @@
   font-size: 14px;
   font-weight: 700;
   color: var(--delivery-text, #241c15);
-}
+}

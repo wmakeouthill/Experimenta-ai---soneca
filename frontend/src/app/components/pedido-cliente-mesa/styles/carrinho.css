@@ -368,9 +368,12 @@
   width: 100%;
   max-width: 480px;
   margin: 0 auto;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 16px;
-  background: var(--delivery-gradient-primary);
+  background-color: #ff6b35;
+  background-image: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
   color: #ffffff;
   border: none;
   border-radius: var(--delivery-radius-sm, 14px);
@@ -380,7 +383,9 @@
   cursor: pointer;
   box-shadow: var(--delivery-shadow-lg);
   transition: opacity 0.2s, transform 0.1s;
-  min-height: 48px;
+  min-height: 52px;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .btn-enviar-pedido:disabled {

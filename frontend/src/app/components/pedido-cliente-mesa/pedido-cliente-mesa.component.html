@@ -669,8 +669,8 @@
                   <span>Total</span>
                   <span class="total-valor">{{ carrinho.totalValor() | currency: 'BRL' }}</span>
                 </div>
-                <button class="btn-primary btn-large" (click)="irParaEtapaPagamento()">
-                  Continuar
+                <button class="btn-primary btn-large btn-iniciar-pagamento" (click)="irParaEtapaPagamento()">
+                  Iniciar pagamento
                 </button>
               </div>
             }
@@ -2023,7 +2023,7 @@
     }
 
     <!-- ========== CHAT IA - Botão flutuante e Chat fullscreen ========== -->
-    @if (etapaAtual() === 'cardapio' && !chatIA.isOpen()) {
+    @if (etapaAtual() === 'cardapio' && !chatIA.isOpen() && abaAtual() !== 'carrinho') {
       <app-chat-ia-button
         [pulse]="true"
         [elevacaoExtra]="offsetChatFlutuante()"
