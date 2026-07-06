@@ -21,6 +21,7 @@ export class OrderListComponent implements OnDestroy {
   readonly status = input.required<StatusPedido>();
   readonly pedidos = input.required<Pedido[]>();
   readonly isModoGestor = input<boolean>(false);
+  readonly conteudoPausado = input<boolean>(false);
   readonly isAnimating = input<boolean>(false);
   readonly pedidoAnimando = input<string | null>(null);
   readonly pedidoAnimandoDados = input<Pedido | null>(null);
@@ -29,19 +30,20 @@ export class OrderListComponent implements OnDestroy {
   readonly onMarcarComoPronto = output<string>();
   readonly onRemover = output<string>();
 
-  @ViewChild('listRef', { static: false }) listRef!: ElementRef<HTMLElement>;
+  @ViewChild('columnRef', { static: false }) columnRef!: ElementRef<HTMLElement>;
 
   private readonly pagination = usePagination(() => this.isModoGestor(), this.platformId);
   private readonly resizeHandler = useResizeHandler({
-    getListRef: () => this.listRef,
+    getListRef: () => this.columnRef,
     isModoGestor: () => this.isModoGestor(),
     onResize: () => this.handleResize()
   });
   private readonly effects = useOrderListEffects({
     platformId: this.platformId,
-    getListRef: () => this.listRef,
+    getColumnRef: () => this.columnRef,
     isModoGestor: () => this.isModoGestor(),
-    pedidosComAnimacao: () => this.listaParaExibicao(),
+    conteudoPausado: () => this.conteudoPausado(),
+    listaParaExibicao: () => this.listaParaExibicao(),
     pagination: this.pagination,
   });
 
@@ -115,7 +117,7 @@ export class OrderListComponent implements OnDestroy {
   }
 
   private handleResize(): void {
-    this.pagination.calcularItensPorPagina(this.listRef);
+    this.pagination.calcularItensPorPagina(this.columnRef);
     this.pagination.ajustarPagina(this.listaParaExibicao());
   }
 

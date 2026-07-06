@@ -134,6 +134,15 @@
   padding: 18px 22px;
 }
 
+.lista-pedidos-cards {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .lista-paginada .card-pedido {
   animation: lobby-card-in 0.6s ease-in-out;
 }

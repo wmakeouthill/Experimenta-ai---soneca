@@ -46,7 +46,6 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
   readonly lobbyPedidos = useLobbyPedidos();
   readonly animations = useAnimations();
 
-  readonly isAnimating = computed(() => this.animations.isAnimating());
   readonly mostrarInterludio = computed(() => this.animations.mostrarInterludio());
   readonly mostrarConfigModal = signal<boolean>(false);
   readonly tema = signal<LobbyTema>('escuro');
@@ -79,7 +78,6 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
 
       if (pedidosAtuais.length !== pedidosAnt.length ||
         pedidosAtuais.some((p, i) => p.id !== pedidosAnt[i]?.id || p.status !== pedidosAnt[i]?.status)) {
-        this.verificarMudancas(pedidosAnt, pedidosAtuais);
         this.pedidosAnteriores.set([...pedidosAtuais]);
       }
     }, { allowSignalWrites: true });
@@ -196,20 +194,6 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
     });
   }
 
-  private verificarMudancas(anteriores: Pedido[], atuais: Pedido[]) {
-    // Verificar se animação periódica está ativada
-    const config = this.animations.animacaoConfig();
-    if (!config.animacaoAtivada) return; // Não animar automaticamente se desabilitada
-
-    for (const atual of atuais) {
-      const anterior = anteriores.find(p => p.id === atual.id);
-      if (anterior && anterior.status === StatusPedido.PREPARANDO && atual.status === StatusPedido.PRONTO) {
-        this.animations.animarTransicaoStatus(atual, anterior.status, config.duracaoAnimacao);
-        break;
-      }
-    }
-  }
-
   // Métodos vazios para eventos do modo visualização (não fazem nada)
   handleMarcarComoPronto(_id: string) {
     // Modo visualização - não faz nada
@@ -316,7 +300,7 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
             return;
           }
 
-          if (this.animations.mostrarInterludio() || this.animations.isAnimating()) {
+          if (this.animations.mostrarInterludio()) {
             return;
           }
 

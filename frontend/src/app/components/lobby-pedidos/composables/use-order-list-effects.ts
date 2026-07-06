@@ -13,9 +13,10 @@ interface PaginationApi {
 
 interface OrderListEffectsConfig {
   platformId: Object;
-  getListRef: () => ElementRef<HTMLElement> | null;
+  getColumnRef: () => ElementRef<HTMLElement> | null;
   isModoGestor: () => boolean;
-  pedidosComAnimacao: () => any[];
+  conteudoPausado: () => boolean;
+  listaParaExibicao: () => any[];
   pagination: PaginationApi;
 }
 
@@ -27,38 +28,13 @@ export function useOrderListEffects(config: OrderListEffectsConfig) {
   const platformId = inject(PLATFORM_ID);
   let autoPaginaIniciada = false;
 
-  const deveTerAutoPagina = (): boolean => {
-    if (!isPlatformBrowser(config.platformId)) return false;
-    if (config.isModoGestor()) return false;
+  const recalcularPagina = () => {
+    const pedidos = config.listaParaExibicao();
+    const columnRef = config.getColumnRef();
 
-    const pedidos = config.pedidosComAnimacao();
-    const itensPorPagina = config.pagination.itensPorPagina();
-    const info = config.pagination.getInfoPagina(pedidos);
-    const listRef = config.getListRef();
-
-    return info.temPagina && 
-           info.totalPaginas > 1 && 
-           itensPorPagina !== null && 
-           listRef?.nativeElement !== null;
-  };
-
-  const iniciarAutoPaginaSeNecessario = () => {
-    if (!deveTerAutoPagina()) {
-      if (autoPaginaIniciada || config.pagination.estaAutoPaginaRodando()) {
-        autoPaginaIniciada = false;
-        config.pagination.pararAutoPagina();
-      }
-      return;
-    }
-
-    if (!autoPaginaIniciada && !config.pagination.estaAutoPaginaRodando()) {
-      autoPaginaIniciada = true;
-      setTimeout(() => {
-        const listRef = config.getListRef();
-        if (listRef?.nativeElement && !config.pagination.estaAutoPaginaRodando()) {
-          config.pagination.iniciarAutoPagina(() => config.pedidosComAnimacao());
-        }
-      }, 800);
+    if (columnRef?.nativeElement && !config.isModoGestor()) {
+      config.pagination.calcularItensPorPagina(columnRef);
+      config.pagination.ajustarPagina(pedidos);
     }
   };
 
@@ -66,17 +42,23 @@ export function useOrderListEffects(config: OrderListEffectsConfig) {
     effect(() => {
       if (!isPlatformBrowser(config.platformId)) return;
 
-      const pedidos = config.pedidosComAnimacao();
-      const listRef = config.getListRef();
+      const pedidos = config.listaParaExibicao();
+      const pausado = config.conteudoPausado();
+      const columnRef = config.getColumnRef();
 
-      if (listRef?.nativeElement && !config.isModoGestor()) {
-        setTimeout(() => {
-          config.pagination.calcularItensPorPagina(listRef);
-          config.pagination.ajustarPagina(pedidos);
-        }, 100);
+      if (pausado) {
+        config.pagination.pararAutoPagina();
+        autoPaginaIniciada = false;
+        return;
+      }
+
+      if (columnRef?.nativeElement && !config.isModoGestor()) {
+        setTimeout(() => recalcularPagina(), 100);
       } else {
         config.pagination.pararAutoPagina();
       }
+
+      void pedidos;
     });
   };
 
@@ -84,24 +66,30 @@ export function useOrderListEffects(config: OrderListEffectsConfig) {
     effect(() => {
       if (!isPlatformBrowser(config.platformId)) return;
 
-      const pedidos = config.pedidosComAnimacao();
+      const pedidos = config.listaParaExibicao();
+      const pausado = config.conteudoPausado();
       const itensPorPagina = config.pagination.itensPorPagina();
       const info = config.pagination.getInfoPagina(pedidos);
-      const listRef = config.getListRef();
+      const columnRef = config.getColumnRef();
 
-      const deveTer = !config.isModoGestor() && 
-                      info.temPagina && 
+      if (pausado) {
+        autoPaginaIniciada = false;
+        config.pagination.pararAutoPagina();
+        return;
+      }
+
+      const deveTer = !config.isModoGestor() &&
+                      info.temPagina &&
                       info.totalPaginas > 1 &&
-                      itensPorPagina !== null && 
-                      listRef?.nativeElement !== null;
+                      itensPorPagina !== null &&
+                      columnRef?.nativeElement !== null;
 
       if (deveTer) {
         if (!autoPaginaIniciada && !config.pagination.estaAutoPaginaRodando()) {
           autoPaginaIniciada = true;
           setTimeout(() => {
-            const listRefAtual = config.getListRef();
-            if (listRefAtual?.nativeElement && !config.pagination.estaAutoPaginaRodando()) {
-              config.pagination.iniciarAutoPagina(() => config.pedidosComAnimacao());
+            if (!config.pagination.estaAutoPaginaRodando()) {
+              config.pagination.iniciarAutoPagina(() => config.listaParaExibicao());
             }
           }, 800);
         }
@@ -117,21 +105,25 @@ export function useOrderListEffects(config: OrderListEffectsConfig) {
       if (!isPlatformBrowser(config.platformId)) return;
 
       setTimeout(() => {
-        const pedidos = config.pedidosComAnimacao();
+        if (config.conteudoPausado()) return;
+
+        recalcularPagina();
+
+        const pedidos = config.listaParaExibicao();
         const itensPorPagina = config.pagination.itensPorPagina();
         const info = config.pagination.getInfoPagina(pedidos);
-        const listRef = config.getListRef();
+        const columnRef = config.getColumnRef();
 
-        if (!config.isModoGestor() && 
-            info.temPagina && 
+        if (!config.isModoGestor() &&
+            info.temPagina &&
             info.totalPaginas > 1 &&
-            itensPorPagina !== null && 
-            listRef?.nativeElement !== null && 
+            itensPorPagina !== null &&
+            columnRef?.nativeElement !== null &&
             !config.pagination.estaAutoPaginaRodando()) {
           autoPaginaIniciada = true;
-          config.pagination.iniciarAutoPagina(() => config.pedidosComAnimacao());
+          config.pagination.iniciarAutoPagina(() => config.listaParaExibicao());
         }
-      }, 1000);
+      }, 300);
     });
   };
 
@@ -147,4 +139,3 @@ export function useOrderListEffects(config: OrderListEffectsConfig) {
     limpar
   };
 }
-

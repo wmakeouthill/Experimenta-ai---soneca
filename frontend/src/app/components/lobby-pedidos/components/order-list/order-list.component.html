@@ -1,4 +1,7 @@
-<div [class]="'coluna-fila ' + columnClass() + (isAnimating() ? ' saindo' : '')">
+<div
+  #columnRef
+  [class]="'coluna-fila ' + columnClass() + (isModoGestor() && isAnimating() ? ' saindo' : '')"
+>
   <div [class]="'cabecalho-coluna ' + headerClass()">
     <span class="cabecalho-coluna__dot" aria-hidden="true"></span>
     <h2>{{ titleText() }}</h2>
@@ -14,28 +17,27 @@
     <span class="contador">{{ pedidosComAnimacao().length }}</span>
   </div>
 
-  <div
-    #listRef
-    [class]="'lista-pedidos ' + (!isModoGestor() ? 'lista-paginada' : '')"
-  >
+  <div [class]="'lista-pedidos ' + (!isModoGestor() ? 'lista-paginada' : '')">
     @if (pedidosComAnimacao().length === 0) {
       <div class="pedido-vazio">{{ emptyText() }}</div>
     } @else {
       @if (pedidoHero(); as hero) {
         <app-lobby-hero-card [pedido]="hero" />
       }
-      @for (pedido of itensPaginados(); track pedido.id; let i = $index) {
-        <app-order-card
-          [pedido]="pedido"
-          [isModoGestor]="isModoGestor()"
-          [isAnimating]="isAnimating()"
-          [pedidoAnimando]="pedidoAnimando()"
-          [relogioMs]="relogioMs()"
-          (onMarcarComoPronto)="handleMarcarComoPronto($event)"
-          (onRemover)="handleRemover($event)"
-          [style.animation-delay]="i * 0.05 + 's'"
-        />
-      }
+      <div class="lista-pedidos-cards">
+        @for (pedido of itensPaginados(); track pedido.id; let i = $index) {
+          <app-order-card
+            [pedido]="pedido"
+            [isModoGestor]="isModoGestor()"
+            [isAnimating]="isAnimating()"
+            [pedidoAnimando]="pedidoAnimando()"
+            [relogioMs]="relogioMs()"
+            (onMarcarComoPronto)="handleMarcarComoPronto($event)"
+            (onRemover)="handleRemover($event)"
+            [style.animation-delay]="i * 0.05 + 's'"
+          />
+        }
+      </div>
     }
   </div>
 </div>

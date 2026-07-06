@@ -7,48 +7,58 @@ interface PaginationInfo {
   temPagina: boolean;
 }
 
+/** Altura fixa do card compacto no lobby TV (não medir DOM paginado — evita ciclo 1/página). */
+const ALTURA_CARD_TV = 74;
+const GAP_LISTA = 10;
+const CAPACIDADE_MINIMA_TV = 5;
+const PADDING_LISTA = 36;
+
 export function usePagination(isModoGestor: () => boolean, platformId: Object) {
   const pagina = signal(0);
   const itensPorPagina = signal<number | null>(null);
-  let autoPaginaInterval: any = null;
+  let autoPaginaInterval: ReturnType<typeof setInterval> | null = null;
 
-  const calcularItensPorPagina = (containerRef: ElementRef<HTMLElement> | null) => {
-    if (!containerRef?.nativeElement) return;
+  const calcularItensPorPagina = (columnRef: ElementRef<HTMLElement> | null) => {
+    if (isModoGestor() || !columnRef?.nativeElement) return;
 
-    const container = containerRef.nativeElement;
-    const alturaContainer = container.clientHeight;
-    const primeiroItem = container.querySelector('.card-pedido') as HTMLElement;
+    const column = columnRef.nativeElement;
+    if (column.clientHeight <= 0) return;
 
-    if (!primeiroItem || alturaContainer === 0) {
-      // Se não tem item ainda, tenta calcular baseado na altura do container
-      const alturaBase = 100; // altura aproximada de um card
-      const gap = 15;
-      const itens = Math.floor((alturaContainer + gap) / (alturaBase + gap));
-      itensPorPagina.set(Math.max(1, itens));
-      return;
-    }
+    const header = column.querySelector('.cabecalho-coluna') as HTMLElement | null;
+    const hero = column.querySelector('.lobby-hero') as HTMLElement | null;
+    const headerHeight = header?.offsetHeight ?? 0;
+    const heroHeight = hero ? hero.offsetHeight + 12 : 0;
+    const alturaDisponivel = column.clientHeight - headerHeight - heroHeight - PADDING_LISTA;
 
-    const alturaCard = primeiroItem.offsetHeight || 100;
-    const gap = 15;
-    const padding = 10; // padding da lista
-    const alturaDisponivel = alturaContainer - padding;
-    const itens = Math.floor((alturaDisponivel + gap) / (alturaCard + gap));
-    itensPorPagina.set(Math.max(1, itens));
+    if (alturaDisponivel <= 0) return;
+
+    const itens = Math.floor((alturaDisponivel + GAP_LISTA) / (ALTURA_CARD_TV + GAP_LISTA));
+    itensPorPagina.set(Math.max(CAPACIDADE_MINIMA_TV, itens));
   };
 
   const getItensPaginados = (items: any[]) => {
-    if (isModoGestor() || !itensPorPagina() || items.length <= (itensPorPagina() || 0)) {
+    if (isModoGestor()) return items;
+
+    const capacidade = itensPorPagina();
+    if (!capacidade || items.length <= capacidade) {
       return items;
     }
-    const inicio = pagina() * (itensPorPagina() || 0);
-    return items.slice(inicio, inicio + (itensPorPagina() || 0));
+
+    const inicio = pagina() * capacidade;
+    return items.slice(inicio, inicio + capacidade);
   };
 
   const getInfoPagina = (items: any[]): PaginationInfo => {
-    if (isModoGestor() || !itensPorPagina() || items.length <= (itensPorPagina() || 0)) {
+    if (isModoGestor()) {
       return { totalPaginas: 1, paginaAtual: 0, temPagina: false };
     }
-    const totalPaginas = Math.ceil(items.length / (itensPorPagina() || 0));
+
+    const capacidade = itensPorPagina();
+    if (!capacidade || items.length <= capacidade) {
+      return { totalPaginas: 1, paginaAtual: 0, temPagina: false };
+    }
+
+    const totalPaginas = Math.ceil(items.length / capacidade);
     return {
       totalPaginas,
       paginaAtual: pagina(),
@@ -63,8 +73,9 @@ export function usePagination(isModoGestor: () => boolean, platformId: Object) {
       return;
     }
 
-    if (itensPorPagina() && items.length > (itensPorPagina() || 0)) {
-      const totalPaginas = Math.ceil(items.length / (itensPorPagina() || 0));
+    const capacidade = itensPorPagina();
+    if (capacidade && items.length > capacidade) {
+      const totalPaginas = Math.ceil(items.length / capacidade);
       pagina.update(p => totalPaginas <= 1 ? 0 : Math.min(p, totalPaginas - 1));
     } else {
       pagina.set(0);
@@ -83,39 +94,30 @@ export function usePagination(isModoGestor: () => boolean, platformId: Object) {
   };
 
   const iniciarAutoPagina = (items: () => any[]) => {
-    // Se já existe um intervalo rodando, não reiniciar
-    if (autoPaginaInterval) {
-      return;
-    }
-
+    if (autoPaginaInterval) return;
     if (isModoGestor()) return;
     if (!isPlatformBrowser(platformId)) return;
 
-    // Verificar se já tem itensPorPagina calculado
     if (!itensPorPagina()) {
-      // Se não tem ainda, aguardar um pouco e tentar novamente
       setTimeout(() => iniciarAutoPagina(items), 100);
       return;
     }
 
-    // Verificar se há páginas antes de iniciar
     const listaInicial = items();
     const infoInicial = getInfoPagina(listaInicial);
     if (!infoInicial.temPagina || infoInicial.totalPaginas <= 1) {
-      return; // Não inicia se não há múltiplas páginas
+      return;
     }
 
-    // Iniciar intervalo de auto-paginação
     autoPaginaInterval = setInterval(() => {
       const lista = items();
       const info = getInfoPagina(lista);
       if (info.temPagina && info.totalPaginas > 1) {
         avancarPagina(lista);
       } else {
-        // Se não há mais páginas, parar o intervalo
         pararAutoPagina();
       }
-    }, 5000); // 5 segundos
+    }, 5000);
   };
 
   const pararAutoPagina = () => {
@@ -125,9 +127,7 @@ export function usePagination(isModoGestor: () => boolean, platformId: Object) {
     }
   };
 
-  const estaAutoPaginaRodando = () => {
-    return autoPaginaInterval !== null;
-  };
+  const estaAutoPaginaRodando = () => autoPaginaInterval !== null;
 
   return {
     pagina,
@@ -141,4 +141,3 @@ export function usePagination(isModoGestor: () => boolean, platformId: Object) {
     estaAutoPaginaRodando
   };
 }
-
