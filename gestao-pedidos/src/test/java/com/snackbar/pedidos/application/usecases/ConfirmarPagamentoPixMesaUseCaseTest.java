@@ -2,6 +2,8 @@ package com.snackbar.pedidos.application.usecases;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -48,6 +50,15 @@ class ConfirmarPagamentoPixMesaUseCaseTest {
         return pagamento;
     }
 
+    private Pagamento aguardandoPixDeContaMesa(String contaMesaId, String txid) {
+        Pagamento pagamento = Pagamento.iniciarParaContaMesa(
+                contaMesaId, CanalPagamento.MESA, GatewayPagamento.SIMULADO,
+                3000L, MeioPagamentoGateway.PIX, "corr-" + txid);
+        pagamento.marcarAguardandoPix(new DadosPix(
+                txid, "payload", "b64", "copia", LocalDateTime.now().plusMinutes(3)));
+        return pagamento;
+    }
+
     @Test
     void deveLiberarPedidoPendenteAoConfirmarPixDeMesa() {
         var pagamento = aguardandoPixDePendente("pendente-1", "txid-1");
@@ -60,6 +71,19 @@ class ConfirmarPagamentoPixMesaUseCaseTest {
     }
 
     @Test
+    void deveFalharSemSalvarQuandoLiberacaoDoPendenteFalha() {
+        var pagamento = aguardandoPixDePendente("pendente-erro", "txid-erro");
+        when(pagamentoRepository.buscarPorTxidPix("txid-erro")).thenReturn(Optional.of(pagamento));
+        doThrow(new ValidationException("Pedido pendente aguardando pagamento nao encontrado: pendente-erro"))
+                .when(pedidoPendenteRepository).liberarPagamento("pendente-erro");
+
+        assertThrows(ValidationException.class, () -> useCase.executar("txid-erro", "E2E-ERRO"));
+
+        verify(pedidoPendenteRepository).liberarPagamento("pendente-erro");
+        verify(pagamentoRepository, never()).salvar(any());
+    }
+
+    @Test
     void deveSerIdempotenteQuandoPagamentoJaFinalizado() {
         var pagamento = aguardandoPixDePendente("pendente-2", "txid-2");
         pagamento.aprovarPix("E2E-2");
@@ -67,7 +91,19 @@ class ConfirmarPagamentoPixMesaUseCaseTest {
 
         useCase.executar("txid-2", "E2E-2");
 
-        verify(pedidoPendenteRepository, org.mockito.Mockito.never()).liberarPagamento(any());
+        verify(pedidoPendenteRepository, never()).liberarPagamento(any());
+        verify(pagamentoRepository, never()).salvar(any());
+    }
+
+    @Test
+    void deveLancarExcecaoQuandoPagamentoForDeContaMesa() {
+        var pagamento = aguardandoPixDeContaMesa("conta-1", "txid-conta");
+        when(pagamentoRepository.buscarPorTxidPix("txid-conta")).thenReturn(Optional.of(pagamento));
+
+        assertThrows(ValidationException.class, () -> useCase.executar("txid-conta", "E2E-CONTA"));
+
+        verify(pedidoPendenteRepository, never()).liberarPagamento(any());
+        verify(pagamentoRepository, never()).salvar(any());
     }
 
     @Test
