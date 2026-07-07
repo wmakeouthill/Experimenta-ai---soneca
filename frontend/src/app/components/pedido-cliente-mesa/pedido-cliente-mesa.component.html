@@ -1512,6 +1512,9 @@
     <!-- ========== CONTA PÓS-PAGA (MESA) ========== -->
     @if (contaMesa; as cm) {
       <section class="conta-mesa">
+        @if (contaCartaoPaga()) {
+          <p class="conta-mesa__ok">Conta paga com cartao. Obrigado.</p>
+        }
         @if (cm.etapa() === 'previa' && cm.conta(); as conta) {
           <h2>Sua conta — Mesa {{ conta.numeroMesa }}</h2>
           <ul>
@@ -1523,6 +1526,39 @@
           <button type="button" [disabled]="conta.pedidos.length === 0" (click)="cm.fechar()">
             Pagar com PIX
           </button>
+
+          @if (cartaoContaDisponivel()) {
+            <div class="cartao-form conta-cartao">
+              <div class="form-grupo">
+                <label>Numero do cartao</label>
+                <input inputmode="numeric" autocomplete="cc-number" name="numeroCartaoConta" [ngModel]="cartao.numero()" (ngModelChange)="cartao.numero.set($event)" />
+              </div>
+              <div class="form-grupo">
+                <label>Nome no cartao</label>
+                <input autocomplete="cc-name" name="nomeCartaoConta" [ngModel]="cartao.nomePortador()" (ngModelChange)="cartao.nomePortador.set($event)" />
+              </div>
+              <div class="validade">
+                <div class="form-grupo">
+                  <label>Mes</label>
+                  <input inputmode="numeric" maxlength="2" autocomplete="cc-exp-month" name="mesCartaoConta" [ngModel]="cartao.validadeMes()" (ngModelChange)="cartao.validadeMes.set($event)" />
+                </div>
+                <div class="form-grupo">
+                  <label>Ano</label>
+                  <input inputmode="numeric" maxlength="4" autocomplete="cc-exp-year" name="anoCartaoConta" [ngModel]="cartao.validadeAno()" (ngModelChange)="cartao.validadeAno.set($event)" />
+                </div>
+                <div class="form-grupo">
+                  <label>CVV</label>
+                  <input inputmode="numeric" maxlength="4" autocomplete="cc-csc" name="cvvCartaoConta" [ngModel]="cartao.cvv()" (ngModelChange)="cartao.cvv.set($event)" />
+                </div>
+              </div>
+              @if (contaCartaoErro(); as msg) {
+                <p class="conta-mesa__erro">{{ msg }}</p>
+              }
+              <button type="button" [disabled]="!cartao.valido() || contaCartaoProcessando()" (click)="fecharContaComCartao()">
+                {{ contaCartaoProcessando() ? "Processando..." : "Pagar com cartao" }}
+              </button>
+            </div>
+          }
         }
         @if (cm.etapa() === 'pagando' && cm.cobranca(); as cobranca) {
           <h2>Pague a conta com PIX</h2>
@@ -1883,6 +1919,36 @@
                 </div>
               </div>
 
+              @if (mostrarFormularioCartaoPedido()) {
+                <div class="cartao-form pedido-cartao">
+                  <div class="form-grupo">
+                    <label>Numero do cartao</label>
+                    <input inputmode="numeric" autocomplete="cc-number" name="numeroCartaoPedido" [ngModel]="cartao.numero()" (ngModelChange)="cartao.numero.set($event)" />
+                    @if (cartao.numero() && !cartao.numeroValido()) {
+                      <span class="erro-msg">Numero de cartao invalido</span>
+                    }
+                  </div>
+                  <div class="form-grupo">
+                    <label>Nome no cartao</label>
+                    <input autocomplete="cc-name" name="nomeCartaoPedido" [ngModel]="cartao.nomePortador()" (ngModelChange)="cartao.nomePortador.set($event)" />
+                  </div>
+                  <div class="validade">
+                    <div class="form-grupo">
+                      <label>Mes</label>
+                      <input inputmode="numeric" maxlength="2" autocomplete="cc-exp-month" name="mesCartaoPedido" [ngModel]="cartao.validadeMes()" (ngModelChange)="cartao.validadeMes.set($event)" />
+                    </div>
+                    <div class="form-grupo">
+                      <label>Ano</label>
+                      <input inputmode="numeric" maxlength="4" autocomplete="cc-exp-year" name="anoCartaoPedido" [ngModel]="cartao.validadeAno()" (ngModelChange)="cartao.validadeAno.set($event)" />
+                    </div>
+                    <div class="form-grupo">
+                      <label>CVV</label>
+                      <input inputmode="numeric" maxlength="4" autocomplete="cc-csc" name="cvvCartaoPedido" [ngModel]="cartao.cvv()" (ngModelChange)="cartao.cvv.set($event)" />
+                    </div>
+                  </div>
+                </div>
+              }
+
               <!-- Resumo do pagamento dividido -->
               @if (pagamento.dividido() && pagamento.meiosSelecionados().length > 0) {
                 <div class="pagamento-resumo">
@@ -1916,7 +1982,7 @@
             <div class="carrinho-footer">
               <button
                 class="btn-enviar-pedido"
-                [disabled]="!pagamento.pagamentoValido()"
+                [disabled]="!pagamento.pagamentoValido() || (mostrarFormularioCartaoPedido() && !cartao.valido())"
                 (click)="pagamento.irParaConfirmacao()"
               >
                 Revisar Pedido

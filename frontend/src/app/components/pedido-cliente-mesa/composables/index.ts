@@ -17,3 +17,4 @@ export { useAvaliacao } from './use-avaliacao';
 export { useChatIA, type MensagemChat, type ChatIAComposable, type ProdutoDestacado } from './use-chat-ia';
 export { usePagamentoDigital, type EtapaPix } from './use-pagamento-digital';
 export { useContaMesa, type EtapaConta } from './use-conta-mesa';
+export { useCartaoForm, validarLuhn, type CartaoPayload } from './use-cartao-form';

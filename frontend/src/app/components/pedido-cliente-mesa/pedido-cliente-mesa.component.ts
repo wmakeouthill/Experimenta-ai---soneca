@@ -47,6 +47,7 @@ import {
   useMeusPedidos,
   usePagamento,
   usePagamentoDigital,
+  useCartaoForm,
   useSucessoPedido,
 } from './composables';
 
@@ -181,6 +182,7 @@ export class PedidoClienteMesaComponent
   readonly carrinho = useCarrinho();
   readonly pagamento = usePagamento(() => this.carrinho.totalValor());
   readonly pagamentoDigital = usePagamentoDigital(this.pagamentoService);
+  readonly cartao = useCartaoForm();
   readonly cardapio = useCardapio(this.mesaToken);
   readonly favoritos = useFavoritos(
     () => this.identificacao.clienteIdentificado()?.id,
@@ -221,13 +223,36 @@ export class PedidoClienteMesaComponent
   readonly salvandoSenha = signal(false);
 
   // ========== Computed ==========
+  readonly mesaPrePago = computed(() => this.pagamentoConfig.modoMesa() === 'PRE_PAGO');
+
   readonly pixPrePagoDisponivel = computed(
-    () => this.pagamentoConfig.pixMesaAtivo() && this.pagamentoConfig.modoMesa() === 'PRE_PAGO'
+    () => this.pagamentoConfig.pixMesaAtivo() && this.mesaPrePago()
+  );
+
+  readonly cartaoPrePagoDisponivel = computed(
+    () => this.pagamentoConfig.cartaoMesaAtivo() && this.mesaPrePago()
   );
 
   readonly contaDisponivel = computed(
-    () => this.pagamentoConfig.pixMesaAtivo() && this.pagamentoConfig.modoMesa() === 'POS_PAGO'
+    () =>
+      (this.pagamentoConfig.pixMesaAtivo() || this.pagamentoConfig.cartaoMesaAtivo()) &&
+      this.pagamentoConfig.modoMesa() === 'POS_PAGO'
   );
+
+  readonly cartaoContaDisponivel = computed(
+    () => this.pagamentoConfig.cartaoMesaAtivo() && this.pagamentoConfig.modoMesa() === 'POS_PAGO'
+  );
+
+  readonly mostrarFormularioCartaoPedido = computed(
+    () =>
+      this.cartaoPrePagoDisponivel() &&
+      !this.pagamento.dividido() &&
+      this.pagamento.meioPagamentoSelecionado('CARTAO_CREDITO')
+  );
+
+  readonly contaCartaoProcessando = signal(false);
+  readonly contaCartaoPaga = signal(false);
+  readonly contaCartaoErro = signal<string | null>(null);
 
   // ========== Conta pós-paga (mesa) ==========
   contaMesa: ReturnType<typeof useContaMesa> | null = null;
@@ -913,12 +938,52 @@ export class PedidoClienteMesaComponent
       return;
     }
 
-    // PRE_PAGO: o self-order do cliente so pode finalizar via PIX. Qualquer outro meio
+
+    if (
+      this.cartaoPrePagoDisponivel() &&
+      !this.pagamento.dividido() &&
+      this.pagamento.meioPagamentoSelecionado('CARTAO_CREDITO')
+    ) {
+      if (!this.cartao.valido()) {
+        this.erroFinalizacao.set('Preencha os dados do cartao para continuar.');
+        return;
+      }
+      const requestCartao = this.montarRequestPedidoMesa();
+      if (!requestCartao) return;
+      this.enviando.set(true);
+      const correlationId = crypto.randomUUID();
+      this.pagamentoService
+        .pagarPedidoMesaComCartao(requestCartao, this.cartao.payload(), correlationId)
+        .subscribe({
+          next: resposta => {
+            this.enviando.set(false);
+            if (resposta.aprovado) {
+              this.etapaAtual.set('sucesso');
+              this.carrinho.limparCarrinho();
+              this.pagamento.limparPagamentos();
+              this.cartao.limpar();
+              this.carrinho.fecharCarrinho();
+              if (resposta.pedido?.id) {
+                this.sucesso.iniciarAcompanhamento(resposta.pedido.id);
+              }
+            } else {
+              this.erroFinalizacao.set(resposta.motivo ?? 'Cartao recusado. Verifique os dados e tente novamente.');
+            }
+          },
+          error: () => {
+            this.enviando.set(false);
+            this.erroFinalizacao.set('Cartao recusado. Verifique os dados e tente novamente.');
+          },
+        });
+      return;
+    }
+
+    // PRE_PAGO: o self-order do cliente so pode finalizar via pagamento digital aprovado. Qualquer outro meio
     // (dinheiro, cartao, dividido) exigiria liberar o pedido sem pagamento — furando a
     // garantia de que nada vai a cozinha sem estar pago. Bloqueia aqui.
-    if (this.pixPrePagoDisponivel()) {
+    if (this.mesaPrePago()) {
       this.erroFinalizacao.set(
-        'No modo pré-pago, o pedido só pode ser finalizado via PIX. Volte e selecione PIX para continuar.'
+        'No modo pre-pago, selecione PIX ou cartao para pagar antes de enviar o pedido.'
       );
       return;
     }
@@ -982,9 +1047,44 @@ export class PedidoClienteMesaComponent
     const token = this.mesaToken();
     const clienteId = this.identificacao.clienteIdentificado()?.id;
     if (!token || !clienteId) return;
+    this.contaCartaoPaga.set(false);
+    this.contaCartaoErro.set(null);
     this.contaMesa = useContaMesa(this.pagamentoService, token, clienteId);
     this.contaMesa.carregarPrevia();
   }
+
+  fecharContaComCartao(): void {
+    const token = this.mesaToken();
+    const clienteId = this.identificacao.clienteIdentificado()?.id;
+    if (!token || !clienteId || this.contaCartaoProcessando()) return;
+    if (!this.cartao.valido()) {
+      this.contaCartaoErro.set('Preencha os dados do cartao para continuar.');
+      return;
+    }
+
+    this.contaCartaoProcessando.set(true);
+    this.contaCartaoErro.set(null);
+    const correlationId = crypto.randomUUID();
+    this.pagamentoService
+      .fecharContaComCartao(token, this.cartao.payload(), clienteId, correlationId)
+      .subscribe({
+        next: resposta => {
+          this.contaCartaoProcessando.set(false);
+          if (resposta.aprovado) {
+            this.contaCartaoPaga.set(true);
+            this.cartao.limpar();
+            this.contaMesa?.encerrar();
+          } else {
+            this.contaCartaoErro.set(resposta.motivo ?? 'Cartao recusado. Verifique os dados e tente novamente.');
+          }
+        },
+        error: () => {
+          this.contaCartaoProcessando.set(false);
+          this.contaCartaoErro.set('Cartao recusado. Verifique os dados e tente novamente.');
+        },
+      });
+  }
+
 
   novoPedido(): void {
     this.etapaAtual.set('cardapio');

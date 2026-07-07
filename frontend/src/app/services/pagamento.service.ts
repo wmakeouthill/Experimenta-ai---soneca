@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { CartaoPayload } from '../components/pedido-cliente-mesa/composables/use-cartao-form';
 
 export type MeioPagamentoGateway =
   | 'PIX'
@@ -103,6 +104,18 @@ export interface ContaMesaComPix {
   pagamento: PixCobrancaCriadaDTO;
 }
 
+export interface ResultadoPagamentoCartao {
+  aprovado: boolean;
+  motivo: string | null;
+  pedido: { id: string; valorTotal: number } | null;
+}
+
+export interface ResultadoContaCartao {
+  aprovado: boolean;
+  motivo: string | null;
+  conta: ContaMesa | null;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -153,6 +166,31 @@ export class PagamentoService {
       params: { mesaToken },
       headers: { 'X-Cliente-Id': clienteId },
     });
+  }
+
+  pagarPedidoMesaComCartao(
+    pedido: unknown,
+    cartao: CartaoPayload,
+    correlationId: string,
+  ): Observable<ResultadoPagamentoCartao> {
+    return this.http.post<ResultadoPagamentoCartao>(
+      '/api/public/mesa/pedido/cartao',
+      { pedido, cartao },
+      { headers: { 'X-Correlation-Id': correlationId } },
+    );
+  }
+
+  fecharContaComCartao(
+    mesaToken: string,
+    cartao: CartaoPayload,
+    clienteId: string,
+    correlationId: string,
+  ): Observable<ResultadoContaCartao> {
+    return this.http.post<ResultadoContaCartao>(
+      '/api/cliente/conta/fechar-cartao',
+      { mesaToken, cartao },
+      { headers: { 'X-Cliente-Id': clienteId, 'X-Correlation-Id': correlationId } },
+    );
   }
 
   /** Fecha a conta pós-paga da mesa e gera uma cobrança PIX única. */
