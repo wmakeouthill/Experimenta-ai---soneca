@@ -3,7 +3,6 @@ package com.snackbar.pedidos.application.usecases;
 import java.math.RoundingMode;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.snackbar.kernel.domain.exceptions.ValidationException;
 import com.snackbar.pedidos.application.dto.ConfiguracaoPagamentoDTO;
@@ -42,7 +41,6 @@ public class PagarPedidoMesaComCartaoUseCase {
     private final ConfiguracaoPagamentoRepositoryPort configuracaoRepository;
     private final AplicarPagamentoMesaAprovadoService aplicarPagamentoAprovado;
 
-    @Transactional
     public ResultadoPagamentoCartaoDTO executar(String correlationId, PagarPedidoMesaComCartaoRequest request) {
         validarObrigatorio(correlationId, "correlationId");
 

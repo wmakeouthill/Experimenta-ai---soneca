@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.snackbar.pedidos.application.ports.PagamentoRepositoryPort;
 import com.snackbar.pedidos.domain.entities.Pagamento;
@@ -26,11 +28,13 @@ public class PagamentoRepositoryAdapter implements PagamentoRepositoryPort {
     private final PagamentoMapper mapper;
 
     @Override
+    @Transactional
     public Pagamento salvar(Pagamento pagamento) {
         return mapper.paraDomain(jpaRepository.save(mapper.paraEntity(pagamento)));
     }
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Pagamento salvarImediato(Pagamento pagamento) {
         return mapper.paraDomain(jpaRepository.saveAndFlush(mapper.paraEntity(pagamento)));
     }

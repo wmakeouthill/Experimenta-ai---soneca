@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.snackbar.kernel.domain.exceptions.ValidationException;
 import com.snackbar.pedidos.application.dto.ConfiguracaoPagamentoDTO;
@@ -48,7 +47,6 @@ public class FecharContaMesaComCartaoUseCase {
     private final ConfiguracaoPagamentoRepositoryPort configuracaoRepository;
     private final AplicarPagamentoMesaAprovadoService aplicarPagamentoAprovado;
 
-    @Transactional
     public ResultadoContaCartaoDTO executar(
             String correlationId, String clienteId, FecharContaComCartaoRequest request) {
         validarObrigatorio(correlationId, "correlationId");
