@@ -10,6 +10,9 @@ public interface PagamentoRepositoryPort {
 
     Pagamento salvar(Pagamento pagamento);
 
+    /** Persiste e força flush para materializar constraints antes de efeitos externos. */
+    Pagamento salvarImediato(Pagamento pagamento);
+
     Optional<Pagamento> buscarPorCorrelationId(String correlationId);
 
     Optional<Pagamento> buscarPorTxidPix(String txid);

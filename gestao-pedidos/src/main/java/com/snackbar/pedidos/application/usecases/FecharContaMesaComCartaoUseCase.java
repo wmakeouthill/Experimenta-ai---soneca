@@ -29,6 +29,7 @@ import com.snackbar.pedidos.domain.entities.MeioPagamentoGateway;
 import com.snackbar.pedidos.domain.entities.ModoPagamentoMesa;
 import com.snackbar.pedidos.domain.entities.Pagamento;
 import com.snackbar.pedidos.domain.entities.Pedido;
+import com.snackbar.pedidos.domain.entities.StatusPagamento;
 import com.snackbar.pedidos.domain.valueobjects.DadosCartaoDigital;
 
 import lombok.RequiredArgsConstructor;
@@ -59,6 +60,21 @@ public class FecharContaMesaComCartaoUseCase {
         }
         if (config.modoMesa() != ModoPagamentoMesa.POS_PAGO) {
             throw new ValidationException("Fechar conta com cartao so esta disponivel no modo POS_PAGO");
+        }
+
+        var existente = pagamentoRepository.buscarPorCorrelationId(correlationId);
+        if (existente.isPresent()) {
+            Pagamento pagamentoExistente = existente.get();
+            ContaMesa conta = pagamentoExistente.getContaMesaId() != null
+                    ? contaRepository.buscarPorId(pagamentoExistente.getContaMesaId()).orElse(null) : null;
+            if (pagamentoExistente.getStatus() == StatusPagamento.APROVADO) {
+                return new ResultadoContaCartaoDTO(true, null,
+                        conta != null ? FecharContaMesaUseCase.toDTO(conta) : null);
+            }
+            String motivo = pagamentoExistente.getMotivo() != null
+                    ? pagamentoExistente.getMotivo() : "Pagamento em processamento";
+            return new ResultadoContaCartaoDTO(false, motivo,
+                    conta != null ? FecharContaMesaUseCase.toDTO(conta) : null);
         }
 
         Mesa mesa = mesaRepository.buscarPorQrCodeToken(request.getMesaToken())
@@ -95,6 +111,7 @@ public class FecharContaMesaComCartaoUseCase {
                 valorCentavos,
                 MeioPagamentoGateway.CARTAO_CREDITO,
                 correlationId);
+        pagamento = pagamentoRepository.salvarImediato(pagamento);
 
         var cartao = request.getCartao();
         ResultadoPagamentoCartao resultado = cartaoGateway.pagar(new PagarCartaoCommand(
@@ -110,6 +127,7 @@ public class FecharContaMesaComCartaoUseCase {
                     resultado.gatewayPaymentId(), resultado.bandeira(), resultado.codigoAutorizacao()));
             aplicarPagamentoAprovado.aplicar(pagamento, MeioPagamento.CARTAO_CREDITO);
             pagamentoRepository.salvar(pagamento);
+            contaSalva.pagar();
             log.info("Conta {} paga com cartao paymentId={}", contaSalva.getId(), resultado.gatewayPaymentId());
             return new ResultadoContaCartaoDTO(true, null, FecharContaMesaUseCase.toDTO(contaSalva));
         }

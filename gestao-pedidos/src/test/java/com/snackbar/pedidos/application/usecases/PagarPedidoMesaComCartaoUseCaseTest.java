@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -16,6 +17,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -81,11 +83,16 @@ class PagarPedidoMesaComCartaoUseCaseTest {
         when(cartaoGateway.gateway()).thenReturn(GatewayPagamento.SIMULADO);
         when(cartaoGateway.pagar(any())).thenReturn(
                 new ResultadoPagamentoCartao(true, "pay-1", "MASTERCARD", "AUT1", null));
+        when(pagamentoRepository.salvarImediato(any())).thenAnswer(inv -> inv.getArgument(0));
         when(pagamentoRepository.salvar(any())).thenAnswer(inv -> inv.getArgument(0));
 
         ResultadoPagamentoCartaoDTO resultado = useCase.executar("corr-1", request);
 
         assertTrue(resultado.aprovado());
+        assertFalse(resultado.pedido().isAguardandoPagamento());
+        InOrder ordem = inOrder(pagamentoRepository, cartaoGateway);
+        ordem.verify(pagamentoRepository).salvarImediato(any());
+        ordem.verify(cartaoGateway).pagar(any());
         verify(aplicarPagamentoAprovado).aplicar(any(), eq(MeioPagamento.CARTAO_CREDITO));
         verify(pedidoPendenteRepository, never()).remover(anyString());
     }
@@ -99,6 +106,7 @@ class PagarPedidoMesaComCartaoUseCaseTest {
         when(cartaoGateway.gateway()).thenReturn(GatewayPagamento.SIMULADO);
         when(cartaoGateway.pagar(any())).thenReturn(
                 new ResultadoPagamentoCartao(false, null, null, null, "Cartao recusado"));
+        when(pagamentoRepository.salvarImediato(any())).thenAnswer(inv -> inv.getArgument(0));
         when(pagamentoRepository.salvar(any())).thenAnswer(inv -> inv.getArgument(0));
 
         ResultadoPagamentoCartaoDTO resultado = useCase.executar("corr-1", request);

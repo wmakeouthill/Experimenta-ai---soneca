@@ -31,6 +31,11 @@ public class PagamentoRepositoryAdapter implements PagamentoRepositoryPort {
     }
 
     @Override
+    public Pagamento salvarImediato(Pagamento pagamento) {
+        return mapper.paraDomain(jpaRepository.saveAndFlush(mapper.paraEntity(pagamento)));
+    }
+
+    @Override
     public Optional<Pagamento> buscarPorCorrelationId(String correlationId) {
         return jpaRepository.findByCorrelationId(correlationId)
                 .map(mapper::paraDomain);

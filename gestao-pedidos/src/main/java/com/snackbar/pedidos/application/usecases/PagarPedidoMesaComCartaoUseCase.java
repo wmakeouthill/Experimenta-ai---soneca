@@ -61,7 +61,8 @@ public class PagarPedidoMesaComCartaoUseCase {
                 PedidoPendenteDTO pendente = filaPedidosMesa.buscarPorId(pagamento.getPedidoPendenteId()).orElse(null);
                 return new ResultadoPagamentoCartaoDTO(true, null, pendente);
             }
-            return new ResultadoPagamentoCartaoDTO(false, pagamento.getMotivo(), null);
+            String motivo = pagamento.getMotivo() != null ? pagamento.getMotivo() : "Pagamento em processamento";
+            return new ResultadoPagamentoCartaoDTO(false, motivo, null);
         }
 
         PedidoPendenteDTO pendente = filaPedidosMesa.adicionarPedidoAguardandoPagamento(
@@ -78,6 +79,7 @@ public class PagarPedidoMesaComCartaoUseCase {
                 valorCentavos,
                 MeioPagamentoGateway.CARTAO_CREDITO,
                 correlationId);
+        pagamento = pagamentoRepository.salvarImediato(pagamento);
 
         var cartao = request.getCartao();
         ResultadoPagamentoCartao resultado = cartaoGateway.pagar(new PagarCartaoCommand(
@@ -93,6 +95,7 @@ public class PagarPedidoMesaComCartaoUseCase {
                     resultado.gatewayPaymentId(), resultado.bandeira(), resultado.codigoAutorizacao()));
             aplicarPagamentoAprovado.aplicar(pagamento, MeioPagamento.CARTAO_CREDITO);
             pagamentoRepository.salvar(pagamento);
+            pendente.setAguardandoPagamento(false);
             log.info("Cartao aprovado pendenteId={} paymentId={}", pendente.getId(), resultado.gatewayPaymentId());
             return new ResultadoPagamentoCartaoDTO(true, null, pendente);
         }

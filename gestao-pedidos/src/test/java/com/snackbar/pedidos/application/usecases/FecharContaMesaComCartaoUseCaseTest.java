@@ -82,6 +82,7 @@ class FecharContaMesaComCartaoUseCaseTest {
         when(cartaoGateway.gateway()).thenReturn(GatewayPagamento.SIMULADO);
         when(cartaoGateway.pagar(any())).thenReturn(
                 new ResultadoPagamentoCartao(true, "pay-1", "VISA", "AUT1", null));
+        when(pagamentoRepository.salvarImediato(any())).thenAnswer(inv -> inv.getArgument(0));
         when(pagamentoRepository.salvar(any())).thenAnswer(inv -> inv.getArgument(0));
 
         ResultadoContaCartaoDTO resultado = useCase.executar("corr-1", "cliente-1", request);
@@ -103,6 +104,7 @@ class FecharContaMesaComCartaoUseCaseTest {
         when(cartaoGateway.gateway()).thenReturn(GatewayPagamento.SIMULADO);
         when(cartaoGateway.pagar(any())).thenReturn(
                 new ResultadoPagamentoCartao(false, null, null, null, "Cartao recusado"));
+        when(pagamentoRepository.salvarImediato(any())).thenAnswer(inv -> inv.getArgument(0));
         when(pagamentoRepository.salvar(any())).thenAnswer(inv -> inv.getArgument(0));
 
         ResultadoContaCartaoDTO resultado = useCase.executar("corr-1", "cliente-1", request);
