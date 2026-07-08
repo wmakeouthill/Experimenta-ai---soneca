@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "node scripts/run-electron.js --dev",
     "start": "node scripts/run-electron.js",
+    "test": "node --test tests/",
     "check": "node --check main.js && node --check preload.js && node --check touch-mode.js && node --check virtual-keyboard.js && node --check scripts/run-electron.js"
   }
 }
