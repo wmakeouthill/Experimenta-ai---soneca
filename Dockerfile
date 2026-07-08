@@ -12,6 +12,8 @@ COPY gestao-clientes/pom.xml ./gestao-clientes/
 COPY gestao-pedidos/pom.xml ./gestao-pedidos/
 COPY autenticacao/pom.xml ./autenticacao/
 COPY sistema-orquestrador/pom.xml ./sistema-orquestrador/
+COPY impressao-cupom-fiscal/pom.xml ./impressao-cupom-fiscal/
+COPY chat-ia/pom.xml ./chat-ia/
 
 # Baixar dependências (cache layer)
 RUN mvn dependency:go-offline -B
@@ -23,6 +25,8 @@ COPY gestao-clientes ./gestao-clientes
 COPY gestao-pedidos ./gestao-pedidos
 COPY autenticacao ./autenticacao
 COPY sistema-orquestrador ./sistema-orquestrador
+COPY impressao-cupom-fiscal ./impressao-cupom-fiscal
+COPY chat-ia ./chat-ia
 
 # Build do backend
 RUN mvn clean package -DskipTests -B
