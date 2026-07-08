@@ -1,6 +1,8 @@
 const { app, BrowserWindow, Menu, ipcMain } = require('electron');
 const fs = require('fs');
 const path = require('path');
+const { resolveTefDriver } = require('./tef');
+const { criarResultadoErro } = require('./tef/tef-driver');
 
 let mainWindow = null;
 
@@ -160,101 +162,27 @@ function createWindow() {
   }
 }
 
-function createMockTefResponse(payload) {
-  const valorCentavos = Number(payload?.valorCentavos);
-  if (!Number.isInteger(valorCentavos) || valorCentavos <= 0) {
-    return {
-      sucesso: false,
-      status: 'ERRO',
-      mensagem: 'Valor invalido para pagamento TEF.',
-    };
-  }
-
-  const result = (process.env.TOTEM_TEF_MOCK_RESULT || 'APROVADO').toUpperCase();
-  const correlationId = String(payload?.correlationId || cryptoLikeId());
-  const now = new Date();
-
-  if (result === 'NEGADO') {
-    return {
-      sucesso: false,
-      status: 'NEGADO',
-      correlationId,
-      codigoResposta: '51',
-      mensagem: 'Pagamento negado pelo TEF mock.',
-      dataHora: now.toISOString(),
-    };
-  }
-
-  if (result === 'TIMEOUT') {
-    return {
-      sucesso: false,
-      status: 'TIMEOUT',
-      correlationId,
-      codigoResposta: 'TIMEOUT',
-      mensagem: 'Tempo esgotado no TEF mock.',
-      dataHora: now.toISOString(),
-    };
-  }
-
-  if (result === 'ERRO') {
-    return {
-      sucesso: false,
-      status: 'ERRO',
-      correlationId,
-      codigoResposta: 'ERRO_TECNICO',
-      mensagem: 'Erro tecnico simulado no TEF mock.',
-      dataHora: now.toISOString(),
-    };
-  }
-
-  return {
-    sucesso: true,
-    status: 'APROVADO',
-    correlationId,
-    autorizacao: `AUT${String(now.getTime()).slice(-6)}`,
-    nsu: `NSU${String(now.getTime()).slice(-8)}`,
-    bandeira: process.env.TOTEM_TEF_MOCK_BANDEIRA || 'VISA',
-    ultimosDigitos: process.env.TOTEM_TEF_MOCK_ULTIMOS_DIGITOS || '1234',
-    adquirente: 'STONE_TEF_MOCK',
-    valorCentavos,
-    mensagem: 'Pagamento aprovado pelo TEF mock.',
-    dataHora: now.toISOString(),
-  };
-}
-
-function cryptoLikeId() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, char => {
-    const random = Math.floor(Math.random() * 16);
-    const value = char === 'x' ? random : (random & 0x3) | 0x8;
-    return value.toString(16);
-  });
-}
-
-function sleep(milliseconds) {
-  return new Promise(resolve => setTimeout(resolve, milliseconds));
-}
-
 function registerIpcHandlers() {
-  ipcMain.handle('totem:tef:iniciar-pagamento', async (_event, payload) => {
-    if (!readBoolean('TOTEM_TEF_MOCK_ENABLED', true)) {
-      return {
-        sucesso: false,
-        status: 'NAO_CONFIGURADO',
-        mensagem: 'TEF real ainda nao foi configurado neste Electron do totem.',
-      };
-    }
+  const tefDriver = resolveTefDriver(process.env);
+  console.log(`Driver TEF ativo: ${tefDriver.nome}`);
 
-    await sleep(readNumber('TOTEM_TEF_MOCK_DELAY_MS', 1200));
-    return createMockTefResponse(payload);
+  ipcMain.handle('totem:tef:iniciar-pagamento', async (_event, payload) => {
+    try {
+      return await tefDriver.iniciarPagamento(payload);
+    } catch (error) {
+      console.error('Erro no driver TEF (iniciar):', error);
+      return criarResultadoErro('Falha inesperada no TEF do totem.');
+    }
   });
 
-  ipcMain.handle('totem:tef:cancelar-pagamento', async (_event, payload) => ({
-    sucesso: true,
-    status: 'CANCELADO',
-    correlationId: String(payload?.correlationId || ''),
-    mensagem: 'Pagamento cancelado no TEF mock.',
-    dataHora: new Date().toISOString(),
-  }));
+  ipcMain.handle('totem:tef:cancelar-pagamento', async (_event, payload) => {
+    try {
+      return await tefDriver.cancelarPagamento(payload || {});
+    } catch (error) {
+      console.error('Erro no driver TEF (cancelar):', error);
+      return criarResultadoErro('Falha inesperada no TEF do totem.');
+    }
+  });
 }
 
 loadLocalEnv();
