@@ -2,6 +2,7 @@ package com.snackbar.pedidos.application.usecases;
 
 import java.math.RoundingMode;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,7 +56,18 @@ public class IniciarPagamentoCartaoPresencialUseCase {
                 request.correlationId());
         pagamento.marcarAguardandoTef();
 
-        var salvo = pagamentoRepository.salvar(pagamento);
+        // A checagem acima nao fecha a corrida entre duas requisicoes com o mesmo
+        // correlationId (duplo toque no totem). Quem perde bate no unique de correlation_id
+        // e recebe orientacao de repetir: no retry o buscarPorCorrelationId ja encontra.
+        Pagamento salvo;
+        try {
+            // salvarImediato (saveAndFlush) e o que faz o unique estourar aqui dentro; com
+            // salvar comum o INSERT so vai no commit, depois deste catch.
+            salvo = pagamentoRepository.salvarImediato(pagamento);
+        } catch (DataIntegrityViolationException exception) {
+            throw new ValidationException("Pagamento ja esta sendo processado. Tente novamente.");
+        }
+
         log.info("Pagamento TEF iniciado correlationId={} pedidoId={}",
                 salvo.getCorrelationId(), salvo.getPedidoId());
         return PagamentoDTO.de(salvo);
