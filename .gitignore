@@ -261,3 +261,5 @@ graphify-out/
 
 # Downloads da Auttar (manuais e instaladores do CTFClient, ~500 MB)
 auttar/
+.claude/settings.json
+.claude/skills/graphify/
