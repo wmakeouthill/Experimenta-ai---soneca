@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { resolveTefDriver } = require('./tef');
 const { criarResultadoErro } = require('./tef/tef-driver');
+const { criarStoreConfirmacoes } = require('./tef/confirmacoes-pendentes');
 
 let mainWindow = null;
 
@@ -164,15 +165,28 @@ function createWindow() {
 
 function registerIpcHandlers() {
   const tefDriver = resolveTefDriver(process.env);
+  const confirmacoes = criarStoreConfirmacoes({
+    diretorio: path.join(app.getPath('userData'), 'tef-confirmacoes-pendentes'),
+  });
   console.log(`Driver TEF ativo: ${tefDriver.nome}`);
 
   ipcMain.handle('totem:tef:iniciar-pagamento', async (_event, payload) => {
     try {
-      return await tefDriver.iniciarPagamento(payload);
+      const resultado = await tefDriver.iniciarPagamento(payload);
+      // Aprovado = dinheiro ja capturado. A pendencia so sai do disco quando o renderer
+      // avisar que o backend gravou.
+      confirmacoes.registrar(resultado);
+      return resultado;
     } catch (error) {
       console.error('Erro no driver TEF (iniciar):', error);
       return criarResultadoErro('Falha inesperada no TEF do totem.');
     }
+  });
+
+  ipcMain.handle('totem:tef:confirmacoes-pendentes', () => confirmacoes.listar());
+
+  ipcMain.handle('totem:tef:confirmacao-registrada', (_event, correlationId) => {
+    confirmacoes.concluir(correlationId);
   });
 
   ipcMain.handle('totem:tef:cancelar-pagamento', async (_event, payload) => {

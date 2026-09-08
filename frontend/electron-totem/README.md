@@ -64,11 +64,86 @@ Sem endpoint/cliente configurado, responde `NAO_CONFIGURADO`.
 - `TOTEM_TEF_PAYGO_TIMEOUT_MS`: timeout da transacao (default 90000).
 - `TOTEM_TEF_PAYGO_ADQUIRENTE`: adquirente configurada no PayGo (ex.: `GETNET`).
 
-### Driver auttar (producao Getnet — Fase 0)
+### Driver auttar (producao Getnet)
 
-Caminho oficial do TEF Getnet (proposta WSGE + kit CTFClient da Auttar). Ainda nao
-implementado: responde `NAO_CONFIGURADO` ate a Fase 0 da spec
-`docs/superpowers/specs/2026-07-08-totem-tef-driver-plugavel-getnet-design.md`.
+Caminho oficial do TEF Getnet. Integra pelo **WebSocket do CTFClient** (`tipointegracao=websocket`
+em `configCTFClient.xml`) — JSON puro, sem FFI, sem sidecar e sem troca de arquivos. Usa o
+`WebSocket` global do Node 22, entao nao ha dependencia nova.
+
+Fluxo de pagamento: envia a operacao do meio escolhido, e — so quando o CTF aprova (`retorno = 0`) —
+envia a **confirmacao** (operacao 6). Se a confirmacao falhar, ou se a transacao cair por timeout ou
+erro de comunicacao, dispara o **desfazimento total** (operacao 191), que derruba as transacoes nao
+confirmadas da fase de recebimento.
+
+Operacoes usadas (Guia Rapido de Integracao WebSocket v01.17):
+
+| Meio | Operacao |
+| --- | --- |
+| `CARTAO_CREDITO` | 112 (credito a vista) |
+| `CARTAO_DEBITO` | 101 |
+| `CARTAO_VOUCHER` | 106 |
+| `PIX` | 422 |
+
+- `TOTEM_TEF_AUTTAR_URL`: WebSocket do CTFClient, ex.: `ws://127.0.0.1:2500` (obrigatoria).
+- `TOTEM_TEF_AUTTAR_TIMEOUT_MS`: timeout da transacao (default 90000).
+- `TOTEM_TEF_AUTTAR_VERSAO_AC`: versao da automacao enviada em cada requisicao (opcional).
+
+Sem a URL, responde `NAO_CONFIGURADO`.
+
+> **Antes do primeiro teste com o CTFClient real:** o pacote portable nao vem com credencial.
+> `estabelecimento`, `loja` e `terminal` no `configCTFClient.xml`, mais o login/senha/CNPJ da
+> operacao 801 (ou o codigo de ativacao Multi-EC), precisam vir da Auttar. Homologacao aponta para
+> `201.87.167.97:1996` com `homologacao=true`, e o terminal ainda precisa ser ativado no Portal
+> Auttar (TEF / Cadastro / Terminal Loja).
+
+### CTFClient falso (dev sem kit/credencial)
+
+```bash
+node scripts/fake-ctfclient.js --porta 2500 --resultado APROVADO
+```
+
+`--resultado` aceita `APROVADO`, `NEGADO`, `CANCELADO` ou `TIMEOUT` (nao responde); `--atraso <ms>`
+simula a demora do PinPad. Em outro terminal, rode o totem com `TOTEM_TEF_DRIVER=auttar` e
+`TOTEM_TEF_AUTTAR_URL=ws://127.0.0.1:2500`.
+
+### Confirmacoes pendentes (venda aprovada que o backend nao gravou)
+
+Entre a aprovacao no CTF e o POST `confirmarCartao` o dinheiro ja saiu do cartao e o backend ainda
+nao sabe de nada. Se o totem cair nesse intervalo, a venda ficaria capturada e sem registro — passou
+do ponto em que o desfazimento (191) resolve.
+
+Por isso o processo principal grava a confirmacao em
+`<userData>/tef-confirmacoes-pendentes/<correlationId>.json` assim que a transacao e aprovada, e so
+apaga quando o renderer avisa que o backend gravou. O arquivo tem duas partes:
+
+```json
+{
+  "confirmacao": { "correlationId": "...", "aprovado": true, "nsuTef": "...", "comprovanteCliente": "..." },
+  "estorno": { "correlationId": "...", "nsu": "...", "dataTransacao": "AAMMDD", "valorCentavos": 4579 }
+}
+```
+
+`confirmacao` e exatamente o corpo do POST `confirmarCartao`. `estorno` sao os campos que a
+operacao 128 exige — o unico caminho de volta depois que o dinheiro foi capturado.
+
+Na abertura seguinte o totem reenvia o que sobrou; o endpoint de confirmacao e idempotente por
+`correlationId`, entao reenvio repetido nao cobra de novo. Resposta 5xx ou rede fora mantem o
+arquivo para a proxima abertura. Resposta 4xx e recusa definitiva: o renderer chama
+`cancelarPagamentoTef` com o bloco `estorno` (operacao 128 na adquirente) e so entao baixa a
+pendencia. Vale para o reenvio na abertura e para a venda ao vivo — os dois passam pelo mesmo
+`confirmarComEstorno`.
+
+Nao existe opcode de abortar transacao em curso no protocolo WebSocket: so 128 (cancelamento de
+venda ja capturada) e 191 (desfazimento, antes da confirmacao). Por isso a tela `CARTAO_PROCESSANDO`
+nao tem botao de cancelar — quem cancela e o cliente na propria PinPad (retorno 6) ou o timeout do
+driver.
+
+### Comprovante (via do cliente)
+
+O CTF devolve `cupomCliente` / `cupomEstabelecimento` / `cupomReduzido` como listas de `{ "linha" }`.
+O driver junta `cupomCliente` (com fallback para `cupomReduzido`) em `comprovanteCliente`, que segue
+para o backend e aparece na tela de sucesso do totem. So a via do cliente e capturada: o totem nao
+tem impressora nem operador para a via do estabelecimento.
 
 ### PinPad recomendado
 

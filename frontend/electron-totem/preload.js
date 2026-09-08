@@ -15,8 +15,12 @@ contextBridge.exposeInMainWorld('totemAPI', {
   plataforma: process.platform,
   versaoElectron: process.versions.electron,
   iniciarPagamentoTef: payload => ipcRenderer.invoke('totem:tef:iniciar-pagamento', payload),
-  cancelarPagamentoTef: correlationId =>
-    ipcRenderer.invoke('totem:tef:cancelar-pagamento', { correlationId }),
+  // Sem nsu/dataTransacao/valorCentavos o driver so consegue desfazimento (191); o estorno de
+  // venda ja capturada (128) precisa do payload inteiro.
+  cancelarPagamentoTef: payload => ipcRenderer.invoke('totem:tef:cancelar-pagamento', payload),
+  confirmacoesTefPendentes: () => ipcRenderer.invoke('totem:tef:confirmacoes-pendentes'),
+  marcarConfirmacaoTefRegistrada: correlationId =>
+    ipcRenderer.invoke('totem:tef:confirmacao-registrada', correlationId),
 });
 
 if (readBoolean('TOTEM_MOBILE_EMULATION_ENABLED', true)) {
