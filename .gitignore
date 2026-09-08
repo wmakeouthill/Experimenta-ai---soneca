@@ -255,3 +255,9 @@ app/dist/
 *.ps1.bak
 *.sh.bak
 
+
+# Graphify (grafo local, cada dev gera o seu)
+graphify-out/
+
+# Downloads da Auttar (manuais e instaladores do CTFClient, ~500 MB)
+auttar/
