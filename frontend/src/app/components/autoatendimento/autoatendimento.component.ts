@@ -1,4 +1,5 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -24,6 +25,7 @@ import {
   PedidoAutoAtendimentoResponse,
 } from '../../services/autoatendimento.service';
 import {
+  type ConfirmarPagamentoCartaoRequest,
   type MeioPagamentoGateway,
   type PagamentoDTO,
   PagamentoService,
@@ -65,6 +67,23 @@ interface ResultadoTefTotem {
   autorizacao?: string;
   adquirente?: string;
   mensagem?: string;
+  /** Via do cliente montada pelo CTF; exigida pela adquirente em toda venda aprovada. */
+  comprovanteCliente?: string;
+  dataTransacao?: string;
+  valorCentavos?: number;
+}
+
+/** Dados da operacao 128 — o unico caminho de volta depois que o dinheiro foi capturado. */
+interface EstornoTefTotem {
+  correlationId: string;
+  nsu?: string;
+  dataTransacao?: string;
+  valorCentavos?: number;
+}
+
+interface ConfirmacaoTefPendente {
+  confirmacao: ConfirmarPagamentoCartaoRequest;
+  estorno: EstornoTefTotem;
 }
 
 interface TotemApi {
@@ -73,6 +92,9 @@ interface TotemApi {
     valorCentavos: number;
     meio: MeioPagamentoGateway;
   }) => Promise<ResultadoTefTotem>;
+  cancelarPagamentoTef?: (payload: EstornoTefTotem) => Promise<ResultadoTefTotem>;
+  confirmacoesTefPendentes?: () => Promise<ConfirmacaoTefPendente[]>;
+  marcarConfirmacaoTefRegistrada?: (correlationId: string) => Promise<void>;
 }
 
 /**
@@ -124,6 +146,8 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
   readonly enviando = signal(false);
   readonly checkoutPagamento = signal<PagamentoCheckoutTotem | null>(null);
   readonly erroPagamento = signal<string | null>(null);
+  /** Via do cliente da ultima venda no cartao; a adquirente exige entrega-la ao portador. */
+  readonly comprovanteTef = signal<string | null>(null);
 
   // ========== Countdown do QR Code PIX ==========
   readonly pixTempoRestante = signal(0);
@@ -211,6 +235,7 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
     this.carregarCardapio();
     this.carregarInicio();
     this.iniciarMonitoramentoInatividade();
+    void this.drenarConfirmacoesTefPendentes();
   }
 
   ngOnDestroy(): void {
@@ -433,6 +458,7 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
     this.nomeClienteInput = '';
     this.pedidoCriado.set(null);
     this.erro.set(null);
+    this.comprovanteTef.set(null);
     this.limparCheckoutPagamento();
     this.etapaAtual.set(null);
     this.abaAtual.set('inicio');
@@ -700,19 +726,70 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
       throw new Error(resultadoTef.mensagem || 'Pagamento nao aprovado na maquininha.');
     }
 
-    const confirmado = await firstValueFrom(
-      this.pagamentoService.confirmarCartao({
+    this.comprovanteTef.set(resultadoTef.comprovanteCliente ?? null);
+
+    const confirmado = await this.confirmarComEstorno(
+      {
         correlationId,
         aprovado: true,
         nsuTef: resultadoTef.nsu,
         bandeira: resultadoTef.bandeira,
         codigoAutorizacao: resultadoTef.autorizacao,
         codigoAdquirente: resultadoTef.adquirente,
-        comprovanteCliente: resultadoTef.mensagem,
-      })
+        comprovanteCliente: resultadoTef.comprovanteCliente,
+      },
+      {
+        correlationId,
+        nsu: resultadoTef.nsu,
+        dataTransacao: resultadoTef.dataTransacao,
+        valorCentavos: resultadoTef.valorCentavos,
+      }
     );
 
     this.aplicarStatusPagamento(confirmado, pedido);
+  }
+
+  /**
+   * Grava a confirmacao no backend. Nesse ponto o dinheiro ja foi capturado na adquirente,
+   * entao recusa definitiva (4xx) tem um unico caminho de volta: estorno pela operacao 128.
+   * Falha transitoria (5xx / rede) mantem a pendencia em disco para a proxima abertura.
+   */
+  private async confirmarComEstorno(
+    confirmacao: ConfirmarPagamentoCartaoRequest,
+    estorno: EstornoTefTotem
+  ): Promise<PagamentoDTO> {
+    const totemApi = this.getTotemApi();
+
+    try {
+      const pagamento = await firstValueFrom(this.pagamentoService.confirmarCartao(confirmacao));
+      await totemApi?.marcarConfirmacaoTefRegistrada?.(confirmacao.correlationId);
+      return pagamento;
+    } catch (erro) {
+      if (erro instanceof HttpErrorResponse && erro.status >= 400 && erro.status < 500) {
+        await totemApi?.cancelarPagamentoTef?.(estorno);
+        await totemApi?.marcarConfirmacaoTefRegistrada?.(confirmacao.correlationId);
+      }
+      throw erro;
+    }
+  }
+
+  /**
+   * Se o totem caiu entre a aprovacao na maquininha e a gravacao no backend, o dinheiro ja
+   * foi capturado e o backend nao sabe. O processo principal guarda a confirmacao em disco;
+   * aqui reenviamos na abertura. O backend e idempotente por correlationId, entao reenvio
+   * repetido nao cobra de novo.
+   */
+  private async drenarConfirmacoesTefPendentes(): Promise<void> {
+    const pendentes = (await this.getTotemApi()?.confirmacoesTefPendentes?.()) ?? [];
+
+    for (const pendente of pendentes) {
+      try {
+        await this.confirmarComEstorno(pendente.confirmacao, pendente.estorno);
+      } catch {
+        // Transitorio continua pendente para a proxima abertura; recusa definitiva ja foi
+        // estornada e baixada dentro do confirmarComEstorno.
+      }
+    }
   }
 
   private async executarTef(

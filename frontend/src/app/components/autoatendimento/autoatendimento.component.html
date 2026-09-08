@@ -1070,6 +1070,12 @@
             }
           }
 
+          @if (comprovanteTef()) {
+            <!-- A adquirente exige a via do cliente em toda venda aprovada; sem impressora,
+                 o totem entrega na tela. -->
+            <pre class="sucesso-comprovante">{{ comprovanteTef() }}</pre>
+          }
+
           <p class="sucesso-timer">Esta tela será reiniciada automaticamente...</p>
 
           <button class="btn-novo-pedido" (click)="novoAtendimento()">Novo Pedido</button>
