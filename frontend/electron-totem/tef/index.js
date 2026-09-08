@@ -37,7 +37,7 @@ function resolveTefDriver(env = process.env) {
     return createPayGoDriver({ env });
   }
   if (nome === 'auttar') {
-    return createAuttarDriver();
+    return createAuttarDriver({ env });
   }
   if (nome) {
     return createDriverNaoConfigurado(

@@ -4,17 +4,17 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const { resolveTefDriver } = require('../tef');
-const { createAuttarDriver, MENSAGEM_PENDENCIA_AUTTAR } = require('../tef/drivers/auttar-driver');
+const { createAuttarDriver } = require('../tef/drivers/auttar-driver');
 
 const MENSAGEM_LEGADO = 'TEF real ainda nao foi configurado neste Electron do totem.';
 
-test('auttar responde NAO_CONFIGURADO em iniciar e cancelar', async () => {
-  const driver = createAuttarDriver();
+// O comportamento do driver auttar (WebSocket do CTFClient) vive em auttar-driver.test.js.
+test('auttar sem TOTEM_TEF_AUTTAR_URL responde NAO_CONFIGURADO', async () => {
+  const driver = createAuttarDriver({ env: {} });
   assert.equal(driver.nome, 'auttar');
 
   const iniciar = await driver.iniciarPagamento({ correlationId: 'x', valorCentavos: 100 });
   assert.equal(iniciar.status, 'NAO_CONFIGURADO');
-  assert.equal(iniciar.mensagem, MENSAGEM_PENDENCIA_AUTTAR);
 
   const cancelar = await driver.cancelarPagamento({ correlationId: 'x' });
   assert.equal(cancelar.status, 'NAO_CONFIGURADO');
