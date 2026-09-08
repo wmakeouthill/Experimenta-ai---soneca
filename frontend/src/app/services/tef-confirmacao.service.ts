@@ -48,6 +48,12 @@ export interface TotemApi {
   cancelarPagamentoTef?: (payload: EstornoTefTotem) => Promise<ResultadoTefTotem>;
   confirmacoesTefPendentes?: () => Promise<ConfirmacaoTefPendente[]>;
   marcarConfirmacaoTefRegistrada?: (correlationId: string) => Promise<void>;
+  /** Impressao termica local. Fora do caminho de dinheiro: falha aqui nao desfaz venda. */
+  imprimir?: (payload: {
+    dadosBase64: string;
+    tipoImpressora?: string;
+    devicePath?: string;
+  }) => Promise<{ sucesso: boolean; mensagem?: string }>;
 }
 
 /**

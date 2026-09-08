@@ -36,6 +36,7 @@ import {
   TefConfirmacaoService,
   type ResultadoTefTotem,
 } from '../../services/tef-confirmacao.service';
+import { ImpressaoTotemService } from '../../services/impressao-totem.service';
 import { ImageProxyUtil } from '../../utils/image-proxy.util';
 
 import { AbaNavegacaoAutoatendimento, AutoatendimentoFooterNavComponent } from './components';
@@ -91,6 +92,7 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
   private readonly autoAtendimentoService = inject(AutoAtendimentoService);
   private readonly pagamentoService = inject(PagamentoService);
   private readonly tefConfirmacao = inject(TefConfirmacaoService);
+  private readonly impressaoTotem = inject(ImpressaoTotemService);
   private readonly statusLojaService = inject(StatusLojaService);
   readonly pagamentoConfig = inject(PagamentoConfigService);
   private readonly destroy$ = new Subject<void>();
@@ -746,12 +748,25 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
       id: pedido.id,
       numeroPedido: pedido.numeroPedido,
     });
+    const viaDoCliente = this.comprovanteTef();
     this.limparCheckoutPagamento();
     this.etapaAtual.set('sucesso');
+
+    // Impressao roda fora do caminho de dinheiro: o pedido ja esta pago e gravado, entao
+    // impressora parada nao pode segurar a tela nem desfazer a venda.
+    void this.imprimirComprovantes(pedido.id, viaDoCliente);
 
     setTimeout(() => {
       this.novoAtendimento();
     }, 10000);
+  }
+
+  /** Sequencial de proposito: duas impressoes ao mesmo tempo embaralham bytes no papel. */
+  private async imprimirComprovantes(pedidoId: string, viaDoCliente: string | null): Promise<void> {
+    await this.impressaoTotem.imprimirPedido(pedidoId);
+    if (viaDoCliente) {
+      await this.impressaoTotem.imprimirComprovanteTef(viaDoCliente);
+    }
   }
 
   private limparCheckoutPagamento(): void {

@@ -4,6 +4,7 @@ const path = require('path');
 const { resolveTefDriver } = require('./tef');
 const { criarResultadoErro } = require('./tef/tef-driver');
 const { criarStoreConfirmacoes } = require('./tef/confirmacoes-pendentes');
+const { imprimir } = require('./print');
 
 let mainWindow = null;
 
@@ -188,6 +189,10 @@ function registerIpcHandlers() {
   ipcMain.handle('totem:tef:confirmacao-registrada', (_event, correlationId) => {
     confirmacoes.concluir(correlationId);
   });
+
+  // Impressao nao e caminho de dinheiro: o pedido ja esta pago e gravado quando chega aqui,
+  // entao erro de impressora volta como { sucesso: false } e nunca derruba a venda.
+  ipcMain.handle('totem:imprimir', (_event, payload) => imprimir(payload || {}));
 
   ipcMain.handle('totem:tef:cancelar-pagamento', async (_event, payload) => {
     try {

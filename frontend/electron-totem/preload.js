@@ -21,6 +21,7 @@ contextBridge.exposeInMainWorld('totemAPI', {
   confirmacoesTefPendentes: () => ipcRenderer.invoke('totem:tef:confirmacoes-pendentes'),
   marcarConfirmacaoTefRegistrada: correlationId =>
     ipcRenderer.invoke('totem:tef:confirmacao-registrada', correlationId),
+  imprimir: payload => ipcRenderer.invoke('totem:imprimir', payload),
 });
 
 if (readBoolean('TOTEM_MOBILE_EMULATION_ENABLED', true)) {

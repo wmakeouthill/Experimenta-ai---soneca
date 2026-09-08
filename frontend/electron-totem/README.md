@@ -162,6 +162,43 @@ await window.totemAPI.iniciarPagamentoTef({
 });
 ```
 
+## Impressao
+
+Mesmo esquema do Electron da lanchonete, com uma diferenca: la o renderer fala com um
+servidor HTTP local (`localhost:3001`); aqui vai direto por IPC, porque o totem ja tem a
+ponte `window.totemAPI`. Nao ha express, CORS nem rate limit para manter.
+
+Fluxo de um cupom:
+
+1. renderer pede `GET /api/impressao/configuracao` (tipo da impressora e devicePath, do banco);
+2. renderer pede `POST /api/impressao/cupom-fiscal/formatar` com o `pedidoId`; o backend
+   devolve `dadosEscPosBase64` — o mesmo endpoint que a lanchonete usa, sem nada especifico
+   de totem;
+3. renderer chama `window.totemAPI.imprimir({ dadosBase64, tipoImpressora, devicePath })`;
+4. `print/index.js` valida o devicePath, converte para ESC/POS e manda para a impressora.
+
+A via do cliente do TEF pula o passo 2: o texto ja vem montado pelo CTF e o conversor aceita
+conteudo cru. As duas impressoes saem em sequencia — simultaneas embaralhariam bytes no papel.
+
+**Impressao nao e caminho de dinheiro.** Quando qualquer coisa aqui roda, a venda ja foi
+aprovada pela adquirente e gravada no backend. Por isso nada em `print/index.js` nem no
+`ImpressaoTotemService` lanca: impressora sem papel, sem cabo ou sem configuracao vira
+`{ sucesso: false }` e o pedido continua pago. O oposto do TEF, onde falha precisa estornar.
+
+### Codigo compartilhado com a lanchonete
+
+`print/index.js` requer o core de impressao de `frontend/electron/` (ESC/POS, spooler do
+Windows, USB direto, rede, COM) por caminho relativo. Esse core e Node puro, sem dependencia
+npm — as tres deps do Electron da lanchonete sao `express` (o servidor HTTP, que o totem nao
+usa) e `node-thermal-printer` + `jimp` (so o logo, que o totem ainda nao imprime).
+
+Ceiling conhecido: quando o totem ganhar `electron-builder` proprio, o `files` do pacote nao
+alcanca pasta fora da raiz do app. Ai `core/print`, `core/printer`, `infrastructure/os` e
+`utils` viram um pacote compartilhado e so o `RAIZ_CORE` de `print/index.js` muda.
+
+Cuidado: `frontend/electron/electron/` e uma copia antiga de `core/` e `infrastructure/`, sem
+o `utils/`. A raiz viva e `frontend/electron/`.
+
 ### Testes automatizados
 
 ```bash
