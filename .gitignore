@@ -224,6 +224,8 @@ replay_pid*
 **/*.md
 !README.md
 !**/README.md
+!docs/specs/atualizacao-electron-balcao.md
+!docs/superpowers/plans/2026-09-22-atualizacao-electron-balcao.md
 
 # ============================================
 # Arquivos Temporários
@@ -261,5 +263,11 @@ graphify-out/
 
 # Downloads da Auttar (manuais e instaladores do CTFClient, ~500 MB)
 auttar/
+# Artefatos de atualização publicados na VPS, fora do Git
+/releases/electron/
+/frontend/electron/dist-update/
+/frontend/electron-totem/dist-update/
+/frontend/electron/.npm-cache/
+/.npm-cache/
 .claude/settings.json
 .claude/skills/graphify/

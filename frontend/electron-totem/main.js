@@ -1,15 +1,22 @@
-const { app, BrowserWindow, Menu, ipcMain } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const fs = require('fs');
 const path = require('path');
 const { resolveTefDriver } = require('./tef');
 const { criarResultadoErro } = require('./tef/tef-driver');
 const { criarStoreConfirmacoes } = require('./tef/confirmacoes-pendentes');
 const { imprimir } = require('./print');
+const { criarAtualizador, avisarVersaoAtualizada } = require(app.isPackaged
+  ? path.join(process.resourcesPath, 'atualizacao.js')
+  : '../electron/atualizacao');
 
 let mainWindow = null;
+let atualizador;
 
 function loadLocalEnv() {
-  const envPath = path.join(__dirname, '.env');
+  const envPath = app.isPackaged
+    ? path.join(app.getPath('userData'), '.env')
+    : path.join(__dirname, '.env');
   if (!fs.existsSync(envPath)) {
     return;
   }
@@ -136,10 +143,18 @@ function createWindow() {
   });
 
   mainWindow.webContents.on('before-input-event', (event, input) => {
+    const isUpdateShortcut =
+      input.key.toLowerCase() === 'u' && input.control && input.shift && input.type === 'keyDown';
     const isDevToolsShortcut =
       input.key.toLowerCase() === 'i' && input.control && input.shift && input.type === 'keyDown';
     const isReloadShortcut = input.key.toLowerCase() === 'r' && input.control && input.type === 'keyDown';
     const isFullscreenShortcut = input.key === 'F11' && input.type === 'keyDown';
+
+    if (isUpdateShortcut) {
+      event.preventDefault();
+      void atualizador.verificar(true);
+      return;
+    }
 
     if (isDevToolsShortcut && readBoolean('TOTEM_DEVTOOLS_ENABLED', isDevelopment)) {
       mainWindow.webContents.toggleDevTools();
@@ -209,7 +224,23 @@ configureChromiumFlags();
 registerIpcHandlers();
 
 app.whenReady().then(() => {
+  atualizador = criarAtualizador({
+    app,
+    updater: autoUpdater,
+    dialog,
+    atualizarMenu: () => {},
+    atualizarProgresso: valor => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.setProgressBar(valor);
+        mainWindow.webContents.send('atualizacao:progresso', valor);
+      }
+    },
+    antesDeInstalar: async () => {},
+  });
   createWindow();
+  avisarVersaoAtualizada(app, dialog);
+  void atualizador.verificar(false);
+  setInterval(() => { void atualizador.verificar(false); }, 6 * 60 * 60 * 1000).unref();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

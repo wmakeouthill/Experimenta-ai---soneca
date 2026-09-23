@@ -1,6 +1,7 @@
 {
   "name": "experimenta-ai-soneca-totem",
-  "version": "1.0.0",
+  "productName": "Experimenta ai do Soneca Totem",
+  "version": "1.0.1",
   "description": "Electron dedicado ao totem de autoatendimento",
   "main": "main.js",
   "private": true,
@@ -8,6 +9,78 @@
     "dev": "node scripts/run-electron.js --dev",
     "start": "node scripts/run-electron.js",
     "test": "node --test",
-    "check": "node --check main.js && node --check print/index.js && node --check preload.js && node --check touch-mode.js && node --check virtual-keyboard.js && node --check scripts/run-electron.js && node --check tef/index.js && node --check tef/tef-driver.js && node --check tef/confirmacoes-pendentes.js && node --check tef/drivers/mock-driver.js && node --check tef/drivers/paygo-driver.js && node --check tef/drivers/auttar-driver.js && node --check scripts/fake-ctfclient.js"
+    "check": "node --check main.js && node --check print/index.js && node --check preload.js && node --check touch-mode.js && node --check virtual-keyboard.js && node --check scripts/run-electron.js && node --check tef/index.js && node --check tef/tef-driver.js && node --check tef/confirmacoes-pendentes.js && node --check tef/drivers/mock-driver.js && node --check tef/drivers/paygo-driver.js && node --check tef/drivers/auttar-driver.js && node --check scripts/fake-ctfclient.js",
+    "build:release:win": "electron-builder --win nsis --publish never --config.directories.output=dist-update"
+  },
+  "build": {
+    "appId": "com.experimentaaisoneca.totem",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "touch-mode.js",
+      "virtual-keyboard.js",
+      "print/**/*",
+      "tef/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../electron/core/print",
+        "to": "print-core/core/print"
+      },
+      {
+        "from": "../electron/core/printer",
+        "to": "print-core/core/printer"
+      },
+      {
+        "from": "../electron/infrastructure/os",
+        "to": "print-core/infrastructure/os"
+      },
+      {
+        "from": "../electron/utils",
+        "to": "print-core/utils"
+      },
+      {
+        "from": "../electron/atualizacao.js",
+        "to": "atualizacao.js"
+      }
+    ],
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://experimentaaisoneca.app/updates/totem/"
+      }
+    ],
+    "win": {
+      "icon": "../electron/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "signtoolOptions": {
+        "publisherName": "Experimenta aí do Soneca Delivery"
+      }
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Experimenta ai do Soneca Totem"
+    }
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
+  },
+  "devDependencies": {
+    "electron": "^44.4.4",
+    "electron-builder": "^26.15.3"
   }
 }

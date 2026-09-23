@@ -135,6 +135,7 @@ services:
       - ./config/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - ./config/certbot/conf:/etc/letsencrypt:ro
       - ./config/certbot/www:/var/www/certbot:ro
+      - ./releases/electron:/usr/share/nginx/html/updates:ro
     depends_on:
       backend:
         condition: service_healthy

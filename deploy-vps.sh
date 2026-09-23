@@ -36,6 +36,14 @@ check_env() {
     log "✅ Variáveis de ambiente validadas"
 }
 
+preparar_frontend() {
+    mkdir -p releases/electron/balcao releases/electron/totem
+    if [ -n "${DOMAIN:-}" ] && [ -f "config/certbot/conf/live/${DOMAIN}/fullchain.pem" ]; then
+        export DOMAIN
+        envsubst '${DOMAIN}' < config/nginx/default.conf.template > config/nginx/default.conf
+    fi
+}
+
 # ==================== LOGIN GHCR ====================
 login_ghcr() {
     source .env.prod
@@ -162,6 +170,7 @@ SYSCTL
     
     # Criar diretórios necessários
     mkdir -p config/certbot/conf config/certbot/www
+    preparar_frontend
     
     log "🎉 Setup da VPS completo! Faça logout e login novamente para o grupo docker funcionar."
 }
@@ -174,6 +183,7 @@ primeiro_deploy() {
     
     # Criar diretórios
     mkdir -p config/certbot/conf config/certbot/www
+    preparar_frontend
     
     # Criar link simbólico para .env
     ln -sf .env.prod .env
@@ -228,8 +238,7 @@ configurar_ssl() {
     
     # Substituir config Nginx para HTTPS
     log "📝 Ativando configuração HTTPS no Nginx..."
-    export DOMAIN
-    envsubst '${DOMAIN}' < config/nginx/default.conf.template > config/nginx/default.conf
+    preparar_frontend
     
     # Reiniciar Nginx
     docker compose -f docker-compose.prod.yml restart frontend
@@ -250,6 +259,7 @@ atualizar() {
     
     # Pull do código mais recente (configs, nginx, etc.)
     git pull origin main
+    preparar_frontend
     
     # Login no registry
     login_ghcr
@@ -299,6 +309,7 @@ atualizar_frontend() {
     log "🔄 Atualizando apenas o FRONTEND..."
     
     git pull origin main
+    preparar_frontend
     login_ghcr
     
     log "📥 Baixando imagem do frontend..."

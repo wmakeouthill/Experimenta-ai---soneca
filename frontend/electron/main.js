@@ -4,7 +4,9 @@
  * Tem acesso completo ao sistema operacional
  */
 
-const { app, BrowserWindow, ipcMain, screen, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, Menu, dialog } = require('electron');
+const { autoUpdater } = require('electron-updater');
+const { criarAtualizador, avisarVersaoAtualizada } = require('./atualizacao');
 const path = require('path');
 
 // Biblioteca para detectar impressoras (usa APIs nativas do sistema)
@@ -17,6 +19,7 @@ const printServer = require('./infrastructure/http/print-server');
 
 let mainWindow;
 let printServerPort = null;
+let atualizador;
 
 function configureChromiumFlags() {
   if (process.platform !== 'win32') {
@@ -269,6 +272,13 @@ function criarMenu() {
         },
         { type: 'separator' },
         {
+          id: 'verificar-atualizacoes',
+          label: 'Verificar atualizações',
+          click: () => { void atualizador.verificar(true); },
+        },
+        { label: `Versão instalada: ${app.getVersion()}`, enabled: false },
+        { type: 'separator' },
+        {
           label: 'Sair',
           accelerator: process.platform === 'darwin' ? 'Cmd+Q' : 'Ctrl+Q',
           click: () => {
@@ -313,6 +323,23 @@ app.whenReady().then(async () => {
     );
   }
 
+  atualizador = criarAtualizador({
+    app,
+    updater: autoUpdater,
+    dialog,
+    atualizarMenu: label => {
+      const item = Menu.getApplicationMenu()?.getMenuItemById('verificar-atualizacoes');
+      if (item) item.label = label;
+    },
+    atualizarProgresso: valor => {
+      if (mainWindow && !mainWindow.isDestroyed()) mainWindow.setProgressBar(valor);
+    },
+    antesDeInstalar: limparRecursos,
+    restaurarAposFalha: async () => {
+      printServerPort = await printServer.iniciarServidor(3001);
+    },
+  });
+
   // Cria o menu da aplicação
   criarMenu();
 
@@ -325,6 +352,14 @@ app.whenReady().then(async () => {
   }
 
   createWindow();
+  avisarVersaoAtualizada(app, dialog);
+
+  // A checagem é silenciosa; instalar exige confirmação no menu.
+  void atualizador.verificar(false);
+  const intervaloAtualizacao = setInterval(() => {
+    void atualizador.verificar(false);
+  }, 6 * 60 * 60 * 1000);
+  intervaloAtualizacao.unref();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -348,6 +383,7 @@ let estaLimpando = false;
 
 // Evento quando todas as janelas são fechadas
 app.on('window-all-closed', async () => {
+  if (atualizador?.estaInstalando()) return;
   if (estaLimpando) return;
   estaLimpando = true;
 

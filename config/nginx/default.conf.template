@@ -53,6 +53,12 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
+    # Instaladores Electron ficam fora da imagem do frontend.
+    location /updates/ {
+        try_files $uri =404;
+        add_header Cache-Control "no-store" always;
+    }
+
     # Cache de assets estáticos (JS, CSS, imagens)
     location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
         expires 1y;

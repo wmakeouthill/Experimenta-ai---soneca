@@ -1,6 +1,6 @@
 {
   "name": "experimenta-ai-soneca-delivery",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Experimenta aí do Soneca Delivery - Sistema de Gestão para Lanchonetes",
   "main": "main.js",
   "scripts": {
@@ -8,6 +8,7 @@
     "dev": "cross-env NODE_ENV=development electron .",
     "build": "electron-builder",
     "build:win": "electron-builder --win",
+    "build:release:win": "electron-builder --win nsis --publish never --config.directories.output=dist-update",
     "build:linux": "electron-builder --linux",
     "build:mac": "electron-builder --mac",
     "build:all": "electron-builder --win --linux --mac"
@@ -30,6 +31,7 @@
     },
     "files": [
       "main.js",
+      "atualizacao.js",
       "preload.js",
       "core/**/*",
       "infrastructure/**/*",
@@ -45,6 +47,12 @@
       {
         "from": "icon.ico",
         "to": "icon.ico"
+      }
+    ],
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://experimentaaisoneca.app/updates/balcao/"
       }
     ],
     "win": {
@@ -89,6 +97,7 @@
     }
   },
   "dependencies": {
+    "electron-updater": "^6.8.9",
     "express": "^4.21.2",
     "jimp": "^1.6.0",
     "node-thermal-printer": "^4.5.0"

@@ -8,15 +8,11 @@
 
 const path = require('path');
 
-// ponytail: o core de impressao (ESC/POS + spooler do Windows) vive no Electron da
-// lanchonete e e Node puro, sem dependencia npm. Requerido daqui por caminho relativo para
-// nao duplicar ~1.5k linhas de tratamento de impressora que ja custaram caro uma vez.
-// Ceiling: quando o totem ganhar electron-builder proprio, o `files` nao alcanca fora da
-// pasta do app — ai mover core/print, core/printer, infrastructure/os e utils para um
-// pacote compartilhado (file:../print-core) e trocar apenas o RAIZ_CORE abaixo.
-// Atencao: `frontend/electron/electron/` e uma copia antiga de core/ e infrastructure/ sem o
-// utils/. A raiz viva do app da lanchonete e `frontend/electron/`, que tem main.js e utils/.
-const RAIZ_CORE = path.join(__dirname, '..', '..', 'electron');
+// ponytail: o build copia o core vivo do balcao para resources/print-core;
+// em desenvolvimento usamos os mesmos arquivos direto da pasta irma.
+const RAIZ_CORE = process.versions.electron && require('electron').app.isPackaged
+  ? path.join(process.resourcesPath, 'print-core')
+  : path.join(__dirname, '..', '..', 'electron');
 
 const { converterParaEscPos } = require(path.join(RAIZ_CORE, 'core', 'print', 'escpos-converter'));
 const { imprimirLocalmente } = require(path.join(RAIZ_CORE, 'core', 'print', 'print-executor'));

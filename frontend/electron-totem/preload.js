@@ -24,6 +24,29 @@ contextBridge.exposeInMainWorld('totemAPI', {
   imprimir: payload => ipcRenderer.invoke('totem:imprimir', payload),
 });
 
+let progressoAtualizacao = -1;
+function mostrarProgressoAtualizacao() {
+  const anterior = document.getElementById('progresso-atualizacao-electron');
+  if (progressoAtualizacao < 0) {
+    anterior?.remove();
+    return;
+  }
+  if (!document.body) return;
+  const aviso = anterior || document.createElement('div');
+  aviso.id = 'progresso-atualizacao-electron';
+  aviso.style.cssText = 'position:fixed;top:12px;right:12px;z-index:2147483647;padding:8px 12px;border-radius:8px;background:#18212ee6;color:#fff;font:600 14px system-ui;pointer-events:none;';
+  aviso.textContent = `Atualizando aplicativo: ${Math.round(progressoAtualizacao * 100)}%`;
+  if (!anterior) document.body.appendChild(aviso);
+}
+ipcRenderer.on('atualizacao:progresso', (_event, valor) => {
+  if (!Number.isFinite(valor)) return;
+  progressoAtualizacao = valor;
+  mostrarProgressoAtualizacao();
+});
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', mostrarProgressoAtualizacao);
+}
+
 if (readBoolean('TOTEM_MOBILE_EMULATION_ENABLED', true)) {
   installTouchMode();
 }

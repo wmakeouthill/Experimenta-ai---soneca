@@ -90,7 +90,7 @@ Operacoes usadas (Guia Rapido de Integracao WebSocket v01.17):
 
 Sem a URL, responde `NAO_CONFIGURADO`.
 
-> **Antes do primeiro teste com o CTFClient real:** o pacote portable nao vem com credencial.
+> **Antes do primeiro teste com o CTFClient real:** o instalador nao vem com credencial.
 > `estabelecimento`, `loja` e `terminal` no `configCTFClient.xml`, mais o login/senha/CNPJ da
 > operacao 801 (ou o codigo de ativacao Multi-EC), precisam vir da Auttar. Homologacao aponta para
 > `201.87.167.97:1996` com `homologacao=true`, e o terminal ainda precisa ser ativado no Portal
@@ -192,9 +192,8 @@ Windows, USB direto, rede, COM) por caminho relativo. Esse core e Node puro, sem
 npm — as tres deps do Electron da lanchonete sao `express` (o servidor HTTP, que o totem nao
 usa) e `node-thermal-printer` + `jimp` (so o logo, que o totem ainda nao imprime).
 
-Ceiling conhecido: quando o totem ganhar `electron-builder` proprio, o `files` do pacote nao
-alcanca pasta fora da raiz do app. Ai `core/print`, `core/printer`, `infrastructure/os` e
-`utils` viram um pacote compartilhado e so o `RAIZ_CORE` de `print/index.js` muda.
+O instalador copia esse core para `resources/print-core`. Em desenvolvimento o totem
+continua lendo os mesmos arquivos diretamente de `frontend/electron/`.
 
 Cuidado: `frontend/electron/electron/` e uma copia antiga de `core/` e `infrastructure/`, sem
 o `utils/`. A raiz viva e `frontend/electron/`.
@@ -205,3 +204,28 @@ o `utils/`. A raiz viva e `frontend/electron/`.
 npm test        # unit tests dos drivers (node --test, sem hardware)
 npm run check   # verificacao de sintaxe
 ```
+
+## Atualização do aplicativo Windows
+
+O totem instalado por NSIS consulta `https://experimentaaisoneca.app/updates/totem/latest.yml`
+ao abrir e a cada seis horas. Se houver versão maior, baixa o instalador em segundo plano.
+O operador usa **Ctrl+Shift+U** com um teclado conectado para verificar ou instalar a versão
+baixada. Um aviso no canto da tela mostra o progresso, e o atalho informa a versão instalada e a porcentagem. Após uma troca de versão, o app confirma a nova versão ao abrir. A instalação exige confirmação e reinicia o totem; faça isso somente entre vendas,
+sem pagamento TEF em andamento. A primeira instalação deste NSIS é manual nas máquinas antigas.
+
+O totem carrega as telas do site. Mudanças no Angular/backend entram no deploy web normal.
+Mudanças em `main.js`, `preload.js`, TEF ou impressão local pedem uma release Electron separada.
+O procedimento de publicação e o requisito de assinatura estão em
+[`../electron/README.md`](../electron/README.md). Use `-App totem` no script de publicação.
+
+Para uma release local, aumente a versão em `package.json`, então rode (o certificado é o mesmo do balcão):
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ..\electron\build-assinado.ps1 -App totem
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ..\electron\publicar-atualizacao.ps1 -App totem -SshTarget deploy@SEU_HOST
+```
+
+O instalador usa Electron 44 porque o driver Auttar depende do `WebSocket` global do Node 22+.
+No app instalado, coloque as variáveis `TOTEM_*` necessárias em `.env` dentro do diretório
+`userData` do Electron (`%APPDATA%\Experimenta ai do Soneca Totem\` no Windows); no desenvolvimento,
+o arquivo continua em `frontend/electron-totem/.env`. Credenciais não entram no instalador.
