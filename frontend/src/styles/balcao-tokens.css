@@ -1,0 +1,43 @@
+/**
+ * Design tokens — telas internas do balcão (pedidos, cardápio e seus modais).
+ * Paleta base vem dos tokens delivery; aqui ficam as cores de status e de origem.
+ */
+@import './delivery-design-tokens.css';
+
+:root {
+  --balcao-primary-hover: #f25a22;
+  --balcao-primary-text: #d4461c;
+  --balcao-hover-bg: #f7f1ec;
+  --balcao-text-strong: #4a3e35;
+
+  /* status do pedido: cor, fundo claro, texto sobre o fundo */
+  --balcao-aguardando: #e0a100;
+  --balcao-aguardando-bg: #fff5d4;
+  --balcao-aguardando-text: #8a6200;
+  --balcao-preparando: #ef7d1a;
+  --balcao-preparando-bg: #fff0e0;
+  --balcao-preparando-text: #b45309;
+  --balcao-pronto: #1fa971;
+  --balcao-pronto-bg: #e3f6ee;
+  --balcao-pronto-text: #137a52;
+  --balcao-finalizado: #3b6fd8;
+  --balcao-finalizado-bg: #e8effc;
+  --balcao-finalizado-text: #2851a8;
+  --balcao-cancelado: #e5483a;
+  --balcao-cancelado-bg: #fde9e7;
+  --balcao-cancelado-text: #b42318;
+
+  /* origem do pedido */
+  --balcao-mesa: #8e3fa8;
+  --balcao-mesa-bg: #f5e9f8;
+  --balcao-mesa-text: #6b2382;
+  --balcao-totem: #12877c;
+  --balcao-totem-bg: #e2f4f2;
+  --balcao-totem-text: #0b6a61;
+
+  --balcao-radius-btn: 12px;
+  --balcao-btn-height: 42px;
+  --balcao-shadow-primary: 0 6px 14px rgba(255, 107, 53, 0.28);
+  --balcao-shadow-modal: 0 24px 60px rgba(36, 20, 10, 0.22);
+  --balcao-overlay: rgba(36, 28, 21, 0.45);
+}

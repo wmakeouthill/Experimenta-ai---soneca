@@ -1,3 +1,6 @@
+/* Tokens precisam ser globais: dentro do CSS de componente o Angular reescreve :root para [_ngcontent-x]:root, que nunca casa */
+@import './styles/balcao-tokens.css';
+
 /* Global Styles */
 * {
   margin: 0;
