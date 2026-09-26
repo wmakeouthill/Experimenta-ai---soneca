@@ -23,12 +23,27 @@ test('confirma a versão nova somente após uma troca de versão instalada', asy
   }
 });
 
+test('entrega a versão instalada ao aviso visual sem abrir diálogo nativo', () => {
+  const pasta = fs.mkdtempSync(path.join(os.tmpdir(), 'atualizacao-electron-'));
+  const avisos = [];
+  const dialog = { showMessageBox: () => { throw new Error('Diálogo nativo inesperado'); } };
+  const app = versao => ({ isPackaged: true, getVersion: () => versao, getPath: () => pasta });
+  try {
+    avisarVersaoAtualizada(app('1.0.2'), dialog, (anterior, atual) => avisos.push({ anterior, atual }));
+    avisarVersaoAtualizada(app('1.0.3'), dialog, (anterior, atual) => avisos.push({ anterior, atual }));
+    assert.deepEqual(avisos, [{ anterior: '1.0.2', atual: '1.0.3' }]);
+  } finally {
+    fs.rmSync(pasta, { recursive: true, force: true });
+  }
+});
+
 function criarCenario({ resposta = 1, checar = async () => {}, instalar = () => {} } = {}) {
   const updater = new EventEmitter();
   const mensagens = [];
   const ordem = [];
   const labels = [];
   const progresso = [];
+  const avisos = [];
   updater.checkForUpdates = checar;
   updater.quitAndInstall = (...args) => {
     ordem.push(['instalar', ...args]);
@@ -48,10 +63,11 @@ function criarCenario({ resposta = 1, checar = async () => {}, instalar = () => 
     portable: false,
     atualizarMenu: label => labels.push(label),
     atualizarProgresso: valor => progresso.push(valor),
+    avisarAtualizacaoPronta: versao => avisos.push(versao),
     antesDeInstalar: async () => ordem.push(['parar-impressao']),
     restaurarAposFalha: async () => ordem.push(['restaurar-impressao']),
   });
-  return { atualizador, updater, mensagens, ordem, labels, progresso };
+  return { atualizador, updater, mensagens, ordem, labels, progresso, avisos };
 }
 
 test('mostra versão encontrada e porcentagem durante download manual', async () => {
@@ -79,6 +95,7 @@ test('release baixada instala ao sair ou após confirmação manual', async () =
   assert.equal(cenario.updater.autoInstallOnAppQuit, true);
   await cenario.atualizador.verificar(false);
   cenario.updater.emit('update-downloaded', { version: '1.0.1' });
+  assert.deepEqual(cenario.avisos, ['1.0.1']);
   assert.equal(cenario.mensagens.length, 0);
   assert.match(cenario.labels.at(-1), /Instalar atualização/);
   assert.equal(cenario.atualizador.estaInstalando(), false);

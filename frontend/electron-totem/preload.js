@@ -47,6 +47,50 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', mostrarProgressoAtualizacao);
 }
 
+let avisoAtualizacao = null;
+let tempoAvisoAtualizacao;
+let avisoRecebido = false;
+function mostrarAvisoAtualizacao() {
+  if (!document.body) return;
+  document.getElementById('aviso-versao-totem')?.remove();
+  clearTimeout(tempoAvisoAtualizacao);
+  if (!avisoAtualizacao || !['pronta', 'concluida'].includes(avisoAtualizacao.tipo)) return;
+
+  const pronta = avisoAtualizacao.tipo === 'pronta';
+  const cartao = document.createElement('section');
+  cartao.id = 'aviso-versao-totem';
+  cartao.setAttribute('role', 'status');
+  cartao.setAttribute('aria-live', 'polite');
+  cartao.style.cssText = 'position:fixed;top:12px;left:12px;right:12px;z-index:2147483647;box-sizing:border-box;padding:13px 16px;background:var(--delivery-surface,#fff);color:var(--delivery-text,#241c15);border:1px solid var(--delivery-border,#f0e6de);border-left:5px solid var(--delivery-primary,#ff6b35);border-radius:var(--delivery-radius-sm,14px);box-shadow:0 8px 24px rgba(36,20,10,.16);font-family:var(--delivery-font,"Plus Jakarta Sans",system-ui,sans-serif);pointer-events:none;';
+
+  const titulo = document.createElement('strong');
+  titulo.style.cssText = 'display:block;font-size:15px;line-height:1.3;';
+  titulo.textContent = pronta ? 'Tem novidade no Totem! 🎉' : 'Totem atualizado! 🎉';
+
+  const descricao = document.createElement('span');
+  descricao.style.cssText = 'display:block;margin-top:4px;color:var(--delivery-text-secondary,#6b5d53);font-size:13px;line-height:1.4;';
+  descricao.textContent = pronta
+    ? `Versão ${avisoAtualizacao.versao} pronta. Instala ao encerrar o Totem.`
+    : `A versão ${avisoAtualizacao.versao} já está em uso.`;
+
+  cartao.append(titulo, descricao);
+  document.body.append(cartao);
+  tempoAvisoAtualizacao = setTimeout(() => cartao.remove(), 9000);
+}
+ipcRenderer.on('atualizacao:aviso', (_event, aviso) => {
+  avisoRecebido = true;
+  avisoAtualizacao = aviso;
+  mostrarAvisoAtualizacao();
+});
+void ipcRenderer.invoke('atualizacao:estado').then(aviso => {
+  if (avisoRecebido) return;
+  avisoAtualizacao = aviso;
+  mostrarAvisoAtualizacao();
+});
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', mostrarAvisoAtualizacao);
+}
+
 if (readBoolean('TOTEM_MOBILE_EMULATION_ENABLED', true)) {
   installTouchMode();
 }

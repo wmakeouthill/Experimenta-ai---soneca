@@ -20,6 +20,20 @@ const printServer = require('./infrastructure/http/print-server');
 let mainWindow;
 let printServerPort = null;
 let atualizador;
+let avisoAtualizacao = null;
+
+function publicarAvisoAtualizacao(aviso) {
+  avisoAtualizacao = aviso;
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('atualizacao:aviso', aviso);
+  }
+}
+
+ipcMain.handle('atualizacao:estado', () => avisoAtualizacao);
+ipcMain.handle('atualizacao:instalar', event => {
+  if (!mainWindow || event.sender !== mainWindow.webContents) return;
+  return atualizador?.verificar(true);
+});
 
 function configureChromiumFlags() {
   if (process.platform !== 'win32') {
@@ -344,6 +358,9 @@ app.whenReady().then(async () => {
     atualizarProgresso: valor => {
       if (mainWindow && !mainWindow.isDestroyed()) mainWindow.setProgressBar(valor);
     },
+    avisarAtualizacaoPronta: versao => publicarAvisoAtualizacao(
+      versao ? { tipo: 'pronta', versao } : null
+    ),
     antesDeInstalar: limparRecursos,
     restaurarAposFalha: async () => {
       printServerPort = await printServer.iniciarServidor(3001);
@@ -362,7 +379,9 @@ app.whenReady().then(async () => {
   }
 
   createWindow();
-  avisarVersaoAtualizada(app, dialog);
+  avisarVersaoAtualizada(app, dialog, (_anterior, versao) => {
+    publicarAvisoAtualizacao({ tipo: 'concluida', versao });
+  });
 
   // A checagem é silenciosa; a versão baixada instala no encerramento normal.
   void atualizador.verificar(false);

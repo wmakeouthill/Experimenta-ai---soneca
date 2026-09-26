@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-function avisarVersaoAtualizada(app, dialog) {
+function avisarVersaoAtualizada(app, dialog, notificar) {
   if (!app.isPackaged) return;
   const arquivo = path.join(app.getPath('userData'), 'versao-electron.txt');
   const versaoAtual = app.getVersion();
@@ -9,12 +9,15 @@ function avisarVersaoAtualizada(app, dialog) {
     const anterior = fs.existsSync(arquivo) ? fs.readFileSync(arquivo, 'utf8').trim() : null;
     if (anterior !== versaoAtual) fs.writeFileSync(arquivo, versaoAtual, 'utf8');
     if (anterior && anterior !== versaoAtual) {
-      void dialog.showMessageBox({
-        type: 'info',
-        title: 'Aplicativo atualizado',
-        message: `Atualização concluída: versão ${anterior} → ${versaoAtual}.`,
-        buttons: ['OK'],
-      });
+      if (notificar) notificar(anterior, versaoAtual);
+      else {
+        void dialog.showMessageBox({
+          type: 'info',
+          title: 'Aplicativo atualizado',
+          message: `Atualização concluída: versão ${anterior} → ${versaoAtual}.`,
+          buttons: ['OK'],
+        });
+      }
     }
   } catch (error) {
     console.error('Erro ao registrar versão do aplicativo:', error);
@@ -27,6 +30,7 @@ function criarAtualizador({
   dialog,
   atualizarMenu,
   atualizarProgresso = () => {},
+  avisarAtualizacaoPronta = () => {},
   antesDeInstalar,
   restaurarAposFalha = async () => {},
   platform = process.platform,
@@ -84,6 +88,7 @@ function criarAtualizador({
     erroDaChecagem = true;
     verificando = false;
     baixando = false;
+    if (versaoPronta) avisarAtualizacaoPronta(null);
     versaoPronta = null;
     percentual = null;
     atualizarProgresso(-1);
@@ -135,6 +140,7 @@ function criarAtualizador({
       percentual = null;
       atualizarProgresso(-1);
       atualizarMenu(`Instalar atualização ${info.version}...`);
+      avisarAtualizacaoPronta(info.version);
       if (checagemManual) {
         checagemManual = false;
         void oferecerInstalacao();

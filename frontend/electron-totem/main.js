@@ -12,6 +12,16 @@ const { criarAtualizador, avisarVersaoAtualizada } = require(app.isPackaged
 
 let mainWindow = null;
 let atualizador;
+let avisoAtualizacao = null;
+
+function publicarAvisoAtualizacao(aviso) {
+  avisoAtualizacao = aviso;
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('atualizacao:aviso', aviso);
+  }
+}
+
+ipcMain.handle('atualizacao:estado', () => avisoAtualizacao);
 
 function loadLocalEnv() {
   const envPath = app.isPackaged
@@ -235,10 +245,15 @@ app.whenReady().then(() => {
         mainWindow.webContents.send('atualizacao:progresso', valor);
       }
     },
+    avisarAtualizacaoPronta: versao => publicarAvisoAtualizacao(
+      versao ? { tipo: 'pronta', versao } : null
+    ),
     antesDeInstalar: async () => {},
   });
   createWindow();
-  avisarVersaoAtualizada(app, dialog);
+  avisarVersaoAtualizada(app, dialog, (_anterior, versao) => {
+    publicarAvisoAtualizacao({ tipo: 'concluida', versao });
+  });
   void atualizador.verificar(false);
   setInterval(() => { void atualizador.verificar(false); }, 6 * 60 * 60 * 1000).unref();
 

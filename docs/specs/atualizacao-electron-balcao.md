@@ -26,6 +26,7 @@ Permitir que os Electron instalados no balcão e no totem encontrem novas versõ
 
 - [ ] Dado um NSIS instalado sem release nova, quando o operador usa “Verificar atualizações”, então o app informa que está atualizado.
 - [ ] Dado um NSIS instalado e uma release de versão maior publicada, quando o app consulta o feed, então baixa a release e oferece “Reiniciar e instalar” ou “Depois”.
+- [ ] Dada uma release baixada, quando o download termina, então cada app avisa visualmente a versão pronta; na próxima abertura após instalar, confirma a nova versão em uso.
 - [ ] Dada uma release baixada, quando o operador escolhe “Depois”, então o app continua atendendo, o menu ainda permite instalar ao retornar e o encerramento normal instala automaticamente.
 - [ ] Dada uma release baixada, quando o operador confirma o reinício, então o servidor de impressão é encerrado antes de chamar a instalação.
 - [ ] Dada uma falha de rede ou feed inválido, quando ocorre a checagem, então o app continua funcionando e mostra erro somente se a checagem foi manual.

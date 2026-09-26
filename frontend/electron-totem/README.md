@@ -213,6 +213,8 @@ O operador usa **Ctrl+Shift+U** com um teclado conectado para verificar ou insta
 baixada. Um aviso no canto da tela mostra o progresso, e o atalho informa a versão instalada e a porcentagem. Após uma troca de versão, o app confirma a nova versão ao abrir. O atalho pede confirmação para reiniciar e instalar entre vendas, sem pagamento TEF em andamento. Se o operador não usar o atalho, a versão baixada instala automaticamente no encerramento normal diário do totem. A primeira instalação deste NSIS é manual nas máquinas antigas.
 
 O totem carrega as telas do site. Mudanças no Angular/backend entram no deploy web normal.
+Quando uma versão termina de baixar, um aviso breve mostra o número da versão. Na abertura após instalar, outro aviso confirma a versão em uso; nenhum deles oferece toque para reiniciar durante uma compra.
+Quem já instalou o Totem 1.0.1 precisa usar **Ctrl+Shift+U → Reiniciar e instalar** uma vez para chegar à versão mais recente; depois disso, as versões baixadas instalam no encerramento normal.
 Mudanças em `main.js`, `preload.js`, TEF ou impressão local pedem uma release Electron separada.
 O procedimento de publicação e o requisito de assinatura estão em
 [`../electron/README.md`](../electron/README.md). Use `-App totem` no script de publicação.

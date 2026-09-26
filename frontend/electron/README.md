@@ -7,8 +7,10 @@ O app instalado abre o Angular hospedado em `experimentaaisoneca.app`. Mudanças
 - O app Windows instalado por NSIS consulta `https://experimentaaisoneca.app/updates/balcao/latest.yml` ao abrir e a cada seis horas. O menu **Opções → Verificar atualizações** permite consultar manualmente.
 - Se houver versão maior, `electron-updater` baixa o instalador. O menu mostra a versão e a porcentagem do download, e a barra de tarefas mostra o progresso. Depois do download, o operador pode escolher **Reiniciar e instalar** após concluir as operações em andamento. Se escolher **Depois**, a atualização será instalada automaticamente no encerramento normal do app, sem outra confirmação.
 - O menu mostra a versão instalada. Após uma troca de versão, o app confirma a nova versão ao abrir.
+- Ao terminar o download, um aviso visual mostra a nova versão e permite iniciar a instalação após confirmar. Depois da instalação, outro aviso confirma a versão em uso.
 - O instalador portable e a execução de desenvolvimento não consultam o feed.
 - A primeira versão com este atualizador precisa ser instalada manualmente nas máquinas antigas. As versões seguintes podem usar o fluxo remoto.
+- Quem já instalou o Balcão 1.0.2 precisa usar **Verificar atualizações → Reiniciar e instalar** uma vez para chegar à versão mais recente; a instalação automática ao sair só passa a valer depois que a nova versão estiver em execução.
 
 ## Preparar a KingHost uma vez
 
