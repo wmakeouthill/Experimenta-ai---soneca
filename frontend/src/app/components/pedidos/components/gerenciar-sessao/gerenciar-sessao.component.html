@@ -1,6 +1,6 @@
 <div class="gerenciar-sessao-container">
   <div class="sessao-header">
-    <h3 class="sessao-titulo">📅 Sessão de Trabalho</h3>
+    <h3 class="sessao-titulo"><app-icone nome="calendario" aria-hidden="true" /> Sessão de Trabalho</h3>
   </div>
 
   @if (carregando()) {
@@ -24,17 +24,17 @@
     <div class="sessao-acoes">
       @if (podePausar()) {
         <button class="btn-sessao btn-pausar" (click)="pausar()" [disabled]="carregando()">
-          ⏸️ Pausar
+          <app-icone nome="pausar" aria-hidden="true" /> Pausar
         </button>
       }
       @if (podeRetomar()) {
         <button class="btn-sessao btn-retomar" (click)="retomar()" [disabled]="carregando()">
-          ▶️ Retomar
+          <app-icone nome="iniciar" aria-hidden="true" /> Retomar
         </button>
       }
       @if (podeFinalizar()) {
         <button class="btn-sessao btn-finalizar" (click)="finalizar()" [disabled]="carregando()">
-          ✅ Finalizar
+          <app-icone nome="check" aria-hidden="true" /> Finalizar
         </button>
       }
     </div>
@@ -42,7 +42,7 @@
     <div class="sessao-vazia">
       <p>Nenhuma sessão ativa</p>
       <button class="btn-sessao btn-iniciar" (click)="iniciar()" [disabled]="carregando()">
-        🚀 Iniciar Sessão
+        <app-icone nome="iniciar" aria-hidden="true" /> Iniciar Sessão
       </button>
     </div>
   }

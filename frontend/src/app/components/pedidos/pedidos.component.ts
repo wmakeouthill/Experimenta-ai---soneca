@@ -25,6 +25,7 @@ import { gerarUuid } from '../../shared/utils/uuid';
 import { MenuContextoPedidoComponent } from './components/menu-contexto-pedido/menu-contexto-pedido.component';
 import { NovoPedidoModalComponent } from './components/novo-pedido-modal/novo-pedido-modal.component';
 import { usePedidos } from './composables/use-pedidos';
+import { IconeComponent } from '../shared/icone/icone.component';
 
 @Component({
   selector: 'app-pedidos',
@@ -35,6 +36,7 @@ import { usePedidos } from './composables/use-pedidos';
     FormsModule,
     NovoPedidoModalComponent,
     MenuContextoPedidoComponent,
+    IconeComponent,
   ],
   templateUrl: './pedidos.component.html',
   styleUrl: './pedidos.component.css',
@@ -184,7 +186,7 @@ export class PedidosComponent implements OnInit, OnDestroy {
             if (pedidos.length > pedidosAnteriores.length) {
               const novos = pedidos.length - pedidosAnteriores.length;
               this.notificationService.info(
-                `🍽️ ${novos} novo(s) pedido(s) de mesa aguardando aceitação!`
+                `${novos} novo(s) pedido(s) de mesa aguardando aceitação!`
               );
             }
           });
@@ -213,7 +215,7 @@ export class PedidosComponent implements OnInit, OnDestroy {
             if (pedidos.length > anteriores.length) {
               const novos = pedidos.length - anteriores.length;
               this.notificationService.info(
-                `🖥️ ${novos} novo(s) pedido(s) do totem aguardando aceitação!`
+                `${novos} novo(s) pedido(s) do totem aguardando aceitação!`
               );
             }
           });
@@ -301,7 +303,7 @@ export class PedidosComponent implements OnInit, OnDestroy {
     const idempotencyKey = gerarUuid();
     this.filaPedidosMesaService.aceitarPedido(pedidoId, idempotencyKey).subscribe({
       next: pedidoCriado => {
-        this.notificationService.sucesso('✅ Pedido aceito e criado com sucesso!');
+        this.notificationService.sucesso('Pedido aceito e criado com sucesso!');
         // Remove da fila local
         this.pedidosPendentesMesa.update(lista => lista.filter(p => p.id !== pedidoId));
         // Recarrega pedidos para mostrar o novo
@@ -311,7 +313,7 @@ export class PedidosComponent implements OnInit, OnDestroy {
       error: error => {
         console.error('Erro ao aceitar pedido:', error);
         this.notificationService.erro(
-          '❌ Erro ao aceitar pedido: ' + (error.error?.message || error.message)
+          'Erro ao aceitar pedido: ' + (error.error?.message || error.message)
         );
         this.carregandoFilaMesa.set(false);
       },
@@ -334,7 +336,7 @@ export class PedidosComponent implements OnInit, OnDestroy {
       error: error => {
         console.error('Erro ao rejeitar pedido:', error);
         this.notificationService.erro(
-          '❌ Erro ao rejeitar pedido: ' + (error.error?.message || error.message)
+          'Erro ao rejeitar pedido: ' + (error.error?.message || error.message)
         );
         this.carregandoFilaMesa.set(false);
       },
@@ -353,7 +355,7 @@ export class PedidosComponent implements OnInit, OnDestroy {
     const idempotencyKey = this.filaPedidosTotemService.gerarChaveIdempotencia();
     this.filaPedidosTotemService.aceitarPedido(pedidoId, idempotencyKey).subscribe({
       next: () => {
-        this.notificationService.sucesso('✅ Pedido totem aceito e criado com sucesso!');
+        this.notificationService.sucesso('Pedido totem aceito e criado com sucesso!');
         this.pedidosPendentesTotem.update(lista => lista.filter(p => p.id !== pedidoId));
         this.carregarDados();
         this.carregandoFilaTotem.set(false);
@@ -361,7 +363,7 @@ export class PedidosComponent implements OnInit, OnDestroy {
       error: error => {
         console.error('Erro ao aceitar pedido totem:', error);
         this.notificationService.erro(
-          '❌ Erro ao aceitar pedido: ' + (error.error?.message || error.message)
+          'Erro ao aceitar pedido: ' + (error.error?.message || error.message)
         );
         this.carregandoFilaTotem.set(false);
       },
@@ -382,7 +384,7 @@ export class PedidosComponent implements OnInit, OnDestroy {
       error: error => {
         console.error('Erro ao rejeitar pedido totem:', error);
         this.notificationService.erro(
-          '❌ Erro ao rejeitar pedido: ' + (error.error?.message || error.message)
+          'Erro ao rejeitar pedido: ' + (error.error?.message || error.message)
         );
         this.carregandoFilaTotem.set(false);
       },
@@ -582,7 +584,7 @@ export class PedidosComponent implements OnInit, OnDestroy {
     if (!this.isBrowser) return;
 
     const valorStr = prompt(
-      `💵 Informe o valor pago em dinheiro pelo cliente:\n(Valor do pedido: R$ ${valorTotal.toFixed(2).replace('.', ',')})`
+      `Informe o valor pago em dinheiro pelo cliente:\n(Valor do pedido: R$ ${valorTotal.toFixed(2).replace('.', ',')})`
     );
     if (valorStr === null) return; // Usuário cancelou
 
@@ -608,7 +610,7 @@ export class PedidosComponent implements OnInit, OnDestroy {
     this.pedidoService.corrigirTroco(pedidoId, valorPago).subscribe({
       next: pedidoAtualizado => {
         this.pedidosComposable.atualizarPedidoNoSignal(pedidoAtualizado);
-        this.notificationService.sucesso('✅ Troco corrigido com sucesso!');
+        this.notificationService.sucesso('Troco corrigido com sucesso!');
         setTimeout(() => {
           const sessaoId = this.sessaoAtiva()?.id;
           this.pedidosComposable.carregarPedidos(sessaoId ? { sessaoId } : undefined);
@@ -719,9 +721,9 @@ export class PedidosComponent implements OnInit, OnDestroy {
           )
           .subscribe(response => {
             if (response?.sucesso) {
-              this.notificationService.sucesso('✅ Cupom impresso com sucesso!');
+              this.notificationService.sucesso('Cupom impresso com sucesso!');
             } else if (response && !response.sucesso) {
-              this.notificationService.erro('❌ Erro ao imprimir: ' + response.mensagem);
+              this.notificationService.erro('Erro ao imprimir: ' + response.mensagem);
             }
           });
       });

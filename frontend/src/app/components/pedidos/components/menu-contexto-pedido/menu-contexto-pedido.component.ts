@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { MeioPagamento, Pedido, StatusPedido } from '../../../../services/pedido.service';
+import { IconeComponent } from '../../../shared/icone/icone.component';
 
 @Component({
   selector: 'app-menu-contexto-pedido',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconeComponent],
   templateUrl: './menu-contexto-pedido.component.html',
   styleUrl: './menu-contexto-pedido.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

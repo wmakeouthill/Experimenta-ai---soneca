@@ -11,11 +11,12 @@ import {
   signal,
 } from '@angular/core';
 import { MeioPagamento, MeioPagamentoPedido } from '../../../../services/pedido.service';
+import { IconeComponent } from '../../../shared/icone/icone.component';
 
 @Component({
   selector: 'app-meios-pagamento',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconeComponent],
   templateUrl: './meios-pagamento.component.html',
   styleUrl: './meios-pagamento.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

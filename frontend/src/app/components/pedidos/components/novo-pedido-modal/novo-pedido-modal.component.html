@@ -2,8 +2,10 @@
   <div class="formulario-overlay" (click)="fechar()">
     <div class="formulario-sidebar" (click)="$event.stopPropagation()">
       <div class="formulario-header">
-        <h2>➕ Novo Pedido</h2>
-        <button class="btn-fechar" (click)="fechar()">×</button>
+        <h2><app-icone nome="mais" aria-hidden="true" /> Novo Pedido</h2>
+        <button class="btn-fechar" (click)="fechar()" aria-label="Fechar">
+          <app-icone nome="fechar" />
+        </button>
       </div>
 
       <div class="formulario-conteudo">

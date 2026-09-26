@@ -30,7 +30,7 @@
             </div>
           } @else {
             <div class="sessao-ativa-header sessao-sem-sessao">
-              <span class="sessao-ativa-label">⚠️ Sem sessão</span>
+              <span class="sessao-ativa-label"><app-icone nome="alerta" /> Sem sessão</span>
               <a routerLink="/sessoes" class="sessao-link-criar">Criar</a>
             </div>
           }
@@ -43,9 +43,9 @@
           (click)="abrirFormulario()"
           [disabled]="!temSessaoAtiva()"
         >
-          ➕ Novo Pedido
+          <app-icone nome="mais" aria-hidden="true" /> Novo Pedido
         </button>
-        <button class="btn-voltar" routerLink="/" aria-label="Voltar para home">← Voltar</button>
+        <button class="btn-voltar" routerLink="/" aria-label="Voltar para home"><app-icone nome="voltar" aria-hidden="true" /> Voltar</button>
       </div>
     </div>
   </header>
@@ -54,7 +54,7 @@
     <!-- Sidebar de Filtros -->
     <aside class="sidebar-filtros">
       <div class="filtros-container">
-        <h2 class="filtros-titulo">🔍 Filtros</h2>
+        <h2 class="filtros-titulo"><app-icone nome="busca" /> Filtros</h2>
 
         <!-- Busca -->
         <div class="filtro-grupo">
@@ -110,7 +110,7 @@
           </div>
         </div>
 
-        <button class="btn-limpar-filtros" (click)="limparFiltros()">🗑️ Limpar Filtros</button>
+        <button class="btn-limpar-filtros" (click)="limparFiltros()"><app-icone nome="lixeira" aria-hidden="true" /> Limpar Filtros</button>
       </div>
     </aside>
 
@@ -141,7 +141,7 @@
               (click)="filtrarPorFilaMesa()"
             >
               <div class="status-card-header">
-                <h3>🍽️ Mesa</h3>
+                <h3><app-icone nome="prato" /> Mesa</h3>
                 <span class="status-count pulse">{{ pedidosPendentesMesa().length }}</span>
               </div>
             </button>
@@ -153,7 +153,7 @@
               (click)="filtrarPorFilaTotem()"
             >
               <div class="status-card-header">
-                <h3>🖥️ Totem</h3>
+                <h3><app-icone nome="monitor" /> Totem</h3>
                 <span class="status-count pulse">{{ pedidosPendentesTotem().length }}</span>
               </div>
             </button>
@@ -166,7 +166,7 @@
             (click)="filtrarPorStatus(StatusPedido.PENDENTE)"
           >
             <div class="status-card-header">
-              <h3>⏳ Aguardando</h3>
+              <h3><app-icone nome="ampulheta" /> Aguardando</h3>
               <span class="status-count">{{ pedidosPorStatus().aguardando.length }}</span>
             </div>
           </button>
@@ -178,7 +178,7 @@
             (click)="filtrarPorStatus(StatusPedido.PREPARANDO)"
           >
             <div class="status-card-header">
-              <h3>🔄 Preparando</h3>
+              <h3><app-icone nome="chama" /> Preparando</h3>
               <span class="status-count">{{ pedidosPorStatus().preparando.length }}</span>
             </div>
           </button>
@@ -190,7 +190,7 @@
             (click)="filtrarPorStatus(StatusPedido.PRONTO)"
           >
             <div class="status-card-header">
-              <h3>✅ Pronto</h3>
+              <h3><app-icone nome="checkCirculo" /> Pronto</h3>
               <span class="status-count">{{ pedidosPorStatus().pronto.length }}</span>
             </div>
           </button>
@@ -202,7 +202,7 @@
             (click)="filtrarPorStatus(StatusPedido.FINALIZADO)"
           >
             <div class="status-card-header">
-              <h3>✔️ Finalizado</h3>
+              <h3><app-icone nome="check" /> Finalizado</h3>
               <span class="status-count">{{ pedidosPorStatus().finalizado.length }}</span>
             </div>
           </button>
@@ -214,7 +214,7 @@
             (click)="filtrarPorStatus(StatusPedido.CANCELADO)"
           >
             <div class="status-card-header">
-              <h3>❌ Cancelados</h3>
+              <h3><app-icone nome="xCirculo" /> Cancelados</h3>
               <span class="status-count">{{ pedidosPorStatus().cancelado.length }}</span>
             </div>
           </button>
@@ -233,7 +233,7 @@
                   <div class="pedido-header">
                     <div class="pedido-info-principal">
                       <h3 class="pedido-numero">
-                        <span class="pedido-mesa-badge fila">🍽️ Mesa {{ pedido.numeroMesa }}</span>
+                        <span class="pedido-mesa-badge fila"><app-icone nome="prato" /> Mesa {{ pedido.numeroMesa }}</span>
                       </h3>
                       <p class="pedido-cliente-data">
                         <span class="pedido-cliente" [title]="pedido.nomeCliente">{{
@@ -241,7 +241,7 @@
                         }}</span>
                         @if (pedido.telefoneCliente) {
                           <span class="pedido-separador"> - </span>
-                          <span class="pedido-telefone">📱 {{ pedido.telefoneCliente }}</span>
+                          <span class="pedido-telefone"><app-icone nome="celular" /> {{ pedido.telefoneCliente }}</span>
                         }
                       </p>
                     </div>
@@ -251,7 +251,7 @@
                           class="tempo-espera"
                           [class]="getClasseTempoEspera(pedido.tempoEsperaSegundos)"
                         >
-                          ⏱️ {{ formatarTempoEspera(pedido.tempoEsperaSegundos) }}
+                          <app-icone nome="relogio" /> {{ formatarTempoEspera(pedido.tempoEsperaSegundos) }}
                         </span>
                       </div>
                     </div>
@@ -310,7 +310,7 @@
                           meio.meioPagamento === 'DINHEIRO' &&
                           (!meio.valorPagoDinheiro || meio.valorPagoDinheiro <= meio.valor)
                         ) {
-                          <span class="pagamento-sem-troco">💵 Sem troco informado</span>
+                          <span class="pagamento-sem-troco"><app-icone nome="dinheiro" /> Sem troco informado</span>
                         }
                       }
                     </div>
@@ -326,14 +326,14 @@
                         (click)="aceitarPedidoMesa(pedido.id)"
                         [disabled]="carregandoFilaMesa()"
                       >
-                        ✅ Aceitar
+                        <app-icone nome="check" aria-hidden="true" /> Aceitar
                       </button>
                       <button
                         class="btn-acao btn-rejeitar"
                         (click)="rejeitarPedidoMesa(pedido.id)"
                         [disabled]="carregandoFilaMesa()"
                       >
-                        ❌ Rejeitar
+                        <app-icone nome="xCirculo" aria-hidden="true" /> Rejeitar
                       </button>
                     </div>
                   </div>
@@ -354,7 +354,7 @@
                   <div class="pedido-header">
                     <div class="pedido-info-principal">
                       <h3 class="pedido-numero">
-                        <span class="pedido-totem-badge fila">🖥️ Totem</span>
+                        <span class="pedido-totem-badge fila"><app-icone nome="monitor" /> Totem</span>
                       </h3>
                       <p class="pedido-cliente-data">
                         <span class="pedido-cliente" [title]="pedido.nomeCliente">{{
@@ -368,7 +368,7 @@
                           class="tempo-espera"
                           [class]="getClasseTempoEsperaTotem(pedido.tempoEsperaSegundos)"
                         >
-                          ⏱️ {{ formatarTempoEsperaTotem(pedido.tempoEsperaSegundos) }}
+                          <app-icone nome="relogio" /> {{ formatarTempoEsperaTotem(pedido.tempoEsperaSegundos) }}
                         </span>
                       </div>
                     </div>
@@ -427,7 +427,7 @@
                           meio.meioPagamento === 'DINHEIRO' &&
                           (!meio.valorPagoDinheiro || meio.valorPagoDinheiro <= meio.valor)
                         ) {
-                          <span class="pagamento-sem-troco">💵 Sem troco informado</span>
+                          <span class="pagamento-sem-troco"><app-icone nome="dinheiro" /> Sem troco informado</span>
                         }
                       }
                     </div>
@@ -443,14 +443,14 @@
                         (click)="aceitarPedidoTotem(pedido.id)"
                         [disabled]="carregandoFilaTotem()"
                       >
-                        ✅ Aceitar
+                        <app-icone nome="check" aria-hidden="true" /> Aceitar
                       </button>
                       <button
                         class="btn-acao btn-rejeitar"
                         (click)="rejeitarPedidoTotem(pedido.id)"
                         [disabled]="carregandoFilaTotem()"
                       >
-                        ❌ Rejeitar
+                        <app-icone nome="xCirculo" aria-hidden="true" /> Rejeitar
                       </button>
                     </div>
                   </div>
@@ -464,7 +464,7 @@
             <div class="estado-vazio">
               <p class="vazio-mensagem">Nenhum pedido encontrado.</p>
               <button class="btn-primary" (click)="abrirFormulario()">
-                ➕ Criar Primeiro Pedido
+                <app-icone nome="mais" aria-hidden="true" /> Criar Primeiro Pedido
               </button>
             </div>
           } @else {
@@ -481,14 +481,14 @@
                       <h3 class="pedido-numero">Pedido #{{ pedido.numeroPedido }}</h3>
                       <p class="pedido-cliente-data">
                         @if (pedido.mesaId) {
-                          <span class="pedido-mesa-badge">🍽️ Mesa {{ pedido.numeroMesa }}</span>
+                          <span class="pedido-mesa-badge"><app-icone nome="prato" /> Mesa {{ pedido.numeroMesa }}</span>
                           <span
                             class="pedido-cliente"
                             [title]="pedido.nomeClienteMesa || 'Cliente da mesa'"
                             >{{ pedido.nomeClienteMesa || 'Cliente' }}</span
                           >
                         } @else if (!pedido.clienteId) {
-                          <span class="pedido-totem-badge">🖥️ Totem</span>
+                          <span class="pedido-totem-badge"><app-icone nome="monitor" /> Totem</span>
                           <span class="pedido-cliente" [title]="pedido.clienteNome">{{
                             pedido.clienteNome
                           }}</span>
@@ -566,7 +566,7 @@
                               $event.stopPropagation(); corrigirTroco(pedido.id, pedido.valorTotal)
                             "
                           >
-                            💵 Informar Valor Pago
+                            <app-icone nome="dinheiro" aria-hidden="true" /> Informar Valor Pago
                           </button>
                         }
                       }

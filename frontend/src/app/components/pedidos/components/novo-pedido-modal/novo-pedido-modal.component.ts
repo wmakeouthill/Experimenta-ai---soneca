@@ -9,6 +9,7 @@ import { ProdutoDetalhesModalComponent, ProdutoComAdicionais } from '../produto-
 import { Cliente } from '../../../../services/cliente.service';
 import { Produto } from '../../../../services/produto.service';
 import { ItemPedidoRequest, MeioPagamentoPedido, ItemPedidoAdicionalRequest } from '../../../../services/pedido.service';
+import { IconeComponent } from '../../../shared/icone/icone.component';
 
 export interface ItemPedidoComAdicionais extends ItemPedidoRequest {
   itemId?: string;
@@ -26,7 +27,8 @@ export interface ItemPedidoComAdicionais extends ItemPedidoRequest {
     SelecaoProdutosComponent,
     ItensPedidoComponent,
     MeiosPagamentoComponent,
-    ProdutoDetalhesModalComponent
+    ProdutoDetalhesModalComponent,
+    IconeComponent
   ],
   templateUrl: './novo-pedido-modal.component.html',
   styleUrl: './novo-pedido-modal.component.css',

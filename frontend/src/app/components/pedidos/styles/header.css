@@ -1,9 +1,8 @@
-/* Header */
+/* Header claro, unificado com o cardápio */
 .pedidos-header {
-  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-  color: white;
-  padding: 1rem 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: var(--delivery-surface);
+  border-bottom: 1px solid var(--delivery-border);
+  padding: 0.875rem 1.75rem;
 }
 
 .pedidos-header-content {
@@ -13,129 +12,140 @@
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
-  padding: 0 1rem;
 }
 
 .header-info-wrapper {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
   margin-left: auto;
-  margin-right: 1rem;
   flex-wrap: wrap;
 }
 
 .sessao-ativa-wrapper {
   display: flex;
-  justify-content: flex-end;
   align-items: center;
 }
 
 .pedidos-titulo {
-  font-size: 2rem;
-  font-weight: 900;
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: -0.015em;
   margin: 0;
-  letter-spacing: 1px;
+  color: var(--delivery-text);
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
 .pedidos-logo {
-  width: 70px;
-  height: 70px;
+  width: 48px;
+  height: 48px;
   object-fit: contain;
   flex-shrink: 0;
 }
 
 .header-actions {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.5rem;
   flex-wrap: wrap;
 }
 
 .btn-header,
 .btn-voltar {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
-  padding: 0.75rem 1.5rem;
-  font-size: 0.95rem;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--balcao-btn-height);
+  padding: 0 1rem;
+  border-radius: var(--balcao-radius-btn);
+  font-size: 0.9rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
   text-decoration: none;
-  display: inline-block;
+  background: transparent;
+  color: var(--balcao-text-strong);
+  border: 1px solid var(--delivery-border);
 }
 
 .btn-header.btn-primary {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--delivery-primary);
+  color: #fff;
+  border: none;
+  box-shadow: var(--balcao-shadow-primary);
 }
 
-.btn-header:hover,
+.btn-header.btn-primary:hover:not(:disabled) {
+  background: var(--balcao-primary-hover);
+}
+
+.btn-header:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .btn-voltar:hover {
-  background: rgba(255, 255, 255, 0.35);
-  border-color: rgba(255, 255, 255, 0.5);
-  transform: translateY(-2px);
+  background: var(--balcao-hover-bg);
+  color: var(--delivery-text);
 }
 
-/* Sessão Ativa no Header */
+/* Sessão ativa no header */
 .sessao-ativa-header {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.6rem 1rem;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 8px;
-  font-size: 0.9rem;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  background: var(--delivery-accent-pill);
+  border-radius: 999px;
+  font-size: 0.85rem;
   white-space: nowrap;
-  min-width: fit-content;
 }
 
 .sessao-ativa-label {
   font-weight: 600;
-  opacity: 0.9;
-  font-size: 0.9rem;
+  color: var(--delivery-text-secondary);
+  font-size: 0.85rem;
 }
 
 .sessao-ativa-nome {
   font-weight: 700;
-  font-size: 0.95rem;
+  color: var(--delivery-text);
+  font-size: 0.9rem;
 }
 
 .sessao-ativa-status {
-  padding: 0.3rem 0.65rem;
-  border-radius: 16px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.06em;
   white-space: nowrap;
 }
 
 .sessao-aberta-badge {
-  background: rgba(76, 175, 80, 0.3);
-  color: #fff;
-  border: 1px solid rgba(76, 175, 80, 0.5);
+  background: var(--balcao-pronto-bg);
+  color: var(--balcao-pronto-text);
 }
 
 .sessao-sem-sessao {
-  background: rgba(255, 193, 7, 0.2);
-  border: 1px solid rgba(255, 193, 7, 0.4);
+  background: var(--balcao-aguardando-bg);
+}
+
+.sessao-sem-sessao .sessao-ativa-label {
+  color: var(--balcao-aguardando-text);
 }
 
 .sessao-link-criar {
-  color: white;
+  color: var(--delivery-primary);
   text-decoration: underline;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: opacity 0.3s ease;
   font-size: 0.85rem;
-  margin-left: 0.5rem;
+  margin-left: 0.25rem;
 }
 
 .sessao-link-criar:hover {
   opacity: 0.8;
 }
-

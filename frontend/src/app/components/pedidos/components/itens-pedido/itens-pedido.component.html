@@ -13,14 +13,16 @@
             </div>
           }
           @if (item.observacoes) {
-            <span class="item-obs">📝 {{ item.observacoes }}</span>
+            <span class="item-obs"><app-icone nome="nota" aria-hidden="true" /> {{ item.observacoes }}</span>
           }
         </div>
         <div class="item-controles">
           <button class="btn-quantidade" (click)="atualizarQuantidade(i, item.quantidade - 1)">-</button>
           <span class="item-quantidade">{{ item.quantidade }}</span>
           <button class="btn-quantidade" (click)="atualizarQuantidade(i, item.quantidade + 1)">+</button>
-          <button class="btn-remover" (click)="removerItem(i)">🗑️</button>
+          <button class="btn-remover" (click)="removerItem(i)" aria-label="Remover item">
+            <app-icone nome="lixeira" />
+          </button>
         </div>
         <span class="item-subtotal">
           {{ formatarPreco(calcularSubtotalItem(item)) }}

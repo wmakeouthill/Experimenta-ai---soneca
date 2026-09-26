@@ -38,14 +38,15 @@
         valorMeioPagamento() <= 0 ||
         (!isDinheiro() && valorMeioPagamento() > valorRestante())
       "
+      aria-label="Adicionar meio de pagamento"
     >
-      ➕
+      <app-icone nome="mais" />
     </button>
   </div>
   @if (isDinheiro() && valorMeioPagamento() > 0) {
     <div class="troco-container">
       <div class="troco-input-group">
-        <label class="troco-label">💵 Valor pago em nota:</label>
+        <label class="troco-label"><app-icone nome="dinheiro" aria-hidden="true" /> Valor pago em nota:</label>
         <input
           type="number"
           class="form-input input-valor-troco"
@@ -59,7 +60,7 @@
       </div>
       @if (trocoCalculado() > 0) {
         <div class="troco-resultado">
-          <span class="troco-icone">🔄</span>
+          <span class="troco-icone"><app-icone nome="atualizar" /></span>
           <span class="troco-texto"
             >Troco: <strong>{{ formatarPreco(trocoCalculado()) }}</strong></span
           >
@@ -92,8 +93,9 @@
             type="button"
             class="btn-remover-meio-pagamento"
             (click)="removerMeioPagamento($index)"
+            aria-label="Remover meio de pagamento"
           >
-            🗑️
+            <app-icone nome="lixeira" />
           </button>
         </div>
       }

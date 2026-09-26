@@ -1,11 +1,12 @@
 import { Component, input, output, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Produto } from '../../../../services/produto.service';
+import { IconeComponent } from '../../../shared/icone/icone.component';
 
 @Component({
   selector: 'app-selecao-produtos',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconeComponent],
   templateUrl: './selecao-produtos.component.html',
   styleUrl: './selecao-produtos.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush

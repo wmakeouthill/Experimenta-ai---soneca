@@ -10,10 +10,10 @@
 :host h3 {
   font-size: 1rem;
   font-weight: 700;
-  color: #333;
+  color: var(--balcao-text-strong);
   margin: 0 0 0.5rem 0;
   padding-bottom: 0.25rem;
-  border-bottom: 2px solid #4CAF50;
+  border-bottom: 2px solid var(--delivery-border);
   flex-shrink: 0;
 }
 
@@ -36,9 +36,9 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.5rem;
-  background: #f9f9f9;
+  background: var(--delivery-bg);
   border-radius: 6px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--delivery-border);
   min-width: 0;
   max-width: 100%;
   gap: 0.5rem;
@@ -61,16 +61,19 @@
 
 .adicional-badge {
   font-size: 0.65rem;
-  background: #fff3e0;
-  color: #e65100;
+  background: var(--delivery-accent-pill);
+  color: var(--balcao-primary-text);
   padding: 2px 6px;
   border-radius: 4px;
   white-space: nowrap;
 }
 
 .item-obs {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 0.65rem;
-  color: #666;
+  color: var(--delivery-text-secondary);
   font-style: italic;
   white-space: nowrap;
   overflow: hidden;
@@ -88,14 +91,14 @@
 .btn-quantidade {
   width: 24px;
   height: 24px;
-  border: 1.5px solid #4CAF50;
-  background: white;
-  color: #4CAF50;
+  border: 1.5px solid var(--delivery-primary);
+  background: var(--delivery-surface);
+  color: var(--delivery-primary);
   border-radius: 4px;
   cursor: pointer;
   font-weight: 600;
   font-size: 0.75rem;
-  transition: all 0.3s ease;
+  transition: background 0.15s ease, color 0.15s ease;
   padding: 0;
   display: flex;
   align-items: center;
@@ -104,31 +107,39 @@
 }
 
 .btn-quantidade:hover {
-  background: #4CAF50;
+  background: var(--delivery-primary);
   color: white;
 }
 
 .btn-remover {
-  background: #ffcdd2;
-  border: 1.5px solid #c62828;
-  color: #c62828;
+  background: var(--balcao-cancelado-bg);
+  border: 1.5px solid var(--balcao-cancelado);
+  color: var(--balcao-cancelado-text);
   border-radius: 4px;
   padding: 0.2rem 0.4rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background 0.15s ease, color 0.15s ease;
   font-size: 0.75rem;
   flex-shrink: 0;
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
 }
 
 .btn-remover:hover {
-  background: #c62828;
+  background: var(--balcao-cancelado);
   color: white;
+}
+
+.btn-quantidade:focus-visible,
+.btn-remover:focus-visible {
+  outline: 2px solid var(--delivery-primary);
+  outline-offset: 2px;
 }
 
 .item-nome {
   flex: 1;
-  color: #333;
+  color: var(--delivery-text);
   font-size: 0.8rem;
   min-width: 0;
   overflow: hidden;
@@ -138,7 +149,7 @@
 
 .item-quantidade {
   font-weight: 600;
-  color: #4CAF50;
+  color: var(--delivery-primary);
   min-width: 24px;
   font-size: 0.75rem;
   flex-shrink: 0;
@@ -147,7 +158,7 @@
 
 .item-subtotal {
   font-weight: 700;
-  color: #2e7d32;
+  color: var(--balcao-pronto-text);
   min-width: 60px;
   font-size: 0.8rem;
   text-align: right;
@@ -156,14 +167,13 @@
 
 .pedido-total-form {
   padding: 0.5rem 0.75rem;
-  background: #e8f5e9;
+  background: var(--balcao-pronto-bg);
   border-radius: 6px;
   text-align: right;
   font-size: 1rem;
-  color: #2e7d32;
+  color: var(--balcao-pronto-text);
   margin-bottom: 0;
   margin-top: auto;
   flex-shrink: 0;
   max-width: 100%;
 }
-

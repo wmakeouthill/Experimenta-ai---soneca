@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Produto } from '../../../../services/produto.service';
 import { AdicionalService, Adicional } from '../../../../services/adicional.service';
 import { ItemPedidoAdicionalRequest } from '../../../../services/pedido.service';
+import { IconeComponent } from '../../../shared/icone/icone.component';
 
 export interface ProdutoComAdicionais {
     produto: Produto;
@@ -20,7 +21,7 @@ export interface ItemAdicionalSelecionado {
 @Component({
     selector: 'app-produto-detalhes-modal',
     standalone: true,
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, IconeComponent],
     templateUrl: './produto-detalhes-modal.component.html',
     styleUrl: './produto-detalhes-modal.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush

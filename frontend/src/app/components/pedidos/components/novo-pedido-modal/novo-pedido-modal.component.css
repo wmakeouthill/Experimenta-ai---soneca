@@ -4,7 +4,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--balcao-overlay);
+  backdrop-filter: blur(2px);
   z-index: 1000;
   display: flex;
   justify-content: flex-end;
@@ -14,8 +15,9 @@
 .formulario-sidebar {
   width: 900px;
   max-width: 95vw;
-  background: white;
-  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.2);
+  background: var(--delivery-surface);
+  box-shadow: var(--balcao-shadow-modal);
+  font-family: var(--delivery-font);
   display: flex;
   flex-direction: column;
   max-height: 100vh;
@@ -26,29 +28,30 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1.5rem;
-  border-bottom: 2px solid #e0e0e0;
-  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-  color: white;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--delivery-border);
   flex-shrink: 0;
 }
 
 .formulario-header h2 {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--delivery-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .btn-fechar {
-  background: rgba(255, 255, 255, 0.2);
+  background: transparent;
   border: none;
-  color: white;
-  font-size: 1.5rem;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+  color: var(--delivery-text-secondary);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: background 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -56,7 +59,7 @@
 }
 
 .btn-fechar:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--balcao-hover-bg);
 }
 
 .formulario-conteudo {
@@ -238,10 +241,10 @@
 .formulario-secao h3 {
   font-size: 1rem;
   font-weight: 700;
-  color: #333;
+  color: var(--balcao-text-strong);
   margin: 0 0 0.25rem 0;
   padding-bottom: 0.25rem;
-  border-bottom: 2px solid #4CAF50;
+  border-bottom: 2px solid var(--delivery-border);
 }
 
 .formulario-secao:has(app-selecao-produtos) h3 {
@@ -281,48 +284,58 @@
 .form-textarea {
   width: 100%;
   padding: 0.6rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
+  border: 1.5px solid var(--delivery-border);
+  border-radius: var(--balcao-radius-btn);
+  background: var(--delivery-input-bg);
+  color: var(--delivery-text);
   font-size: 0.9rem;
   font-family: inherit;
-  transition: border-color 0.3s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
   resize: vertical;
   min-height: 80px;
 }
 
 .form-textarea:focus {
   outline: none;
-  border-color: #4CAF50;
+  border-color: var(--delivery-primary);
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.18);
+}
+
+.btn-fechar:focus-visible,
+.btn-primary:focus-visible {
+  outline: 2px solid var(--delivery-primary);
+  outline-offset: 2px;
 }
 
 .formulario-acoes {
-  padding-top: 0.75rem;
-  border-top: 2px solid #e0e0e0;
+  padding-top: 16px;
+  border-top: 1px solid var(--delivery-border);
   margin-top: 0;
   flex-shrink: 0;
   padding-bottom: 0.5rem;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  background: var(--delivery-primary);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--balcao-radius-btn);
   padding: 0.75rem 1.5rem;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 800;
   cursor: pointer;
-  transition: all 0.3s ease;
+  box-shadow: var(--balcao-shadow-primary);
+  transition: background 0.15s ease;
 }
 
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+.btn-primary:hover:not(:disabled) {
+  background: var(--balcao-primary-hover);
 }
 
 .btn-criar {
   width: 100%;
-  padding: 0.85rem;
+  height: var(--balcao-btn-height);
+  padding: 0 0.85rem;
   font-size: 1rem;
 }
 

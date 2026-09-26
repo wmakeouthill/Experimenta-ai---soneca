@@ -12,13 +12,16 @@
           <option [value]="categoria">{{ categoria }}</option>
         }
       </select>
-      <input
-        type="text"
-        class="input-pesquisa-produto"
-        placeholder="🔍 Pesquisar produto..."
-        [value]="pesquisaProduto()"
-        (input)="pesquisarProduto($any($event.target).value)"
-      />
+      <div class="campo-pesquisa-produto">
+        <app-icone nome="busca" aria-hidden="true" />
+        <input
+          type="text"
+          class="input-pesquisa-produto"
+          placeholder="Pesquisar produto..."
+          [value]="pesquisaProduto()"
+          (input)="pesquisarProduto($any($event.target).value)"
+        />
+      </div>
     </div>
   </div>
   <div class="produtos-grid-form">
@@ -33,7 +36,7 @@
         @if (produto.foto) {
           <img [src]="produto.foto" [alt]="produto.nome" class="produto-foto-mini" />
         } @else {
-          <div class="produto-foto-placeholder-mini">📷</div>
+          <div class="produto-foto-placeholder-mini"><app-icone nome="camera" /></div>
         }
         <div class="produto-info-form">
           <span class="produto-nome-form" [title]="produto.nome">{{ produto.nome }}</span>

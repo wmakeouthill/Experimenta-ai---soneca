@@ -4,6 +4,7 @@ import { StatusSessao } from '../../../../services/sessao-trabalho.service';
 import { useSessaoAtiva } from './composables/use-sessao-ativa';
 import { FormatoUtil } from '../../../../utils/formato.util';
 import { AuthService } from '../../../../services/auth.service';
+import { IconeComponent } from '../../../shared/icone/icone.component';
 
 /**
  * Componente de apresentação para gerenciamento de sessão ativa.
@@ -12,7 +13,7 @@ import { AuthService } from '../../../../services/auth.service';
 @Component({
   selector: 'app-gerenciar-sessao',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconeComponent],
   templateUrl: './gerenciar-sessao.component.html',
   styleUrl: './gerenciar-sessao.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush

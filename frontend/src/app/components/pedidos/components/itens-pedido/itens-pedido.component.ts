@@ -2,6 +2,7 @@ import { Component, input, output, ChangeDetectionStrategy } from '@angular/core
 import { CommonModule } from '@angular/common';
 import { ItemPedidoRequest } from '../../../../services/pedido.service';
 import { Produto } from '../../../../services/produto.service';
+import { IconeComponent } from '../../../shared/icone/icone.component';
 
 interface ItemPedidoComAdicionais extends ItemPedidoRequest {
   itemId?: string;
@@ -11,7 +12,7 @@ interface ItemPedidoComAdicionais extends ItemPedidoRequest {
 @Component({
   selector: 'app-itens-pedido',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconeComponent],
   templateUrl: './itens-pedido.component.html',
   styleUrl: './itens-pedido.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush

@@ -20,34 +20,49 @@
   width: 120px;
   flex-shrink: 0;
   padding: 0.6rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
+  border: 1.5px solid var(--delivery-border);
+  border-radius: var(--balcao-radius-btn);
   font-size: 0.9rem;
   font-family: inherit;
+  background: var(--delivery-input-bg);
+  color: var(--delivery-text);
   transition: border-color 0.3s ease;
 }
 
 .input-valor-meio-pagamento:focus {
   outline: none;
-  border-color: #4caf50;
+  border-color: var(--delivery-primary);
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, .18);
 }
 
 .btn-adicionar-meio-pagamento {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 0.6rem 1rem;
-  background: #4caf50;
+  background: var(--delivery-primary);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--balcao-radius-btn);
   font-size: 1rem;
+  font-weight: 800;
   cursor: pointer;
-  transition: all 0.3s ease;
+  box-shadow: var(--balcao-shadow-primary);
+  transition: all 0.2s ease;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .btn-adicionar-meio-pagamento:hover:not(:disabled) {
-  background: #45a049;
-  transform: translateY(-1px);
+  background: var(--balcao-primary-hover);
+}
+
+.btn-adicionar-meio-pagamento:focus-visible,
+.input-valor-meio-pagamento:focus-visible,
+.btn-remover-meio-pagamento:focus-visible,
+.input-valor-troco:focus-visible {
+  outline: 2px solid var(--delivery-primary);
+  outline-offset: 2px;
 }
 
 .btn-adicionar-meio-pagamento:disabled {
@@ -61,30 +76,30 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem;
-  background: #f5f5f5;
+  background: var(--delivery-bg);
   border-radius: 6px;
   font-size: 0.85rem;
   flex-wrap: wrap;
 }
 
 .valor-label {
-  font-weight: 600;
-  color: #333;
+  font-weight: 700;
+  color: var(--balcao-text-strong);
 }
 
 .separador {
-  color: #999;
+  color: var(--delivery-text-muted);
   font-weight: 400;
 }
 
 .valor-restante {
-  color: #666;
+  color: var(--delivery-text-secondary);
   font-size: 0.85rem;
 }
 
 .valor-restante.completo {
-  color: #4caf50;
-  font-weight: 600;
+  color: var(--balcao-pronto-text);
+  font-weight: 700;
 }
 
 .meios-pagamento-lista {
@@ -101,8 +116,8 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.4rem 0.6rem;
-  background: #e8f5e9;
-  border: 1px solid #4caf50;
+  background: var(--balcao-pronto-bg);
+  border: 1px solid var(--balcao-pronto);
   border-radius: 6px;
   font-size: 0.85rem;
   width: auto;
@@ -112,37 +127,39 @@
 .meio-pagamento-nome {
   flex: 0 0 auto;
   font-weight: 500;
-  color: #333;
+  color: var(--balcao-text-strong);
   white-space: nowrap;
 }
 
 .meio-pagamento-valor {
   font-weight: 700;
-  color: #2e7d32;
+  color: var(--balcao-pronto-text);
   text-align: right;
   white-space: nowrap;
 }
 
 .btn-remover-meio-pagamento {
-  background: #ffcdd2;
-  border: 1px solid #c62828;
-  color: #c62828;
+  display: inline-flex;
+  align-items: center;
+  background: var(--balcao-cancelado-bg);
+  border: 1px solid var(--balcao-cancelado);
+  color: var(--balcao-cancelado-text);
   border-radius: 4px;
   padding: 0.25rem 0.5rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   font-size: 0.8rem;
   flex-shrink: 0;
 }
 
 .btn-remover-meio-pagamento:hover {
-  background: #c62828;
+  background: var(--balcao-cancelado);
   color: white;
 }
 
 .meio-pagamento-hint {
   font-size: 0.8rem;
-  color: #999;
+  color: var(--delivery-text-muted);
   font-style: italic;
   margin: 0;
   padding: 0.5rem;
@@ -154,8 +171,8 @@
   flex-direction: column;
   gap: 0.4rem;
   padding: 0.5rem;
-  background: #fff8e1;
-  border: 1px solid #ffcc02;
+  background: var(--balcao-aguardando-bg);
+  border: 1px solid var(--balcao-aguardando);
   border-radius: 8px;
 }
 
@@ -168,7 +185,7 @@
 .troco-label {
   font-size: 0.85rem;
   font-weight: 500;
-  color: #333;
+  color: var(--balcao-text-strong);
   white-space: nowrap;
 }
 
@@ -176,16 +193,19 @@
   width: 120px;
   flex-shrink: 0;
   padding: 0.5rem;
-  border: 2px solid #ffcc02;
+  border: 1.5px solid var(--balcao-aguardando);
   border-radius: 6px;
   font-size: 0.9rem;
   font-family: inherit;
+  background: var(--delivery-input-bg);
+  color: var(--delivery-text);
   transition: border-color 0.3s ease;
 }
 
 .input-valor-troco:focus {
   outline: none;
-  border-color: #f9a825;
+  border-color: var(--balcao-aguardando-text);
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, .18);
 }
 
 .troco-resultado {
@@ -193,17 +213,18 @@
   align-items: center;
   gap: 0.4rem;
   padding: 0.4rem 0.6rem;
-  background: #e8f5e9;
+  background: var(--balcao-pronto-bg);
   border-radius: 6px;
   font-size: 0.9rem;
 }
 
 .troco-icone {
+  display: inline-flex;
   font-size: 1rem;
 }
 
 .troco-texto {
-  color: #2e7d32;
+  color: var(--balcao-pronto-text);
 }
 
 .troco-texto strong {
@@ -212,7 +233,7 @@
 
 .meio-pagamento-troco {
   font-size: 0.75rem;
-  color: #f57c00;
+  color: var(--balcao-aguardando-text);
   font-weight: 500;
   white-space: nowrap;
 }
@@ -220,22 +241,24 @@
 .form-input,
 .form-select {
   padding: 0.6rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
+  border: 1.5px solid var(--delivery-border);
+  border-radius: var(--balcao-radius-btn);
   font-size: 0.9rem;
   font-family: inherit;
   transition: border-color 0.3s ease;
-  background: white;
+  background: var(--delivery-input-bg);
+  color: var(--delivery-text);
   cursor: pointer;
 }
 
 .form-select:focus {
   outline: none;
-  border-color: #4caf50;
+  border-color: var(--delivery-primary);
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, .18);
 }
 
 .obrigatorio {
-  color: #c62828;
+  color: var(--balcao-cancelado-text);
 }
 
 /* Responsivo Mobile */

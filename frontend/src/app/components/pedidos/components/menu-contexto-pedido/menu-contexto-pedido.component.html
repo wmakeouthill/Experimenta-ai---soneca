@@ -29,11 +29,11 @@
               class="context-menu-item context-menu-item-impressao"
               (click)="imprimirSegundaVia()"
             >
-              🖨️ Imprimir Segunda Via
+              <app-icone nome="impressora" aria-hidden="true" /> Imprimir Segunda Via
             </button>
             @if (podeCorrigirTroco(pedidoAtual)) {
               <button class="context-menu-item context-menu-item-troco" (click)="corrigirTroco()">
-                💵 Informar/Corrigir Troco
+                <app-icone nome="dinheiro" aria-hidden="true" /> Informar/Corrigir Troco
               </button>
             }
             @if (podeCancelar(pedidoAtual.status)) {
@@ -41,7 +41,7 @@
                 class="context-menu-item context-menu-item-cancelar"
                 (click)="cancelarPedido()"
               >
-                ❌ Cancelar Pedido
+                <app-icone nome="xCirculo" aria-hidden="true" /> Cancelar Pedido
               </button>
             }
           </div>

@@ -28,22 +28,22 @@
       
       @if (totalPaginasClientes() > 1) {
         <div class="clientes-paginacao">
-          <button 
-            class="btn-pagina" 
+          <button
+            class="btn-pagina"
             (click)="paginaAnteriorClientes()"
             [disabled]="paginaClientes() === 1"
           >
-            ← Anterior
+            <app-icone nome="chevronEsquerda" aria-hidden="true" /> Anterior
           </button>
           <span class="pagina-info">
             Página {{ paginaClientes() }} de {{ totalPaginasClientes() }}
           </span>
-          <button 
-            class="btn-pagina" 
+          <button
+            class="btn-pagina"
             (click)="proximaPaginaClientes()"
             [disabled]="paginaClientes() === totalPaginasClientes()"
           >
-            Próxima →
+            Próxima <app-icone nome="chevronDireita" aria-hidden="true" />
           </button>
         </div>
       }

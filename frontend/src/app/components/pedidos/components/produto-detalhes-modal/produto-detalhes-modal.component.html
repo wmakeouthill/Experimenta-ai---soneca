@@ -3,7 +3,9 @@
     <div class="modal-container" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h2>{{ produto()!.nome }}</h2>
-        <button class="btn-fechar" (click)="fechar()">×</button>
+        <button class="btn-fechar" (click)="fechar()" aria-label="Fechar">
+          <app-icone nome="fechar" />
+        </button>
       </div>
 
       <div class="modal-body">
@@ -36,12 +38,12 @@
               (click)="toggleAdicionaisExpandido()"
             >
               <span>
-                🍕 Adicionais ({{ adicionaisDisponiveis().length }})
+                <app-icone nome="camadas" aria-hidden="true" /> Adicionais ({{ adicionaisDisponiveis().length }})
                 @if (totalAdicionaisSelecionados() > 0) {
                   <span class="adicionais-badge">{{ totalAdicionaisSelecionados() }}</span>
                 }
               </span>
-              <span class="expandir-icone">▼</span>
+              <span class="expandir-icone"><app-icone nome="chevronBaixo" /></span>
             </button>
 
             @if (adicionaisExpandido()) {

@@ -2,11 +2,12 @@ import { Component, inject, input, output, signal, computed, OnInit, AfterViewIn
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ClienteService, Cliente, CriarClienteRequest } from '../../../../services/cliente.service';
+import { IconeComponent } from '../../../shared/icone/icone.component';
 
 @Component({
   selector: 'app-selecao-cliente',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, IconeComponent],
   templateUrl: './selecao-cliente.component.html',
   styleUrl: './selecao-cliente.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
