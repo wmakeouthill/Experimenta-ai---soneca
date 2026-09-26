@@ -15,6 +15,7 @@ import { catchError, finalize } from 'rxjs/operators';
 import { CategoriaService } from '../../../../services/categoria.service';
 import { useFormulario } from '../../composables/use-formulario';
 import { BaseModalComponent } from '../base-modal/base-modal.component';
+import { IconeComponent } from '../../../shared/icone/icone.component';
 
 export interface CategoriaFormData {
   nome: string;
@@ -28,7 +29,7 @@ export interface CategoriaFormData {
 @Component({
   selector: 'app-categoria-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, BaseModalComponent],
+  imports: [CommonModule, ReactiveFormsModule, BaseModalComponent, IconeComponent],
   templateUrl: './categoria-modal.component.html',
   styleUrl: './categoria-modal.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -138,6 +139,6 @@ export class CategoriaModalComponent {
   }
 
   obterTitulo(): string {
-    return this.categoria() ? '✏️ Editar Categoria' : '➕ Nova Categoria';
+    return this.categoria() ? 'Editar Categoria' : 'Nova Categoria';
   }
 }

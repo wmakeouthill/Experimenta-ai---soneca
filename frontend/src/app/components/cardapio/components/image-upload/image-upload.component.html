@@ -17,12 +17,12 @@
           (click)="removerImagem()"
           aria-label="Remover imagem"
         >
-          ✕
+          <app-icone nome="fechar" />
         </button>
       </div>
     } @else {
       <div class="image-upload-placeholder">
-        <div class="placeholder-icon">📷</div>
+        <app-icone nome="camera" class="placeholder-icon" />
         <p class="placeholder-text">Clique para adicionar imagem</p>
         <p class="placeholder-hint">
           Máximo: {{ tamanhoMaximoMB() }}MB

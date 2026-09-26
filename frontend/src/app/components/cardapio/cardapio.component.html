@@ -11,18 +11,20 @@
       </h1>
       <div class="header-actions">
         @if (abaAtiva() === 'produtos') {
-          <button class="btn-header btn-primary" (click)="abrirModalCategoria()">
-            ➕ Nova Categoria
+          <button class="btn-header btn-soft" (click)="abrirModalCategoria()">
+            <app-icone nome="mais" />Nova Categoria
           </button>
           <button class="btn-header btn-primary" (click)="abrirModalProduto()">
-            ➕ Novo Produto
+            <app-icone nome="mais" />Novo Produto
           </button>
         } @else {
           <button class="btn-header btn-primary" (click)="abrirModalAdicional()">
-            ➕ Novo Adicional
+            <app-icone nome="mais" />Novo Adicional
           </button>
         }
-        <button class="btn-voltar" routerLink="/" aria-label="Voltar para home">← Voltar</button>
+        <button class="btn-voltar" routerLink="/" aria-label="Voltar para home">
+          <app-icone nome="voltar" />Voltar
+        </button>
       </div>
     </div>
   </header>
@@ -34,14 +36,14 @@
       [class.active]="abaAtiva() === 'produtos'"
       (click)="mudarAba('produtos')"
     >
-      🍔 Produtos
+      <app-icone nome="hamburguer" />Produtos
     </button>
     <button
       class="aba-btn"
       [class.active]="abaAtiva() === 'adicionais'"
       (click)="mudarAba('adicionais')"
     >
-      🥓 Adicionais
+      <app-icone nome="camadas" />Adicionais
     </button>
   </div>
 
@@ -51,19 +53,22 @@
       <!-- Sidebar de Filtros -->
       <aside class="sidebar-filtros">
         <div class="filtros-container">
-          <h2 class="filtros-titulo">🔍 Filtros</h2>
+          <h2 class="filtros-titulo">Filtros</h2>
 
           <!-- Busca -->
           <div class="filtro-grupo">
             <label for="busca-produto" class="filtro-label">Buscar</label>
-            <input
-              id="busca-produto"
-              type="text"
-              class="filtro-input"
-              placeholder="Nome, descrição..."
-              [value]="pesquisaTexto()"
-              (input)="pesquisar($any($event.target).value)"
-            />
+            <div class="filtro-input-wrapper">
+              <app-icone nome="busca" />
+              <input
+                id="busca-produto"
+                type="text"
+                class="filtro-input"
+                placeholder="Nome, descrição..."
+                [value]="pesquisaTexto()"
+                (input)="pesquisar($any($event.target).value)"
+              />
+            </div>
           </div>
 
           <!-- Filtro por Categoria -->
@@ -118,7 +123,9 @@
             </div>
           </div>
 
-          <button class="btn-limpar-filtros" (click)="limparFiltros()">🗑️ Limpar Filtros</button>
+          <button class="btn-limpar-filtros" (click)="limparFiltros()">
+            <app-icone nome="lixeira" />Limpar Filtros
+          </button>
         </div>
       </aside>
 
@@ -150,7 +157,9 @@
           @if (produtosPaginados().totalItens === 0) {
             <div class="estado-vazio">
               <p class="vazio-mensagem">Nenhum produto encontrado.</p>
-              <button class="btn-primary" (click)="abrirModalProduto()">➕ Criar Produto</button>
+              <button class="btn-primary" (click)="abrirModalProduto()">
+                <app-icone nome="mais" />Criar Produto
+              </button>
             </div>
           } @else {
             <!-- Grid de Produtos -->
@@ -173,7 +182,7 @@
                     </div>
                   } @else {
                     <div class="produto-imagem-placeholder">
-                      <span class="placeholder-icon">📷</span>
+                      <app-icone nome="camera" class="placeholder-icon" />
                     </div>
                   }
 
@@ -185,21 +194,22 @@
                   <div class="produto-preco-wrapper">
                     <p class="produto-preco">R$ {{ produto.preco.toFixed(2).replace('.', ',') }}</p>
                     <button
-                      class="btn-toggle-disponibilidade"
-                      [class.ativo]="produto.disponivel"
-                      [class.inativo]="!produto.disponivel"
+                      type="button"
+                      role="switch"
+                      class="switch-disponibilidade"
+                      [class.on]="produto.disponivel"
+                      [attr.aria-checked]="produto.disponivel"
+                      [attr.aria-label]="produto.disponivel ? 'Desativar produto' : 'Ativar produto'"
                       [title]="produto.disponivel ? 'Desativar produto' : 'Ativar produto'"
                       (click)="alternarDisponibilidade(produto)"
-                    >
-                      {{ produto.disponivel ? '🟢' : '⚫' }}
-                    </button>
+                    ></button>
                   </div>
                   <div class="produto-acoes">
                     <button class="btn-acao btn-editar" (click)="editarProduto(produto)">
-                      ✏️ Editar
+                      <app-icone nome="lapis" />Editar
                     </button>
                     <button class="btn-acao btn-excluir" (click)="excluirProduto(produto.id)">
-                      🗑️ Excluir
+                      <app-icone nome="lixeira" />Excluir
                     </button>
                   </div>
                 </article>
@@ -214,7 +224,7 @@
                   [disabled]="produtosPaginados().paginaAtual === 1"
                   (click)="irParaPagina(produtosPaginados().paginaAtual - 1)"
                 >
-                  ← Anterior
+                  <app-icone nome="chevronEsquerda" />Anterior
                 </button>
 
                 <div class="paginacao-numeros">
@@ -235,7 +245,7 @@
                   [disabled]="produtosPaginados().paginaAtual === produtosPaginados().totalPaginas"
                   (click)="irParaPagina(produtosPaginados().paginaAtual + 1)"
                 >
-                  Próxima →
+                  Próxima<app-icone nome="chevronDireita" />
                 </button>
               </div>
             }
@@ -250,7 +260,7 @@
     <div class="adicionais-container">
       <div class="adicionais-info">
         <p class="adicionais-descricao">
-          🥓 Gerencie os itens adicionais que podem ser vinculados aos produtos do cardápio.
+          Gerencie os itens adicionais que podem ser vinculados aos produtos do cardápio.
           <br />
           <small>Ex: Carne extra, Bacon, Onion Rings, etc.</small>
         </p>
@@ -264,7 +274,9 @@
       } @else if (adicionais().length === 0) {
         <div class="estado-vazio">
           <p class="vazio-mensagem">Nenhum adicional cadastrado.</p>
-          <button class="btn-primary" (click)="abrirModalAdicional()">➕ Criar Adicional</button>
+          <button class="btn-primary" (click)="abrirModalAdicional()">
+            <app-icone nome="mais" />Criar Adicional
+          </button>
         </div>
       } @else {
         <div class="adicionais-grid">
@@ -274,23 +286,21 @@
               [class.disponivel]="adicional.disponivel"
               [class.indisponivel]="!adicional.disponivel"
             >
-              @if (!adicional.disponivel) {
-                <div class="adicional-badge-wrapper">
-                  <span class="adicional-badge indisponivel">Indisponível</span>
-                </div>
-              }
-
               <div class="adicional-header">
                 <h3 class="adicional-nome">{{ adicional.nome }}</h3>
+                @if (!adicional.disponivel) {
+                  <span class="adicional-badge indisponivel">Indisponível</span>
+                }
                 <button
-                  class="btn-toggle-disponibilidade"
-                  [class.ativo]="adicional.disponivel"
-                  [class.inativo]="!adicional.disponivel"
+                  type="button"
+                  role="switch"
+                  class="switch-disponibilidade"
+                  [class.on]="adicional.disponivel"
+                  [attr.aria-checked]="adicional.disponivel"
+                  [attr.aria-label]="adicional.disponivel ? 'Desativar adicional' : 'Ativar adicional'"
                   [title]="adicional.disponivel ? 'Desativar adicional' : 'Ativar adicional'"
                   (click)="alternarDisponibilidadeAdicional(adicional)"
-                >
-                  {{ adicional.disponivel ? '🟢' : '⚫' }}
-                </button>
+                ></button>
               </div>
 
               @if (adicional.categoria) {
@@ -305,10 +315,10 @@
 
               <div class="adicional-acoes">
                 <button class="btn-acao btn-editar" (click)="editarAdicional(adicional)">
-                  ✏️ Editar
+                  <app-icone nome="lapis" />Editar
                 </button>
                 <button class="btn-acao btn-excluir" (click)="excluirAdicional(adicional.id)">
-                  🗑️ Excluir
+                  <app-icone nome="lixeira" />Excluir
                 </button>
               </div>
             </article>

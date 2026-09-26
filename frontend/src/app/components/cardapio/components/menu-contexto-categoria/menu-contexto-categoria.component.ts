@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { Categoria } from '../../../../services/categoria.service';
+import { IconeComponent } from '../../../shared/icone/icone.component';
 
 @Component({
   selector: 'app-menu-contexto-categoria',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconeComponent],
   templateUrl: './menu-contexto-categoria.component.html',
   styleUrl: './menu-contexto-categoria.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,5 +1,6 @@
 import { Component, input, output, effect, inject, PLATFORM_ID, ChangeDetectionStrategy, computed } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { IconeComponent } from '../../../shared/icone/icone.component';
 
 /**
  * Componente base reutilizável para modais.
@@ -8,7 +9,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 @Component({
   selector: 'app-base-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconeComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (aberto()) {
@@ -17,7 +18,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
           <div class="modal-header">
             <h2 class="modal-titulo">{{ titulo() }}</h2>
             <button class="modal-fechar" (click)="fechar()" aria-label="Fechar">
-              ✕
+              <app-icone nome="fechar" />
             </button>
           </div>
           <div class="modal-conteudo">

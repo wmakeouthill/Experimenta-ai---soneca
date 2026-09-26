@@ -1,6 +1,7 @@
 import { Component, input, output, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UploadUtil } from '../../../../utils/upload.util';
+import { IconeComponent } from '../../../shared/icone/icone.component';
 
 /**
  * Componente reutilizável para upload de imagem.
@@ -9,7 +10,7 @@ import { UploadUtil } from '../../../../utils/upload.util';
 @Component({
   selector: 'app-image-upload',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconeComponent],
   templateUrl: './image-upload.component.html',
   styleUrl: './image-upload.component.css'
 })

@@ -12,6 +12,7 @@ import { RouterModule } from '@angular/router';
 import { Adicional, AdicionalService } from '../../services/adicional.service';
 import { Categoria, CategoriaService } from '../../services/categoria.service';
 import { ProdutoService } from '../../services/produto.service';
+import { IconeComponent } from '../shared/icone/icone.component';
 import { MenuContextoCategoriaComponent } from './components/menu-contexto-categoria/menu-contexto-categoria.component';
 import { useProdutos } from './composables/use-produtos';
 import { AdicionalModalComponent } from './modals/adicional-modal/adicional-modal.component';
@@ -28,6 +29,7 @@ import { ProdutoModalComponent } from './modals/produto-modal/produto-modal.comp
     CategoriaModalComponent,
     AdicionalModalComponent,
     MenuContextoCategoriaComponent,
+    IconeComponent,
   ],
   templateUrl: './cardapio.component.html',
   styleUrl: './cardapio.component.css',

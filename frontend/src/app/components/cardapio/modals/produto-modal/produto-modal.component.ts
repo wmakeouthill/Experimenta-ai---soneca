@@ -3,6 +3,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BaseModalComponent } from '../base-modal/base-modal.component';
 import { ImageUploadComponent } from '../../components/image-upload/image-upload.component';
+import { IconeComponent } from '../../../shared/icone/icone.component';
 import { ProdutoService } from '../../../../services/produto.service';
 import { CategoriaService } from '../../../../services/categoria.service';
 import { AdicionalService, Adicional } from '../../../../services/adicional.service';
@@ -28,7 +29,7 @@ export interface ProdutoFormData {
 @Component({
   selector: 'app-produto-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, BaseModalComponent, ImageUploadComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, BaseModalComponent, ImageUploadComponent, IconeComponent],
   templateUrl: './produto-modal.component.html',
   styleUrl: './produto-modal.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -298,7 +299,7 @@ export class ProdutoModalComponent {
   }
 
   obterTitulo(): string {
-    return this.ehEdicao() ? '✏️ Editar Produto' : '➕ Novo Produto';
+    return this.ehEdicao() ? 'Editar Produto' : 'Novo Produto';
   }
 
   excluirProduto(): void {

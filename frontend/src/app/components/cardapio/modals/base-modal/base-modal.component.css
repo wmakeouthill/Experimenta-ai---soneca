@@ -4,13 +4,21 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--balcao-overlay);
+  backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   padding: 1rem;
   animation: fadeIn 0.2s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-overlay,
+  .modal-container {
+    animation: none !important;
+  }
 }
 
 @keyframes fadeIn {
@@ -23,15 +31,16 @@
 }
 
 .modal-container {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  background: var(--delivery-surface);
+  border-radius: var(--delivery-radius-lg);
+  box-shadow: var(--balcao-shadow-modal);
   max-width: 90vw;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
   animation: slideUp 0.3s ease;
   overflow: hidden;
+  font-family: var(--delivery-font);
 }
 
 @keyframes slideUp {
@@ -49,51 +58,53 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem;
-  border-bottom: 2px solid #e0e0e0;
-  background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
-  color: white;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--delivery-border);
 }
 
 .modal-titulo {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 800;
   margin: 0;
+  color: var(--delivery-text);
 }
 
 .modal-fechar {
-  background: rgba(255, 255, 255, 0.2);
+  background: transparent;
   border: none;
-  border-radius: 50%;
+  border-radius: 10px;
   width: 36px;
   height: 36px;
-  color: white;
-  font-size: 1.5rem;
+  color: var(--delivery-text-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+  transition: background 0.15s, color 0.15s;
 }
 
 .modal-fechar:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: rotate(90deg);
+  background: var(--balcao-hover-bg);
+  color: var(--delivery-text);
+}
+
+.modal-fechar:focus-visible {
+  outline: 2px solid var(--delivery-primary);
+  outline-offset: 2px;
 }
 
 .modal-conteudo {
-  padding: 2rem;
+  padding: 20px 24px;
   overflow-y: auto;
   flex: 1;
 }
 
 .modal-footer {
-  padding: 1.5rem;
-  border-top: 2px solid #e0e0e0;
+  padding: 16px 24px;
+  border-top: 1px solid var(--delivery-border);
   display: flex;
   justify-content: flex-end;
-  gap: 1rem;
-  background: #f9f9f9;
+  gap: 10px;
 }
 
 /* Tamanhos - usando classes para melhor controle */
@@ -124,4 +135,3 @@
     padding: 1rem;
   }
 }
-

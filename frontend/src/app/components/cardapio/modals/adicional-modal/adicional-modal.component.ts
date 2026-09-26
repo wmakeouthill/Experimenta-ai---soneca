@@ -2,6 +2,7 @@ import { Component, inject, input, output, computed, signal, PLATFORM_ID, Change
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BaseModalComponent } from '../base-modal/base-modal.component';
+import { IconeComponent } from '../../../shared/icone/icone.component';
 import { AdicionalService, Adicional } from '../../../../services/adicional.service';
 import { useFormulario } from '../../composables/use-formulario';
 import { FormatoUtil } from '../../../../utils/formato.util';
@@ -22,7 +23,7 @@ export interface AdicionalFormData {
 @Component({
     selector: 'app-adicional-modal',
     standalone: true,
-    imports: [CommonModule, FormsModule, ReactiveFormsModule, BaseModalComponent],
+    imports: [CommonModule, FormsModule, ReactiveFormsModule, BaseModalComponent, IconeComponent],
     templateUrl: './adicional-modal.component.html',
     styleUrl: './adicional-modal.component.css',
     changeDetection: ChangeDetectionStrategy.OnPush
