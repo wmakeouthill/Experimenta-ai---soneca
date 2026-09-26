@@ -24,6 +24,13 @@ export class PagamentoConfigService {
   readonly pixMesaAtivo = computed(() => this._config()?.mesa.pixAtivo ?? false);
   readonly cartaoMesaAtivo = computed(() => this._config()?.mesa.cartaoAtivo ?? false);
   readonly modoMesa = computed<ModoPagamentoMesa>(() => this._config()?.mesa.modo ?? 'PRE_PAGO');
+  /**
+   * Pre-pago so vale com PIX ou cartao digital ativo na mesa. Sem eles (pagamentos desligados
+   * ou config indisponivel) a mesa segue manual: o cliente escolhe o meio e paga no atendimento.
+   */
+  readonly mesaPrePago = computed(
+    () => this.modoMesa() === 'PRE_PAGO' && (this.pixMesaAtivo() || this.cartaoMesaAtivo())
+  );
   readonly gatewayPixSimulado = computed(() => this._config()?.gatewayPixSimulado ?? false);
 
   carregar(): void {

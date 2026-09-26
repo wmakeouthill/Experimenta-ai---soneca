@@ -223,7 +223,7 @@ export class PedidoClienteMesaComponent
   readonly salvandoSenha = signal(false);
 
   // ========== Computed ==========
-  readonly mesaPrePago = computed(() => this.pagamentoConfig.modoMesa() === 'PRE_PAGO');
+  readonly mesaPrePago = this.pagamentoConfig.mesaPrePago;
 
   readonly pixPrePagoDisponivel = computed(
     () => this.pagamentoConfig.pixMesaAtivo() && this.mesaPrePago()
