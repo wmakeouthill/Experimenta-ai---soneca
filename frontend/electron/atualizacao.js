@@ -97,7 +97,7 @@ function criarAtualizador({
 
   if (habilitado) {
     updater.autoDownload = true;
-    updater.autoInstallOnAppQuit = false;
+    updater.autoInstallOnAppQuit = true;
 
     updater.on('update-available', info => {
       baixando = true;

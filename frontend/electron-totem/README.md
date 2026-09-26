@@ -210,8 +210,7 @@ npm run check   # verificacao de sintaxe
 O totem instalado por NSIS consulta `https://experimentaaisoneca.app/updates/totem/latest.yml`
 ao abrir e a cada seis horas. Se houver versão maior, baixa o instalador em segundo plano.
 O operador usa **Ctrl+Shift+U** com um teclado conectado para verificar ou instalar a versão
-baixada. Um aviso no canto da tela mostra o progresso, e o atalho informa a versão instalada e a porcentagem. Após uma troca de versão, o app confirma a nova versão ao abrir. A instalação exige confirmação e reinicia o totem; faça isso somente entre vendas,
-sem pagamento TEF em andamento. A primeira instalação deste NSIS é manual nas máquinas antigas.
+baixada. Um aviso no canto da tela mostra o progresso, e o atalho informa a versão instalada e a porcentagem. Após uma troca de versão, o app confirma a nova versão ao abrir. O atalho pede confirmação para reiniciar e instalar entre vendas, sem pagamento TEF em andamento. Se o operador não usar o atalho, a versão baixada instala automaticamente no encerramento normal diário do totem. A primeira instalação deste NSIS é manual nas máquinas antigas.
 
 O totem carrega as telas do site. Mudanças no Angular/backend entram no deploy web normal.
 Mudanças em `main.js`, `preload.js`, TEF ou impressão local pedem uma release Electron separada.

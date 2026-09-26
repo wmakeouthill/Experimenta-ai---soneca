@@ -354,7 +354,7 @@ app.whenReady().then(async () => {
   createWindow();
   avisarVersaoAtualizada(app, dialog);
 
-  // A checagem é silenciosa; instalar exige confirmação no menu.
+  // A checagem é silenciosa; a versão baixada instala no encerramento normal.
   void atualizador.verificar(false);
   const intervaloAtualizacao = setInterval(() => {
     void atualizador.verificar(false);
@@ -391,21 +391,19 @@ app.on('window-all-closed', async () => {
 
   // No macOS, é comum manter o app rodando mesmo sem janelas
   if (process.platform !== 'darwin') {
-    // Força encerramento após limpeza
-    setTimeout(() => {
-      app.exit(0);
-    }, 500);
+    app.quit();
   } else {
     estaLimpando = false;
   }
 });
 
 // Evento antes do app ser encerrado
-app.on('before-quit', async event => {
+app.on('before-quit', event => {
   if (estaLimpando) return;
+  event.preventDefault();
   estaLimpando = true;
 
-  await limparRecursos();
+  void limparRecursos().then(() => app.quit());
 });
 
 // Evento quando o app realmente vai encerrar (último evento)

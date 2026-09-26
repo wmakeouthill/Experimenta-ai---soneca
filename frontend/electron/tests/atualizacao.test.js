@@ -70,12 +70,13 @@ test('mostra versão encontrada e porcentagem durante download manual', async ()
   assert.equal(cenario.progresso.at(-1), -1);
 });
 
-test('release baixada espera o operador e encerra a impressão antes da instalação', async () => {
+test('release baixada instala ao sair ou após confirmação manual', async () => {
   let verificacoes = 0;
   const cenario = criarCenario({
     checar: async () => { verificacoes += 1; },
   });
 
+  assert.equal(cenario.updater.autoInstallOnAppQuit, true);
   await cenario.atualizador.verificar(false);
   cenario.updater.emit('update-downloaded', { version: '1.0.1' });
   assert.equal(cenario.mensagens.length, 0);

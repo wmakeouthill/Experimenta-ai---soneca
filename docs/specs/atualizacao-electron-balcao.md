@@ -17,16 +17,16 @@ Permitir que os Electron instalados no balcão e no totem encontrem novas versõ
 
 - RF1: o app instalado consulta `https://experimentaaisoneca.app/updates/balcao/` sem bloquear a tela ou a impressão.
 - RF2: no menu, o operador consegue verificar atualizações e ver o resultado: indisponível, disponível, erro ou pronta para instalar.
-- RF3: uma versão baixada só inicia a instalação após confirmação do operador; o servidor local de impressão é encerrado antes da instalação.
+- RF3: uma versão baixada pode ser instalada após confirmação do operador ou automaticamente no encerramento normal do app; o servidor local de impressão é encerrado antes da instalação.
 - RF4: a versão instalada fica no `package.json`; a publicação exige versão maior e preserva releases anteriores para recuperação.
 - RF5: o servidor retorna 404 para artefatos inexistentes e não serve o `index.html` da SPA no lugar deles. Metadados de atualização não são armazenados em cache.
-- RF6: o totem consulta `/updates/totem/`, baixa em segundo plano e só instala por confirmação do operador entre vendas; o instalador contém TEF e o core de impressão compartilhado.
+- RF6: o totem consulta `/updates/totem/`, baixa em segundo plano e instala no encerramento normal diário ou por confirmação do operador entre vendas; o instalador contém TEF e o core de impressão compartilhado.
 
 ## 4. Critérios de aceite
 
 - [ ] Dado um NSIS instalado sem release nova, quando o operador usa “Verificar atualizações”, então o app informa que está atualizado.
 - [ ] Dado um NSIS instalado e uma release de versão maior publicada, quando o app consulta o feed, então baixa a release e oferece “Reiniciar e instalar” ou “Depois”.
-- [ ] Dada uma release baixada, quando o operador escolhe “Depois”, então o app continua atendendo e o menu ainda permite instalar ao retornar.
+- [ ] Dada uma release baixada, quando o operador escolhe “Depois”, então o app continua atendendo, o menu ainda permite instalar ao retornar e o encerramento normal instala automaticamente.
 - [ ] Dada uma release baixada, quando o operador confirma o reinício, então o servidor de impressão é encerrado antes de chamar a instalação.
 - [ ] Dada uma falha de rede ou feed inválido, quando ocorre a checagem, então o app continua funcionando e mostra erro somente se a checagem foi manual.
 - [ ] Dado um caminho inexistente em `/updates/balcao/`, quando requisitado via HTTPS, então responde 404 sem fallback da SPA.
