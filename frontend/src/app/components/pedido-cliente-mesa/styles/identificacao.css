@@ -1,73 +1,128 @@
-/* ========== TELA DE IDENTIFICAÇÃO ========== */
+/* ========== TELA DE IDENTIFICAÇÃO / CADASTRO — "Letreiro" (mesma linguagem da home e do login) ========== */
 .identificacao-screen {
+  --tinta: #1a120d;
+  --creme: #fff3dc;
+  --mostarda: #ffc21a;
+  --laranja: #ff6b35;
+  --vermelho: #d62f22;
+  --verde: #1f9d62;
+  --titulo-font: 'Luckiest Guy', Impact, 'Arial Black', sans-serif;
+  position: relative;
+  overflow: hidden;
   min-height: 100dvh;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  background: var(--delivery-gradient-ident);
+  align-items: center;
+  gap: 34px;
+  padding: 44px 16px 40px;
+  /* cobre o respiro do rodapé que o container reserva, senão sobra uma faixa creme embaixo */
+  margin-bottom: calc(-1 * (var(--delivery-footer-height-mesa, 76px) + env(safe-area-inset-bottom, 0px)));
+  padding-bottom: calc(40px + var(--delivery-footer-height-mesa, 76px) + env(safe-area-inset-bottom, 0px));
+  background: var(--laranja);
+  color: var(--tinta);
+}
+
+/* retícula nos cantos */
+.identificacao-screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(#d8461d 1.7px, transparent 2.1px);
+  background-size: 15px 15px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 45% at 100% 0%, #000 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 0% 100%, #000 0%, transparent 70%);
+  mask-image: radial-gradient(ellipse 70% 45% at 100% 0%, #000 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 0% 100%, #000 0%, transparent 70%);
+}
+
+.identificacao-screen > * {
+  position: relative;
 }
 
 .identificacao-header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 64px 32px 28px;
-  color: #ffffff;
+  gap: 16px;
   text-align: center;
 }
 
 .logo-grande {
-  width: 80px;
-  height: 80px;
+  width: 92px;
+  height: 92px;
   border-radius: 50%;
   object-fit: cover;
   background: #ffffff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
-  margin-bottom: 18px;
-  border: none;
+  border: 4px solid var(--tinta);
+  box-shadow: 5px 5px 0 var(--tinta);
+  transform: rotate(-6deg);
 }
 
 .identificacao-header h1 {
-  margin: 0 0 10px;
-  font-size: 26px;
-  font-weight: 800;
+  margin: 0;
+  font-family: var(--titulo-font);
+  font-weight: 400;
+  font-size: clamp(40px, 12vw, 56px);
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+  color: #ffffff;
+  text-shadow:
+    -2px -2px 0 var(--tinta), 2px -2px 0 var(--tinta), -2px 2px 0 var(--tinta), 2px 2px 0 var(--tinta),
+    0 -2.5px 0 var(--tinta), 0 2.5px 0 var(--tinta), -2.5px 0 0 var(--tinta), 2.5px 0 0 var(--tinta),
+    6px 6px 0 var(--tinta);
 }
 
 .mesa-badge {
-  display: inline-block;
+  margin: 0;
   padding: 7px 18px;
-  background: rgba(255, 255, 255, 0.22);
-  border-radius: 100px;
-  font-size: 14px;
-  font-weight: 700;
-  backdrop-filter: blur(6px);
+  background: var(--mostarda);
+  border: 3px solid var(--tinta);
+  border-radius: 999px;
+  box-shadow: 4px 4px 0 var(--tinta);
+  font-size: 15px;
+  font-weight: 800;
+  transform: rotate(-2deg);
 }
 
 .identificacao-form {
-  flex: 1;
-  background: var(--delivery-surface, #ffffff);
-  border-radius: var(--delivery-radius-xl, 28px) var(--delivery-radius-xl, 28px) 0 0;
-  padding: 34px 24px 48px;
-  margin-top: -20px;
-  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.06);
-  max-width: 460px;
   width: 100%;
-  margin-left: auto;
-  margin-right: auto;
+  max-width: 440px;
+  box-sizing: border-box;
+  padding: 34px 22px 26px;
+  background: var(--creme);
+  border: 3px solid var(--tinta);
+  border-radius: 26px;
+  box-shadow: 8px 8px 0 var(--tinta);
+}
+
+.identificacao-acai {
+  position: absolute;
+  width: 74px;
+  right: -8px;
+  top: -44px;
+  transform: rotate(12deg);
+  filter: drop-shadow(3px 4px 0 var(--tinta));
+  pointer-events: none;
 }
 
 .identificacao-form h2 {
   margin: 0 0 6px;
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--delivery-text, #241c15);
-  text-align: center;
+  padding-right: 48px;
+  font-family: var(--titulo-font);
+  font-weight: 400;
+  font-size: 26px;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  color: var(--tinta);
 }
 
 .form-hint {
-  color: var(--delivery-text-muted, #9c8f86);
-  text-align: center;
-  margin: 0 0 26px;
+  color: #6b5a4c;
+  margin: 0 0 22px;
   font-size: 14px;
+  font-weight: 600;
 }
 
 .input-group {
@@ -77,20 +132,23 @@
 .input-group label {
   display: block;
   margin-bottom: 7px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--delivery-text-secondary, #6b5d53);
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--tinta);
 }
 
 .input-telefone,
 .input-nome {
   width: 100%;
-  padding: 15px 16px;
+  height: 56px;
+  padding: 0 16px;
   font-size: max(1rem, 16px);
-  border: 1.5px solid var(--delivery-border, #f0e6de);
-  border-radius: var(--delivery-radius-sm, 14px);
-  background: var(--delivery-input-bg, #fbf7f4);
-  transition: all 0.2s;
+  color: var(--tinta);
+  border: 3px solid var(--tinta);
+  border-radius: 14px;
+  background: #ffffff;
+  outline: none;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
   text-align: left;
   letter-spacing: 0.3px;
   box-sizing: border-box;
@@ -98,56 +156,79 @@
 }
 
 .input-nome {
-  text-align: left;
   letter-spacing: normal;
+}
+
+.input-telefone::placeholder,
+.input-nome::placeholder {
+  color: #9a8b7f;
 }
 
 .input-telefone:focus,
 .input-nome:focus {
-  outline: none;
-  border-color: var(--delivery-primary, #ff6b35);
-  background: var(--delivery-surface, #ffffff);
-  box-shadow: none;
+  background: #fffbea;
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 var(--tinta);
 }
 
 .input-telefone.valido,
 .input-nome.valido {
-  border-color: var(--delivery-success, #1fa971);
+  border-color: var(--verde);
+  box-shadow: 4px 4px 0 var(--verde);
 }
 
 .input-telefone.disabled {
-  background: var(--delivery-disabled-bg, #f5efe9);
-  color: var(--delivery-text-muted, #9c8f86);
+  background: #f3e6cf;
+  color: #8d7c6b;
+  border-style: dashed;
+  box-shadow: none;
+  transform: none;
   cursor: not-allowed;
 }
 
 .btn-continuar {
   width: 100%;
-  padding: 16px;
-  background: var(--delivery-gradient-primary);
-  color: #ffffff;
-  border: none;
-  border-radius: var(--delivery-radius-sm, 14px);
-  font-size: 15.5px;
-  font-weight: 700;
+  height: 60px;
+  padding: 4px 16px 0;
+  background: var(--tinta);
+  color: var(--mostarda);
+  border: 3px solid var(--tinta);
+  border-radius: 16px;
+  font-family: var(--titulo-font);
+  font-size: 24px;
+  letter-spacing: 0.05em;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  margin-top: 0;
-  box-shadow: var(--delivery-shadow-lg);
+  box-shadow: 5px 5px 0 var(--laranja);
 }
 
 .btn-continuar:disabled {
-  background: #ccc;
-  cursor: not-allowed;
+  background: #eadcc5;
+  color: #8d7c6b;
+  border-style: dashed;
   box-shadow: none;
+  cursor: not-allowed;
 }
 
 .btn-continuar:not(:disabled):active {
-  transform: scale(0.98);
+  transform: translate(3px, 3px);
+  box-shadow: 2px 2px 0 var(--laranja);
+}
+
+.btn-continuar:focus-visible {
+  outline: 3px solid var(--tinta);
+  outline-offset: 3px;
+}
+
+/* spinner branco do base.css some no fundo claro */
+.btn-continuar:disabled .spinner-mini,
+.google-loading-overlay .spinner-mini {
+  border-color: rgba(26, 18, 13, 0.2);
+  border-top-color: var(--tinta);
 }
 
 .erro-msg {
@@ -155,6 +236,20 @@
   text-align: center;
   margin: 1rem 0;
   font-size: 0.9rem;
+}
+
+.identificacao-screen .erro-msg {
+  margin: 0 0 18px;
+  padding: 10px 14px;
+  background: #ffe1dc;
+  border: 3px solid var(--tinta);
+  border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--vermelho);
+  color: var(--tinta);
+  text-align: left;
+  font-size: 14px;
+  font-weight: 800;
+  transform: rotate(-1deg);
 }
 
 .btn-voltar {
@@ -173,6 +268,13 @@
   color: var(--delivery-text, #241c15);
 }
 
+.identificacao-screen .btn-voltar {
+  margin-top: 10px;
+  color: var(--tinta);
+  font-size: 15px;
+  font-weight: 800;
+}
+
 /* ========== DIVISOR "OU" ========== */
 .divisor-ou {
     display: flex;
@@ -185,15 +287,16 @@
 .divisor-ou::after {
     content: '';
     flex: 1;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 2px dashed rgba(26, 18, 13, 0.3);
 }
 
 .divisor-ou span {
     padding: 0 1rem;
-    color: #999;
+    color: var(--tinta);
     font-size: 0.85rem;
     text-transform: uppercase;
-    font-weight: 500;
+    letter-spacing: 0.08em;
+    font-weight: 800;
 }
 
 /* ========== CONTAINER BOTÃO GOOGLE OFICIAL ========== */
@@ -219,14 +322,23 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 243, 220, 0.94);
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     font-size: 0.9rem;
-    color: #666;
+    font-weight: 700;
+    color: var(--tinta);
     border-radius: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .input-telefone,
+  .input-nome,
+  .btn-continuar {
+    transition: none;
+  }
 }
 
 /* ========== BOTÃO GOOGLE CUSTOMIZADO (fallback) ========== */
