@@ -23,7 +23,7 @@ Na máquina Windows de build, dentro de `frontend/electron`:
 ```powershell
 npm.cmd version patch --no-git-tag-version
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\build-assinado.ps1 -App balcao
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\publicar-atualizacao.ps1 -SshTarget deploy@SEU_HOST
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\publicar-atualizacao.ps1 -SshTarget deploy@177.153.39.90 -IdentityFile "$env:USERPROFILE\.ssh\kinghost_deploy_ed25519"
 ```
 
 O build assinado cria `dist-update/kit-cliente/<nome-do-instalador>/` com EXE, CER público de mesmo nome, TXT `-LEIA-ME` de mesmo nome e o script de confiança. A senha do PFX fica somente na máquina de build. O script de publicação usa o `.exe` indicado em `latest.yml` e exige o `.blockmap` correspondente, assinatura Windows válida e versão maior que a publicada. Envia o instalador e blockmap primeiro; ativa `latest.yml` por último. Confirme via HTTPS que o feed mostra a nova versão e que o instalador baixa. Teste a atualização com **uma máquina instalada** antes de atualizar as demais.

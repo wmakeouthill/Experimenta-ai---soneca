@@ -4,6 +4,7 @@ param(
     [string]$SshTarget,
     [ValidateSet('balcao', 'totem')]
     [string]$App = 'balcao',
+    [string]$IdentityFile,
     [ValidatePattern('^/[a-zA-Z0-9/_-]+$')]
     [string]$RemoteProjectDir = '/home/deploy/snackbar'
 )
@@ -13,6 +14,10 @@ $appDir = if ($App -eq 'totem') { Join-Path $PSScriptRoot '..\electron-totem' } 
 $dist = Join-Path $appDir 'dist-update'
 $metadata = Join-Path $dist 'latest.yml'
 $remoteDir = "$RemoteProjectDir/releases/electron/$App"
+$sshOptions = @()
+if ($IdentityFile) {
+    $sshOptions = @('-i', (Resolve-Path -LiteralPath $IdentityFile -ErrorAction Stop).Path, '-o', 'IdentitiesOnly=yes')
+}
 
 if (-not (Test-Path -LiteralPath $metadata -PathType Leaf)) {
     throw 'latest.yml não encontrado. Rode npm.cmd run build:release:win antes de publicar.'
@@ -59,23 +64,23 @@ if ($signerName -ne $publisherName) {
     throw "O publicador do certificado ($signerName) difere de package.json ($publisherName)."
 }
 
-& ssh $SshTarget "mkdir -p $remoteDir"
+& ssh @sshOptions $SshTarget "mkdir -p $remoteDir"
 if ($LASTEXITCODE -ne 0) { throw 'Falha ao criar diretório de releases na VPS.' }
 
-$publishedVersion = & ssh $SshTarget "if [ -f $remoteDir/latest.yml ]; then sed -n 's/^version: //p' $remoteDir/latest.yml; fi"
+$publishedVersion = & ssh @sshOptions $SshTarget "if [ -f $remoteDir/latest.yml ]; then sed -n 's/^version: //p' $remoteDir/latest.yml; fi"
 if ($LASTEXITCODE -ne 0) { throw 'Falha ao consultar a versão publicada na VPS.' }
 if ($publishedVersion -and [version]$packageVersion -le [version]$publishedVersion) {
     throw "A versão publicada ($publishedVersion) deve ser menor que a nova ($packageVersion)."
 }
 
 # O feed só muda depois que os arquivos citados nele chegaram completos.
-& scp $installer.FullName $blockmap "${SshTarget}:${remoteDir}/"
+& scp @sshOptions $installer.FullName $blockmap "${SshTarget}:${remoteDir}/"
 if ($LASTEXITCODE -ne 0) { throw 'Falha no upload do instalador ou blockmap.' }
 
-& scp $metadata "${SshTarget}:${remoteDir}/latest.yml.next"
+& scp @sshOptions $metadata "${SshTarget}:${remoteDir}/latest.yml.next"
 if ($LASTEXITCODE -ne 0) { throw 'Falha no upload do feed.' }
 
-& ssh $SshTarget "mv -f $remoteDir/latest.yml.next $remoteDir/latest.yml"
+& ssh @sshOptions $SshTarget "mv -f $remoteDir/latest.yml.next $remoteDir/latest.yml"
 if ($LASTEXITCODE -ne 0) { throw 'Falha ao ativar o feed.' }
 
 Write-Host "Versão $packageVersion publicada em https://experimentaaisoneca.app/updates/$App/"

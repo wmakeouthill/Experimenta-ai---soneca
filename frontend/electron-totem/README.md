@@ -221,7 +221,7 @@ Para uma release local, aumente a versão em `package.json`, então rode (o cert
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File ..\electron\build-assinado.ps1 -App totem
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File ..\electron\publicar-atualizacao.ps1 -App totem -SshTarget deploy@SEU_HOST
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ..\electron\publicar-atualizacao.ps1 -App totem -SshTarget deploy@177.153.39.90 -IdentityFile "$env:USERPROFILE\.ssh\kinghost_deploy_ed25519"
 ```
 
 O instalador usa Electron 44 porque o driver Auttar depende do `WebSocket` global do Node 22+.
