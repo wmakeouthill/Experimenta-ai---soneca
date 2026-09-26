@@ -1,16 +1,22 @@
-import { Component, computed, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { AuthorizationService } from '../../services/authorization.service';
 import { Modulo } from '../../models/modulo.model';
 import { FormatoUtil } from '../../utils/formato.util';
-import { TituloHomeComponent } from './components/titulo-home/titulo-home.component';
+import { IconeComponent } from '../shared/icone/icone.component';
+
+export function saudacaoPorHora(hora: number): string {
+  if (hora >= 5 && hora < 12) return 'Bom dia';
+  if (hora >= 12 && hora < 18) return 'Boa tarde';
+  return 'Boa noite';
+}
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterModule, TituloHomeComponent],
+  imports: [IconeComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })
@@ -21,85 +27,83 @@ export class HomeComponent {
 
   readonly usuarioAtual = this.authService.usuarioAtual;
   readonly estaAutenticado = this.authService.estaAutenticado;
-  readonly isAdministrador = this.authService.isAdministrador;
+
+  // ponytail: calculados ao abrir a home; se ela ficar aberta de um período para outro, só atualizam na próxima visita
+  private readonly agora = new Date();
+  readonly saudacao = saudacaoPorHora(this.agora.getHours());
+  readonly dataHoje = this.agora.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
 
   readonly nomeFormatado = computed(() => {
     const nome = this.usuarioAtual()?.nome;
     return FormatoUtil.capitalizarNome(nome);
   });
 
+  readonly primeiroNome = computed(() => this.nomeFormatado().split(' ')[0]);
+
   readonly modulosDisponiveis = computed(() => {
     const modulosBase: Omit<Modulo, 'rolesPermitidos' | 'bloqueado'>[] = [
-      {
-        id: 'cardapio',
-        nome: 'Gestão de Cardápio',
-        descricao: 'Gerenciar produtos, categorias e itens do cardápio',
-        icone: '🍔',
-        rota: '/cardapio',
-        cor: 'primary',
-        disponivel: true
-      },
       {
         id: 'pedidos',
         nome: 'Gestão de Pedidos',
         descricao: 'Gerenciar pedidos, fila de preparo e status',
-        icone: '📋',
+        icone: 'prancheta',
         rota: '/pedidos',
-        cor: 'success',
+        disponivel: true
+      },
+      {
+        id: 'cardapio',
+        nome: 'Gestão de Cardápio',
+        descricao: 'Gerenciar produtos, categorias e itens do cardápio',
+        icone: 'hamburguer',
+        rota: '/cardapio',
         disponivel: true
       },
       {
         id: 'lobby-pedidos',
         nome: 'Lobby de Pedidos',
         descricao: 'Visualizar fila de pedidos em tempo real (preparando/pronto)',
-        icone: '🖥️',
+        icone: 'monitor',
         rota: '/lobby-pedidos',
-        cor: 'secondary',
         disponivel: true
       },
       {
         id: 'sessoes',
         nome: 'Gestão de Sessões',
         descricao: 'Gerenciar sessões de trabalho, iniciar, pausar e finalizar',
-        icone: '📅',
+        icone: 'calendario',
         rota: '/sessoes',
-        cor: 'info',
         disponivel: true
       },
       {
         id: 'gestao-caixa',
         nome: 'Gestão de Caixa',
         descricao: 'Controle financeiro de dinheiro por sessão de trabalho',
-        icone: '💵',
+        icone: 'dinheiro',
         rota: '/gestao-caixa',
-        cor: 'warning',
         disponivel: true
       },
       {
         id: 'relatorios',
         nome: 'Relatórios e Insights',
         descricao: 'Dashboards de vendas por período, categoria, cliente e horário',
-        icone: '📈',
+        icone: 'grafico',
         rota: '/relatorios',
-        cor: 'purple',
         disponivel: true
       },
       {
         id: 'gestao-estoque',
         nome: 'Gestão de Estoque',
         descricao: 'Controle de estoque e inventário de produtos',
-        icone: '📦',
+        icone: 'caixa',
         rota: '/gestao-estoque',
-        cor: 'success',
         disponivel: true
       },
       {
         id: 'administracao',
         nome: 'Administração',
         descricao: 'Gerenciar usuários, senhas e contas do sistema',
-        icone: '⚙️',
+        icone: 'ajustes',
         rota: '/administracao',
-        cor: 'warning',
         disponivel: true
       }
     ];
@@ -142,4 +146,3 @@ export class HomeComponent {
     this.authService.logout();
   }
 }
-

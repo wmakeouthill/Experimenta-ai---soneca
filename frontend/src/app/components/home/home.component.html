@@ -1,48 +1,52 @@
-<div class="home-container">
-  <div class="home-card">
-    <header class="home-header">
-      <div class="home-header-top">
-        <div>
-          <h1 class="home-titulo">
-            <app-titulo-home />
-          </h1>
-        </div>
-        @if (estaAutenticado()) {
-          <div class="home-user-info">
-            <div class="user-info-content">
-              <span class="user-name">{{ nomeFormatado() }}</span>
-              <span class="user-role">{{ usuarioAtual()?.descricaoRole }}</span>
-            </div>
-            <button class="btn-logout" (click)="logout()">
-              Sair
-            </button>
-          </div>
-        }
-      </div>
-    </header>
+<main class="home">
+  <header class="home-topo">
+    <div class="home-saudacao">
+      <span class="home-data">{{ dataHoje }}</span>
+      <h1 class="home-titulo">{{ saudacao }}@if (primeiroNome()) {, {{ primeiroNome() }}}!</h1>
+    </div>
 
-    <div class="home-modulos">
-      @for (modulo of modulosDisponiveis(); track modulo.id) {
-        <button
-          [class]="'modulo-card modulo-' + modulo.cor"
-          [class.modulo-bloqueado]="modulo.bloqueado"
-          (click)="navegarParaModulo(modulo, $event)"
-          (auxclick)="navegarParaModulo(modulo, $event)"
-          [disabled]="!modulo.disponivel || modulo.bloqueado"
-          [title]="modulo.bloqueado ? 'Bloqueado apenas para administração' : ''"
-        >
-          <div class="modulo-icone">{{ modulo.icone }}</div>
-          <h2 class="modulo-titulo">{{ modulo.nome }}</h2>
-          <p class="modulo-descricao">{{ modulo.descricao }}</p>
-          @if (modulo.bloqueado) {
-            <div class="modulo-bloqueado-badge">
-              <span class="bloqueado-icon">🔒</span>
-              <span class="bloqueado-texto">Apenas Administração</span>
-            </div>
-          }
+    <div class="home-usuario">
+      <img class="home-acai" src="/assets/acai_do_soneca.png" alt="Açaí do Soneca" />
+      @if (estaAutenticado()) {
+        <div class="home-quem">
+          <span class="home-quem-nome">{{ nomeFormatado() }}</span>
+          <span class="home-quem-papel">{{ usuarioAtual()?.descricaoRole }}</span>
+        </div>
+        <button type="button" class="home-sair" (click)="logout()">
+          Sair <app-icone nome="sair" />
         </button>
       }
     </div>
-  </div>
-</div>
+  </header>
 
+  <nav class="home-grade" aria-label="Módulos">
+    @for (modulo of modulosDisponiveis(); track modulo.id) {
+      <button
+        type="button"
+        [class]="'modulo modulo-' + modulo.id"
+        [class.modulo-bloqueado]="modulo.bloqueado"
+        (click)="navegarParaModulo(modulo, $event)"
+        (auxclick)="navegarParaModulo(modulo, $event)"
+        [disabled]="!modulo.disponivel || modulo.bloqueado"
+        [title]="modulo.bloqueado ? 'Bloqueado apenas para administração' : ''"
+      >
+        @if (modulo.id === 'pedidos') {
+          <img class="modulo-mascote" src="/assets/experimenta_ai_banner_circular.webp" alt="" />
+        }
+        <span class="modulo-icone"><app-icone [nome]="modulo.icone" /></span>
+        @if (modulo.bloqueado) {
+          <span class="modulo-cadeado"><app-icone nome="cadeado" /> Só administração</span>
+        } @else if (modulo.id !== 'pedidos') {
+          <span class="modulo-ir"><app-icone nome="seta" /></span>
+        }
+        <span class="modulo-texto">
+          <span class="modulo-nome">{{ modulo.nome }}</span>
+          <span class="modulo-descricao">{{ modulo.descricao }}</span>
+        </span>
+        @if (modulo.id === 'pedidos' && !modulo.bloqueado) {
+          <span class="modulo-cta">Abrir pedidos <app-icone nome="seta" /></span>
+        }
+      </button>
+    }
+  </nav>
+</main>
