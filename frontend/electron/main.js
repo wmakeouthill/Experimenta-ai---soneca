@@ -179,8 +179,18 @@ function createWindow() {
     // Tratamento de erros de conexão
     mainWindow.webContents.on(
       'did-fail-load',
-      (event, errorCode, errorDescription, validatedURL) => {
+      (_event, errorCode, errorDescription, validatedURL, isMainFrame) => {
         console.error('❌ Erro ao carregar (prod):', errorCode, errorDescription, validatedURL);
+        if (!isMainFrame || errorCode === -3 || mainWindow.isDestroyed()) return;
+
+        mainWindow.show();
+        void dialog.showMessageBox(mainWindow, {
+          type: 'error',
+          title: 'Falha ao abrir o Balcão',
+          message: 'Não foi possível carregar o sistema online.',
+          detail: `Verifique a conexão e o certificado HTTPS de ${PRODUCTION_URL}.\nErro: ${errorDescription} (${errorCode}).`,
+          buttons: ['OK'],
+        });
       }
     );
 
