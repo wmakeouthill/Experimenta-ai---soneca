@@ -16,6 +16,8 @@ O `docker-compose.prod.yml` monta `releases/electron` da VPS no Nginx, fora da i
 
 Os arquivos ficam em `/home/deploy/snackbar/releases/electron/{balcao,totem}/` por padrão. Se o checkout da VPS estiver em outro lugar, informe `-RemoteProjectDir` no script de publicação.
 
+O container Certbot renova o certificado HTTPS automaticamente, mas o Nginx precisa recarregá-lo. Na VPS, o `crontab` do usuário `deploy` executa diariamente `/usr/bin/docker exec snackbar-frontend nginx -s reload`. Sem esse reload, o Nginx pode continuar servindo um certificado vencido mesmo após a renovação.
+
 ## Publicar uma nova versão
 
 Na máquina Windows de build, dentro de `frontend/electron`:
