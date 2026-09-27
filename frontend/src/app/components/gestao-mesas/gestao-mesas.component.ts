@@ -52,6 +52,7 @@ export class GestaoMesasComponent implements OnInit {
     this.form = this.fb.group({
       numero: [null, [Validators.required, Validators.min(1)]],
       nome: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      piso: ['TERREO'],
     });
   }
 
@@ -66,6 +67,7 @@ export class GestaoMesasComponent implements OnInit {
     this.form.reset({
       numero: this.sugerirProximoNumero(),
       nome: '',
+      piso: 'TERREO',
     });
     this.mostrarModal.set(true);
   }
@@ -75,6 +77,7 @@ export class GestaoMesasComponent implements OnInit {
     this.form.patchValue({
       numero: mesa.numero,
       nome: mesa.nome,
+      piso: mesa.piso,
     });
     this.mostrarModal.set(true);
   }
@@ -98,6 +101,7 @@ export class GestaoMesasComponent implements OnInit {
       const sucesso = await this.mesasComposable.atualizarMesa(mesaEditando.id, {
         numero: formValue.numero,
         nome: formValue.nome,
+        piso: formValue.piso,
       });
       if (sucesso) {
         this.fecharModal();
@@ -106,6 +110,7 @@ export class GestaoMesasComponent implements OnInit {
       const sucesso = await this.mesasComposable.criarMesa({
         numero: formValue.numero,
         nome: formValue.nome,
+        piso: formValue.piso,
       });
       if (sucesso) {
         this.fecharModal();

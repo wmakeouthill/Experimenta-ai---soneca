@@ -8,7 +8,7 @@ import { MeiosPagamentoComponent } from '../meios-pagamento/meios-pagamento.comp
 import { ProdutoDetalhesModalComponent, ProdutoComAdicionais } from '../produto-detalhes-modal/produto-detalhes-modal.component';
 import { Cliente } from '../../../../services/cliente.service';
 import { Produto } from '../../../../services/produto.service';
-import { ItemPedidoRequest, MeioPagamentoPedido, ItemPedidoAdicionalRequest } from '../../../../services/pedido.service';
+import { ItemPedidoRequest, MeioPagamentoPedido, ItemPedidoAdicionalRequest, Piso } from '../../../../services/pedido.service';
 import { IconeComponent } from '../../../shared/icone/icone.component';
 
 export interface ItemPedidoComAdicionais extends ItemPedidoRequest {
@@ -35,6 +35,7 @@ export interface ItemPedidoComAdicionais extends ItemPedidoRequest {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NovoPedidoModalComponent implements OnDestroy {
+  private static readonly CHAVE_PISO = 'novo-pedido-piso';
   private readonly fb = inject(FormBuilder);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
@@ -49,11 +50,14 @@ export class NovoPedidoModalComponent implements OnDestroy {
     itens: ItemPedidoRequest[];
     meiosPagamento: MeioPagamentoPedido[];
     observacoes?: string;
+    piso: Piso;
   }>();
 
   readonly clienteSelecionado = signal<Cliente | null>(null);
   readonly itensSelecionados = signal<ItemPedidoComAdicionais[]>([]);
   readonly meiosPagamento = signal<MeioPagamentoPedido[]>([]);
+  /** Painel onde o pedido aparece; lembra o último usado neste navegador. */
+  readonly piso = signal<Piso>(this.lerPisoSalvo());
 
   // Modal de detalhes do produto
   readonly modalDetalhesAberto = signal(false);
@@ -208,6 +212,7 @@ export class NovoPedidoModalComponent implements OnDestroy {
       itens: any[];
       meiosPagamento: MeioPagamentoPedido[];
       observacoes?: string;
+      piso: Piso;
     } = {
       clienteId: cliente.id,
       clienteNome: cliente.nome,
@@ -225,7 +230,8 @@ export class NovoPedidoModalComponent implements OnDestroy {
         }
         return itemRequest;
       }),
-      meiosPagamento: this.meiosPagamento()
+      meiosPagamento: this.meiosPagamento(),
+      piso: this.piso()
     };
 
     if (this.pedidoForm.value.observacoes?.trim()) {
@@ -234,6 +240,23 @@ export class NovoPedidoModalComponent implements OnDestroy {
 
     this.onCriarPedido.emit(request);
     this.resetar();
+  }
+
+  selecionarPiso(piso: Piso): void {
+    this.piso.set(piso);
+    try {
+      localStorage.setItem(NovoPedidoModalComponent.CHAVE_PISO, piso);
+    } catch {
+      // Storage indisponível: vale só para esta sessão.
+    }
+  }
+
+  private lerPisoSalvo(): Piso {
+    try {
+      return localStorage.getItem(NovoPedidoModalComponent.CHAVE_PISO) === 'ANDAR' ? 'ANDAR' : 'TERREO';
+    } catch {
+      return 'TERREO';
+    }
   }
 
   private resetar(): void {

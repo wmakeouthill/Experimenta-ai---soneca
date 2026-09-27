@@ -93,6 +93,7 @@ public class FilaPedidosTotemService {
                 .mesaToken(null)
                 .mesaId(null)
                 .numeroMesa(null)
+                .piso(request.getPiso())
                 .clienteId(null)
                 .nomeCliente(nomeCliente)
                 .itens(itens)

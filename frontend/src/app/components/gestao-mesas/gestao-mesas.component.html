@@ -70,6 +70,7 @@
           <tr>
             <th>Número</th>
             <th>Nome</th>
+            <th>Piso</th>
             <th>Status</th>
             <th>QR Code</th>
             <th>Ações</th>
@@ -80,6 +81,7 @@
             <tr>
               <td class="numero-mesa">{{ mesa.numero }}</td>
               <td>{{ mesa.nome }}</td>
+              <td>{{ mesa.piso === 'ANDAR' ? '1º Andar' : 'Térreo' }}</td>
               <td>
                 <span
                   class="badge"
@@ -171,6 +173,14 @@
                 }
               </span>
             }
+          </div>
+
+          <div class="form-group">
+            <label for="piso">Piso (painel onde os pedidos da mesa aparecem)</label>
+            <select id="piso" formControlName="piso">
+              <option value="TERREO">Térreo</option>
+              <option value="ANDAR">1º Andar</option>
+            </select>
           </div>
 
           <div class="modal-actions">

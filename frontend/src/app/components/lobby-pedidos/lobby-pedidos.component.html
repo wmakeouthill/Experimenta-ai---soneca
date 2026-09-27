@@ -32,7 +32,7 @@
     <app-order-list
       title="PREPARANDO"
       [status]="StatusPedido.PREPARANDO"
-      [pedidos]="lobbyPedidos.pedidos()"
+      [pedidos]="pedidosDoPiso()"
       [isModoGestor]="false"
       [conteudoPausado]="mostrarInterludio()"
       [relogioMs]="relogioMs()"
@@ -43,7 +43,7 @@
     <app-order-list
       title="PRONTO"
       [status]="StatusPedido.PRONTO"
-      [pedidos]="lobbyPedidos.pedidos()"
+      [pedidos]="pedidosDoPiso()"
       [isModoGestor]="false"
       [conteudoPausado]="mostrarInterludio()"
       [relogioMs]="relogioMs()"

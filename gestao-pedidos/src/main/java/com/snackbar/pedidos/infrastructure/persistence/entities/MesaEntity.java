@@ -32,6 +32,10 @@ public class MesaEntity implements Persistable<String> {
     @Column(nullable = false)
     private Boolean ativa = true;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private com.snackbar.pedidos.domain.entities.Piso piso = com.snackbar.pedidos.domain.entities.Piso.TERREO;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

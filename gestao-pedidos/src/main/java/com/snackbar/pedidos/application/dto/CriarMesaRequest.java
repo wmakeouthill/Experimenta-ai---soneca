@@ -1,5 +1,6 @@
 package com.snackbar.pedidos.application.dto;
 
+import com.snackbar.pedidos.domain.entities.Piso;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -21,4 +22,7 @@ public class CriarMesaRequest {
     @NotBlank(message = "Nome da mesa é obrigatório")
     @Size(max = 100, message = "Nome da mesa não pode ter mais de 100 caracteres")
     private String nome;
+
+    /** Opcional; padrão térreo. */
+    private Piso piso;
 }

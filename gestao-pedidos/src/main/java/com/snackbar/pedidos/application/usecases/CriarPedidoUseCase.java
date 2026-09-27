@@ -68,6 +68,7 @@ public class CriarPedidoUseCase {
                 request.getClienteId(),
                 request.getClienteNome(),
                 request.getUsuarioId());
+        pedido.definirPiso(request.getPiso());
 
         for (ItemPedidoRequest itemRequest : request.getItens()) {
             validarProdutoDisponivel(itemRequest.getProdutoId());

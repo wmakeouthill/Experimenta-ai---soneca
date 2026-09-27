@@ -1,6 +1,7 @@
 package com.snackbar.pedidos.application.dto;
 
 import com.snackbar.pedidos.domain.entities.Mesa;
+import com.snackbar.pedidos.domain.entities.Piso;
 
 import java.time.LocalDateTime;
 
@@ -13,6 +14,7 @@ public record MesaDTO(
         String nome,
         String qrCodeToken,
         boolean ativa,
+        Piso piso,
         LocalDateTime createdAt,
         LocalDateTime updatedAt) {
 
@@ -26,6 +28,7 @@ public record MesaDTO(
                 mesa.getNome(),
                 mesa.getQrCodeTokenValor(),
                 mesa.isAtiva(),
+                mesa.getPiso(),
                 mesa.getCreatedAt(),
                 mesa.getUpdatedAt());
     }

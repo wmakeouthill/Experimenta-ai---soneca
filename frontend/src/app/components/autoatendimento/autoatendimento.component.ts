@@ -23,6 +23,7 @@ import {
   MeioPagamentoAutoAtendimentoRequest,
   PedidoAutoAtendimentoResponse,
 } from '../../services/autoatendimento.service';
+import type { Piso } from '../../services/pedido.service';
 import {
   type MeioPagamentoGateway,
   type PagamentoDTO,
@@ -144,6 +145,8 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
 
   // ========== Input para nome do cliente ==========
   nomeClienteInput = '';
+  /** Piso onde o cliente vai esperar o pedido; padrão térreo. */
+  readonly pisoEspera = signal<Piso>('TERREO');
 
   // ========== Computed ==========
   readonly operadorLogado = computed(() => this.authService.usuarioAtual());
@@ -413,6 +416,7 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
       nomeCliente: this.nomeClienteInput.trim() || undefined,
       itens,
       meiosPagamento,
+      piso: this.pisoEspera(),
     };
   }
 
@@ -422,6 +426,7 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
     this.pagamento.resetar();
     this.cliente.limpar();
     this.nomeClienteInput = '';
+    this.pisoEspera.set('TERREO');
     this.pedidoCriado.set(null);
     this.erro.set(null);
     this.comprovanteTef.set(null);

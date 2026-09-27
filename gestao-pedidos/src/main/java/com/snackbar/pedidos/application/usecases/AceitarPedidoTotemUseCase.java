@@ -75,6 +75,7 @@ public class AceitarPedidoTotemUseCase {
                 : "Cliente Totem";
 
         Pedido pedido = Pedido.criarPedidoAutoAtendimento(numeroPedido, nomeCliente, usuarioId);
+        pedido.definirPiso(pedidoPendente.getPiso());
 
         for (ItemPedidoPendenteDTO itemPendente : pedidoPendente.getItens()) {
             Preco precoUnitario = Preco.of(itemPendente.getPrecoUnitario());

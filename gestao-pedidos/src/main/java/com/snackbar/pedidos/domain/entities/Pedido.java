@@ -26,6 +26,7 @@ public class Pedido extends BaseEntity {
     private String mesaId; // ID da mesa (para pedidos via QR code)
     private Integer numeroMesa; // Número da mesa (para exibição)
     private String nomeClienteMesa; // Nome do cliente informado na mesa
+    private Piso piso; // Painel onde o pedido aparece; null = nos dois pisos
     private LocalDateTime dataPedido;
     private LocalDateTime dataFinalizacao; // Data definitiva de finalização (imutável após definida)
     private Long version; // Para Optimistic Locking - preservado entre conversões domain/entity
@@ -235,6 +236,13 @@ public class Pedido extends BaseEntity {
         if (nomeClienteMesa != null && !nomeClienteMesa.trim().isEmpty()) {
             this.nomeClienteMesa = nomeClienteMesa.trim();
         }
+    }
+
+    /**
+     * Define em qual painel (piso) o pedido aparece. Null = aparece nos dois.
+     */
+    public void definirPiso(Piso piso) {
+        this.piso = piso;
     }
 
     /**

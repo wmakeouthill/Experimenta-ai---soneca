@@ -492,6 +492,20 @@
             />
           </div>
 
+          <fieldset class="totem-piso">
+            <legend>Onde você vai esperar?</legend>
+            <div class="totem-piso__opcoes">
+              <label class="totem-piso__opcao">
+                <input type="radio" name="totem-piso" [checked]="pisoEspera() === 'TERREO'" (change)="pisoEspera.set('TERREO')" />
+                Térreo
+              </label>
+              <label class="totem-piso__opcao">
+                <input type="radio" name="totem-piso" [checked]="pisoEspera() === 'ANDAR'" (change)="pisoEspera.set('ANDAR')" />
+                1º Andar
+              </label>
+            </div>
+          </fieldset>
+
           <div class="carrinho-footer">
             <div class="carrinho-total-row">
               <span>Total</span>

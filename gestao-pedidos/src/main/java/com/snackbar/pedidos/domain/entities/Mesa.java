@@ -16,10 +16,12 @@ public class Mesa extends BaseEntity {
     private String nome;
     private QrCodeToken qrCodeToken;
     private boolean ativa;
+    private Piso piso;
 
     private Mesa() {
         super();
         this.ativa = true;
+        this.piso = Piso.TERREO;
     }
 
     /**
@@ -39,7 +41,7 @@ public class Mesa extends BaseEntity {
     /**
      * Restaura uma mesa do banco de dados.
      */
-    public static Mesa restaurar(String id, int numero, String nome, String qrCodeToken, boolean ativa,
+    public static Mesa restaurar(String id, int numero, String nome, String qrCodeToken, boolean ativa, Piso piso,
             java.time.LocalDateTime createdAt, java.time.LocalDateTime updatedAt) {
         Mesa mesa = new Mesa();
         mesa.restaurarId(id);
@@ -47,6 +49,7 @@ public class Mesa extends BaseEntity {
         mesa.nome = nome;
         mesa.qrCodeToken = QrCodeToken.restaurar(qrCodeToken);
         mesa.ativa = ativa;
+        mesa.piso = piso;
         mesa.restaurarTimestamps(createdAt, updatedAt);
         return mesa;
     }
@@ -70,6 +73,17 @@ public class Mesa extends BaseEntity {
             throw new ValidationException("Número da mesa deve ser maior que zero");
         }
         this.numero = novoNumero;
+        touch();
+    }
+
+    /**
+     * Define o piso da mesa; os pedidos da mesa aparecem no painel desse piso.
+     */
+    public void atualizarPiso(Piso novoPiso) {
+        if (novoPiso == null) {
+            throw new ValidationException("Piso da mesa é obrigatório");
+        }
+        this.piso = novoPiso;
         touch();
     }
 

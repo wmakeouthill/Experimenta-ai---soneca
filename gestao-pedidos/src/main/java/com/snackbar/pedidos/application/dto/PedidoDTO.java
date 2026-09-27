@@ -1,6 +1,7 @@
 package com.snackbar.pedidos.application.dto;
 
 import com.snackbar.pedidos.domain.entities.Pedido;
+import com.snackbar.pedidos.domain.entities.Piso;
 import com.snackbar.pedidos.domain.entities.StatusPedido;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,6 +31,7 @@ public class PedidoDTO {
         private String mesaId;
         private Integer numeroMesa;
         private String nomeClienteMesa;
+        private Piso piso;
         private LocalDateTime dataPedido;
         private LocalDateTime dataFinalizacao;
         private LocalDateTime createdAt;
@@ -78,6 +80,7 @@ public class PedidoDTO {
                                 .mesaId(pedido.getMesaId())
                                 .numeroMesa(pedido.getNumeroMesa())
                                 .nomeClienteMesa(pedido.getNomeClienteMesa())
+                                .piso(pedido.getPiso())
                                 .dataPedido(pedido.getDataPedido())
                                 .dataFinalizacao(pedido.getDataFinalizacao())
                                 .createdAt(pedido.getCreatedAt())

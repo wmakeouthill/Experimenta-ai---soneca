@@ -85,6 +85,7 @@ public class CriarPedidoAutoAtendimentoUseCase {
                 numeroPedido,
                 nomeCliente,
                 usuarioId);
+        pedido.definirPiso(request.getPiso());
 
         // Processa os itens do pedido
         for (ItemPedidoRequest itemRequest : request.getItens()) {

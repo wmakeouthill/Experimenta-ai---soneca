@@ -23,6 +23,9 @@ public class CriarMesaUseCase {
         validarNumeroUnico(request.getNumero());
 
         Mesa mesa = Mesa.criar(request.getNumero(), request.getNome());
+        if (request.getPiso() != null) {
+            mesa.atualizarPiso(request.getPiso());
+        }
         Mesa mesaSalva = mesaRepository.salvar(mesa);
 
         return MesaDTO.de(mesaSalva);

@@ -20,6 +20,7 @@ public class MesaMapper {
         entity.setNome(mesa.getNome());
         entity.setQrCodeToken(mesa.getQrCodeTokenValor());
         entity.setAtiva(mesa.isAtiva());
+        entity.setPiso(mesa.getPiso());
         entity.setCreatedAt(mesa.getCreatedAt());
         entity.setUpdatedAt(mesa.getUpdatedAt());
         return entity;
@@ -35,6 +36,7 @@ public class MesaMapper {
                 entity.getNome(),
                 entity.getQrCodeToken(),
                 entity.getAtiva(),
+                entity.getPiso(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt());
     }

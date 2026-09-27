@@ -54,6 +54,9 @@ export enum TipoPedido {
   RETIRADA = 'RETIRADA',
 }
 
+/** Painel (TV) onde o pedido aparece; sem piso = aparece nos dois. */
+export type Piso = 'TERREO' | 'ANDAR';
+
 export interface Pedido {
   id: string;
   numeroPedido: string;
@@ -73,6 +76,7 @@ export interface Pedido {
   createdAt: string;
   updatedAt: string;
   tipoPedido?: TipoPedido;
+  piso?: Piso;
 }
 
 export enum MeioPagamento {
@@ -97,6 +101,7 @@ export interface CriarPedidoRequest {
   observacoes?: string;
   meiosPagamento: MeioPagamentoPedido[];
   usuarioId: string; // Obrigatório - deve ser enviado sempre
+  piso?: Piso;
 }
 
 export interface ItemPedidoAdicionalRequest {

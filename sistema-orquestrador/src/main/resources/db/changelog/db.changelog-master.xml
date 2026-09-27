@@ -157,6 +157,9 @@
     <!-- Migration: Garante no maximo uma conta ABERTA por (mesa, cliente) -->
     <include file="changes/048-add-unique-conta-aberta.sql" relativeToChangelogFile="true"/>
 
+    <!-- Migration: Piso (terreo/andar) em pedidos, fila de pendentes e mesas -->
+    <include file="changes/049-add-piso-pedidos-mesas.sql" relativeToChangelogFile="true"/>
+
     <!--
     NOTA: O usuário administrador inicial é criado automaticamente via CommandLineRunner
     (UsuarioInicialConfig) na primeira execução da aplicação.

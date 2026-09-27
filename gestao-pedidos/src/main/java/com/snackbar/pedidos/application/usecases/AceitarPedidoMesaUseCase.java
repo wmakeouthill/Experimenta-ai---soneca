@@ -95,6 +95,7 @@ public class AceitarPedidoMesaUseCase {
 
         // Define a mesa
         pedido.definirMesa(pedidoPendente.getMesaId(), pedidoPendente.getNumeroMesa(), pedidoPendente.getNomeCliente());
+        pedido.definirPiso(pedidoPendente.getPiso());
 
         // Adiciona os itens
         for (ItemPedidoPendenteDTO itemPendente : pedidoPendente.getItens()) {

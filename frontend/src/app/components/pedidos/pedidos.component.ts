@@ -19,7 +19,7 @@ import { FilaPedidosMesaService, PedidoPendente } from '../../services/fila-pedi
 import { FilaPedidosTotemService } from '../../services/fila-pedidos-totem.service';
 import { ImpressaoService } from '../../services/impressao.service';
 import { NotificationService } from '../../services/notification.service';
-import { Pedido, PedidoService, StatusPedido } from '../../services/pedido.service';
+import { Pedido, PedidoService, Piso, StatusPedido } from '../../services/pedido.service';
 import { SessaoTrabalho, SessaoTrabalhoService } from '../../services/sessao-trabalho.service';
 import { gerarUuid } from '../../shared/utils/uuid';
 import { MenuContextoPedidoComponent } from './components/menu-contexto-pedido/menu-contexto-pedido.component';
@@ -427,6 +427,7 @@ export class PedidosComponent implements OnInit, OnDestroy {
     itens: any[];
     meiosPagamento: any[];
     observacoes?: string;
+    piso: Piso;
   }): void {
     // Validar se usuário está logado
     const usuario = this.authService.usuarioAtual();

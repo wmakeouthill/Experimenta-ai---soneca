@@ -151,6 +151,7 @@ public class FilaPedidosMesaService {
                 .mesaToken(request.getMesaToken())
                 .mesaId(mesa.getId())
                 .numeroMesa(mesa.getNumero())
+                .piso(mesa.getPiso())
                 .clienteId(request.getClienteId())
                 .nomeCliente(request.getNomeCliente())
                 .itens(itens)

@@ -1,5 +1,6 @@
 package com.snackbar.pedidos.application.dto;
 
+import com.snackbar.pedidos.domain.entities.Piso;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,6 +29,8 @@ public class PedidoPendenteDTO {
     private String mesaToken;
     private String mesaId;
     private Integer numeroMesa;
+    /** Piso herdado da mesa ou escolhido no totem; vai para o pedido real no aceite. */
+    private Piso piso;
     private String clienteId;
     private String nomeCliente;
     private String telefoneCliente;

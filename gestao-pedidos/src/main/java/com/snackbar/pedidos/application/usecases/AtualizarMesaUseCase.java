@@ -45,6 +45,10 @@ public class AtualizarMesaUseCase {
             mesa.atualizarNome(request.getNome());
         }
 
+        if (request.getPiso() != null) {
+            mesa.atualizarPiso(request.getPiso());
+        }
+
         if (request.getAtiva() != null) {
             if (request.getAtiva()) {
                 mesa.ativar();

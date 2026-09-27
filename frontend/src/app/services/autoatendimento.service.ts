@@ -1,6 +1,7 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import type { Piso } from './pedido.service';
 
 /**
  * Gera uma chave de idempotência única para requisições.
@@ -36,6 +37,8 @@ export interface CriarPedidoAutoAtendimentoRequest {
   observacao?: string;
   itens: ItemPedidoAutoAtendimentoRequest[];
   meiosPagamento: MeioPagamentoAutoAtendimentoRequest[];
+  /** Piso onde o cliente vai esperar; o backend assume térreo se omitido. */
+  piso?: Piso;
 }
 
 /** Resposta quando o pedido do totem foi enviado para a fila de aceitação. */

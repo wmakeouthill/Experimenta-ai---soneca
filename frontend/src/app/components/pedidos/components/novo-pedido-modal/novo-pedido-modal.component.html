@@ -51,6 +51,17 @@
                       rows="3"
                     ></textarea>
                   </div>
+                  <fieldset class="piso-opcoes">
+                    <legend>Aparece no painel</legend>
+                    <label class="piso-opcao">
+                      <input type="radio" name="novo-pedido-piso" [checked]="piso() === 'TERREO'" (change)="selecionarPiso('TERREO')" />
+                      Térreo
+                    </label>
+                    <label class="piso-opcao">
+                      <input type="radio" name="novo-pedido-piso" [checked]="piso() === 'ANDAR'" (change)="selecionarPiso('ANDAR')" />
+                      1º Andar
+                    </label>
+                  </fieldset>
                 </div>
                 <div class="formulario-coluna">
                   <div class="formulario-secao">

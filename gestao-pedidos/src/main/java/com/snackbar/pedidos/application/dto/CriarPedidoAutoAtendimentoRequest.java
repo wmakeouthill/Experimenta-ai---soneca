@@ -1,5 +1,6 @@
 package com.snackbar.pedidos.application.dto;
 
+import com.snackbar.pedidos.domain.entities.Piso;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
@@ -38,4 +39,7 @@ public class CriarPedidoAutoAtendimentoRequest {
     @NotEmpty(message = "Pedido deve ter pelo menos um meio de pagamento")
     @Valid
     private List<MeioPagamentoRequest> meiosPagamento;
+
+    /** Piso onde o cliente vai esperar o pedido; padrão térreo. */
+    private Piso piso = Piso.TERREO;
 }

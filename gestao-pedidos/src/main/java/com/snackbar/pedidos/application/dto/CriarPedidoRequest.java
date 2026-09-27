@@ -1,5 +1,6 @@
 package com.snackbar.pedidos.application.dto;
 
+import com.snackbar.pedidos.domain.entities.Piso;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -31,5 +32,8 @@ public class CriarPedidoRequest {
     
     @NotBlank(message = "ID do usuário é obrigatório")
     private String usuarioId;
+
+    /** Painel onde o pedido aparece; null = nos dois pisos. */
+    private Piso piso;
 }
 

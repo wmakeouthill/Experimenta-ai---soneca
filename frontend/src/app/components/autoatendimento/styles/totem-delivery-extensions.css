@@ -275,6 +275,63 @@
   border-color: var(--delivery-primary, #ff6b35);
 }
 
+/* Piso onde o cliente espera o pedido */
+.totem-piso {
+  margin: 0 20px 16px;
+  padding: 14px;
+  border: none;
+  background: var(--delivery-surface, #ffffff);
+  border-radius: var(--delivery-radius-md, 16px);
+  box-shadow: var(--delivery-shadow-sm);
+}
+
+.totem-piso legend {
+  float: left;
+  width: 100%;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--delivery-text-secondary, #6b5d53);
+  margin-bottom: 8px;
+}
+
+.totem-piso__opcoes {
+  clear: both;
+  display: flex;
+  gap: 10px;
+}
+
+.totem-piso__opcao {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 52px;
+  border: 1.5px solid var(--delivery-border, #f0e6de);
+  border-radius: var(--delivery-radius-sm, 14px);
+  background: var(--delivery-input-bg, #fbf7f4);
+  color: var(--delivery-text, #241c15);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.totem-piso__opcao:has(input:checked) {
+  border-color: var(--delivery-primary, #ff6b35);
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.18);
+}
+
+.totem-piso__opcao:has(input:focus-visible) {
+  outline: 2px solid var(--delivery-primary, #ff6b35);
+  outline-offset: 2px;
+}
+
+.totem-piso__opcao input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--delivery-primary, #ff6b35);
+}
+
 /* Totem: alvos de toque maiores */
 .autoatendimento-container .quantidade-mini button {
   width: 34px;

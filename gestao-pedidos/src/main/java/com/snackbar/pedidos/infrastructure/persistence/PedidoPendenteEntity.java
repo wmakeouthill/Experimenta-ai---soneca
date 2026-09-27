@@ -51,6 +51,10 @@ public class PedidoPendenteEntity implements Persistable<String> {
     @Column(name = "numero_mesa")
     private Integer numeroMesa;
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 10)
+    private com.snackbar.pedidos.domain.entities.Piso piso;
+
     @Column(name = "cliente_id", length = 36)
     private String clienteId;
 

@@ -64,6 +64,10 @@ public class PedidoEntity implements Persistable<String> {
     @Column(name = "nome_cliente_mesa", length = 100)
     private String nomeClienteMesa;
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 10)
+    private com.snackbar.pedidos.domain.entities.Piso piso;
+
     @Column(nullable = false)
     private LocalDateTime dataPedido;
 

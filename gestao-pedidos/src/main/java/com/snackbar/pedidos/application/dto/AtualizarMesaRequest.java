@@ -1,5 +1,6 @@
 package com.snackbar.pedidos.application.dto;
 
+import com.snackbar.pedidos.domain.entities.Piso;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -21,4 +22,6 @@ public class AtualizarMesaRequest {
     private String nome;
 
     private Boolean ativa;
+
+    private Piso piso;
 }

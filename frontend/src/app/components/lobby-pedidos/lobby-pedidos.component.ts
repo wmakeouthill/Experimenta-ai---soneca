@@ -50,6 +50,11 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
   readonly mostrarConfigModal = signal<boolean>(false);
   readonly tema = signal<LobbyTema>('escuro');
   readonly piso = signal<LobbyPiso>('terreo');
+  /** Pedidos deste painel; pedido sem piso (legado) aparece nos dois. */
+  readonly pedidosDoPiso = computed(() => {
+    const piso = this.piso() === 'terreo' ? 'TERREO' : 'ANDAR';
+    return this.lobbyPedidos.pedidos().filter(p => !p.piso || p.piso === piso);
+  });
   readonly isAdministrador = this.authService.isAdministrador;
   readonly horaAtual = signal(this.formatarHora(new Date()));
   readonly relogioMs = signal(Date.now());

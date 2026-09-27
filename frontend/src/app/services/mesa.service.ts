@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import type { Piso } from './pedido.service';
 
 export interface Mesa {
     id: string;
@@ -8,6 +9,7 @@ export interface Mesa {
     nome: string;
     qrCodeToken: string;
     ativa: boolean;
+    piso: Piso;
     createdAt: string;
     updatedAt: string;
 }
@@ -15,12 +17,14 @@ export interface Mesa {
 export interface CriarMesaRequest {
     numero: number;
     nome: string;
+    piso?: Piso;
 }
 
 export interface AtualizarMesaRequest {
     numero?: number;
     nome?: string;
     ativa?: boolean;
+    piso?: Piso;
 }
 
 @Injectable({
