@@ -1,8 +1,8 @@
 name: Build & Push Images
 
+# Só manual: o build normal é local (deploy-vps.ps1), para não gastar minutos do Actions
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io

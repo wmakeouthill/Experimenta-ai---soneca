@@ -53,11 +53,11 @@ RUN apk add --no-cache wget tini && \
 
 WORKDIR /app
 
-# Copiar JAR do build
-COPY --from=maven-build /app/sistema-orquestrador/target/sistema-orquestrador-*.jar /app/app.jar
+# Copiar JAR do build já com o dono certo (chown -R depois duplicaria os ~85 MB do JAR em outra camada)
+COPY --from=maven-build --chown=appuser:appgroup /app/sistema-orquestrador/target/sistema-orquestrador-*.jar /app/app.jar
 
-# Ajustar permissões
-RUN chown -R appuser:appgroup /app
+# Ajustar permissões da pasta (só ela, não o conteúdo)
+RUN chown appuser:appgroup /app
 
 # Rodar como usuário não-root
 USER appuser
