@@ -18,7 +18,7 @@ import { CommonModule } from '@angular/common';
       (click)="onClick.emit()"
       [attr.aria-label]="'Abrir chat com Soneca IA'">
       <img 
-        src="/assets/soneca_ai.webp" 
+        src="/assets/chat-avatar.webp" 
         alt="Soneca IA" 
         class="chat-ia-btn-icon"
         loading="eager"
@@ -76,10 +76,10 @@ import { CommonModule } from '@angular/common';
       }
     }
 
+    /* Arte em balão com fundo transparente: sem recorte redondo, senão corta o rabinho */
     .chat-ia-btn-icon {
       width: 72px;
       height: 72px;
-      border-radius: 50%;
       object-fit: contain;
     }
 

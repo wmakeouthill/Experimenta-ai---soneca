@@ -29,7 +29,7 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
         <!-- Header -->
         <header class="chat-ia-header">
           <div class="chat-ia-header-info">
-            <img src="/assets/soneca_ai.webp" alt="Soneca IA" class="chat-ia-avatar">
+            <img src="/assets/chat-avatar.webp" alt="Soneca IA" class="chat-ia-avatar">
             <div class="chat-ia-header-text">
               <h2>Soneca</h2>
               <span class="status-online">● Online</span>
@@ -68,7 +68,7 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
           @for (msg of mensagens(); track msg.id) {
             <div class="chat-ia-message" [class.user]="msg.from === 'user'" [class.assistant]="msg.from === 'assistant'">
               @if (msg.from === 'assistant') {
-                <img src="/assets/soneca_ai.webp" alt="Soneca" class="message-avatar">
+                <img src="/assets/chat-avatar.webp" alt="Soneca" class="message-avatar">
               }
               <div class="message-content">
                 <div class="message-bubble">
@@ -122,7 +122,7 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
 
           @if (isLoading()) {
             <div class="chat-ia-message assistant">
-              <img src="/assets/soneca_ai.webp" alt="Soneca" class="message-avatar">
+              <img src="/assets/chat-avatar.webp" alt="Soneca" class="message-avatar">
               <div class="message-bubble typing">
                 <div class="typing-indicator">
                   <span></span>
@@ -316,11 +316,10 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
       min-width: 0;
     }
 
+    /* A arte já tem formato de balão com fundo transparente: sem recorte redondo */
     .chat-ia-avatar {
       width: 36px;
       height: 36px;
-      border-radius: 50%;
-      object-fit: cover;
       flex-shrink: 0;
     }
 
@@ -454,8 +453,6 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
     .message-avatar {
       width: 28px;
       height: 28px;
-      border-radius: 50%;
-      object-fit: cover;
       flex-shrink: 0;
     }
 
