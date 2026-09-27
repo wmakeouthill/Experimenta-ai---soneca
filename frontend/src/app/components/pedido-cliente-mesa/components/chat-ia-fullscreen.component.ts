@@ -215,16 +215,7 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
       opacity: 0;
       visibility: hidden;
       transition: opacity 0.3s ease, visibility 0.3s ease;
-      /* Fonts otimizadas para mobile */
-      font-family:
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        'Segoe UI',
-        'Roboto',
-        'Noto Sans',
-        'Helvetica Neue', Arial,
-        sans-serif;
+      font-family: var(--fonte-app);
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
     }

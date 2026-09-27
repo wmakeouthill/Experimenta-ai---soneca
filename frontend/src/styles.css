@@ -1,6 +1,15 @@
 /* Tokens precisam ser globais: dentro do CSS de componente o Angular reescreve :root para [_ngcontent-x]:root, que nunca casa */
 @import './styles/balcao-tokens.css';
 
+/* Fontes embutidas no bundle (sem CDN nem fonte do sistema). Inter variável é a mais
+   próxima da SF Pro do iOS; o eixo opsz ajusta o desenho ao tamanho, como a SF. */
+@import '@fontsource-variable/inter/opsz.css';
+@import '@fontsource/luckiest-guy/latin.css';
+
+:root {
+  --fonte-app: 'Inter Variable', system-ui, sans-serif;
+}
+
 /* Global Styles */
 * {
   margin: 0;
@@ -13,7 +22,7 @@ html, body {
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI Emoji", "Segoe UI Symbol", 
+  font-family: 'Inter Variable', -apple-system, BlinkMacSystemFont, "Segoe UI Emoji", "Segoe UI Symbol", 
                "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

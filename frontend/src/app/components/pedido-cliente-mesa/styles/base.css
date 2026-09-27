@@ -23,7 +23,9 @@
   --radius-lg: var(--delivery-radius-md, 16px);
   --radius-full: 9999px;
 
-  font-family: var(--delivery-font, 'Plus Jakarta Sans', system-ui, sans-serif);
+  /* Tudo que usa --delivery-font dentro da tela herda a fonte embutida */
+  --delivery-font: var(--fonte-app);
+  font-family: var(--delivery-font);
 }
 
 /* ========== Buttons ========== */
