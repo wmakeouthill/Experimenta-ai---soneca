@@ -4,7 +4,7 @@ import com.snackbar.chatia.domain.entity.MensagemChat;
 import java.util.List;
 
 /**
- * Porta de saída para comunicação com a API de IA (OpenAI).
+ * Porta de saída para comunicação com a API de IA.
  */
 public interface IAClientPort {
     

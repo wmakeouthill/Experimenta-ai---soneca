@@ -13,7 +13,7 @@
 
     <artifactId>chat-ia</artifactId>
     <name>Chat IA - Assistente Virtual</name>
-    <description>Módulo de chat com IA usando OpenAI API - Assistente virtual para pedidos</description>
+    <description>Módulo de chat com IA usando Gemini no Vertex AI - Assistente virtual para pedidos</description>
 
     <dependencies>
         <!-- Kernel Compartilhado -->
@@ -48,6 +48,16 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+        <!-- Token OAuth da conta de serviço (ADC) para o Vertex AI.
+             ponytail: versão alinhada ao google-http-client 1.42 / guava 32 que o app já carrega
+             (google-api-client do gestao-clientes, socket factory do Cloud SQL); versões novas pedem
+             http-client 2.x e guava 33. Subir junto com eles (ex.: libraries-bom) quando forem atualizados. -->
+        <dependency>
+            <groupId>com.google.auth</groupId>
+            <artifactId>google-auth-library-oauth2-http</artifactId>
+            <version>1.19.0</version>
         </dependency>
 
         <!-- Test -->

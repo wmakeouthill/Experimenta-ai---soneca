@@ -226,6 +226,8 @@ replay_pid*
 !**/README.md
 !docs/specs/atualizacao-electron-balcao.md
 !docs/superpowers/plans/2026-09-22-atualizacao-electron-balcao.md
+!docs/runbooks/chat-ia-gemini-vertex.md
+!/VERTEX-AI-CONTA-DE-SERVICO.md
 
 # ============================================
 # Arquivos Temporários
