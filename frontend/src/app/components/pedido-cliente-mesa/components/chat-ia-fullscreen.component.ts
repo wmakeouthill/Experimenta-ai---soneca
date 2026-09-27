@@ -7,11 +7,22 @@ import {
   computed,
   ViewChild,
   ElementRef,
-  AfterViewChecked
+  AfterViewChecked,
+  Pipe,
+  PipeTransform
 } from '@angular/core';
-import { CommonModule, CurrencyPipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/use-chat-ia';
+import { markdownChatParaHtml } from '../../../shared/utils/markdown-chat';
+
+/** Pipe pura: converte cada resposta uma vez só, não a cada ciclo de detecção. */
+@Pipe({ name: 'markdownChat', standalone: true })
+export class MarkdownChatPipe implements PipeTransform {
+  transform(texto: string): string {
+    return markdownChatParaHtml(texto);
+  }
+}
 
 /**
  * Componente de Chat IA fullscreen responsivo.
@@ -21,7 +32,7 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
 @Component({
   selector: 'app-chat-ia-fullscreen',
   standalone: true,
-  imports: [CommonModule, FormsModule, CurrencyPipe],
+  imports: [CommonModule, FormsModule, MarkdownChatPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="chat-ia-overlay" [class.aberto]="isOpen() && !isHidden()" (click)="fecharAoClicarFora($event)">
@@ -72,7 +83,11 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
               }
               <div class="message-content">
                 <div class="message-bubble">
-                  <p class="message-text">{{ msg.text }}</p>
+                  @if (msg.from === 'assistant') {
+                    <div class="message-text markdown" [innerHTML]="msg.text | markdownChat"></div>
+                  } @else {
+                    <p class="message-text">{{ msg.text }}</p>
+                  }
                   <span class="message-time">{{ formatTime(msg.timestamp) }}</span>
                 </div>
 
@@ -97,7 +112,7 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
                                 <p class="produto-descricao">{{ produto.descricao }}</p>
                               }
                               <div class="produto-footer">
-                                <span class="produto-preco">{{ produto.preco | currency:'BRL':'symbol':'1.2-2' }}</span>
+                                <span class="produto-preco">{{ formatarPreco(produto.preco) }}</span>
                                 @if (produto.disponivel) {
                                   <button
                                     class="btn-adicionar"
@@ -486,6 +501,35 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
       font-size: 0.9375rem;
       line-height: 1.45;
       white-space: pre-wrap;
+    }
+
+    /* Resposta da IA: quebras vêm do <p>/<br> gerado pelo markdown */
+    .message-text.markdown {
+      white-space: normal;
+    }
+
+    .message-text.markdown ::ng-deep p,
+    .message-text.markdown ::ng-deep ul,
+    .message-text.markdown ::ng-deep ol {
+      margin: 0 0 0.5rem;
+    }
+
+    .message-text.markdown ::ng-deep :last-child {
+      margin-bottom: 0;
+    }
+
+    .message-text.markdown ::ng-deep ul,
+    .message-text.markdown ::ng-deep ol {
+      padding-left: 1.25rem;
+    }
+
+    .message-text.markdown ::ng-deep li + li {
+      margin-top: 0.25rem;
+    }
+
+    .message-text.markdown ::ng-deep strong {
+      font-weight: 700;
+      color: #fff;
     }
 
     .message-time {
@@ -1019,6 +1063,11 @@ export class ChatIAFullscreenComponent implements AfterViewChecked {
       this.scrollToBottom();
       this.shouldScrollToBottom = false;
     }
+  }
+
+  /** O app não registra LOCALE_ID pt-BR, então o currency pipe saía "R$15.00". */
+  formatarPreco(valor: number): string {
+    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
   formatTime(date: Date): string {
