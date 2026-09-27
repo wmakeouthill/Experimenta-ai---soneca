@@ -8,10 +8,9 @@ const PROXY_CONFIG = {
     "logLevel": "warn",
     
     // ========== BUFFERING E PERFORMANCE ==========
-    // Timeout de conexão
-    "timeout": 30000,
-    "proxyTimeout": 30000,
-    
+    // Sem timeout/proxyTimeout: são de inatividade e derrubam o SSE do status-loja
+    // (heartbeat a cada 30s). Em prod o nginx trata o stream à parte.
+
     // Desabilita streaming para buffering completo (evita byte-a-byte)
     "selfHandleResponse": false,
     
