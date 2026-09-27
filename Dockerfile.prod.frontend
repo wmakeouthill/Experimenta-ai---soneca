@@ -26,17 +26,13 @@ FROM nginx:1.25-alpine
 # Segurança: remover configs default
 RUN rm -rf /etc/nginx/conf.d/default.conf /usr/share/nginx/html/*
 
-# Copiar frontend buildado
-COPY --from=frontend-build /app/frontend/dist/frontend/browser /usr/share/nginx/html
+# Copiar frontend buildado já com o dono certo (chown -R depois duplicaria os arquivos em outra camada)
+COPY --from=frontend-build --chown=nginx:nginx /app/frontend/dist/frontend/browser /usr/share/nginx/html
 
 # Nginx config será montada via volume no docker-compose
 # Mas incluímos uma default para fallback
 COPY config/nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY config/nginx/nginx.conf /etc/nginx/nginx.conf
-
-# Ajustar permissões
-RUN chown -R nginx:nginx /usr/share/nginx/html && \
-    chmod -R 755 /usr/share/nginx/html
 
 # Expor portas
 EXPOSE 80 443

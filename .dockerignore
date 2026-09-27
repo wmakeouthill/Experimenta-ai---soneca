@@ -63,6 +63,10 @@ temp/
 application-secrets.yml
 *.secret
 .env.local
+secrets/
+
+# Worktrees do Claude Code (cópias inteiras do repositório)
+.claude/
 
 # Outros
 Lobby-pedidos/

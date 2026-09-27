@@ -16,15 +16,16 @@ no Vertex AI. Deploy, rollback e rotação da chave estão no
 
 | Ambiente | Caminho | Depois |
 | --- | --- | --- |
-| Produção (VPS) | `secrets/vertex-sa.json` dentro da pasta do deploy (a mesma do `docker-compose.prod.yml`) | `sudo chown -R 1001:1001 secrets && sudo chmod 700 secrets && sudo chmod 400 secrets/vertex-sa.json` |
-| Dev com Docker | `secrets/vertex-sa.json` na raiz deste repositório (ao lado do `docker-compose.dev.yml`) | nada |
+| Dev com Docker | `secrets/vertex-sa.json` na raiz deste repositório (ao lado do `docker-compose.dev.yml`) | `GEMINI_PROJECT_ID=<ID_DO_PROJETO>` no `.env` |
+| Produção (VPS) | `~/snackbar/secrets/vertex-sa.json` | daqui, com a chave já em `secrets/`: `.\enviar-chave-vertex.ps1 -Vps deploy@<ip da VPS>` |
 | Dev fora do Docker (IDE, `mvn`) | qualquer pasta fora do repositório | defina `GOOGLE_APPLICATION_CREDENTIALS=<caminho absoluto do JSON>` |
 
 - Os dois compose montam `./secrets` em `/run/secrets` (somente leitura) e já
   definem `GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/vertex-sa.json`.
-- Defina também `GEMINI_PROJECT_ID=<ID_DO_PROJETO>` no `.env` (dev) ou `.env.prod` (VPS).
-- O `chown 1001` é obrigatório na VPS: o container roda como `appuser` (uid 1001)
-  e, sem ele, não lê a chave.
+- O `enviar-chave-vertex.ps1` faz três coisas: copia a chave por SSH, dá o arquivo
+  ao uid 1001 com modo 400 e põe o `GEMINI_PROJECT_ID` no `.env.prod`. O dono uid
+  1001 é obrigatório, porque o container roda como `appuser` (uid 1001). Rode o
+  script de novo para trocar a chave.
 - `secrets/` está no `.gitignore`. **Nunca** coloque o conteúdo do JSON no `.env`,
   em log, no chat ou em commit.
 

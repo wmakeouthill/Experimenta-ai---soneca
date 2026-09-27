@@ -88,14 +88,13 @@ Write-Host "  Frontend build OK" -ForegroundColor Green
 # ==================== PUSH ====================
 Write-Host "[5/6] Pushing imagens para $Registry..." -ForegroundColor Yellow
 
-docker push "${backendImage}:${Tag}"
-docker push "${backendImage}:latest"
-docker push "${frontendImage}:${Tag}"
-docker push "${frontendImage}:latest"
-
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "Falha no push!" -ForegroundColor Red
-    exit 1
+# Checa cada push: so o ultimo deixava passar backend velho com frontend novo
+foreach ($imagem in "${backendImage}:${Tag}", "${backendImage}:latest", "${frontendImage}:${Tag}", "${frontendImage}:latest") {
+    docker push $imagem
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Falha no push de $imagem!" -ForegroundColor Red
+        exit 1
+    }
 }
 Write-Host "  Push OK" -ForegroundColor Green
 
@@ -107,8 +106,8 @@ Write-Host "  Imagens publicadas:" -ForegroundColor Cyan
 Write-Host "    ${backendImage}:${Tag}" -ForegroundColor White
 Write-Host "    ${frontendImage}:${Tag}" -ForegroundColor White
 Write-Host "" -ForegroundColor Cyan
-Write-Host "  Na VPS, execute:" -ForegroundColor Cyan
-Write-Host "    ./deploy-vps.sh atualizar" -ForegroundColor White
+Write-Host "  Na VPS, execute (ou use .\deploy-vps.ps1, que faz tudo):" -ForegroundColor Cyan
+Write-Host "    bash ./deploy-vps.sh atualizar" -ForegroundColor White
 Write-Host "============================================" -ForegroundColor Cyan
 
 # Mostrar tamanho das imagens
