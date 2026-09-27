@@ -170,6 +170,7 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
             <input
               #chatInput
               type="text"
+              name="mensagem"
               [ngModel]="inputText()"
               (ngModelChange)="onInputChange.emit($event)"
               (keydown.enter)="enviar()"

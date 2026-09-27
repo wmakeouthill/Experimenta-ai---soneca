@@ -23,11 +23,6 @@ export class PedidoPollingService {
   private readonly pedidosConhecidos = new Set<string>();
   private pollingSubscription: Subscription | null = null;
 
-  constructor() {
-    // Debug
-    console.log('PedidoPollingService inicializado');
-  }
-
   iniciarPolling(sessaoId?: string) {
     if (this.pollingAtivo()) {
       console.log('Polling já está ativo.');
@@ -71,7 +66,6 @@ export class PedidoPollingService {
       this.pollingSubscription.unsubscribe();
       this.pollingSubscription = null;
     }
-    console.log('Polling global de pedidos parado.');
   }
 
   private processarNovosPedidos(novosPedidos: Pedido[]) {

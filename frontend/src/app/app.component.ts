@@ -42,8 +42,6 @@ export class AppComponent implements OnInit {
       // Usa window.location pois this.router.url pode não estar atualizado no ngOnInit
       const urlAtual = window.location.pathname;
 
-      console.log('🔍 URL atual:', urlAtual, '| Sem serviços globais:', this.isRotaSemServicosGlobais(urlAtual));
-
       // SEMPRE configura a impressão automática (independente de sessão ativa).
       // A subscription fica ativa e imprime quando o polling detectar novos pedidos.
       // Isso corrige o bug onde o operador loga depois do app iniciar e a
