@@ -70,22 +70,26 @@ alternativa sem chave (metadata server) aqui.
 
 ```bash
 gcloud iam service-accounts keys create vertex-sa.json --iam-account="$SA"
-
-# Copie para a pasta do deploy na VPS (a mesma do docker-compose.prod.yml)
-scp vertex-sa.json usuario@vps:/caminho/do/deploy/secrets/vertex-sa.json
 ```
 
-Na VPS, dentro da pasta do deploy:
+Coloque o arquivo em `secrets/vertex-sa.json` na raiz do repositório local e envie
+para a VPS com o script da raiz (PowerShell):
 
-```bash
-mkdir -p secrets
-# O container roda como appuser (uid 1001): sem este chown ele não lê a chave
-sudo chown -R 1001:1001 secrets
-sudo chmod 700 secrets
-sudo chmod 400 secrets/vertex-sa.json
+```powershell
+.\enviar-chave-vertex.ps1 -Vps deploy@<ip da VPS>
 ```
 
-Depois apague a cópia local: `rm vertex-sa.json`.
+O script:
+
+- copia a chave por SSH para `~/snackbar/secrets/vertex-sa.json`, passando por uma
+  pasta temporária `700`;
+- aplica dono `1001:1001` (o `appuser` do container) e modo `400`. Sem esse dono, o
+  backend não lê a chave. Quem aplica é um container `alpine` descartável, porque o
+  `sudo` da VPS pede senha e o usuário `deploy` está no grupo `docker`;
+- acrescenta `GEMINI_PROJECT_ID` ao `.env.prod`, lido do `project_id` da chave, se
+  ainda não estiver lá.
+
+A chave não passa por git, `.env` nem log.
 
 > Se `secrets/vertex-sa.json` não existir, a aplicação sobe normalmente e o chat
 > responde "indisponível". O log mostra `Credenciais do Google não encontradas`.
@@ -128,29 +132,25 @@ fica sem fallback. Corrija `GEMINI_MODELS_FALLBACK` antes de seguir.
 
 ## 5. Deploy na VPS
 
-O deploy passa por `main`: o workflow publica a imagem `latest` no GHCR. Na VPS,
-**antes** de atualizar, guarde a imagem atual para ter rollback (só existe a tag `latest`):
+O deploy passa por `main`, com build na sua máquina (o GitHub Actions não builda mais
+no push). Na VPS, **antes** de atualizar, guarde a imagem atual para ter rollback:
 
 ```bash
-cd /caminho/do/deploy
+cd ~/snackbar
 git rev-parse HEAD > .pre-gemini-commit
 docker tag ghcr.io/wmakeouthill/snackbar-backend:latest ghcr.io/wmakeouthill/snackbar-backend:pre-gemini
 ```
 
-Acrescente ao `.env.prod`, mantendo o `OPENAI_API_KEY` até estabilizar (rollback):
+O script do passo 3 já pôs `GEMINI_PROJECT_ID` no `.env.prod`. As outras variáveis
+`GEMINI_*` têm padrão no compose e só entram no `.env.prod` para mudar o valor.
+Mantenha o `OPENAI_API_KEY` até o Gemini estabilizar, porque o rollback usa essa chave.
 
-```bash
-GEMINI_PROJECT_ID=seu-projeto-gcp
-GEMINI_LOCATION=global
-GEMINI_MODEL=gemini-3.8-flash
-GEMINI_MODELS_FALLBACK=gemini-3.5-flash-lite
-GEMINI_MAX_TOKENS=4000
-```
+Atualize com `main` em dia, na raiz do repositório, na sua máquina. O script builda e
+publica as imagens no GHCR, faz backup do banco, roda `deploy-vps.sh atualizar` na VPS
+e espera o backend ficar `healthy`:
 
-Atualize (git pull + imagens novas + restart do backend e do frontend):
-
-```bash
-./deploy-vps.sh atualizar
+```powershell
+.\deploy-vps.ps1 -Vps deploy@<ip da VPS>
 ```
 
 ## 6. Validar
@@ -176,7 +176,7 @@ docker compose -f docker-compose.prod.yml logs --since 10m backend \
 | Log | Causa |
 | --- | --- |
 | `GEMINI_PROJECT_ID não definido` | Variável ausente no `.env.prod` |
-| `Credenciais do Google não encontradas` | Chave ausente ou ilegível (reveja o `chown 1001` do passo 3) |
+| `Credenciais do Google não encontradas` | Chave ausente ou ilegível: rode de novo o `enviar-chave-vertex.ps1` (passo 3) |
 | `Modelo gemini-3.8-flash falhou: status 4xx: ...` | Mensagem do Vertex; confira a tabela do passo 4 |
 
 Por fim, teste pela tela de pedido da mesa: abra o chat e faça uma pergunta sobre o cardápio.
@@ -193,13 +193,13 @@ Depois volte o valor para `gemini-3.8-flash` e suba de novo.
 A imagem antiga só funciona com o compose antigo, que ainda repassa as variáveis `OPENAI_*`:
 
 ```bash
-cd /caminho/do/deploy
+cd ~/snackbar
 git checkout "$(cat .pre-gemini-commit)" -- docker-compose.prod.yml
 TAG=pre-gemini docker compose -f docker-compose.prod.yml up -d --no-deps backend
 ```
 
 Para voltar ao Gemini, rode `git checkout HEAD -- docker-compose.prod.yml` e depois
-`./deploy-vps.sh atualizar`. Depois de alguns dias estável, remova `OPENAI_API_KEY`
+`bash ./deploy-vps.sh atualizar`. Depois de alguns dias estável, remova `OPENAI_API_KEY`
 do `.env.prod`, revogue a chave no painel da OpenAI e apague a tag local
 (`docker rmi ghcr.io/wmakeouthill/snackbar-backend:pre-gemini`).
 
@@ -209,8 +209,9 @@ Faça a rotação a cada 90 dias, ou na hora se houver suspeita de vazamento:
 
 ```bash
 gcloud iam service-accounts keys create vertex-sa-nova.json --iam-account="$SA"
-# Leve para a VPS no lugar de secrets/vertex-sa.json (passo 3, com chown/chmod)
-docker compose -f docker-compose.prod.yml restart backend   # a chave é lida na subida
+# Substitua secrets/vertex-sa.json local pela nova e rode .\enviar-chave-vertex.ps1 (passo 3)
+# Na VPS (a chave é lida na subida):
+docker compose -f docker-compose.prod.yml restart backend
 # Valide (passo 6), depois apague a chave antiga:
 gcloud iam service-accounts keys list --iam-account="$SA"
 gcloud iam service-accounts keys delete ID_DA_CHAVE_ANTIGA --iam-account="$SA"
