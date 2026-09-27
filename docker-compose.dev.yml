@@ -66,11 +66,14 @@ services:
       - FRONTEND_PROXY_URL=http://frontend-dev:4200
       # ========== Google OAuth ==========
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
-      # ========== Chat IA - OpenAI ==========
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-5-mini}
-      - OPENAI_MAX_TOKENS=${OPENAI_MAX_TOKENS:-4000}
-      - OPENAI_MODELS_FALLBACK=${OPENAI_MODELS_FALLBACK:-gpt-4o-mini,gpt-3.5-turbo}
+      # ========== Chat IA - Gemini no Vertex AI ==========
+      # Chave da conta de serviço em ./secrets/vertex-sa.json (runbook: docs/runbooks/chat-ia-gemini-vertex.md)
+      - GEMINI_PROJECT_ID=${GEMINI_PROJECT_ID:-}
+      - GEMINI_LOCATION=${GEMINI_LOCATION:-global}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-3.8-flash}
+      - GEMINI_MODELS_FALLBACK=${GEMINI_MODELS_FALLBACK:-gemini-3.5-flash-lite}
+      - GEMINI_MAX_TOKENS=${GEMINI_MAX_TOKENS:-4000}
+      - GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/vertex-sa.json
       # ========== Pagamento Totem ==========
       - PAGAMENTO_TOTEM_ENABLED=${PAGAMENTO_TOTEM_ENABLED:-true}
       - STONE_PIX_MOCK_ENABLED=${STONE_PIX_MOCK_ENABLED:-true}
@@ -93,6 +96,8 @@ services:
       - ./impressao-cupom-fiscal:/app/impressao-cupom-fiscal
       - ./chat-ia:/app/chat-ia
       - ./pom.xml:/app/pom.xml
+      # Chave da conta de serviço do Vertex AI (pasta ignorada pelo git)
+      - ./secrets:/run/secrets:ro
       # Cache do Maven para acelerar builds
       - maven_cache:/root/.m2
       # ✅ OTIMIZAÇÃO: Volumes persistentes para targets compilados (evita recompilar tudo)

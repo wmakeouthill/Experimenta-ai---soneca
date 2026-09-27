@@ -1,6 +1,8 @@
 # 🤖 Chat IA - Módulo de Assistente Virtual
 
-Módulo de chat com IA usando OpenAI API para assistência virtual aos clientes durante o pedido.
+Módulo de chat com IA usando o Gemini no Vertex AI para assistência virtual aos clientes durante o pedido.
+
+Configuração da conta de serviço, deploy e rollback: [runbook](../docs/runbooks/chat-ia-gemini-vertex.md).
 
 ## Arquitetura
 
@@ -33,7 +35,7 @@ chat-ia/
 │   │
 │   └── infrastructure/            # Implementações técnicas
 │       ├── ai/
-│       │   └── OpenAIAdapter.java  # Integração com OpenAI
+│       │   └── GeminiVertexAdapter.java  # Integração com Gemini (Vertex AI)
 │       ├── persistence/
 │       │   └── HistoricoChatMemoriaRepository.java
 │       ├── web/
@@ -76,27 +78,26 @@ X-Session-ID: uuid-da-sessao
 ### Variáveis de Ambiente
 
 ```properties
-# Chave da API OpenAI (obrigatória)
-OPENAI_API_KEY=sk-...
-
-# Ou via application.properties
-openai.api.key=sk-...
+# Projeto GCP (sem ele o chat responde "indisponível")
+GEMINI_PROJECT_ID=seu-projeto-gcp
+# Chave JSON da conta de serviço (roles/aiplatform.user); no compose já aponta para ./secrets/vertex-sa.json
+GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/vertex-sa.json
 ```
 
-### application.properties
+### application.yml
 
-```properties
-# Modelo principal (padrão: gpt-5-mini)
-openai.model=gpt-5-mini
+```yaml
+gemini:
+  project-id: ${GEMINI_PROJECT_ID:}
+  location: ${GEMINI_LOCATION:global}                       # ou uma região, ex.: us-central1
+  model: ${GEMINI_MODEL:gemini-3.8-flash}                    # modelo principal
+  models:
+    fallback: ${GEMINI_MODELS_FALLBACK:gemini-3.5-flash-lite} # separados por vírgula
+  max-tokens: ${GEMINI_MAX_TOKENS:4000}                      # inclui o raciocínio do modelo
 
-# Modelos de fallback separados por vírgula
-openai.models.fallback=gpt-4o-mini,gpt-3.5-turbo
-
-# Máximo de tokens na resposta
-openai.max-tokens=4000
-
-# Prompt do sistema (customizável)
-chat.ia.system-prompt=Você é o Soneca, um assistente virtual simpático...
+chat:
+  ia:
+    system-prompt: Você é o Soneca, um assistente virtual simpático...
 ```
 
 ## Frontend
@@ -153,7 +154,7 @@ O chat é integrado automaticamente na tela de pedido do cliente (`pedido-client
 - ✅ Persistência local no navegador
 - ✅ Interface responsiva (mobile-first)
 - ✅ Suporte a temas dark mode
-- ✅ Fallback automático entre modelos OpenAI
+- ✅ Fallback automático entre modelos Gemini
 - ✅ Indicador de digitação
 - ✅ Emoji support
 - ✅ Safe area para iPhone X+

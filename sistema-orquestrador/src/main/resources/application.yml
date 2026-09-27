@@ -141,15 +141,17 @@ estabelecimento:
   telefone: ${ESTABELECIMENTO_TELEFONE:(21) 97439-7966}
   cnpj: ${ESTABELECIMENTO_CNPJ:12345678000190}
 
-# ========== Chat IA - OpenAI Configuration ==========
-# IMPORTANTE: Defina OPENAI_API_KEY no application-secrets.yml ou variável de ambiente
-openai:
-  api:
-    key: ${OPENAI_API_KEY:}
-  model: ${OPENAI_MODEL:gpt-4o-mini}
+# ========== Chat IA - Gemini no Vertex AI ==========
+# Autenticação por conta de serviço (ADC): GOOGLE_APPLICATION_CREDENTIALS aponta para a chave JSON.
+# Sem GEMINI_PROJECT_ID ou sem credenciais, a aplicação sobe e o chat responde "indisponível".
+# Runbook: docs/runbooks/chat-ia-gemini-vertex.md
+gemini:
+  project-id: ${GEMINI_PROJECT_ID:}
+  location: ${GEMINI_LOCATION:global}
+  model: ${GEMINI_MODEL:gemini-3.8-flash}
   models:
-    fallback: ${OPENAI_MODELS_FALLBACK:gpt-3.5-turbo}
-  max-tokens: ${OPENAI_MAX_TOKENS:2000}
+    fallback: ${GEMINI_MODELS_FALLBACK:gemini-3.5-flash-lite}
+  max-tokens: ${GEMINI_MAX_TOKENS:4000}
 
 # System prompt customizável para o assistente Soneca
 chat:
