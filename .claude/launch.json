@@ -1,0 +1,18 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "balcao-frontend",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--prefix", "frontend", "ng", "serve", "--host", "127.0.0.1", "--port", "4300", "--proxy-config", "proxy.conf.js"],
+      "port": 4300
+    },
+    {
+      "name": "balcao-frontend-api-docker",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--prefix", "frontend", "ng", "serve", "--host", "127.0.0.1", "--port", "4301", "--proxy-config", "proxy.conf.js"],
+      "env": { "BACKEND_URL": "http://localhost" },
+      "port": 4301
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+# ============================================================
+# Overlay para rodar o stack de PRODUÇÃO localmente (sem SSL/certbot),
+# buildando as imagens a partir do código atual em vez do GHCR.
+#
+# Uso:
+#   docker compose --env-file .env.local -f docker-compose.prod.yml -f docker-compose.local.yml up -d --build
+# Acesso: http://localhost
+# ============================================================
+
+name: snackbar-local
+
+services:
+  mysql:
+    # No Windows o bind mount chega como 777 e o MySQL ignora o .cnf (fuso -03:00, utf8mb4...).
+    # Copia com 644 antes de subir para ficar igual à VPS.
+    volumes: !override
+      - mysql_data:/var/lib/mysql
+      - ./config/mysql/my.cnf:/tmp/custom.cnf:ro
+    entrypoint: ["sh", "-c", "install -m 644 /tmp/custom.cnf /etc/mysql/conf.d/custom.cnf && exec docker-entrypoint.sh mysqld"]
+
+  backend:
+    image: snackbar-backend:local
+    build:
+      context: .
+      dockerfile: Dockerfile.prod.backend
+
+  frontend:
+    image: snackbar-frontend:local
+    build:
+      context: .
+      dockerfile: Dockerfile.prod.frontend
+    ports: !override
+      - "80:80"
+    volumes: !override
+      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./config/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+
+  certbot:
+    profiles: ["vps"]
