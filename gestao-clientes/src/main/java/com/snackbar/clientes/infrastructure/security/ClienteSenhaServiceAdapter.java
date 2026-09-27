@@ -11,7 +11,7 @@ public class ClienteSenhaServiceAdapter implements ClienteSenhaServicePort {
     private final PasswordEncoder passwordEncoder;
 
     public ClienteSenhaServiceAdapter() {
-        this.passwordEncoder = new BCryptPasswordEncoder();
+        this.passwordEncoder = new BCryptPasswordEncoder(12);
     }
 
     @Override

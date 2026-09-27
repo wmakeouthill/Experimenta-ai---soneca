@@ -40,7 +40,7 @@ public class ClienteRepositoryAdapter implements ClienteRepositoryPort {
 
     @Override
     public List<Cliente> buscarPorTelefone(String telefone) {
-        return jpaRepository.findByTelefone(telefone).stream()
+        return jpaRepository.findByTelefoneNormalizado(telefone.replaceAll("\\D", "")).stream()
                 .map(mapper::paraDomain)
                 .toList();
     }
@@ -71,7 +71,7 @@ public class ClienteRepositoryAdapter implements ClienteRepositoryPort {
 
     @Override
     public boolean existePorTelefone(String telefone) {
-        return jpaRepository.existsByTelefone(telefone);
+        return !jpaRepository.findByTelefoneNormalizado(telefone.replaceAll("\\D", "")).isEmpty();
     }
 
     @Override

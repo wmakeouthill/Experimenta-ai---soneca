@@ -111,10 +111,11 @@ public class PedidoMesaRestController {
         // Verifica se já existe cliente com este telefone
         var clienteExistente = clienteGateway.buscarPorTelefone(request.getTelefone());
         if (clienteExistente.isPresent()) {
-            return ResponseEntity.ok(clienteExistente.get());
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
 
-        ClientePublicoDTO novoCliente = clienteGateway.cadastrar(request.getNome(), request.getTelefone());
+        ClientePublicoDTO novoCliente = clienteGateway.cadastrar(
+                request.getNome(), request.getTelefone(), request.getSenha());
         return ResponseEntity.status(HttpStatus.CREATED).body(novoCliente);
     }
 

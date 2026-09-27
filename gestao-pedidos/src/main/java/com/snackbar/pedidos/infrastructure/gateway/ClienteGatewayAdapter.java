@@ -1,9 +1,8 @@
 package com.snackbar.pedidos.infrastructure.gateway;
 
 import com.snackbar.clientes.application.dto.ClienteDTO;
-import com.snackbar.clientes.application.dto.CriarClienteRequest;
 import com.snackbar.clientes.application.usecases.BuscarClientePorIdUseCase;
-import com.snackbar.clientes.application.usecases.CriarClienteUseCase;
+import com.snackbar.clientes.application.usecases.CadastrarClienteMesaUseCase;
 import com.snackbar.clientes.application.usecases.ListarClientesUseCase;
 import com.snackbar.pedidos.application.dto.ClientePublicoDTO;
 import com.snackbar.pedidos.application.ports.ClienteGatewayPort;
@@ -22,7 +21,7 @@ import java.util.Optional;
 public class ClienteGatewayAdapter implements ClienteGatewayPort {
 
     private final ListarClientesUseCase listarClientesUseCase;
-    private final CriarClienteUseCase criarClienteUseCase;
+    private final CadastrarClienteMesaUseCase cadastrarClienteMesaUseCase;
     private final BuscarClientePorIdUseCase buscarClientePorIdUseCase;
 
     @Override
@@ -37,13 +36,8 @@ public class ClienteGatewayAdapter implements ClienteGatewayPort {
     }
 
     @Override
-    public ClientePublicoDTO cadastrar(String nome, String telefone) {
-        CriarClienteRequest request = new CriarClienteRequest();
-        request.setNome(nome);
-        request.setTelefone(telefone);
-        // Outros campos ficam null pois são opcionais
-
-        ClienteDTO clienteCriado = criarClienteUseCase.executar(request);
+    public ClientePublicoDTO cadastrar(String nome, String telefone, String senha) {
+        ClienteDTO clienteCriado = cadastrarClienteMesaUseCase.executar(nome, telefone, senha);
         return toPublicoDTO(clienteCriado);
     }
 

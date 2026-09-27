@@ -85,6 +85,10 @@ export function useGoogleAuth(
         }
     }
 
+    function resetarBotao(): void {
+        botaoRenderizado.set(false);
+    }
+
     /**
      * Abre o prompt do Google One Tap
      */
@@ -178,6 +182,7 @@ export function useGoogleAuth(
         // Ações
         inicializar,
         renderizarBotao,
+        resetarBotao,
         abrirPrompt,
         desvincular,
         destroy

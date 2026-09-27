@@ -58,7 +58,7 @@ import {
   SucessoScreenComponent,
 } from './components';
 
-type EtapaPrincipal = 'identificacao' | 'cadastro' | 'cardapio' | 'sucesso';
+type EtapaPrincipal = 'identificacao' | 'cardapio' | 'sucesso';
 type AbaCliente = 'inicio' | 'cardapio' | 'carrinho' | 'perfil';
 type SecaoPerfil = 'principal' | 'favoritos' | 'pedidos' | 'senha' | 'celular';
 
@@ -317,6 +317,20 @@ export class PedidoClienteMesaComponent
     this.identificacao.setNome(value);
   }
 
+  get senhaInputValue(): string {
+    return this.identificacao.getSenha();
+  }
+  set senhaInputValue(value: string) {
+    this.identificacao.setSenha(value);
+  }
+
+  get confirmarSenhaInputValue(): string {
+    return this.identificacao.getConfirmarSenha();
+  }
+  set confirmarSenhaInputValue(value: string) {
+    this.identificacao.setConfirmarSenha(value);
+  }
+
   get observacaoTempValue(): string {
     return this.carrinho.getObservacao();
   }
@@ -566,7 +580,11 @@ export class PedidoClienteMesaComponent
 
   // ========== Ações de Identificação ==========
   buscarCliente(): void {
-    this.identificacao.buscarCliente(() => this.irParaCardapio());
+    this.identificacao.buscarCliente();
+  }
+
+  entrarComSenha(): void {
+    this.identificacao.entrarComSenha(() => this.irParaCardapio());
   }
 
   cadastrarCliente(): void {
@@ -576,12 +594,16 @@ export class PedidoClienteMesaComponent
   voltarParaIdentificacao(): void {
     this.identificacao.voltarParaIdentificacao();
     this.etapaAtual.set('identificacao');
+    this.googleButtonRendered = false;
+    this.googleAuth.resetarBotao();
   }
 
   trocarCliente(): void {
     this.identificacao.trocarCliente();
     this.carrinho.limparCarrinho();
     this.etapaAtual.set('identificacao');
+    this.googleButtonRendered = false;
+    this.googleAuth.resetarBotao();
   }
 
   // ========== Navegação ==========

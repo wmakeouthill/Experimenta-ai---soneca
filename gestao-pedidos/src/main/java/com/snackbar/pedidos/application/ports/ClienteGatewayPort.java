@@ -25,7 +25,7 @@ public interface ClienteGatewayPort {
      * @param telefone Telefone do cliente (apenas dígitos)
      * @return Cliente cadastrado
      */
-    ClientePublicoDTO cadastrar(String nome, String telefone);
+    ClientePublicoDTO cadastrar(String nome, String telefone, String senha);
 
     /**
      * Busca cliente por ID.

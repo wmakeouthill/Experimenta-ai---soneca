@@ -9,6 +9,7 @@ export interface ClienteAuth {
   email?: string;
   fotoUrl?: string;
   googleVinculado: boolean;
+  temSenha?: boolean;
 }
 
 export interface ClienteLoginResponse {

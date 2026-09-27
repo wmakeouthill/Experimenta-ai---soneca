@@ -69,6 +69,7 @@ export interface ClientePublico {
 export interface CadastrarClienteRequest {
   nome: string;
   telefone: string;
+  senha: string;
 }
 
 export type StatusCliente =

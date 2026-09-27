@@ -74,7 +74,7 @@
     }
 
     <!-- ========== ETAPA 1: IDENTIFICAÇÃO ========== -->
-    @if (!carregando() && !erro() && etapaAtual() === 'identificacao' && mesa()) {
+    @if (!carregando() && !erro() && etapaAtual() === 'identificacao' && identificacao.etapa() === 'identificacao' && mesa()) {
       <div class="identificacao-screen">
         <div class="identificacao-header">
           <img src="/assets/experimenta_ai_banner_circular.png" alt="Logo" class="logo-grande" />
@@ -138,7 +138,7 @@
     }
 
     <!-- ========== ETAPA 2: CADASTRO (Novo Cliente) ========== -->
-    @if (!carregando() && !erro() && etapaAtual() === 'cadastro' && mesa()) {
+    @if (!carregando() && !erro() && etapaAtual() === 'identificacao' && identificacao.etapa() === 'cadastro' && mesa()) {
       <div class="identificacao-screen">
         <div class="identificacao-header">
           <img src="/assets/experimenta_ai_banner_circular.png" alt="Logo" class="logo-grande" />
@@ -152,8 +152,9 @@
           <p class="form-hint">Precisamos de algumas informações para continuar</p>
 
           <div class="input-group">
-            <label>Telefone</label>
+            <label for="cadastro-telefone">Telefone</label>
             <input
+              id="cadastro-telefone"
               type="tel"
               [value]="identificacao.getTelefone()"
               disabled
@@ -162,13 +163,40 @@
           </div>
 
           <div class="input-group">
-            <label>Seu nome</label>
+            <label for="cadastro-nome">Seu nome</label>
             <input
+              id="cadastro-nome"
               type="text"
               [(ngModel)]="nomeInputValue"
               placeholder="Como podemos te chamar?"
               class="input-nome"
               [class.valido]="identificacao.nomeValido()"
+              maxlength="100"
+            />
+          </div>
+
+          <div class="input-group">
+            <label for="cadastro-senha">Crie uma senha</label>
+            <input
+              id="cadastro-senha"
+              type="password"
+              [(ngModel)]="senhaInputValue"
+              placeholder="Mínimo de 6 caracteres"
+              class="input-nome"
+              autocomplete="new-password"
+              maxlength="100"
+            />
+          </div>
+
+          <div class="input-group">
+            <label for="cadastro-confirmar-senha">Confirme a senha</label>
+            <input
+              id="cadastro-confirmar-senha"
+              type="password"
+              [(ngModel)]="confirmarSenhaInputValue"
+              placeholder="Repita a senha"
+              class="input-nome"
+              autocomplete="new-password"
               maxlength="100"
             />
           </div>
@@ -189,6 +217,56 @@
             }
           </button>
 
+          <button class="btn-voltar" (click)="voltarParaIdentificacao()">← Voltar</button>
+        </div>
+      </div>
+    }
+
+    <!-- ========== ETAPA 2: SENHA (Cliente existente) ========== -->
+    @if (!carregando() && !erro() && etapaAtual() === 'identificacao' && identificacao.etapa() === 'senha' && mesa()) {
+      <div class="identificacao-screen">
+        <div class="identificacao-header">
+          <img src="/assets/experimenta_ai_banner_circular.png" alt="Logo" class="logo-grande" />
+          <h1>Bem-vindo de volta!</h1>
+          <p class="mesa-badge">Mesa {{ mesa()!.numero }}</p>
+        </div>
+
+        <div class="identificacao-form">
+          <h2>Digite sua senha</h2>
+          <p class="form-hint">Entre para continuar seu pedido</p>
+          <div class="input-group">
+            <label for="login-telefone">Telefone</label>
+            <input
+              id="login-telefone"
+              type="tel"
+              [value]="identificacao.getTelefone()"
+              disabled
+              class="input-telefone disabled"
+            />
+          </div>
+          <div class="input-group">
+            <label for="login-senha">Senha</label>
+            <input
+              id="login-senha"
+              type="password"
+              [(ngModel)]="senhaInputValue"
+              class="input-nome"
+              autocomplete="current-password"
+              (keyup.enter)="entrarComSenha()"
+            />
+          </div>
+
+          @if (identificacao.erro()) {
+            <p class="erro-msg">{{ identificacao.erro() }}</p>
+          }
+
+          <button class="btn-continuar" [disabled]="!identificacao.podeEntrar()" (click)="entrarComSenha()">
+            @if (identificacao.buscando()) {
+              <span class="spinner-mini"></span> Entrando...
+            } @else {
+              Entrar
+            }
+          </button>
           <button class="btn-voltar" (click)="voltarParaIdentificacao()">← Voltar</button>
         </div>
       </div>

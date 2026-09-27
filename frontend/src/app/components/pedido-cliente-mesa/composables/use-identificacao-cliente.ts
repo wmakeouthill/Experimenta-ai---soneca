@@ -1,8 +1,9 @@
-import { signal, computed, inject, PLATFORM_ID, effect } from '@angular/core';
+import { signal, computed, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { PedidoMesaService } from '../../../services/pedido-mesa.service';
 import { ClienteAuthService } from '../../../services/cliente-auth.service';
 import { Subscription } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 
 const CLIENTE_STORAGE_KEY = 'pedido-mesa-cliente';
 
@@ -15,7 +16,7 @@ export interface ClienteIdentificado {
     temSenha?: boolean;
 }
 
-type EtapaIdentificacao = 'identificacao' | 'cadastro';
+type EtapaIdentificacao = 'identificacao' | 'cadastro' | 'senha';
 
 /**
  * Composable para gerenciar a identificação e cadastro de clientes.
@@ -30,6 +31,8 @@ export function useIdentificacaoCliente(mesaToken: () => string | undefined) {
     // Estado interno
     const _telefoneInput = signal('');
     const _nomeInput = signal('');
+    const _senhaInput = signal('');
+    const _confirmarSenhaInput = signal('');
     const etapa = signal<EtapaIdentificacao>('identificacao');
     const buscando = signal(false);
     const clienteIdentificado = signal<ClienteIdentificado | null>(restaurarCliente());
@@ -51,7 +54,8 @@ export function useIdentificacaoCliente(mesaToken: () => string | undefined) {
                         nome: clienteLogado.nome,
                         telefone: clienteLogado.telefone || '',
                         novoCliente: false,
-                        fotoUrl: clienteLogado.fotoUrl
+                        fotoUrl: clienteLogado.fotoUrl,
+                        temSenha: clienteLogado.temSenha
                     };
                     clienteIdentificado.set(clienteData);
                 }
@@ -65,28 +69,26 @@ export function useIdentificacaoCliente(mesaToken: () => string | undefined) {
     function restaurarCliente(): ClienteIdentificado | null {
         if (!isBrowser) return null;
 
-        // Primeiro tenta restaurar do ClienteAuthService (login Google/senha)
+        // Somente uma sessão autenticada pode restaurar a identificação.
         const clienteLogado = clienteAuthService.clienteLogado;
         if (clienteLogado) {
+            const stored = sessionStorage.getItem(CLIENTE_STORAGE_KEY);
+            let temSenha = clienteLogado.temSenha;
+            try {
+                const anterior = stored ? JSON.parse(stored) as ClienteIdentificado : null;
+                if (anterior?.id === clienteLogado.id) temSenha = anterior.temSenha ?? temSenha;
+            } catch {
+                // Ignora estado legado inválido
+            }
             return {
                 id: clienteLogado.id,
                 nome: clienteLogado.nome,
                 telefone: clienteLogado.telefone || '',
                 novoCliente: false,
-                fotoUrl: clienteLogado.fotoUrl
+                fotoUrl: clienteLogado.fotoUrl,
+                temSenha
             };
         }
-
-        // Se não tem login, tenta restaurar do sessionStorage (identificação por telefone)
-        try {
-            const stored = sessionStorage.getItem(CLIENTE_STORAGE_KEY);
-            if (stored) {
-                return JSON.parse(stored) as ClienteIdentificado;
-            }
-        } catch {
-            // Ignora erros de parse
-        }
-
         return null;
     }
 
@@ -131,7 +133,11 @@ export function useIdentificacaoCliente(mesaToken: () => string | undefined) {
     const nomeValido = computed(() => _nomeInput().trim().length >= 2);
 
     const podeBuscar = computed(() => telefoneValido() && !buscando());
-    const podeCadastrar = computed(() => telefoneValido() && nomeValido() && !buscando());
+    const podeCadastrar = computed(() =>
+        telefoneValido() && nomeValido() && _senhaInput().length >= 6 &&
+        _senhaInput() === _confirmarSenhaInput() && !buscando()
+    );
+    const podeEntrar = computed(() => _senhaInput().length > 0 && !buscando());
 
     // Formatação
     function formatarTelefoneInput(numeros: string): string {
@@ -171,8 +177,44 @@ export function useIdentificacaoCliente(mesaToken: () => string | undefined) {
         _nomeInput.set(value);
     }
 
+    function getSenha(): string {
+        return _senhaInput();
+    }
+
+    function setSenha(value: string): void {
+        _senhaInput.set(value);
+    }
+
+    function getConfirmarSenha(): string {
+        return _confirmarSenhaInput();
+    }
+
+    function setConfirmarSenha(value: string): void {
+        _confirmarSenhaInput.set(value);
+    }
+
+    function identificarClienteAutenticado(
+        cliente: { id: string; nome: string; telefone?: string; fotoUrl?: string; temSenha?: boolean },
+        novoCliente: boolean,
+        onSucesso: () => void
+    ): void {
+        const clienteData: ClienteIdentificado = {
+            id: cliente.id,
+            nome: cliente.nome,
+            telefone: cliente.telefone || '',
+            fotoUrl: cliente.fotoUrl,
+            temSenha: cliente.temSenha ?? true,
+            novoCliente
+        };
+        clienteIdentificado.set(clienteData);
+        persistirCliente(clienteData);
+        _senhaInput.set('');
+        _confirmarSenhaInput.set('');
+        onSucesso();
+    }
+
     // Ações
-    function buscarCliente(onSucesso: () => void): void {
+    function buscarCliente(): void {
         if (!podeBuscar()) return;
 
         const token = mesaToken();
@@ -183,18 +225,9 @@ export function useIdentificacaoCliente(mesaToken: () => string | undefined) {
         erro.set(null);
 
         pedidoMesaService.buscarClientePorTelefone(token, telefone).subscribe({
-            next: (cliente) => {
+            next: () => {
                 buscando.set(false);
-                const clienteData: ClienteIdentificado = {
-                    id: cliente.id,
-                    nome: cliente.nome,
-                    telefone: cliente.telefone,
-                    novoCliente: false,
-                    fotoUrl: cliente.fotoUrl
-                };
-                clienteIdentificado.set(clienteData);
-                persistirCliente(clienteData);
-                onSucesso();
+                etapa.set('senha');
             },
             error: (err) => {
                 buscando.set(false);
@@ -207,6 +240,29 @@ export function useIdentificacaoCliente(mesaToken: () => string | undefined) {
         });
     }
 
+    function entrarComSenha(onSucesso: () => void): void {
+        if (!podeEntrar()) return;
+
+        buscando.set(true);
+        erro.set(null);
+        clienteAuthService.login({
+            telefone: _telefoneInput().replace(/\D/g, ''),
+            senha: _senhaInput()
+        }).subscribe({
+            next: response => {
+                buscando.set(false);
+                identificarClienteAutenticado(response.cliente, false, onSucesso);
+            },
+            error: err => {
+                buscando.set(false);
+                const mensagem = err?.error?.message as string | undefined;
+                erro.set(mensagem?.includes('não possui senha')
+                    ? 'Esta conta ainda não tem senha. Volte e entre com Google ou peça ajuda no atendimento.'
+                    : 'Telefone ou senha inválidos.');
+            }
+        });
+    }
+
     function cadastrarCliente(onSucesso: () => void): void {
         if (!podeCadastrar()) return;
 
@@ -215,26 +271,25 @@ export function useIdentificacaoCliente(mesaToken: () => string | undefined) {
 
         const telefone = _telefoneInput().replace(/\D/g, '');
         const nome = _nomeInput().trim();
+        const senha = _senhaInput();
         buscando.set(true);
         erro.set(null);
 
-        pedidoMesaService.cadastrarCliente(token, { nome, telefone }).subscribe({
-            next: (cliente) => {
+        pedidoMesaService.cadastrarCliente(token, { nome, telefone, senha }).pipe(
+            switchMap(() => clienteAuthService.login({ telefone, senha }))
+        ).subscribe({
+            next: response => {
                 buscando.set(false);
-                const clienteData: ClienteIdentificado = {
-                    id: cliente.id,
-                    nome: cliente.nome,
-                    telefone: cliente.telefone,
-                    novoCliente: true,
-                    fotoUrl: cliente.fotoUrl
-                };
-                clienteIdentificado.set(clienteData);
-                persistirCliente(clienteData);
-                onSucesso();
+                identificarClienteAutenticado(response.cliente, true, onSucesso);
             },
-            error: () => {
+            error: err => {
                 buscando.set(false);
-                erro.set('Erro ao cadastrar. Tente novamente.');
+                if (err.status === 409) {
+                    etapa.set('senha');
+                    erro.set('Telefone já cadastrado. Digite sua senha.');
+                } else {
+                    erro.set('Erro ao cadastrar ou entrar. Tente novamente.');
+                }
             }
         });
     }
@@ -242,6 +297,8 @@ export function useIdentificacaoCliente(mesaToken: () => string | undefined) {
     function voltarParaIdentificacao(): void {
         etapa.set('identificacao');
         _nomeInput.set('');
+        _senhaInput.set('');
+        _confirmarSenhaInput.set('');
         erro.set(null);
     }
 
@@ -251,6 +308,8 @@ export function useIdentificacaoCliente(mesaToken: () => string | undefined) {
         clienteAuthService.logout(); // Também faz logout do ClienteAuthService
         _telefoneInput.set('');
         _nomeInput.set('');
+        _senhaInput.set('');
+        _confirmarSenhaInput.set('');
         etapa.set('identificacao');
     }
 
@@ -291,15 +350,21 @@ export function useIdentificacaoCliente(mesaToken: () => string | undefined) {
         nomeValido,
         podeBuscar,
         podeCadastrar,
+        podeEntrar,
 
         // Getters/Setters
         getTelefone,
         setTelefone,
         getNome,
         setNome,
+        getSenha,
+        setSenha,
+        getConfirmarSenha,
+        setConfirmarSenha,
 
         // Ações
         buscarCliente,
+        entrarComSenha,
         cadastrarCliente,
         voltarParaIdentificacao,
         trocarCliente,
