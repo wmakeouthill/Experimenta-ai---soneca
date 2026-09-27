@@ -6,14 +6,11 @@ import com.snackbar.chatia.application.dto.ChatRequestDTO;
 import com.snackbar.chatia.application.dto.ChatResponseDTO;
 import com.snackbar.chatia.application.dto.ChatResponseDTO.ProdutoDestacadoDTO;
 import com.snackbar.chatia.application.dto.HistoricoPedidosClienteContextDTO;
-import com.snackbar.chatia.application.dto.ResultadoBuscaDTO;
-import com.snackbar.chatia.application.dto.ResultadoBuscaDTO.TipoBusca;
 import com.snackbar.chatia.application.dto.AcaoChatDTO;
 import com.snackbar.chatia.application.port.in.EnviarMensagemChatUseCase;
 import com.snackbar.chatia.application.port.out.CardapioContextPort;
 import com.snackbar.chatia.application.port.out.IAClientPort;
 import com.snackbar.chatia.application.port.out.PedidosClienteContextPort;
-import com.snackbar.chatia.application.service.BuscaProdutoInteligenteService;
 import com.snackbar.chatia.application.service.DetectorComandoService;
 import com.snackbar.chatia.domain.entity.MensagemChat;
 import com.snackbar.chatia.domain.repository.HistoricoChatRepository;
@@ -22,31 +19,36 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Caso de uso para enviar mensagens ao chat IA.
  * Orquestra a comunicação com a IA e gerenciamento do histórico.
- * Inclui contexto completo do cardápio, histórico do cliente e busca inteligente de produtos.
+ * Inclui contexto completo do cardápio (com mais vendidos e mais favoritados) e histórico do cliente;
+ * os cards de produto saem dos produtos que a própria resposta da IA cita.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class EnviarMensagemChatUseCaseImpl implements EnviarMensagemChatUseCase {
-    
+
+    // Preço, disponibilidade e ranking mudam durante o expediente; o ranking varre os pedidos, então não a cada mensagem
+    private static final Duration VALIDADE_CARDAPIO = Duration.ofMinutes(5);
+
     private final IAClientPort iaClient;
     private final HistoricoChatRepository historicoRepository;
     private final CardapioContextPort cardapioContextPort;
     private final PedidosClienteContextPort pedidosClienteContextPort;
-    private final BuscaProdutoInteligenteService buscaProdutoService;
     private final DetectorComandoService detectorComandoService;
-    
+
     @Value("${chat.ia.nome-estabelecimento:Soneca Lanchonete}")
     private String nomeEstabelecimento;
-    
-    // Cache do cardápio para evitar múltiplas chamadas
-    private CardapioContextDTO cardapioCache;
+
+    // Cache do cardápio; duas threads recarregando ao mesmo tempo só fazem a busca em dobro
+    private volatile CardapioContextDTO cardapioCache;
+    private volatile Instant cardapioCarregadoEm = Instant.MIN;
     
     @Override
     public ChatResponseDTO executar(ChatRequestDTO request) {
@@ -86,31 +88,23 @@ public class EnviarMensagemChatUseCaseImpl implements EnviarMensagemChatUseCase 
             
             // Constrói o system prompt com contexto completo
             String systemPromptCompleto = construirSystemPromptCompleto(clienteId, cardapio);
-            
-            // Busca produtos COM CONTEXTO (identifica tipo de busca)
-            ResultadoBuscaDTO resultadoBusca = buscaProdutoService.buscarComContexto(mensagemUsuario, cardapio);
-            log.info("🔍 Resultado da busca: tipo={}, termo='{}', produtos={}", 
-                     resultadoBusca.tipo(), resultadoBusca.termoBuscado(), resultadoBusca.produtos().size());
-            
-            // Adiciona contexto dos produtos encontrados ao prompt COM TIPO DE BUSCA
-            String promptComProdutos = adicionarContextoProdutosEncontrados(
-                systemPromptCompleto, resultadoBusca);
-            
+
             // Adiciona mensagem do usuário ao histórico
             MensagemChat msgUsuario = MensagemChat.doUsuario(mensagemUsuario);
             historicoRepository.adicionarMensagem(sessionId, msgUsuario);
-            
+
             // Chama a IA
-            String respostaIA = iaClient.chat(promptComProdutos, historico, mensagemUsuario);
-            
+            String respostaIA = iaClient.chat(systemPromptCompleto, historico, mensagemUsuario);
+
             // Adiciona resposta da IA ao histórico
             MensagemChat msgAssistente = MensagemChat.doAssistente(respostaIA);
             historicoRepository.adicionarMensagem(sessionId, msgAssistente);
-            
-            // Converte produtos encontrados para DTOs de destaque
-            List<ProdutoDestacadoDTO> produtosDestacados = resultadoBusca.produtos().stream()
-                .map(this::toProdutoDestacado)
-                .toList();
+
+            // Um card para cada produto que a resposta cita, na mesma ordem do texto
+            List<ProdutoDestacadoDTO> produtosDestacados = cardapio == null ? List.of()
+                : cardapio.produtosCitadosEm(respostaIA).stream()
+                    .map(this::toProdutoDestacado)
+                    .toList();
             
             log.info("✅ Resposta do chat gerada - Session: {}, Produtos encontrados: {}", 
                      sessionId, produtosDestacados.size());
@@ -189,103 +183,29 @@ public class EnviarMensagemChatUseCaseImpl implements EnviarMensagemChatUseCase 
     }
     
     // ============================================
-    // MÉTODOS DE BUSCA INTELIGENTE DE PRODUTOS
+    // CARDÁPIO E PRODUTOS
     // ============================================
-    
+
     /**
-     * Obtém o cardápio, usando cache para evitar múltiplas chamadas
+     * Obtém o cardápio, recarregando quando o cache passa da validade.
+     * Se a recarga falhar, segue com o último cardápio bom (ou null se nunca carregou).
      */
     private CardapioContextDTO obterCardapio() {
-        if (cardapioCache == null) {
-            try {
-                cardapioCache = cardapioContextPort.buscarCardapioParaIA();
-                log.info("✅ Cardápio carregado com sucesso: {} produtos em {} categorias", 
-                         cardapioCache.produtos().size(), cardapioCache.categorias().size());
-                
-                // Log dos produtos para debug
-                if (log.isDebugEnabled()) {
-                    cardapioCache.produtos().forEach(p -> 
-                        log.debug("  Produto: {} - R$ {}", p.nome(), p.preco()));
-                }
-            } catch (Exception e) {
-                log.error("❌ ERRO ao carregar cardápio: {}", e.getMessage(), e);
-                return null;
-            }
+        if (cardapioCache != null && Instant.now().isBefore(cardapioCarregadoEm.plus(VALIDADE_CARDAPIO))) {
+            return cardapioCache;
+        }
+        try {
+            CardapioContextDTO carregado = cardapioContextPort.buscarCardapioParaIA();
+            cardapioCache = carregado;
+            cardapioCarregadoEm = Instant.now();
+            log.info("✅ Cardápio carregado com sucesso: {} produtos em {} categorias",
+                     carregado.produtos().size(), carregado.categorias().size());
+        } catch (Exception e) {
+            log.error("❌ ERRO ao carregar cardápio: {}", e.getMessage(), e);
         }
         return cardapioCache;
     }
-    
-    /**
-     * Adiciona contexto dos produtos encontrados ao prompt para a IA,
-     * adaptando a instrução de acordo com o TIPO DE BUSCA.
-     */
-    private String adicionarContextoProdutosEncontrados(String promptBase, ResultadoBuscaDTO resultado) {
-        if (!resultado.temResultados()) {
-            return promptBase;
-        }
-        
-        StringBuilder sb = new StringBuilder(promptBase);
-        sb.append("\n\n");
-        sb.append("╔══════════════════════════════════════════════════════════════════════════════╗\n");
-        sb.append("║  🚨 PRODUTOS ENCONTRADOS - RESPONDA ADEQUADAMENTE AO CONTEXTO 🚨            ║\n");
-        sb.append("╚══════════════════════════════════════════════════════════════════════════════╝\n\n");
-        
-        // Instrução específica por tipo de busca
-        switch (resultado.tipo()) {
-            case INGREDIENTE:
-                sb.append("🥬 TIPO DE BUSCA: INGREDIENTE\n");
-                sb.append("O cliente perguntou sobre produtos com '").append(resultado.termoBuscado()).append("'\n");
-                sb.append("ENCONTRAMOS produtos que contêm este ingrediente!\n\n");
-                sb.append("✅ RESPONDA ASSIM:\n");
-                sb.append("   • 'Sim! Temos produtos com ").append(resultado.termoBuscado()).append("! Veja abaixo 👇'\n");
-                sb.append("   • 'Claro! Encontrei opções com ").append(resultado.termoBuscado()).append(" pra você!'\n");
-                break;
-                
-            case CATEGORIA:
-                sb.append("📁 TIPO DE BUSCA: CATEGORIA\n");
-                sb.append("O cliente perguntou sobre a categoria '").append(resultado.termoBuscado()).append("'\n\n");
-                sb.append("✅ RESPONDA ASSIM:\n");
-                sb.append("   • 'Aqui estão nossos ").append(resultado.termoBuscado()).append("! Clique pra pedir 🍔'\n");
-                sb.append("   • 'Temos ótimas opções de ").append(resultado.termoBuscado()).append("! Veja abaixo!'\n");
-                break;
-                
-            case NOME_PRODUTO:
-                sb.append("🍔 TIPO DE BUSCA: PRODUTO ESPECÍFICO\n");
-                sb.append("O cliente perguntou sobre o produto '").append(resultado.termoBuscado()).append("'\n\n");
-                sb.append("✅ RESPONDA ASSIM:\n");
-                sb.append("   • 'Encontrei! Clique no card para adicionar ao carrinho 🛒'\n");
-                sb.append("   • 'Esse é uma ótima escolha! Veja os detalhes abaixo!'\n");
-                break;
-                
-            case CARDAPIO_GERAL:
-                sb.append("📋 TIPO DE BUSCA: CARDÁPIO GERAL\n");
-                sb.append("O cliente quer ver opções do cardápio\n\n");
-                sb.append("✅ RESPONDA ASSIM:\n");
-                sb.append("   • 'Aqui estão algumas opções do nosso cardápio! 😊'\n");
-                sb.append("   • 'Veja algumas sugestões! Clique para adicionar 🛒'\n");
-                break;
-                
-            default:
-                sb.append("✅ Produtos encontrados! Responda positivamente.\n");
-        }
-        
-        sb.append("\n📦 PRODUTOS QUE SERÃO EXIBIDOS (NÃO LISTE, APENAS CONFIRME):\n");
-        for (ProdutoContextDTO produto : resultado.produtos()) {
-            sb.append("   ✅ ").append(produto.nome());
-            if (produto.descricao() != null && !produto.descricao().isBlank()) {
-                sb.append(" → ").append(produto.descricao());
-            }
-            sb.append("\n");
-        }
-        
-        sb.append("\n⛔ NUNCA RESPONDA:\n");
-        sb.append("   • 'Não temos...' ou 'Desculpe...' (ENCONTRAMOS!)\n");
-        sb.append("   • 'Só posso ajudar...' (ESTA É pergunta sobre cardápio!)\n");
-        sb.append("   • Listando preços ou detalhes (o card já mostra!)\n\n");
-        
-        return sb.toString();
-    }
-    
+
     /**
      * Converte ProdutoContextDTO para ProdutoDestacadoDTO (interno do ChatResponseDTO)
      */
@@ -362,26 +282,38 @@ public class EnviarMensagemChatUseCaseImpl implements EnviarMensagemChatUseCase 
             ╚══════════════════════════════════════════════════════════════════╝
             
             INSTRUÇÕES DE RESPOSTA:
-            
-            QUANDO O CLIENTE PERGUNTAR SOBRE O CARDÁPIO:
-            - Liste APENAS os produtos que aparecem na seção "CARDÁPIO OFICIAL" abaixo
-            - Use os nomes EXATOS dos produtos como estão escritos
-            - Use os preços EXATOS (não arredonde, não invente)
-            - Não mencione produtos que não estão na lista
-            
+
+            QUANDO O CLIENTE PEDIR UMA LISTA (ex.: "quais opções de carne tem?", "que bebidas tem?"):
+            - Liste TODOS os produtos do cardápio que atendem ao pedido, sem cortar nenhum
+            - Um produto por linha, neste formato: - **Nome exato do produto** — R$ 0,00
+            - Pode agrupar com uma linha curta antes de cada grupo (ex.: **Carne bovina:**)
+
+            QUANDO O CLIENTE PEDIR RECOMENDAÇÃO ("o que você indica?", "o que é bom aqui?"):
+            - Cliente identificado: priorize os favoritos e o histórico dele (seção do cliente abaixo)
+            - Use também os "MAIS VENDIDOS DA CASA" e os "MAIS FAVORITADOS PELOS CLIENTES"
+            - Diga o porquê em poucas palavras (ex.: "é o mais pedido da casa", "você sempre pede")
+            - Recomende de 1 a 3 produtos, não o cardápio inteiro
+
             QUANDO O CLIENTE PEDIR UM PRODUTO QUE NÃO EXISTE:
             - Responda: "Desculpe, não temos [nome do produto] no nosso cardápio."
             - Sugira alternativas que EXISTAM no cardápio abaixo
-            
+
             QUANDO O CLIENTE PERGUNTAR ALGO FORA DO ESCOPO:
             - Responda: "Só posso ajudar com informações sobre nosso cardápio e pedidos."
-            
-            FORMATO DAS RESPOSTAS:
-            - Use emojis ocasionalmente 😊🍔🥤
-            - Seja conciso e direto
-            - SEMPRE inclua o preço quando mencionar um produto
-            - Incentive adicionar itens ao carrinho
-            
+
+            NOMES E PREÇOS:
+            - Escreva SEMPRE o nome do produto EXATAMENTE como está no cardápio (ex.: "N°1", não "Número 1").
+              A tela mostra um card para cada produto citado pelo nome exato.
+            - SEMPRE inclua o preço, no formato R$ 15,00
+
+            FORMATO (a tela entende só este markdown):
+            - **negrito** para nomes de produto
+            - listas com "- " ou "1. ", um item por linha
+            - parágrafos curtos separados por linha em branco
+            - NÃO use tabelas, títulos (#), links, imagens nem blocos de código
+            - Use emojis com moderação 😊🍔🥤
+            - Seja direto; termine convidando a adicionar ao carrinho
+
             PROIBIDO:
             - Inventar produtos que não estão listados
             - Criar promoções ou combos imaginários

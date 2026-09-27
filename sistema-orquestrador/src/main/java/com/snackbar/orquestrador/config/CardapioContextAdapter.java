@@ -7,7 +7,9 @@ import com.snackbar.chatia.application.port.out.CardapioContextPort;
 import com.snackbar.pedidos.application.dto.CardapioPublicoDTO;
 import com.snackbar.pedidos.application.dto.CardapioPublicoDTO.CategoriaPublicaDTO;
 import com.snackbar.pedidos.application.dto.CardapioPublicoDTO.ProdutoPublicoDTO;
+import com.snackbar.pedidos.application.dto.ProdutoPopularDTO;
 import com.snackbar.pedidos.application.usecases.BuscarCardapioPublicoUseCase;
+import com.snackbar.pedidos.application.usecases.BuscarProdutosPopularesUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 /**
  * Adapter que fornece contexto do cardápio para o Chat IA.
@@ -25,7 +28,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RequiredArgsConstructor
 public class CardapioContextAdapter implements CardapioContextPort {
 
+    private static final int LIMITE_RANKING = 5;
+
     private final BuscarCardapioPublicoUseCase buscarCardapioUseCase;
+    private final BuscarProdutosPopularesUseCase buscarProdutosPopularesUseCase;
 
     @Override
     public CardapioContextDTO buscarCardapioParaIA() {
@@ -53,11 +59,25 @@ public class CardapioContextAdapter implements CardapioContextPort {
             log.info("Contexto do cardápio carregado: {} categorias, {} produtos",
                     categorias.size(), produtos.size());
 
-            return new CardapioContextDTO(categorias, produtos, resumo);
+            // ponytail: buscarMaisPedidos varre todos os pedidos (findAll); o chat só chama a cada 5 min (cache).
+            // Se o volume de pedidos crescer, trocar por uma query agregada (SUM por produto) no repositório.
+            return new CardapioContextDTO(categorias, produtos, resumo,
+                    idsDoRanking("mais pedidos", () -> buscarProdutosPopularesUseCase.buscarMaisPedidos(LIMITE_RANKING)),
+                    idsDoRanking("mais favoritados", () -> buscarProdutosPopularesUseCase.buscarMaisFavoritados(LIMITE_RANKING)));
 
         } catch (Exception e) {
             log.error("Erro ao buscar cardápio para contexto da IA", e);
-            return new CardapioContextDTO(List.of(), List.of(), "Cardápio indisponível no momento.");
+            return new CardapioContextDTO(List.of(), List.of(), "Cardápio indisponível no momento.", List.of(), List.of());
+        }
+    }
+
+    /** Ranking é enfeite da recomendação: se falhar, o chat segue só com o cardápio. */
+    private List<String> idsDoRanking(String nome, Supplier<List<ProdutoPopularDTO>> busca) {
+        try {
+            return busca.get().stream().map(ProdutoPopularDTO::id).toList();
+        } catch (Exception e) {
+            log.warn("Ranking de {} indisponível para o Chat IA: {}", nome, e.getMessage());
+            return List.of();
         }
     }
 
@@ -99,7 +119,7 @@ public class CardapioContextAdapter implements CardapioContextPort {
                 .max()
                 .orElse(0);
 
-        return String.format(
+        return String.format(CardapioContextDTO.LOCALE_BR,
                 "Cardápio com %d categorias e %d produtos. Preços de R$ %.2f a R$ %.2f.",
                 totalCategorias, totalProdutos, precoMinimo, precoMaximo);
     }

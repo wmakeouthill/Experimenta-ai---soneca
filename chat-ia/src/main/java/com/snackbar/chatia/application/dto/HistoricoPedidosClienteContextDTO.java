@@ -54,7 +54,7 @@ public record HistoricoPedidosClienteContextDTO(
         sb.append("Total de pedidos: ").append(totalPedidos).append("\n");
         
         if (valorTotalGasto != null && valorTotalGasto.compareTo(BigDecimal.ZERO) > 0) {
-            sb.append("Valor total gasto: R$ ").append(String.format("%.2f", valorTotalGasto)).append("\n");
+            sb.append("Valor total gasto: ").append(CardapioContextDTO.formatarPreco(valorTotalGasto)).append("\n");
         }
         
         if (produtosFavoritos != null && !produtosFavoritos.isEmpty()) {
@@ -69,7 +69,7 @@ public record HistoricoPedidosClienteContextDTO(
             sb.append("\n📋 Últimos pedidos:\n");
             for (PedidoRecenteDTO pedido : pedidosRecentes) {
                 sb.append("  • ").append(pedido.dataPedido())
-                  .append(" - R$ ").append(String.format("%.2f", pedido.valorTotal()))
+                  .append(" - ").append(CardapioContextDTO.formatarPreco(pedido.valorTotal()))
                   .append(" (").append(String.join(", ", pedido.nomesProdutos())).append(")\n");
             }
         }
