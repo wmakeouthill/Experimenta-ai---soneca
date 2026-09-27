@@ -48,6 +48,7 @@ import {
   usePagamento,
   usePagamentoDigital,
   useCartaoForm,
+  useCtasAdiados,
   useSucessoPedido,
 } from './composables';
 
@@ -61,6 +62,17 @@ import {
 type EtapaPrincipal = 'identificacao' | 'cardapio' | 'sucesso';
 type AbaCliente = 'inicio' | 'cardapio' | 'carrinho' | 'perfil';
 type SecaoPerfil = 'principal' | 'favoritos' | 'pedidos' | 'senha' | 'celular';
+type CtaAdiavel = 'telefone' | 'avaliacao' | 'pedido-ativo' | 'pwa';
+
+/** Por quanto tempo cada aviso some depois do ✕ */
+const HORAS_ADIAMENTO_CTA: Record<CtaAdiavel, number> = {
+  telefone: 72,
+  avaliacao: 24,
+  'pedido-ativo': 12,
+  pwa: 72,
+};
+/** Altura fixa de cada barra de CTA (abas.css) — usada para subir o botão do chat */
+const ALTURA_CTA_PX = 48;
 
 /**
  * Componente de pedido para cliente via QR Code da mesa.
@@ -152,7 +164,7 @@ export class PedidoClienteMesaComponent
   // Para Safari/iOS/Firefox/Samsung: sempre (com instruções)
   // Para Chrome/Edge: quando prompt está pronto OU após timeout com instrução manual
   readonly deveMostrarBannerPwa = computed(() => {
-    if (this.isStandalone()) return false;
+    if (this.isStandalone() || this.ctasAdiados.estaAdiado('pwa')) return false;
     // Se tem instrução (Safari/iOS/Firefox/Samsung/timeout), mostra o banner
     if (this.pwaInstrucao()) return this.mostrarBannerPwa();
     // Se não tem instrução (Chrome/Edge antes do timeout), só mostra se prompt pronto
@@ -201,6 +213,7 @@ export class PedidoClienteMesaComponent
     () => this.favoritos.produtosFavoritos()
   );
   readonly sucesso = useSucessoPedido();
+  readonly ctasAdiados = useCtasAdiados(this.isBrowser);
   readonly meusPedidos = useMeusPedidos(() => this.identificacao.clienteIdentificado()?.id);
   readonly avaliacao = useAvaliacao(
     () => this.identificacao.clienteIdentificado()?.id,
@@ -274,18 +287,6 @@ export class PedidoClienteMesaComponent
     );
   });
 
-  /** Sobe o botão do chat quando há CTAs fixos acima do footer */
-  readonly offsetChatFlutuante = computed(() => {
-    const aba = this.abaAtual();
-    if (aba !== 'inicio' && aba !== 'perfil') return 0;
-    if (aba === 'perfil' && this.secaoPerfil() !== 'principal') return 0;
-
-    let offset = 0;
-    if (this.temPedidosNaoAvaliados()) offset += 48;
-    if (!this.googleAuth.clienteAuth.cliente()?.telefone) offset += 48;
-    return offset;
-  });
-
   // Verifica se há pedido ativo (não finalizado/cancelado)
   readonly pedidoAtivoNaoFinalizado = computed(() => {
     const pedidos = this.meusPedidos.pedidos();
@@ -297,10 +298,45 @@ export class PedidoClienteMesaComponent
     );
   });
 
-  // Verifica se deve mostrar CTA de pedido ativo (quando não está na tela de sucesso)
+  // CTA de pedido ativo: fora da tela de sucesso e do carrinho (que tem footer próprio)
   readonly mostrarCtaPedidoAtivo = computed(() => {
-    return this.pedidoAtivoNaoFinalizado() !== null && this.etapaAtual() !== 'sucesso';
+    const pedido = this.pedidoAtivoNaoFinalizado();
+    return (
+      pedido !== null &&
+      this.etapaAtual() !== 'sucesso' &&
+      this.abaAtual() !== 'carrinho' &&
+      !this.ctasAdiados.estaAdiado(`pedido-ativo:${pedido.id}`)
+    );
   });
+
+  /** Avisos de avaliação/celular só no início e na tela principal do perfil */
+  private readonly telaComAvisos = computed(
+    () =>
+      this.abaAtual() === 'inicio' ||
+      (this.abaAtual() === 'perfil' && this.secaoPerfil() === 'principal')
+  );
+
+  readonly mostrarCtaAvaliacao = computed(
+    () =>
+      this.telaComAvisos() &&
+      this.temPedidosNaoAvaliados() &&
+      !this.ctasAdiados.estaAdiado('avaliacao')
+  );
+
+  readonly mostrarCtaTelefone = computed(
+    () =>
+      this.telaComAvisos() &&
+      !this.googleAuth.clienteAuth.cliente()?.telefone &&
+      !this.ctasAdiados.estaAdiado('telefone')
+  );
+
+  /** Sobe o botão do chat acima das barras de CTA fixas sobre o footer */
+  readonly offsetChatFlutuante = computed(
+    () =>
+      [this.mostrarCtaPedidoAtivo(), this.mostrarCtaAvaliacao(), this.mostrarCtaTelefone()].filter(
+        Boolean
+      ).length * ALTURA_CTA_PX
+  );
 
   // ========== Bindings para NgModel ==========
   get telefoneInputValue(): string {
@@ -651,6 +687,15 @@ export class PedidoClienteMesaComponent
     event?.stopPropagation();
     this.pwaInstallService.dismissPrompt();
     this.mostrarBannerPwa.set(false);
+    this.ctasAdiados.adiar('pwa', HORAS_ADIAMENTO_CTA.pwa);
+  }
+
+  /** ✕ do aviso: esconde por um tempo, sem disparar o clique da barra */
+  adiarCta(cta: Exclude<CtaAdiavel, 'pwa'>, event: Event): void {
+    event.stopPropagation();
+    const chave =
+      cta === 'pedido-ativo' ? `pedido-ativo:${this.pedidoAtivoNaoFinalizado()?.id}` : cta;
+    this.ctasAdiados.adiar(chave, HORAS_ADIAMENTO_CTA[cta]);
   }
 
   // ========== Ações de Favoritos ==========

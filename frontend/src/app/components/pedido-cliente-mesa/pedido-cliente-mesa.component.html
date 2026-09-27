@@ -1511,46 +1511,58 @@
         }
       }
 
-      <!-- ========== CTAs DE NOTIFICAÇÃO ========== -->
+      <!-- ========== CTAs DE NOTIFICAÇÃO (o ✕ esconde por um tempo) ========== -->
       <div class="ctas-container">
-        <!-- CTA Avaliação -->
-        @if (temPedidosNaoAvaliados() && (abaAtual() === 'inicio' || abaAtual() === 'perfil')) {
-          <div class="cta-avaliacao" (click)="irParaMeusPedidos(); navegarPara('perfil')">
-            <span class="cta-icon">⭐</span>
-            <span class="cta-texto">Avalie seus pedidos em <strong>Meus Pedidos</strong></span>
+        @if (mostrarCtaPedidoAtivo()) {
+          <div class="cta-bar cta-pedido-ativo" (click)="verStatusPedidoAtivo()">
+            <span class="cta-icon">🍽️</span>
+            <span class="cta-texto"><strong>Pedido em andamento</strong> · toque para ver o status</span>
             <span class="cta-seta">›</span>
+            <button
+              type="button"
+              class="cta-fechar"
+              aria-label="Esconder aviso do pedido"
+              (click)="adiarCta('pedido-ativo', $event)"
+            >
+              ✕
+            </button>
           </div>
         }
 
-        <!-- CTA Preencher Telefone -->
-        @if (
-          !googleAuth.clienteAuth.cliente()?.telefone &&
-          (abaAtual() === 'inicio' || abaAtual() === 'perfil') &&
-          secaoPerfil() === 'principal'
-        ) {
-          <div class="cta-telefone" (click)="abrirEdicaoCelular(); navegarPara('perfil')">
+        @if (mostrarCtaAvaliacao()) {
+          <div class="cta-bar cta-avaliacao" (click)="navegarPara('perfil'); irParaMeusPedidos()">
+            <span class="cta-icon">⭐</span>
+            <span class="cta-texto">Avalie seus pedidos em <strong>Meus Pedidos</strong></span>
+            <span class="cta-seta">›</span>
+            <button
+              type="button"
+              class="cta-fechar"
+              aria-label="Esconder aviso de avaliação por 1 dia"
+              (click)="adiarCta('avaliacao', $event)"
+            >
+              ✕
+            </button>
+          </div>
+        }
+
+        @if (mostrarCtaTelefone()) {
+          <div class="cta-bar cta-telefone" (click)="navegarPara('perfil'); abrirEdicaoCelular()">
             <span class="cta-icon">📱</span>
             <span class="cta-texto"
               >Cadastre seu celular para <strong>facilitar o atendimento</strong></span
             >
             <span class="cta-seta">›</span>
+            <button
+              type="button"
+              class="cta-fechar"
+              aria-label="Esconder aviso do celular por 3 dias"
+              (click)="adiarCta('telefone', $event)"
+            >
+              ✕
+            </button>
           </div>
         }
       </div>
-
-      <!-- ========== CTA PEDIDO ATIVO ========== -->
-      @if (mostrarCtaPedidoAtivo()) {
-        <div class="cta-pedido-ativo" (click)="verStatusPedidoAtivo()">
-          <div class="cta-pedido-ativo-content">
-            <span class="cta-pedido-ativo-icon">🍽️</span>
-            <div class="cta-pedido-ativo-texto">
-              <strong>Pedido em andamento</strong>
-              <span>Toque para ver o status</span>
-            </div>
-          </div>
-          <span class="cta-pedido-ativo-seta">›</span>
-        </div>
-      }
 
       <!-- ========== FOOTER NAVEGAÇÃO ========== -->
       <app-cardapio-footer-nav

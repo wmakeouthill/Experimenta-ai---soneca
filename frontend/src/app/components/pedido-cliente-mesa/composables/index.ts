@@ -18,3 +18,4 @@ export { useChatIA, type MensagemChat, type ChatIAComposable, type ProdutoDestac
 export { usePagamentoDigital, type EtapaPix } from './use-pagamento-digital';
 export { useContaMesa, type EtapaConta } from './use-conta-mesa';
 export { useCartaoForm, validarLuhn, type CartaoPayload } from './use-cartao-form';
+export { useCtasAdiados } from './use-ctas-adiados';
