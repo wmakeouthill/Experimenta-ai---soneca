@@ -252,27 +252,34 @@
   opacity: 0.8;
 }
 
+/* Carrossel estilo app: sem barra, snap por card, sangra até a borda da aba
+   (margem negativa = padding da .aba-inicio) e padding dá espaço à sombra. */
 .carrossel-horizontal {
   display: flex;
   gap: 12px;
   overflow-x: auto;
-  padding-bottom: 6px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 107, 53, 0.35) transparent;
+  overflow-y: hidden;
+  margin: -4px -20px -12px;
+  padding: 4px 20px 18px;
+  scroll-padding-inline: 20px;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
 }
 
 .carrossel-horizontal::-webkit-scrollbar {
-  height: 6px;
+  display: none;
 }
 
-.carrossel-horizontal::-webkit-scrollbar-thumb {
-  background: rgba(255, 107, 53, 0.35);
-  border-radius: 8px;
+.carrossel-horizontal > * {
+  scroll-snap-align: start;
 }
 
 .produto-card-mini {
   flex-shrink: 0;
-  width: 130px;
+  /* ~2,4 cards visíveis em qualquer celular: o card cortado indica que rola */
+  width: clamp(124px, 36vw, 148px);
   background: var(--delivery-surface, #ffffff);
   border-radius: 16px;
   overflow: hidden;

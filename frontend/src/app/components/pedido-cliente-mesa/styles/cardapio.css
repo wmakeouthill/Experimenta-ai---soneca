@@ -77,8 +77,8 @@
   padding: 16px 20px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 107, 53, 0.35) transparent;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
   background: var(--delivery-surface, #ffffff);
   position: sticky;
   top: 0;
@@ -87,12 +87,7 @@
 }
 
 .categorias-scroll::-webkit-scrollbar {
-  height: 6px;
-}
-
-.categorias-scroll::-webkit-scrollbar-thumb {
-  background: rgba(255, 107, 53, 0.35);
-  border-radius: 8px;
+  display: none;
 }
 
 .categoria-chip {

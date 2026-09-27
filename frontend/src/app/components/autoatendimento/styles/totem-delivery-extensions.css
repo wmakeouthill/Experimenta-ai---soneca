@@ -8,7 +8,6 @@
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
-  touch-action: pan-y;
 }
 
 .aba-cardapio {
@@ -31,7 +30,6 @@
   overflow-x: auto;
   overflow-y: visible;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-x;
   overscroll-behavior-x: contain;
 }
 
@@ -48,16 +46,6 @@
 
 .autoatendimento-container .aba-inicio {
   padding-bottom: calc(var(--delivery-footer-height-totem, 92px) + 24px);
-}
-
-.autoatendimento-container .carrossel-horizontal {
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-x;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x proximity;
-  padding-bottom: 8px;
 }
 
 /* Botões (compartilhados com mesa) */
