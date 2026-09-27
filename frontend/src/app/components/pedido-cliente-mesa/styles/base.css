@@ -99,13 +99,18 @@
   min-height: 100dvh;
   background: var(--delivery-bg, #fbf7f4);
   font-family: var(--delivery-font, 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif);
-  padding-bottom: calc(var(--delivery-footer-height-mesa, 76px) + env(safe-area-inset-bottom, 0px));
   /* Melhora renderização de texto em mobile */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   /* Previne zoom indesejado em inputs no iOS */
   touch-action: manipulation;
+}
+
+/* Espaço do menu inferior só quando ele existe; nas telas cheias (carregando,
+   erro, identificação) sobrava 76px de rolagem */
+.pedido-cliente-container.com-menu {
+  padding-bottom: calc(var(--delivery-footer-height-mesa, 76px) + env(safe-area-inset-bottom, 0px));
 }
 
 .pedido-cliente-container.sucesso {
@@ -119,7 +124,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
+  min-height: 100dvh;
   gap: 1rem;
   color: #666;
 }
@@ -145,7 +150,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
+  min-height: 100dvh;
   padding: 2rem;
   text-align: center;
 }
@@ -171,7 +176,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
+  min-height: 100dvh;
   padding: 2rem;
   text-align: center;
   background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
@@ -332,16 +337,14 @@
   text-align: center;
 }
 
-/* Banner de instalação PWA */
+/* Banner de instalação PWA: no fluxo (acima do header), empurra a tela em vez de
+   cobrir o header; some ao rolar e o header sticky assume o topo */
 .pwa-install-banner {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
+  position: relative;
   background: white;
   padding: 0.75rem 1rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  z-index: 10000;
+  z-index: 101;
   display: flex;
   align-items: center;
   justify-content: space-between;

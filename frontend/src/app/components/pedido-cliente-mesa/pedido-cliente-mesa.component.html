@@ -1,4 +1,8 @@
-<div class="pedido-cliente-container" [class.sucesso]="etapaAtual() === 'sucesso'">
+<div
+  class="pedido-cliente-container"
+  [class.sucesso]="etapaAtual() === 'sucesso'"
+  [class.com-menu]="etapaAtual() === 'cardapio' && !erro()"
+>
   <!-- ========== BLOQUEIO: LOJA FECHADA OU PAUSADA ========== -->
   @if (statusLoja() !== 'ABERTA') {
     <div class="bloqueio-screen">
@@ -91,6 +95,7 @@
             <input
               type="tel"
               [(ngModel)]="telefoneInputValue"
+              aria-label="Telefone"
               placeholder="(00) 00000-0000"
               class="input-telefone"
               [class.valido]="identificacao.telefoneValido()"
