@@ -69,7 +69,8 @@ public class UsuarioEntity implements Persistable<String> {
     
     public enum RoleEntity {
         ADMINISTRADOR,
-        OPERADOR
+        OPERADOR,
+        TOTEM
     }
 }
 

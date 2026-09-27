@@ -49,7 +49,8 @@ export class LoginComponent {
     this.authService.login(credenciais).subscribe({
       next: () => {
         const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
-        this.router.navigate([returnUrl]);
+        // navigateByUrl: returnUrl pode trazer query string, que navigate([...]) codificaria no path
+        this.router.navigateByUrl(returnUrl);
       },
       error: (error) => {
         this.erro.set(error.error?.message || 'Erro ao fazer login. Verifique suas credenciais.');

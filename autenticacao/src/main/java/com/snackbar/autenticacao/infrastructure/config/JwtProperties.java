@@ -28,7 +28,14 @@ public class JwtProperties {
      * Padrão: 86400 segundos (24 horas).
      */
     private Long expiration = 86400L;
-    
+
+    /**
+     * Expiração do token do perfil TOTEM, em segundos. Longa para o totem logar uma vez;
+     * a revogação é desativar o usuário (o filtro JWT confere o status no banco).
+     * Padrão: 31536000 segundos (365 dias).
+     */
+    private Long expirationTotem = 31536000L;
+
     /**
      * Valida a chave secreta após a inicialização.
      * Garante que a chave tenha no mínimo 32 caracteres (256 bits) conforme RFC 7518.

@@ -146,6 +146,13 @@
   font-size: 0.85rem;
   background: rgba(255, 255, 255, 0.95);
   color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.totem-url a.url-input:hover {
+  text-decoration: underline;
 }
 
 .totem-url .btn-copy {

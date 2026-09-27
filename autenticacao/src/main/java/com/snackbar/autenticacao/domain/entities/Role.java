@@ -5,7 +5,8 @@ import lombok.Getter;
 @Getter
 public enum Role {
     ADMINISTRADOR("ROLE_ADMINISTRADOR", "Administrador"),
-    OPERADOR("ROLE_OPERADOR", "Operador");
+    OPERADOR("ROLE_OPERADOR", "Operador"),
+    TOTEM("ROLE_TOTEM", "Totem");
     
     private final String authority;
     private final String descricao;
@@ -30,6 +31,10 @@ public enum Role {
     
     public boolean isOperador() {
         return this == OPERADOR;
+    }
+
+    public boolean isTotem() {
+        return this == TOTEM;
     }
 }
 

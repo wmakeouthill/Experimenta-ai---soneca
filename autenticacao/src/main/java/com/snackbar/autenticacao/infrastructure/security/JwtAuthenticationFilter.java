@@ -1,6 +1,9 @@
 package com.snackbar.autenticacao.infrastructure.security;
 
+import com.snackbar.autenticacao.domain.entities.Usuario;
+import com.snackbar.autenticacao.domain.ports.UsuarioRepositoryPort;
 import com.snackbar.autenticacao.domain.services.JwtService;
+import com.snackbar.kernel.security.JwtUserDetails;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,6 +26,7 @@ import java.util.Collections;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final UsuarioRepositoryPort usuarioRepository;
     private static final String BEARER_PREFIX = "Bearer ";
 
     @Override
@@ -30,45 +34,37 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-        String requestUri = request.getRequestURI();
         String token = extrairToken(request);
 
-        // Log apenas para autoatendimento (debug)
-        if (requestUri.contains("/autoatendimento")) {
-            log.info("[JWT-FILTER] URI: {}, Token presente: {}", requestUri, token != null);
-        }
-
         if (token != null && jwtService.validarToken(token)) {
-            String email = jwtService.extrairEmail(token);
-            String usuarioId = jwtService.extrairId(token);
-            String role = extrairRole(token);
-
-            if (requestUri.contains("/autoatendimento")) {
-                log.info("[JWT-FILTER] Token válido - Email: {}, ID: {}, Role: {}", email, usuarioId, role);
-            }
-
-            if (role != null && !role.isBlank()) {
-                // O Spring Security espera o prefixo "ROLE_" para hasRole/hasAnyRole
-                String roleComPrefixo = role.startsWith("ROLE_") ? role : "ROLE_" + role;
-                var authorities = Collections.singletonList(
-                        new SimpleGrantedAuthority(roleComPrefixo));
-
-                // Cria um objeto com email e ID para facilitar o acesso
-                var userDetails = new JwtUserDetails(email, usuarioId);
-                var authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, authorities);
-
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-
-                if (requestUri.contains("/autoatendimento")) {
-                    log.info("[JWT-FILTER] Autenticação configurada - Authorities: {}", authorities);
-                }
-            }
-        } else if (token != null && requestUri.contains("/autoatendimento")) {
-            log.warn("[JWT-FILTER] Token inválido para: {}", requestUri);
+            autenticar(jwtService.extrairId(token));
+        } else if (token != null && request.getRequestURI().contains("/autoatendimento")) {
+            log.warn("[JWT-FILTER] Token inválido para: {}", request.getRequestURI());
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    /**
+     * Perfil e status vêm do banco, não do token: desativar ou excluir o usuário corta o
+     * acesso na hora — é o que torna seguro o token longo do perfil TOTEM.
+     * Token sem claim "id" (ex.: token de cliente) não autentica operador.
+     */
+    // ponytail: 1 SELECT por PK a cada request autenticado; cache curto (ex.: 30s) se o volume crescer.
+    private void autenticar(String usuarioId) {
+        if (usuarioId == null) {
+            return;
+        }
+
+        usuarioRepository.buscarPorId(usuarioId)
+                .filter(Usuario::estaAtivo)
+                .ifPresentOrElse(usuario -> {
+                    var authorities = Collections.singletonList(
+                            new SimpleGrantedAuthority(usuario.getRole().getAuthority()));
+                    var userDetails = new JwtUserDetails(usuario.getEmail().getValor(), usuario.getId());
+                    SecurityContextHolder.getContext().setAuthentication(
+                            new UsernamePasswordAuthenticationToken(userDetails, null, authorities));
+                }, () -> log.warn("[JWT-FILTER] Token de usuário inativo ou inexistente: {}", usuarioId));
     }
 
     private String extrairToken(HttpServletRequest request) {
@@ -77,17 +73,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return bearerToken.substring(BEARER_PREFIX.length());
         }
         return null;
-    }
-
-    private String extrairRole(String token) {
-        try {
-            String role = jwtService.extrairRole(token);
-            if (role == null || role.isBlank()) {
-                return null;
-            }
-            return role;
-        } catch (Exception e) {
-            return null;
-        }
     }
 }

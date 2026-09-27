@@ -29,8 +29,9 @@ export class AppComponent implements OnInit {
   private readonly notificationService = inject(NotificationService);
   private readonly destroyRef = inject(DestroyRef);
 
-  // Rotas públicas que não devem iniciar serviços autenticados
-  private readonly rotasPublicas = ['/mesa/', '/pedido-mesa/'];
+  // Rotas que não iniciam polling/impressão automática: as públicas e o totem (o totem imprime
+  // só o próprio pedido; com o polling global reimprimiria todos os pedidos da loja)
+  private readonly rotasSemServicosGlobais = ['/mesa/', '/pedido-mesa/', '/autoatendimento'];
 
   // Rotas onde a notificação de novo pedido deve ser suprimida
   // (ex: auto-atendimento cria o pedido na própria tela, não precisa notificar)
@@ -38,17 +39,16 @@ export class AppComponent implements OnInit {
 
   ngOnInit(): void {
     if (this.isBrowser) {
-      // Verifica se a rota atual é pública usando window.location
-      // pois this.router.url pode não estar atualizado no ngOnInit
+      // Usa window.location pois this.router.url pode não estar atualizado no ngOnInit
       const urlAtual = window.location.pathname;
 
-      console.log('🔍 URL atual:', urlAtual, '| É pública:', this.isRotaPublica(urlAtual));
+      console.log('🔍 URL atual:', urlAtual, '| Sem serviços globais:', this.isRotaSemServicosGlobais(urlAtual));
 
       // SEMPRE configura a impressão automática (independente de sessão ativa).
       // A subscription fica ativa e imprime quando o polling detectar novos pedidos.
       // Isso corrige o bug onde o operador loga depois do app iniciar e a
       // impressão automática nunca era ativada.
-      if (!this.isRotaPublica(urlAtual)) {
+      if (!this.isRotaSemServicosGlobais(urlAtual)) {
         this.configurarImpressaoAutomatica();
         this.iniciarServicosGlobais();
       }
@@ -60,8 +60,8 @@ export class AppComponent implements OnInit {
           takeUntilDestroyed(this.destroyRef)
         )
         .subscribe(event => {
-          if (this.isRotaPublica(event.urlAfterRedirects)) {
-            // Rota pública - para os serviços
+          if (this.isRotaSemServicosGlobais(event.urlAfterRedirects)) {
+            // Rota pública ou totem - para os serviços
             this.pollingService.pararPolling();
           } else if (!this.pollingService.pollingAtivo()) {
             // Voltou para rota autenticada e polling não está ativo - reinicia
@@ -71,8 +71,8 @@ export class AppComponent implements OnInit {
     }
   }
 
-  private isRotaPublica(url: string): boolean {
-    return this.rotasPublicas.some(rota => url.includes(rota));
+  private isRotaSemServicosGlobais(url: string): boolean {
+    return this.rotasSemServicosGlobais.some(rota => url.includes(rota));
   }
 
   private iniciarServicosGlobais() {

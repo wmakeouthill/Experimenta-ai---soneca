@@ -1,6 +1,6 @@
 import { NomeIcone } from '../components/shared/icone/icone.component';
 
-export type Role = 'ADMINISTRADOR' | 'OPERADOR';
+export type Role = 'ADMINISTRADOR' | 'OPERADOR' | 'TOTEM';
 
 export interface Modulo {
   id: string;

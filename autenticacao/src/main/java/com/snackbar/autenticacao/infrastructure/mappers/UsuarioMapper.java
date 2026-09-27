@@ -53,6 +53,7 @@ public class UsuarioMapper {
         return switch (role) {
             case ADMINISTRADOR -> UsuarioEntity.RoleEntity.ADMINISTRADOR;
             case OPERADOR -> UsuarioEntity.RoleEntity.OPERADOR;
+            case TOTEM -> UsuarioEntity.RoleEntity.TOTEM;
         };
     }
     
@@ -60,6 +61,7 @@ public class UsuarioMapper {
         return switch (roleEntity) {
             case ADMINISTRADOR -> Role.ADMINISTRADOR;
             case OPERADOR -> Role.OPERADOR;
+            case TOTEM -> Role.TOTEM;
         };
     }
 }

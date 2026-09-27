@@ -24,7 +24,10 @@ public class JwtServiceImpl implements JwtService {
     @Override
     public String gerarToken(Usuario usuario) {
         Instant agora = Instant.now();
-        Instant expiracao = agora.plus(jwtProperties.getExpiration(), ChronoUnit.SECONDS);
+        long validadeSegundos = usuario.getRole().isTotem()
+                ? jwtProperties.getExpirationTotem()
+                : jwtProperties.getExpiration();
+        Instant expiracao = agora.plus(validadeSegundos, ChronoUnit.SECONDS);
 
         return Jwts.builder()
                 .subject(usuario.getEmail().getValor())

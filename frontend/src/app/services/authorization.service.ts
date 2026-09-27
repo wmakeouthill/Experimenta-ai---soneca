@@ -1,7 +1,7 @@
 import { Injectable, inject, computed } from '@angular/core';
 import { AuthService } from './auth.service';
 
-export type Role = 'ADMINISTRADOR' | 'OPERADOR';
+export type Role = 'ADMINISTRADOR' | 'OPERADOR' | 'TOTEM';
 
 export interface PermissaoModulo {
   id: string;

@@ -5,12 +5,14 @@ import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -25,6 +27,8 @@ public class SecurityConfig {
 
     private static final String ROLE_ADMINISTRADOR = "ADMINISTRADOR";
     private static final String ROLE_OPERADOR = "OPERADOR";
+    // TOTEM entra só nas leituras e ações de que a tela /autoatendimento precisa
+    private static final String ROLE_TOTEM = "TOTEM";
     private static final String PRODUTOS_PATH_PATTERN = "/api/produtos/**";
     private static final String CATEGORIAS_PATH_PATTERN = "/api/categorias/**";
     private static final String PEDIDOS_PATH_PATTERN = "/api/pedidos/**";
@@ -104,7 +108,7 @@ public class SecurityConfig {
                         // Endpoints de cardápio - Leitura para ADMINISTRADOR e OPERADOR, escrita apenas
                         // ADMINISTRADOR
                         .requestMatchers("GET", PRODUTOS_PATH_PATTERN)
-                        .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
+                        .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR, ROLE_TOTEM)
                         .requestMatchers("POST", PRODUTOS_PATH_PATTERN)
                         .hasRole(ROLE_ADMINISTRADOR)
                         .requestMatchers("PUT", PRODUTOS_PATH_PATTERN)
@@ -112,7 +116,7 @@ public class SecurityConfig {
                         .requestMatchers(HTTP_METHOD_DELETE, PRODUTOS_PATH_PATTERN)
                         .hasRole(ROLE_ADMINISTRADOR)
                         .requestMatchers("GET", CATEGORIAS_PATH_PATTERN)
-                        .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
+                        .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR, ROLE_TOTEM)
                         .requestMatchers("POST", CATEGORIAS_PATH_PATTERN)
                         .hasRole(ROLE_ADMINISTRADOR)
                         .requestMatchers("PUT", CATEGORIAS_PATH_PATTERN)
@@ -151,10 +155,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/caixa", "/api/caixa/**")
                         .hasRole(ROLE_ADMINISTRADOR)
 
-                        // Endpoints de mesas - Leitura para ADMINISTRADOR e OPERADOR, escrita apenas
-                        // ADMINISTRADOR
+                        // Endpoints de mesas - Leitura para ADMINISTRADOR, OPERADOR e TOTEM (o totem
+                        // usa o token de uma mesa para "mais pedidos"), escrita apenas ADMINISTRADOR
                         .requestMatchers("GET", MESAS_PATH, MESAS_PATTERN)
-                        .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
+                        .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR, ROLE_TOTEM)
                         .requestMatchers("POST", MESAS_PATH, MESAS_PATTERN)
                         .hasRole(ROLE_ADMINISTRADOR)
                         .requestMatchers("PUT", MESAS_PATH, MESAS_PATTERN)
@@ -178,23 +182,26 @@ public class SecurityConfig {
                         .requestMatchers(HTTP_METHOD_DELETE, CONFIG_ANIMACAO_PATH, CONFIG_ANIMACAO_PATTERN)
                         .hasRole(ROLE_ADMINISTRADOR)
 
-                        // Endpoints de auto atendimento (totem) - ADMINISTRADOR e OPERADOR
+                        // Endpoints de auto atendimento (totem) - ADMINISTRADOR, OPERADOR e TOTEM
                         .requestMatchers("/api/autoatendimento/**")
-                        .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
+                        .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR, ROLE_TOTEM)
 
                         // Endpoints de impressão - Configuração apenas ADMINISTRADOR, impressão
-                        // ADMINISTRADOR e OPERADOR
+                        // ADMINISTRADOR e OPERADOR; o TOTEM lê a configuração e formata o cupom
                         .requestMatchers("GET", "/api/impressao/configuracao")
-                        .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
+                        .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR, ROLE_TOTEM)
                         .requestMatchers("POST", "/api/impressao/configuracao")
                         .hasRole(ROLE_ADMINISTRADOR)
                         .requestMatchers("POST", "/api/impressao/cupom-fiscal")
                         .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
                         .requestMatchers("POST", "/api/impressao/cupom-fiscal/formatar")
-                        .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
+                        .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR, ROLE_TOTEM)
 
                         // Qualquer outro endpoint exige autenticação por padrão
                         .anyRequest().authenticated())
+                // Sem token válido = 401 (o front desloga); autenticado sem permissão segue 403
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(
+                        new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

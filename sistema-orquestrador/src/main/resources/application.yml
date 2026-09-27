@@ -52,6 +52,8 @@ management:
 jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION:86400}
+  # Perfil TOTEM: loga uma vez (365 dias); revoga desativando o usuário
+  expiration-totem: ${JWT_EXPIRATION_TOTEM:31536000}
 
 # Google OAuth Configuration (para login de clientes)
 google:

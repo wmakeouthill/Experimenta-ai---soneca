@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, adminGuard, operadorGuard, roleGuard } from './guards/auth.guard';
+import { authGuard, adminGuard, operadorGuard, roleGuard, autoatendimentoGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -85,7 +85,7 @@ export const routes: Routes = [
   {
     path: 'autoatendimento',
     loadComponent: () => import('./components/autoatendimento/autoatendimento.component').then(m => m.AutoatendimentoComponent),
-    canActivate: [operadorGuard]
+    canActivate: [autoatendimentoGuard]
   },
   {
     path: '**',

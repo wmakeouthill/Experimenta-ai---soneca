@@ -7,7 +7,7 @@ import { AuthService } from '../services/auth.service';
 // Rotas públicas que não devem redirecionar para login em caso de erro 401/403
 const ROTAS_PUBLICAS = ['/mesa/', '/pedido-mesa/', '/api/public/'];
 
-// Rotas que devem exibir erro em vez de redirecionar (usuário deve fazer login manualmente)
+// Rotas de totem: 403 (falta de permissão pontual) não derruba a sessão do quiosque
 const ROTAS_TOTEM = ['/autoatendimento'];
 
 /**
@@ -25,16 +25,16 @@ export const authErrorInterceptor: HttpInterceptorFn = (req, next) => {
       const isRotaPublica = typeof window !== 'undefined' &&
         ROTAS_PUBLICAS.some(rota => window.location.pathname.includes(rota));
 
-      // Verificar se é rota de totem (não redireciona automaticamente - exibe erro)
       const isRotaTotem = typeof window !== 'undefined' &&
         ROTAS_TOTEM.some(rota => window.location.pathname.includes(rota));
 
       // Verificar se a requisição é para endpoint público
       const isEndpointPublico = req.url.includes('/api/public/');
 
-      // Para rotas de totem, não fazer logout automático - deixa o componente tratar
-      if ((error.status === 401 || error.status === 403) && isRotaTotem) {
-        console.warn('[AUTH] Erro de autenticação no totem - verifique se o operador está logado');
+      // Totem: 403 fica com o componente. 401 (token expirado/usuário desativado) cai no fluxo
+      // abaixo e volta ao login com returnUrl — senão o quiosque trava sem ter como relogar.
+      if (error.status === 403 && isRotaTotem) {
+        console.warn('[AUTH] Acesso negado no totem - confira as permissões do perfil');
         return throwError(() => error);
       }
 

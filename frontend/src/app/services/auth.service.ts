@@ -28,12 +28,12 @@ export interface CriarUsuarioRequest {
   nome: string;
   email: string;
   senha: string;
-  role: 'ADMINISTRADOR' | 'OPERADOR';
+  role: 'ADMINISTRADOR' | 'OPERADOR' | 'TOTEM';
 }
 
 export interface AtualizarUsuarioRequest {
   nome?: string;
-  role?: 'ADMINISTRADOR' | 'OPERADOR';
+  role?: 'ADMINISTRADOR' | 'OPERADOR' | 'TOTEM';
   ativo?: boolean;
 }
 
@@ -51,6 +51,7 @@ export class AuthService {
   readonly estaAutenticado = signal<boolean>(false);
   readonly isAdministrador = signal<boolean>(false);
   readonly isOperador = signal<boolean>(false);
+  readonly isTotem = signal<boolean>(false);
 
   private get isBrowser(): boolean {
     return isPlatformBrowser(this.platformId);
@@ -74,13 +75,18 @@ export class AuthService {
   }
 
   logout(): void {
+    this.limparSessao();
+    this.router.navigate(['/login']);
+  }
+
+  private limparSessao(): void {
     this.removerToken();
     this.removerUsuario();
     this.usuarioAtual.set(null);
     this.estaAutenticado.set(false);
     this.isAdministrador.set(false);
     this.isOperador.set(false);
-    this.router.navigate(['/login']);
+    this.isTotem.set(false);
   }
 
   getToken(): string | null {
@@ -114,18 +120,28 @@ export class AuthService {
     const usuarioStr = localStorage.getItem('usuario');
     
     if (token && usuarioStr) {
+      // Sem navegar: evita problemas de injeção durante a inicialização; os guards levam ao login
+      if (AuthService.tokenExpirado(token)) {
+        this.limparSessao();
+        return;
+      }
       try {
         const usuario = JSON.parse(usuarioStr) as UsuarioDTO;
         this.atualizarEstado(usuario);
       } catch (e) {
-        // Limpar dados inválidos sem chamar logout (evita problemas de injeção durante inicialização)
-        this.removerToken();
-        this.removerUsuario();
-        this.usuarioAtual.set(null);
-        this.estaAutenticado.set(false);
-        this.isAdministrador.set(false);
-        this.isOperador.set(false);
+        this.limparSessao();
       }
+    }
+  }
+
+  /** Lê o `exp` do JWT sem validar assinatura (quem valida é o backend). Ilegível = expirado. */
+  static tokenExpirado(token: string): boolean {
+    try {
+      const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      const { exp } = JSON.parse(atob(payload)) as { exp?: number };
+      return typeof exp !== 'number' || exp * 1000 <= Date.now();
+    } catch {
+      return true;
     }
   }
 
@@ -134,6 +150,7 @@ export class AuthService {
     this.estaAutenticado.set(true);
     this.isAdministrador.set(usuario.role === 'ADMINISTRADOR');
     this.isOperador.set(usuario.role === 'OPERADOR');
+    this.isTotem.set(usuario.role === 'TOTEM');
   }
 
   listarUsuarios(): Observable<UsuarioDTO[]> {

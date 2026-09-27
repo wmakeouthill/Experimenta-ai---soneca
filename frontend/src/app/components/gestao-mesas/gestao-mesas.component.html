@@ -36,7 +36,9 @@
         <h3>Totem de Auto-Atendimento</h3>
       </div>
       <div class="totem-url">
-        <input type="text" [value]="urlAutoAtendimento" readonly class="url-input" />
+        <a [href]="urlAutoAtendimento" target="_blank" rel="noopener" class="url-input" title="Abrir o totem em nova aba">
+          {{ urlAutoAtendimento }}
+        </a>
         <button
           class="btn-copy"
           (click)="copiarUrlAutoAtendimento()"
