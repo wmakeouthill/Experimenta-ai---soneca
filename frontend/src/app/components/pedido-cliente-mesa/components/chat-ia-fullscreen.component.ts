@@ -4,6 +4,7 @@ import {
   input,
   output,
   effect,
+  computed,
   ViewChild,
   ElementRef,
   AfterViewChecked
@@ -35,28 +36,29 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
             </div>
           </div>
 
-          <!-- Carrinho no centro do header -->
-          @if (quantidadeItensCarrinho() > 0) {
-            <button
-              class="btn-carrinho-header"
-              [class.bounce]="animarCarrinho()"
-              (click)="onAbrirCarrinho.emit()"
-              title="Ver carrinho">
-              <span class="carrinho-icon">🛒</span>
-              <span class="carrinho-badge">{{ quantidadeItensCarrinho() }}</span>
-            </button>
-          }
-
           <div class="chat-ia-header-actions">
+            @if (quantidadeItensCarrinho() > 0) {
+              <button
+                class="btn-header btn-carrinho-header"
+                [class.bounce]="animarCarrinho()"
+                (click)="onAbrirCarrinho.emit()"
+                aria-label="Ver carrinho">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                <span class="carrinho-badge">{{ quantidadeItensCarrinho() }}</span>
+              </button>
+            }
+            <button class="btn-header" (click)="onNovaConversa.emit()" aria-label="Nova conversa">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v6M9 10h6"/></svg>
+            </button>
             <button
-              class="btn-historico-header"
+              class="btn-header"
               [class.ativo]="mostrarHistorico()"
               (click)="onToggleHistorico.emit()"
-              title="Ver conversas anteriores">
-              📜
+              aria-label="Conversas anteriores">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
             </button>
-            <button class="btn-fechar" (click)="onClose.emit()" title="Fechar">
-              ✕
+            <button class="btn-header" (click)="onClose.emit()" aria-label="Fechar chat">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
           </div>
         </header>
@@ -79,17 +81,17 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
                   <div class="produtos-destacados">
                     @for (categoria of agruparPorCategoria(msg.produtosDestacados); track categoria.nome) {
                       <div class="categoria-grupo">
-                        <h5 class="categoria-titulo">📁 {{ categoria.nome }}</h5>
-                        @for (produto of categoria.produtos; track produto.id) {
-                          <div class="produto-card"
-                               [class.indisponivel]="!produto.disponivel"
-                               (click)="adicionarAoCarrinho(produto)">
-                            @if (produto.imagemUrl) {
-                              <img [src]="produto.imagemUrl" [alt]="produto.nome" class="produto-imagem">
-                            } @else {
-                              <div class="produto-imagem-placeholder">🍔</div>
-                            }
-                            <div class="produto-info">
+                        <h5 class="categoria-titulo">{{ categoria.nome }}</h5>
+                        <div class="categoria-cards">
+                          @for (produto of categoria.produtos; track produto.id) {
+                            <div class="produto-card"
+                                 [class.indisponivel]="!produto.disponivel"
+                                 (click)="adicionarAoCarrinho(produto)">
+                              @if (produto.imagemUrl) {
+                                <img [src]="produto.imagemUrl" [alt]="produto.nome" class="produto-imagem" loading="lazy">
+                              } @else {
+                                <div class="produto-imagem-placeholder">🍔</div>
+                              }
                               <h4 class="produto-nome">{{ produto.nome }}</h4>
                               @if (produto.descricao) {
                                 <p class="produto-descricao">{{ produto.descricao }}</p>
@@ -100,16 +102,16 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
                                   <button
                                     class="btn-adicionar"
                                     (click)="adicionarAoCarrinho(produto); $event.stopPropagation()"
-                                    title="Adicionar ao carrinho">
-                                    + Adicionar
+                                    [attr.aria-label]="'Adicionar ' + produto.nome + ' ao carrinho'">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
                                   </button>
                                 } @else {
                                   <span class="produto-indisponivel">Indisponível</span>
                                 }
                               </div>
                             </div>
-                          </div>
-                        }
+                          }
+                        </div>
                       </div>
                     }
                   </div>
@@ -130,14 +132,26 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
               </div>
             </div>
           }
+
+          <!-- Sugestões até o cliente mandar a primeira mensagem -->
+          @if (mostrarSugestoes()) {
+            <div class="sugestoes">
+              @for (sugestao of sugestoes; track sugestao) {
+                <button class="sugestao-chip" (click)="enviarSugestao(sugestao)">{{ sugestao }}</button>
+              }
+            </div>
+          }
         </div>
 
-        <!-- Painel de Histórico -->
+        <!-- Histórico: gaveta que sobe por cima do input -->
         @if (mostrarHistorico()) {
-          <div class="historico-panel">
+          <div class="historico-backdrop" (click)="onToggleHistorico.emit()"></div>
+          <div class="historico-panel" role="dialog" aria-label="Conversas anteriores">
             <div class="historico-header">
-              <h3>📜 Conversas Anteriores</h3>
-              <button class="btn-fechar-historico" (click)="onToggleHistorico.emit()">✕</button>
+              <h3>Conversas anteriores</h3>
+              <button class="btn-header" (click)="onToggleHistorico.emit()" aria-label="Fechar conversas anteriores">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+              </button>
             </div>
             <div class="historico-lista">
               @if (historicoConversas().length === 0) {
@@ -154,8 +168,8 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
                     <button
                       class="btn-remover-conversa"
                       (click)="onRemoverConversa.emit(conversa.id); $event.stopPropagation()"
-                      title="Remover conversa">
-                      🗑️
+                      aria-label="Remover conversa">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
                     </button>
                   </div>
                 }
@@ -175,25 +189,21 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
               (ngModelChange)="onInputChange.emit($event)"
               (keydown.enter)="enviar()"
               (focus)="onInputFocus()"
-              placeholder="Digite sua mensagem..."
+              placeholder="Pergunte ao Soneca…"
+              aria-label="Mensagem para o Soneca"
               [disabled]="isLoading()"
               class="chat-ia-input"
               autocomplete="off"
               enterkeyhint="send">
             <button
-              class="btn-nova-conversa-input"
-              (click)="onNovaConversa.emit()"
-              title="Nova conversa">
-              ✨
-            </button>
-            <button
               class="btn-enviar"
               [disabled]="!canSend()"
-              (click)="enviar()">
+              (click)="enviar()"
+              aria-label="Enviar mensagem">
               @if (isLoading()) {
                 <span class="spinner-mini"></span>
               } @else {
-                ➤
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
               }
             </button>
           </div>
@@ -202,12 +212,27 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
     </div>
   `,
   styles: [`
+    /* Tokens próprios do chat: o :host da pedido-mesa define --text-primary
+       escuro (tema claro) e ele vazava para cá, deixando texto marrom no azul. */
+    :host {
+      --chat-bg: #16213e;
+      --chat-surface: #1a1a2e;
+      --chat-bubble: #24304f;
+      --chat-text: #eef0f6;
+      --chat-text-2: #b8bccb;
+      --chat-text-3: #8f95ab;
+      --chat-border: rgba(255, 255, 255, 0.08);
+      --chat-accent: #ff6b35;
+      --chat-accent-soft: #ffb08a;
+      /* Fundo laranja com texto branco: o #ff6b35 dá ~2.9:1, este passa no AA */
+      --chat-accent-strong: #c2410c;
+      --chat-ok: #5fd38d;
+      --chat-danger: #ff8a80;
+    }
+
     .chat-ia-overlay {
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      inset: 0;
       background: rgba(0, 0, 0, 0.5);
       z-index: 10000;
       display: flex;
@@ -217,6 +242,7 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
       visibility: hidden;
       transition: opacity 0.3s ease, visibility 0.3s ease;
       font-family: var(--fonte-app);
+      color: var(--chat-text);
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
     }
@@ -229,21 +255,13 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
     .chat-ia-container {
       position: relative;
       width: 100%;
-      /* Usa altura visual do viewport que se ajusta ao teclado no mobile */
+      height: 100vh;
+      /* Altura visual: acompanha o teclado virtual no mobile */
       height: 100dvh;
-      height: 100svh; /* Fallback para small viewport height */
-      max-width: 100dvw;
-      background: var(--bg-primary, #1a1a2e);
+      background: var(--chat-surface);
       display: flex;
       flex-direction: column;
       overflow: hidden;
-    }
-
-    /* Mobile: ajuste quando teclado abre */
-    @supports (height: 100dvh) {
-      .chat-ia-container {
-        height: 100dvh;
-      }
     }
 
     /* Desktop: chat como modal */
@@ -258,93 +276,123 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
       }
     }
 
+    svg {
+      width: 22px;
+      height: 22px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    button {
+      font-family: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:focus-visible {
+      outline: 2px solid var(--chat-accent-soft);
+      outline-offset: 2px;
+    }
+
     /* Header */
     .chat-ia-header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 1rem 1.25rem;
-      background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
-      color: white;
+      gap: 0.5rem;
+      padding: 0.5rem 0.25rem 0.5rem 1rem;
+      padding-top: max(0.5rem, env(safe-area-inset-top));
+      background: var(--chat-surface);
+      border-bottom: 1px solid var(--chat-border);
       flex-shrink: 0;
     }
 
     .chat-ia-header-info {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.625rem;
+      flex: 1;
+      min-width: 0;
     }
 
     .chat-ia-avatar {
-      width: 42px;
-      height: 42px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
-      border: 2px solid rgba(255, 255, 255, 0.3);
       object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .chat-ia-header-text {
+      min-width: 0;
     }
 
     .chat-ia-header-text h2 {
       margin: 0;
-      font-size: 1.125rem;
+      font-size: 1rem;
       font-weight: 600;
+      line-height: 1.2;
     }
 
     .status-online {
       font-size: 0.75rem;
-      opacity: 0.9;
-      color: #2ecc71;
+      color: var(--chat-ok);
     }
 
     .chat-ia-header-actions {
       display: flex;
-      gap: 0.5rem;
+      flex-shrink: 0;
     }
 
-    /* Botão do carrinho no header */
-    .btn-carrinho-header {
+    .btn-header {
       position: relative;
-      background: rgba(255, 255, 255, 0.2);
-      border: none;
-      color: white;
       width: 44px;
       height: 44px;
+      border: none;
       border-radius: 50%;
-      cursor: pointer;
+      background: transparent;
+      color: var(--chat-text-2);
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.2s ease, transform 0.2s ease;
-      margin: 0 0.5rem;
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease;
     }
 
-    .btn-carrinho-header:hover {
-      background: rgba(255, 255, 255, 0.3);
-      transform: scale(1.1);
+    .btn-header:active,
+    .btn-header.ativo {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--chat-text);
     }
 
-    .btn-carrinho-header:active {
-      transform: scale(0.95);
+    @media (hover: hover) {
+      .btn-header:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--chat-text);
+      }
     }
 
-    .carrinho-icon {
-      font-size: 1.3rem;
+    .btn-carrinho-header {
+      color: var(--chat-text);
     }
 
     .carrinho-badge {
       position: absolute;
-      top: -2px;
-      right: -2px;
-      background: #2ecc71;
-      color: white;
-      font-size: 0.65rem;
-      font-weight: 700;
+      top: 4px;
+      right: 2px;
       min-width: 18px;
       height: 18px;
-      border-radius: 50%;
+      padding: 0 4px;
+      border-radius: 9px;
+      background: var(--chat-accent-strong);
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 700;
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 2px solid #e67e22;
+      border: 2px solid var(--chat-surface);
       animation: popIn 0.3s ease;
     }
 
@@ -367,55 +415,25 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
       80% { transform: scale(1.1) rotate(2deg); }
     }
 
-    .btn-nova-conversa,
-    .btn-fechar,
-    .btn-historico-header {
-      background: rgba(255, 255, 255, 0.2);
-      border: none;
-      color: white;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      cursor: pointer;
-      font-size: 1rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.2s ease;
-      flex-shrink: 0;
-    }
-
-    .btn-nova-conversa:hover,
-    .btn-fechar:hover,
-    .btn-historico-header:hover {
-      background: rgba(255, 255, 255, 0.3);
-    }
-
-    .btn-historico-header.ativo {
-      background: rgba(255, 255, 255, 0.4);
-    }
-
-    /* Messages */
+    /* Mensagens */
     .chat-ia-messages {
       flex: 1;
+      min-height: 0;
       overflow-y: auto;
-      padding: 1rem;
+      padding: 1rem 0.75rem;
       display: flex;
       flex-direction: column;
       gap: 0.75rem;
-      background: var(--bg-secondary, #16213e);
+      background: var(--chat-bg);
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
-      /* Garante que o container de mensagens ocupe o espaço disponível */
-      min-height: 0;
-      /* Suporte para scroll suave */
       scroll-behavior: smooth;
     }
 
     .chat-ia-message {
       display: flex;
       gap: 0.5rem;
-      max-width: 85%;
+      max-width: 90%;
       animation: fadeIn 0.3s ease;
     }
 
@@ -434,50 +452,62 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
     }
 
     .message-avatar {
-      width: 32px;
-      height: 32px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       object-fit: cover;
       flex-shrink: 0;
     }
 
+    .message-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      min-width: 0;
+    }
+
     .message-bubble {
-      padding: 0.75rem 1rem;
-      border-radius: 16px;
-      max-width: 100%;
-      word-wrap: break-word;
+      padding: 0.625rem 0.875rem;
+      border-radius: 18px;
+      overflow-wrap: anywhere;
     }
 
     .chat-ia-message.user .message-bubble {
-      background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
-      color: white;
-      border-bottom-right-radius: 4px;
+      background: var(--chat-accent-strong);
+      color: #fff;
+      border-bottom-right-radius: 6px;
     }
 
     .chat-ia-message.assistant .message-bubble {
-      background: var(--bg-tertiary, #1f2b47);
-      color: var(--text-primary, #e8e8e8);
-      border-bottom-left-radius: 4px;
+      background: var(--chat-bubble);
+      color: var(--chat-text);
+      border-bottom-left-radius: 6px;
     }
 
     .message-text {
       margin: 0;
-      font-size: 0.95rem;
-      line-height: 1.4;
+      font-size: 0.9375rem;
+      line-height: 1.45;
       white-space: pre-wrap;
     }
 
     .message-time {
       display: block;
-      font-size: 0.7rem;
-      opacity: 0.6;
-      margin-top: 0.35rem;
+      margin-top: 0.25rem;
+      font-size: 0.6875rem;
       text-align: right;
+      color: var(--chat-text-3);
     }
 
-    /* Typing indicator */
+    .chat-ia-message.user .message-time {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    /* Digitando */
     .message-bubble.typing {
-      padding: 0.875rem 1.25rem;
+      padding: 0.875rem 1.125rem;
+      background: var(--chat-bubble);
+      border-bottom-left-radius: 6px;
     }
 
     .typing-indicator {
@@ -488,7 +518,7 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
     .typing-indicator span {
       width: 8px;
       height: 8px;
-      background: var(--text-secondary, #aaa);
+      background: var(--chat-text-3);
       border-radius: 50%;
       animation: typing 1.4s infinite ease-in-out;
     }
@@ -502,64 +532,224 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
       30% { transform: translateY(-6px); opacity: 1; }
     }
 
-    /* Input area */
-    .chat-ia-input-area {
-      padding: 0.75rem;
-      background: var(--bg-primary, #1a1a2e);
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    /* Sugestões iniciais, alinhadas com as bolhas (avatar 28px + gap 8px) */
+    .sugestoes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding-left: 36px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .sugestao-chip {
+      min-height: 44px;
+      padding: 0.5rem 1rem;
+      border: 1px solid rgba(255, 154, 107, 0.45);
+      border-radius: 999px;
+      background: rgba(255, 107, 53, 0.08);
+      color: var(--chat-accent-soft);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .sugestao-chip:active {
+      background: rgba(255, 107, 53, 0.2);
+    }
+
+    /* Produtos destacados: um carrossel por categoria */
+    .produtos-destacados {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .categoria-grupo {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      min-width: 0;
+    }
+
+    .categoria-titulo {
+      margin: 0;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--chat-text-3);
+    }
+
+    .categoria-cards {
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      overscroll-behavior-x: contain;
+      scrollbar-width: none;
+    }
+
+    .categoria-cards::-webkit-scrollbar {
+      display: none;
+    }
+
+    .produto-card {
+      flex: 0 0 140px;
+      scroll-snap-align: start;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      padding: 0.5rem;
+      background: var(--chat-bubble);
+      border: 1px solid var(--chat-border);
+      border-radius: 14px;
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.2s ease;
+    }
+
+    .produto-card:active {
+      transform: scale(0.97);
+    }
+
+    @media (hover: hover) {
+      .produto-card:hover {
+        border-color: rgba(255, 107, 53, 0.45);
+      }
+    }
+
+    .produto-card.indisponivel {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .produto-imagem,
+    .produto-imagem-placeholder {
+      width: 100%;
+      height: 88px;
+      border-radius: 10px;
+      object-fit: cover;
+      background: var(--chat-bg);
+    }
+
+    .produto-imagem-placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+    }
+
+    .produto-nome {
+      margin: 0.25rem 0 0;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      line-height: 1.25;
+      color: var(--chat-text);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .produto-descricao {
+      margin: 0;
+      font-size: 0.75rem;
+      line-height: 1.3;
+      color: var(--chat-text-2);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .produto-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.25rem;
+      margin-top: auto;
+      padding-top: 0.25rem;
+    }
+
+    .produto-preco {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--chat-ok);
+      white-space: nowrap;
+    }
+
+    .btn-adicionar {
+      width: 40px;
+      height: 40px;
       flex-shrink: 0;
-      /* Garante que a área de input fique sempre visível */
+      border: none;
+      border-radius: 50%;
+      background: var(--chat-accent-strong);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+
+    .btn-adicionar svg {
+      width: 18px;
+      height: 18px;
+      stroke-width: 2.5;
+    }
+
+    .btn-adicionar:active {
+      transform: scale(0.9);
+    }
+
+    .produto-indisponivel {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--chat-danger);
+    }
+
+    /* Input */
+    .chat-ia-input-area {
       position: relative;
       z-index: 10;
-    }
-
-    /* Safe area para iPhone X+ */
-    @supports (padding: max(0px)) {
-      .chat-ia-input-area {
-        padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
-      }
-    }
-
-    /* Quando o teclado está aberto no mobile, garante visibilidade */
-    @media (max-width: 768px) {
-      .chat-ia-input-area {
-        /* Padding extra no bottom para compensar keyboards virtuais */
-        padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
-      }
+      flex-shrink: 0;
+      padding: 0.625rem 0.75rem;
+      padding-bottom: max(0.625rem, env(safe-area-inset-bottom));
+      background: var(--chat-surface);
+      border-top: 1px solid var(--chat-border);
     }
 
     .input-wrapper {
       display: flex;
-      gap: 0.5rem;
       align-items: center;
-      width: 100%;
+      gap: 0.5rem;
     }
 
     .chat-ia-input {
       flex: 1;
       min-width: 0;
-      background: var(--bg-secondary, #16213e);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 24px;
-      padding: 0.625rem 0.875rem;
-      color: var(--text-primary, #e8e8e8);
-      /* Font size 16px mínimo previne zoom automático no iOS */
-      font-size: 1rem;
-      font-size: max(1rem, 16px);
+      height: 44px;
+      padding: 0 1rem;
+      border: 1px solid transparent;
+      border-radius: 22px;
+      background: var(--chat-bubble);
+      color: var(--chat-text);
       font-family: inherit;
+      /* 16px no mínimo evita o zoom automático do iOS */
+      font-size: 16px;
       outline: none;
-      transition: border-color 0.2s ease;
-      /* Melhora a experiência de digitação no mobile */
       -webkit-appearance: none;
       appearance: none;
+      transition: border-color 0.2s ease;
     }
 
     .chat-ia-input:focus {
-      border-color: #e67e22;
+      border-color: var(--chat-accent);
     }
 
     .chat-ia-input::placeholder {
-      color: var(--text-secondary, #888);
+      color: var(--chat-text-3);
     }
 
     .chat-ia-input:disabled {
@@ -567,29 +757,35 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
     }
 
     .btn-enviar {
-      width: 42px;
-      height: 42px;
-      min-width: 42px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+      width: 44px;
+      height: 44px;
+      flex-shrink: 0;
       border: none;
-      color: white;
-      font-size: 1.125rem;
-      cursor: pointer;
+      border-radius: 50%;
+      background: var(--chat-accent-strong);
+      color: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 0.2s ease, opacity 0.2s ease;
-      flex-shrink: 0;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.15s ease;
     }
 
-    .btn-enviar:hover:not(:disabled) {
-      transform: scale(1.05);
+    .btn-enviar svg {
+      width: 20px;
+      height: 20px;
+      stroke-width: 2.5;
     }
 
+    .btn-enviar:active:not(:disabled) {
+      transform: scale(0.92);
+    }
+
+    /* Vazio: neutro, e não um laranja apagado que parece quebrado */
     .btn-enviar:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--chat-text-3);
+      cursor: default;
     }
 
     .spinner-mini {
@@ -605,244 +801,61 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
       to { transform: rotate(360deg); }
     }
 
-    /* Message content wrapper */
-    .message-content {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      max-width: 100%;
+    /* Histórico: gaveta inferior com fundo escurecido */
+    .historico-backdrop {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      background: rgba(0, 0, 0, 0.5);
+      animation: fade 0.2s ease;
     }
 
-    /* Produtos destacados / Cards */
-    .produtos-destacados {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      margin-top: 0.5rem;
+    @keyframes fade {
+      from { opacity: 0; }
     }
 
-    .categoria-grupo {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .categoria-titulo {
-      margin: 0;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: #e67e22;
-      padding: 0.25rem 0;
-      border-bottom: 1px solid rgba(230, 126, 34, 0.3);
-    }
-
-    .produto-card {
-      display: flex;
-      gap: 0.75rem;
-      background: var(--bg-tertiary, #1f2b47);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      padding: 0.75rem;
-      animation: fadeIn 0.3s ease;
-      cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .produto-card:hover {
-      transform: translateX(4px);
-      box-shadow: 0 2px 8px rgba(230, 126, 34, 0.2);
-      border-color: rgba(230, 126, 34, 0.4);
-    }
-
-    .produto-card:active {
-      transform: scale(0.98);
-    }
-
-    .produto-card.indisponivel {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .produto-card.indisponivel:hover {
-      transform: none;
-      box-shadow: none;
-    }
-
-    .produto-imagem {
-      width: 60px;
-      height: 60px;
-      border-radius: 8px;
-      object-fit: cover;
-      flex-shrink: 0;
-    }
-
-    .produto-imagem-placeholder {
-      width: 60px;
-      height: 60px;
-      border-radius: 8px;
-      background: var(--bg-secondary, #16213e);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-      flex-shrink: 0;
-    }
-
-    .produto-info {
-      flex: 1;
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 0.125rem;
-    }
-
-    .produto-nome {
-      margin: 0;
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--text-primary, #e8e8e8);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .produto-categoria {
-      margin: 0;
-      font-size: 0.7rem;
-      color: var(--text-secondary, #888);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .produto-descricao {
-      margin: 0;
-      font-size: 0.75rem;
-      color: var(--text-secondary, #aaa);
-      line-height: 1.3;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .produto-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 0.25rem;
-    }
-
-    .produto-preco {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: #2ecc71;
-    }
-
-    .btn-adicionar {
-      background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
-      border: none;
-      color: white;
-      padding: 0.35rem 0.75rem;
-      border-radius: 16px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .btn-adicionar:hover {
-      transform: scale(1.05);
-      box-shadow: 0 2px 8px rgba(230, 126, 34, 0.4);
-    }
-
-    .btn-adicionar:active {
-      transform: scale(0.98);
-    }
-
-    .produto-indisponivel {
-      font-size: 0.75rem;
-      color: #e74c3c;
-      font-weight: 500;
-    }
-
-    /* Botão nova conversa na área de input */
-    .btn-nova-conversa-input {
-      background: rgba(255, 255, 255, 0.1);
-      border: none;
-      color: var(--text-primary, #e8e8e8);
-      width: 36px;
-      height: 36px;
-      min-width: 36px;
-      border-radius: 50%;
-      cursor: pointer;
-      font-size: 0.9rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.2s ease, transform 0.2s ease;
-      flex-shrink: 0;
-    }
-
-    .btn-nova-conversa-input:hover {
-      background: rgba(230, 126, 34, 0.3);
-      transform: scale(1.1);
-    }
-
-    .btn-nova-conversa-input:active {
-      transform: scale(0.95);
-    }
-
-    /* Painel de Histórico */
     .historico-panel {
       position: absolute;
-      bottom: 70px;
       left: 0;
       right: 0;
-      max-height: 300px;
-      background: var(--bg-primary, #1a1a2e);
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      bottom: 0;
+      z-index: 21;
+      max-height: 70%;
       display: flex;
       flex-direction: column;
-      animation: slideUp 0.3s ease;
-      z-index: 10;
+      background: var(--chat-surface);
+      border-radius: 20px 20px 0 0;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      animation: slideUp 0.25s ease;
     }
 
     @keyframes slideUp {
-      from { transform: translateY(100%); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
     }
 
     .historico-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      flex-shrink: 0;
+      padding: 0.5rem 0.25rem 0.5rem 1.25rem;
+      border-bottom: 1px solid var(--chat-border);
     }
 
     .historico-header h3 {
       margin: 0;
-      font-size: 0.9rem;
-      color: var(--text-primary, #e8e8e8);
-    }
-
-    .btn-fechar-historico {
-      background: transparent;
-      border: none;
-      color: var(--text-secondary, #888);
       font-size: 1rem;
-      cursor: pointer;
-      padding: 0.25rem;
-    }
-
-    .btn-fechar-historico:hover {
-      color: var(--text-primary, #e8e8e8);
+      font-weight: 600;
+      color: var(--chat-text);
     }
 
     .historico-lista {
       flex: 1;
+      min-height: 0;
       overflow-y: auto;
-      padding: 0.5rem;
+      overscroll-behavior: contain;
+      padding: 0.5rem 0.75rem 0.75rem;
     }
 
     .historico-vazio {
@@ -851,7 +864,7 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
       align-items: center;
       justify-content: center;
       padding: 2rem;
-      color: var(--text-secondary, #888);
+      color: var(--chat-text-3);
     }
 
     .historico-vazio span {
@@ -861,105 +874,84 @@ import { MensagemChat, ProdutoDestacado, ConversaSalva } from '../composables/us
 
     .historico-vazio p {
       margin: 0;
-      font-size: 0.85rem;
+      font-size: 0.875rem;
     }
 
     .historico-item {
       position: relative;
-      background: var(--bg-secondary, #16213e);
-      border-radius: 8px;
-      padding: 0.75rem;
       margin-bottom: 0.5rem;
+      padding: 0.75rem 3rem 0.75rem 0.875rem;
+      border-radius: 12px;
+      background: var(--chat-bg);
       cursor: pointer;
-      transition: background 0.2s ease, transform 0.2s ease;
+      transition: background 0.2s ease;
     }
 
-    .historico-item:hover {
-      background: var(--bg-tertiary, #1f2b47);
-      transform: translateX(4px);
+    .historico-item:active {
+      background: var(--chat-bubble);
+    }
+
+    @media (hover: hover) {
+      .historico-item:hover {
+        background: var(--chat-bubble);
+      }
+    }
+
+    .historico-item-titulo,
+    .historico-item-preview {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .historico-item-titulo {
-      font-size: 0.85rem;
+      margin-bottom: 0.125rem;
+      font-size: 0.875rem;
       font-weight: 600;
-      color: var(--text-primary, #e8e8e8);
-      margin-bottom: 0.25rem;
-      padding-right: 2rem;
+      color: var(--chat-text);
     }
 
     .historico-item-preview {
-      font-size: 0.75rem;
-      color: var(--text-secondary, #aaa);
       margin-bottom: 0.25rem;
+      font-size: 0.8125rem;
+      color: var(--chat-text-2);
     }
 
     .historico-item-data {
-      font-size: 0.7rem;
-      color: var(--text-secondary, #888);
+      font-size: 0.75rem;
+      color: var(--chat-text-3);
     }
 
     .btn-remover-conversa {
       position: absolute;
-      top: 0.5rem;
-      right: 0.5rem;
-      background: transparent;
+      top: 50%;
+      right: 0.25rem;
+      transform: translateY(-50%);
+      width: 44px;
+      height: 44px;
       border: none;
-      font-size: 0.85rem;
+      border-radius: 50%;
+      background: transparent;
+      color: var(--chat-text-3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
-      opacity: 0.5;
-      transition: opacity 0.2s ease;
     }
 
-    .btn-remover-conversa:hover {
-      opacity: 1;
+    .btn-remover-conversa svg {
+      width: 18px;
+      height: 18px;
     }
 
-    /* Mobile optimizations */
-    @media (max-width: 768px) {
-      .chat-ia-header {
-        padding-top: max(1rem, env(safe-area-inset-top));
-      }
+    .btn-remover-conversa:active {
+      color: var(--chat-danger);
+    }
 
-      .chat-ia-messages {
-        padding: 0.75rem;
-      }
-
-      .chat-ia-message {
-        max-width: 90%;
-      }
-
-      .message-text {
-        font-size: 0.9rem;
-      }
-
-      .produto-card {
-        padding: 0.625rem;
-      }
-
-      .produto-imagem,
-      .produto-imagem-placeholder {
-        width: 50px;
-        height: 50px;
-      }
-
-      .produto-nome {
-        font-size: 0.85rem;
-      }
-
-      .btn-adicionar {
-        padding: 0.3rem 0.6rem;
-        font-size: 0.7rem;
-      }
-
-      .btn-nova-conversa-input,
-      .btn-historico {
-        width: 34px;
-        height: 34px;
-        font-size: 0.9rem;
-      }
-
-      .historico-panel {
-        max-height: 250px;
+    /* 320px com carrinho: 4 botões de 44px não deixam espaço para o nome */
+    @media (max-width: 359px) {
+      .chat-ia-avatar {
+        display: none;
       }
     }
   `]
@@ -1001,6 +993,12 @@ export class ChatIAFullscreenComponent implements AfterViewChecked {
   @ViewChild('messagesContainer') private readonly messagesContainer?: ElementRef<HTMLDivElement>;
   @ViewChild('chatInput') private readonly chatInput?: ElementRef<HTMLInputElement>;
   @ViewChild('inputArea') private readonly inputArea?: ElementRef<HTMLElement>;
+
+  /** Perguntas prontas para quem não sabe por onde começar */
+  readonly sugestoes = ['O que você recomenda?', 'Tem opção sem carne?', 'Quero algo para beber'];
+  readonly mostrarSugestoes = computed(() =>
+    !this.isLoading() && !this.mensagens().some(m => m.from === 'user')
+  );
 
   private shouldScrollToBottom = true;
 
@@ -1048,6 +1046,12 @@ export class ChatIAFullscreenComponent implements AfterViewChecked {
     if (this.canSend()) {
       this.onSend.emit();
     }
+  }
+
+  /** Reusa o fluxo normal: preenche o input e envia (o pai valida texto e loading). */
+  enviarSugestao(texto: string): void {
+    this.onInputChange.emit(texto);
+    this.onSend.emit();
   }
 
   /**
