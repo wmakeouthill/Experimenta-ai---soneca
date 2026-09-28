@@ -73,12 +73,17 @@ server {
     }
 
     # ==================== API PROXY ====================
+    # Variável = resolução pelo resolver do nginx.conf. Connect curto: backend parado vira 502/504
+    # em até 2 s (antes que o polling de 5 s cancele) em vez de pendurar no IP do container morto.
+    set $backend http://backend:8080;
+    proxy_connect_timeout 2s;
+
     # Limites por IP folgados: o WiFi do restaurante põe o salão todo atrás de um IP só
     location /api/ {
         limit_req zone=api burst=100 nodelay;
         limit_conn conn 50;
 
-        proxy_pass http://backend;
+        proxy_pass $backend;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -86,7 +91,6 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header Connection "";
 
-        proxy_connect_timeout 10s;
         proxy_send_timeout 30s;
         proxy_read_timeout 30s;
 
@@ -98,7 +102,7 @@ server {
     location /api/auth/login {
         limit_req zone=login burst=3 nodelay;
 
-        proxy_pass http://backend;
+        proxy_pass $backend;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -112,7 +116,7 @@ server {
         allow 172.16.0.0/12;  # Apenas rede Docker
         deny all;
 
-        proxy_pass http://backend;
+        proxy_pass $backend;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -121,7 +125,7 @@ server {
 
     # SSE (Server-Sent Events) - status da loja
     location /api/public/status-loja/stream {
-        proxy_pass http://backend;
+        proxy_pass $backend;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -144,7 +148,7 @@ server {
 
     # WebSocket para chat-ia (se necessário)
     location /ws/ {
-        proxy_pass http://backend;
+        proxy_pass $backend;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
