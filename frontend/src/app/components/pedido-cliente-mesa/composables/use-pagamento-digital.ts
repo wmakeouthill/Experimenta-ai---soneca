@@ -81,9 +81,11 @@ export function usePagamentoDigital(pagamentoService: PagamentoService) {
         iniciarContagem(resposta.pagamento.expiracaoEm);
         iniciarPolling();
       },
-      error: () => {
+      error: (err: { status?: number; error?: { message?: string } }) => {
         etapa.set('erro');
-        erro.set('Nao foi possivel gerar a cobranca PIX. Tente novamente.');
+        // 422 traz o motivo de negócio (ex.: loja pausada) — mais útil que a mensagem genérica
+        const motivo = err.status === 422 ? err.error?.message : undefined;
+        erro.set(motivo || 'Nao foi possivel gerar a cobranca PIX. Tente novamente.');
       },
     });
   }

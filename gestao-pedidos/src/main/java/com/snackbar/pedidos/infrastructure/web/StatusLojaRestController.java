@@ -89,7 +89,8 @@ public class StatusLojaRestController {
                 emitter.send(SseEmitter.event()
                         .name("status")
                         .data(status));
-            } catch (IOException e) {
+            } catch (IOException | IllegalStateException e) {
+                // IllegalState: emitter já encerrado; não pode derrubar quem mudou a sessão
                 emitters.remove(emitter);
             }
         }
@@ -101,7 +102,8 @@ public class StatusLojaRestController {
                 emitter.send(SseEmitter.event()
                         .name("ping")
                         .data(""));
-            } catch (IOException e) {
+            } catch (IOException | IllegalStateException e) {
+                // Exceção que escapa daqui cancela o scheduleAtFixedRate em silêncio
                 emitters.remove(emitter);
             }
         }

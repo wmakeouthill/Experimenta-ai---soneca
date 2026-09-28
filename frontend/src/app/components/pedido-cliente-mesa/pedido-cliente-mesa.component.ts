@@ -1037,9 +1037,11 @@ export class PedidoClienteMesaComponent
               this.erroFinalizacao.set(resposta.motivo ?? 'Cartao recusado. Verifique os dados e tente novamente.');
             }
           },
-          error: () => {
+          error: (err: { status?: number; error?: { message?: string } }) => {
             this.enviando.set(false);
-            this.erroFinalizacao.set('Cartao recusado. Verifique os dados e tente novamente.');
+            this.erroFinalizacao.set(
+              this.mensagemErroEnvio(err, 'Cartao recusado. Verifique os dados e tente novamente.')
+            );
           },
         });
       return;
@@ -1087,11 +1089,18 @@ export class PedidoClienteMesaComponent
           this.sucesso.iniciarAcompanhamento(response.id);
         }
       },
-      error: () => {
+      error: (err: { status?: number; error?: { message?: string } }) => {
         this.enviando.set(false);
-        this.erro.set('Erro ao enviar o pedido. Tente novamente.');
+        this.erro.set(this.mensagemErroEnvio(err, 'Erro ao enviar o pedido. Tente novamente.'));
       },
     });
+  }
+
+  /** 422 = regra de negócio (ex.: a loja pausou): mostra o motivo do backend e reconsulta a loja. */
+  private mensagemErroEnvio(err: { status?: number; error?: { message?: string } }, padrao: string): string {
+    if (err.status !== 422) return padrao;
+    this.verificarStatusLoja();
+    return err.error?.message || padrao;
   }
 
   /**
