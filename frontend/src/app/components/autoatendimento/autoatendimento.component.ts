@@ -343,9 +343,7 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
   }
 
   adicionarAoCarrinhoRapido(produto: Produto): void {
-    // Adiciona direto ao carrinho sem abrir modal
-    this.carrinho.abrirDetalhes(produto);
-    this.carrinho.confirmarProduto();
+    this.carrinho.adicionarRapido(produto);
     this.resetarInatividade();
   }
 
