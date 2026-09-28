@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { Observable, catchError, interval, of, startWith, switchMap, tap } from 'rxjs';
+import { Observable, catchError, of, tap } from 'rxjs';
 import type {
   AdicionalPedidoPendente,
   ItemPedidoPendente,
@@ -77,18 +77,6 @@ export class FilaPedidosTotemService {
         })
       )
       .subscribe();
-  }
-
-  iniciarPolling(intervaloMs: number = 5000): Observable<PedidoPendente[]> {
-    return interval(intervaloMs).pipe(
-      startWith(0),
-      switchMap(() => this.listarPedidosPendentes()),
-      tap(pedidos => this._pedidosPendentes.set(pedidos)),
-      catchError(err => {
-        console.error('Erro no polling de pedidos pendentes totem:', err);
-        return of([]);
-      })
-    );
   }
 
   formatarTempoEspera(segundos: number): string {
