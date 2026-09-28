@@ -418,12 +418,13 @@ export class PedidoClienteMesaComponent
    * Carrega os adicionais disponíveis para um produto.
    */
   private carregarAdicionaisDoProduto(produtoId: string): void {
+    const token = this.mesaToken();
+    if (!token) return;
     this.carrinho.setCarregandoAdicionais(true);
-    this.adicionalService.listarAdicionaisDoProduto(produtoId).subscribe({
+    // O backend já devolve só os disponíveis
+    this.adicionalService.listarAdicionaisDoProdutoMesa(token, produtoId).subscribe({
       next: adicionais => {
-        // Filtra apenas os disponíveis
-        const disponíveis = adicionais.filter(a => a.disponivel);
-        this.carrinho.setAdicionaisDisponiveis(disponíveis);
+        this.carrinho.setAdicionaisDisponiveis(adicionais);
         this.carrinho.setCarregandoAdicionais(false);
       },
       error: err => {
