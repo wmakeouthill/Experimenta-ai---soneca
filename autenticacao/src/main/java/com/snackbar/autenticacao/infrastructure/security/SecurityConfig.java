@@ -103,11 +103,7 @@ public class SecurityConfig {
                         // O método vai como HttpMethod: requestMatchers("GET", path) trata "GET" como
                         // path e libera todos os métodos. Cada recurso: leitura explícita, o resto ADMIN.
 
-                        // Listagem de usuários - ADMINISTRADOR e OPERADOR (necessário para exibir
-                        // nome do usuário na tela de sessões de trabalho; OPERADOR só pode GET)
-                        .requestMatchers(HttpMethod.GET, "/api/admin/usuarios")
-                        .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
-                        // Demais endpoints administrativos - apenas ADMINISTRADOR
+                        // Usuários (e-mail, perfil) - apenas ADMINISTRADOR: só telas de admin listam
                         .requestMatchers("/api/admin/**").hasRole(ROLE_ADMINISTRADOR)
 
                         // Endpoints de cardápio - Leitura para ADMINISTRADOR e OPERADOR, escrita apenas

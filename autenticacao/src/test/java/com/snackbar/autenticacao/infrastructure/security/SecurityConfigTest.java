@@ -66,6 +66,8 @@ class SecurityConfigTest {
     @CsvSource({
             // Escrita de recurso administrativo: só ADMINISTRADOR
             "POST,   /api/admin/usuarios,             OPERADOR,      403",
+            "GET,    /api/admin/usuarios,             OPERADOR,      403",
+            "GET,    /api/admin/usuarios/u1,          OPERADOR,      403",
             "POST,   /api/produtos,                   OPERADOR,      403",
             "PUT,    /api/produtos/p1,                OPERADOR,      403",
             "DELETE, /api/produtos/p1,                OPERADOR,      403",
@@ -84,7 +86,6 @@ class SecurityConfigTest {
             "POST,   /api/admin/usuarios,             ADMINISTRADOR, 200",
             "PUT,    /api/sessoes-trabalho/s1/pausar, ADMINISTRADOR, 200",
             // Leituras e ações do dia a dia continuam liberadas
-            "GET,    /api/admin/usuarios,             OPERADOR,      200",
             "GET,    /api/produtos,                   OPERADOR,      200",
             "GET,    /api/sessoes-trabalho/ativa,     OPERADOR,      200",
             "GET,    /api/mesas,                      OPERADOR,      200",
