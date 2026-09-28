@@ -273,3 +273,5 @@ auttar/
 /.npm-cache/
 .claude/settings.json
 .claude/skills/graphify/
+# Snapshots/logs do Playwright MCP (testes manuais)
+/.playwright-mcp/
