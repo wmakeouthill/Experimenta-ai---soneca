@@ -1,6 +1,8 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { NgZone } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { ConexaoStatus, retryGetInterceptor } from './retry-get.interceptor';
 
 describe('retryGetInterceptor', () => {
@@ -22,7 +24,7 @@ describe('retryGetInterceptor', () => {
 
   afterEach(() => backend.verify());
 
-  it('refaz GET em 503 e mostra "reconectando" só durante as tentativas', fakeAsync(() => {
+  it('refaz GET em 503 e mostra "reconectando" até o servidor responder', fakeAsync(() => {
     let resposta: unknown;
     http.get('/api/pedidos').subscribe(r => (resposta = r));
 
@@ -33,6 +35,24 @@ describe('retryGetInterceptor', () => {
     backend.expectOne('/api/pedidos').flush([]);
 
     expect(resposta).toEqual([]);
+    expect(conexao.reconectando()).toBeFalse();
+  }));
+
+  it('polling fora da zona: liga o aviso dentro da zona e o cancelamento do ciclo não o desliga', fakeAsync(() => {
+    const zone = TestBed.inject(NgZone);
+    spyOn(zone, 'run').and.callThrough();
+    let ciclo!: Subscription;
+    zone.runOutsideAngular(() => (ciclo = http.get('/api/pedidos').subscribe()));
+
+    falhar('/api/pedidos', 502);
+    expect(zone.run).toHaveBeenCalled();
+    expect(conexao.reconectando()).toBeTrue();
+
+    ciclo.unsubscribe(); // switchMap do próximo tick
+    expect(conexao.reconectando()).toBeTrue();
+
+    http.get('/api/pedidos').subscribe();
+    backend.expectOne('/api/pedidos').flush([]);
     expect(conexao.reconectando()).toBeFalse();
   }));
 
