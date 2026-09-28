@@ -1,14 +1,13 @@
 import { signal, computed, inject, effect } from '@angular/core';
-import { catchError, finalize } from 'rxjs/operators';
+import { catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
-import { PedidoService, Pedido, StatusPedido } from '../../../services/pedido.service';
+import { Pedido, StatusPedido } from '../../../services/pedido.service';
 import { ProdutoService, Produto } from '../../../services/produto.service';
 import { PedidoPollingService } from '../../../services/pedido-polling.service';
 
 type EstadoCarregamento = 'idle' | 'carregando' | 'sucesso' | 'erro';
 
 export function usePedidos() {
-  const pedidoService = inject(PedidoService);
   const produtoService = inject(ProdutoService);
   const pollingService = inject(PedidoPollingService);
 
@@ -77,46 +76,16 @@ export function usePedidos() {
   const estaCarregando = computed(() => estado() === 'carregando');
 
   // Métodos
-  const carregarPedidos = (filters?: {
-    status?: StatusPedido;
-    dataInicio?: string;
-    dataFim?: string;
-    sessaoId?: string;
-  }) => {
-    estado.set('carregando');
+  // Sempre pelo serviço global: sem sessão ele não lista (antes caía num listar() sem filtro = histórico inteiro)
+  const carregarPedidos = (filters?: { sessaoId?: string }) => {
     erro.set(null);
+    pollingService.iniciarPolling(filters?.sessaoId);
 
-    // Se for apenas carga inicial ou filtro específico, usa o serviço direto
-    // Mas se for para iniciar monitoramento, usa o polling service
-    if (filters?.sessaoId) {
-      pollingService.iniciarPolling(filters.sessaoId);
+    // Força uma recarga imediata para garantir que a tela não fique vazia
+    // enquanto aguarda o próximo tick do polling (que pode demorar 5s)
+    pollingService.recarregar(filters?.sessaoId);
 
-      // Força uma recarga imediata para garantir que a tela não fique vazia
-      // enquanto aguarda o próximo tick do polling (que pode demorar 5s)
-      pollingService.recarregar(filters.sessaoId);
-
-      estado.set('sucesso');
-    } else {
-      // Fallback para carga única se não tiver sessão (ex: filtros de data)
-      pedidoService.listar(filters)
-        .pipe(
-          catchError((error) => {
-            const mensagem = error.error?.message || error.message || 'Erro ao carregar pedidos';
-            erro.set(mensagem);
-            estado.set('erro');
-            console.error('Erro ao carregar pedidos:', error);
-            return of([]);
-          }),
-          finalize(() => {
-            if (estado() === 'carregando') {
-              estado.set('sucesso');
-            }
-          })
-        )
-        .subscribe((resultado) => {
-          pedidos.set(resultado);
-        });
-    }
+    estado.set('sucesso');
   };
 
   const carregarProdutos = () => {

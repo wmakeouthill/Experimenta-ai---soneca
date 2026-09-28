@@ -29,6 +29,20 @@ describe('PedidoPollingService', () => {
     discardPeriodicTasks();
   }));
 
+  it('sem sessão não lista pedidos (evita baixar o histórico inteiro)', fakeAsync(() => {
+    service.iniciarPolling('s1');
+    tick(0);
+    doSessao('s1').flush([{ id: 'p1' }]);
+
+    service.iniciarPolling(undefined);
+    service.recarregar();
+    tick(10000);
+
+    http.expectNone(() => true);
+    expect(service.pedidos()).toEqual([]);
+    expect(service.pollingAtivo()).toBeFalse();
+  }));
+
   it('iniciarPolling com outra sessão reinicia o polling com o novo filtro', fakeAsync(() => {
     service.iniciarPolling('s1');
     tick(0);
