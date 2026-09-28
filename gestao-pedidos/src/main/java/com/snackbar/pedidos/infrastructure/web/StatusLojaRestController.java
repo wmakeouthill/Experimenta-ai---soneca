@@ -7,6 +7,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -94,6 +96,16 @@ public class StatusLojaRestController {
                 emitters.remove(emitter);
             }
         }
+    }
+
+    /**
+     * Stream sem timeout segura o graceful shutdown até o SIGKILL (exit 137 no docker stop).
+     * ContextClosedEvent chega antes do Tomcat esperar as requisições abertas; @PreDestroy seria tarde.
+     */
+    @EventListener(ContextClosedEvent.class)
+    public void encerrarStreams() {
+        heartbeatExecutor.shutdownNow();
+        emitters.forEach(SseEmitter::complete);
     }
 
     private void enviarHeartbeat() {
