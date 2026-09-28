@@ -5,6 +5,7 @@ import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { of } from 'rxjs';
 import { catchError, filter } from 'rxjs/operators';
 import { ToastComponent } from './components/shared/toast/toast.component';
+import { ConexaoStatus } from './interceptors/retry-get.interceptor';
 import { ImpressaoService } from './services/impressao.service';
 import { NotificationService } from './services/notification.service';
 import { PedidoPollingService } from './services/pedido-polling.service';
@@ -19,6 +20,7 @@ import { SessaoTrabalhoService } from './services/sessao-trabalho.service';
 })
 export class AppComponent implements OnInit {
   title = 'Snackbar System';
+  readonly reconectando = inject(ConexaoStatus).reconectando;
 
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
