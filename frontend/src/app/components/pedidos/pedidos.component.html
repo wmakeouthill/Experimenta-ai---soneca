@@ -259,7 +259,7 @@
 
                   <div class="pedido-itens">
                     <ul class="itens-lista">
-                      @for (item of pedido.itens; track item.produtoId) {
+                      @for (item of pedido.itens; track $index) {
                         <li class="item-lista">
                           <div class="item-linha-principal">
                             <span class="item-quantidade">{{ item.quantidade }}x</span>
@@ -274,6 +274,9 @@
                                 >
                               }
                             </div>
+                          }
+                          @if (item.observacoes) {
+                            <p class="item-obs"><app-icone nome="nota" aria-hidden="true" /> {{ item.observacoes }}</p>
                           }
                         </li>
                       }
@@ -376,7 +379,7 @@
 
                   <div class="pedido-itens">
                     <ul class="itens-lista">
-                      @for (item of pedido.itens; track item.produtoId) {
+                      @for (item of pedido.itens; track $index) {
                         <li class="item-lista">
                           <div class="item-linha-principal">
                             <span class="item-quantidade">{{ item.quantidade }}x</span>
@@ -391,6 +394,9 @@
                                 >
                               }
                             </div>
+                          }
+                          @if (item.observacoes) {
+                            <p class="item-obs"><app-icone nome="nota" aria-hidden="true" /> {{ item.observacoes }}</p>
                           }
                         </li>
                       }
@@ -512,7 +518,7 @@
 
                   <div class="pedido-itens">
                     <ul class="itens-lista">
-                      @for (item of pedido.itens; track item.produtoId) {
+                      @for (item of pedido.itens; track $index) {
                         <li class="item-lista">
                           <div class="item-linha-principal">
                             <span class="item-quantidade">{{ item.quantidade }}x</span>
@@ -527,6 +533,9 @@
                                 >
                               }
                             </div>
+                          }
+                          @if (item.observacoes) {
+                            <p class="item-obs"><app-icone nome="nota" aria-hidden="true" /> {{ item.observacoes }}</p>
                           }
                         </li>
                       }
