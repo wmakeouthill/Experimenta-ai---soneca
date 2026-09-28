@@ -724,7 +724,7 @@
               </div>
             } @else {
               <div class="carrinho-items">
-                @for (item of carrinho.itens(); track item.produto.id; let i = $index) {
+                @for (item of carrinho.itens(); track i; let i = $index) {
                   <div class="carrinho-item">
                     <div class="item-info">
                       <h4>{{ item.produto.nome }}</h4>
@@ -738,11 +738,11 @@
                     </div>
                     <div class="item-controls">
                       <div class="quantidade-mini">
-                        <button type="button" (click)="carrinho.alterarQuantidade(item.produto.id, -1)" aria-label="Diminuir quantidade">
+                        <button type="button" (click)="carrinho.alterarQuantidade(i, -1)" aria-label="Diminuir quantidade">
                           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14" /></svg>
                         </button>
                         <span>{{ item.quantidade }}</span>
-                        <button type="button" (click)="carrinho.alterarQuantidade(item.produto.id, 1)" aria-label="Aumentar quantidade">
+                        <button type="button" (click)="carrinho.alterarQuantidade(i, 1)" aria-label="Aumentar quantidade">
                           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
                         </button>
                       </div>
@@ -1728,7 +1728,7 @@
                 }
 
                 <div class="carrinho-itens">
-                  @for (item of carrinho.itens(); track item.produto.id) {
+                  @for (item of carrinho.itens(); track i; let i = $index) {
                     <div class="carrinho-item">
                       <div class="item-info">
                         <h4>{{ item.produto.nome }}</h4>
@@ -1749,21 +1749,21 @@
                       <div class="item-controles">
                         <button
                           class="btn-qty-mini"
-                          (click)="carrinho.alterarQuantidade(item.produto.id, -1)"
+                          (click)="carrinho.alterarQuantidade(i, -1)"
                         >
                           −
                         </button>
                         <span class="qty-mini">{{ item.quantidade }}</span>
                         <button
                           class="btn-qty-mini"
-                          (click)="carrinho.alterarQuantidade(item.produto.id, 1)"
+                          (click)="carrinho.alterarQuantidade(i, 1)"
                         >
                           +
                         </button>
                       </div>
                       <button
                         class="btn-remover"
-                        (click)="carrinho.removerDoCarrinho(item.produto.id)"
+                        (click)="carrinho.removerItem(i)"
                       >
                         🗑️
                       </button>
@@ -2117,7 +2117,7 @@
                 <!-- Itens -->
                 <div class="resumo-secao">
                   <span class="resumo-secao-titulo">Itens ({{ carrinho.itens().length }})</span>
-                  @for (item of carrinho.itens(); track item.produto.id) {
+                  @for (item of carrinho.itens(); track $index) {
                     <div class="resumo-item-pedido">
                       <div class="item-qtd-nome">
                         <span class="item-qtd-badge">{{ item.quantidade }}x</span>
