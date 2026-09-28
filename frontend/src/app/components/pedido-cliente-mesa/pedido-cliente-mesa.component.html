@@ -1618,10 +1618,10 @@
           <h2>Sua conta — Mesa {{ conta.numeroMesa }}</h2>
           <ul>
             @for (item of conta.pedidos; track item.pedidoId) {
-              <li>Pedido {{ item.numeroPedido ?? item.pedidoId }} — R$ {{ (item.valorCentavos / 100).toFixed(2) }}</li>
+              <li>Pedido {{ item.numeroPedido ?? item.pedidoId }} — {{ item.valorCentavos / 100 | currency: 'BRL' }}</li>
             }
           </ul>
-          <p class="conta-mesa__total">Total: R$ {{ (conta.valorCentavos / 100).toFixed(2) }}</p>
+          <p class="conta-mesa__total">Total: {{ conta.valorCentavos / 100 | currency: 'BRL' }}</p>
           <button type="button" [disabled]="conta.pedidos.length === 0" (click)="cm.fechar()">
             Pagar com PIX
           </button>

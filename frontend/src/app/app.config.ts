@@ -1,4 +1,6 @@
-import { ApplicationConfig, APP_INITIALIZER, EnvironmentProviders, Provider } from '@angular/core';
+import { ApplicationConfig, APP_INITIALIZER, EnvironmentProviders, LOCALE_ID, Provider } from '@angular/core';
+import { registerLocaleData } from '@angular/common';
+import localePt from '@angular/common/locales/pt';
 import { provideRouter, withPreloading, PreloadAllModules } from '@angular/router';
 import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';
 
@@ -14,6 +16,9 @@ import { PwaInstallService } from './services/pwa-install.service';
 import { environment } from '../environments/environment';
 
 // Instancia o serviço de PWA o mais cedo possível para não perder o evento beforeinstallprompt.
+// Pipes currency/number/date em pt-BR ("R$ 18,90", não "R$18.90")
+registerLocaleData(localePt);
+
 const initPwaInstallService = (service: PwaInstallService) => () => {
   // Apenas injetar já registra o listener; nenhuma ação extra aqui.
   return void service;
@@ -27,6 +32,7 @@ const hydrationProvider: (Provider | EnvironmentProviders)[] = environment.produ
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    { provide: LOCALE_ID, useValue: 'pt-BR' },
     // Preload all modules em background após carregamento inicial (melhora navegação)
     provideRouter(routes, withPreloading(PreloadAllModules)),
     // Hydration condicional - só em produção com SSR

@@ -20,7 +20,7 @@
         <h3>{{ produto.nome }}</h3>
         <p class="categoria">{{ produto.categoria }}</p>
         <p class="descricao">{{ produto.descricao || 'Sem descrição' }}</p>
-        <p class="preco">R$ {{ produto.preco.toFixed(2) }}</p>
+        <p class="preco">{{ produto.preco | currency: 'BRL' }}</p>
         <span [class]="'status ' + (produto.disponivel ? 'disponivel' : 'indisponivel')">
           {{ produto.disponivel ? 'Disponível' : 'Indisponível' }}
         </span>

@@ -884,14 +884,14 @@ export class PedidoClienteMesaComponent
     let resumo = '**Seu carrinho:** 🛒\n\n';
 
     itens.forEach((item, index) => {
-      resumo += `${index + 1}. **${item.produto.nome}** x${item.quantidade} - R$ ${(item.produto.preco * item.quantidade).toFixed(2)}`;
+      resumo += `${index + 1}. **${item.produto.nome}** x${item.quantidade} - ${this.formatarPrecoItemCarrinho(item)}`;
       if (item.observacao) {
         resumo += `\n   📝 _${item.observacao}_`;
       }
       resumo += '\n';
     });
 
-    resumo += `\n**Total: R$ ${this.carrinho.totalValor().toFixed(2)}** 💰`;
+    resumo += `\n**Total: ${this.formatarPreco(this.carrinho.totalValor())}** 💰`;
     resumo += `\n\nDeseja finalizar o pedido ou adicionar mais alguma coisa? 😊`;
 
     return resumo;
