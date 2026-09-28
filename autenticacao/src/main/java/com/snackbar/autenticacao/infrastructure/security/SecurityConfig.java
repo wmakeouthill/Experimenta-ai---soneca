@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -99,30 +100,20 @@ public class SecurityConfig {
                         // Endpoints de autenticação (exigem autenticação)
                         .requestMatchers("/api/auth/**").authenticated()
 
-                        // Listagem de usuários - ADMINISTRADOR e OPERADOR (necessário para exibir
-                        // nome do usuário na tela de sessões de trabalho; OPERADOR só pode GET)
-                        .requestMatchers("GET", "/api/admin/usuarios").hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
-                        // Demais endpoints administrativos - apenas ADMINISTRADOR
+                        // O método vai como HttpMethod: requestMatchers("GET", path) trata "GET" como
+                        // path e libera todos os métodos. Cada recurso: leitura explícita, o resto ADMIN.
+
+                        // Usuários (e-mail, perfil) - apenas ADMINISTRADOR: só telas de admin listam
                         .requestMatchers("/api/admin/**").hasRole(ROLE_ADMINISTRADOR)
 
                         // Endpoints de cardápio - Leitura para ADMINISTRADOR e OPERADOR, escrita apenas
                         // ADMINISTRADOR
-                        .requestMatchers("GET", PRODUTOS_PATH_PATTERN)
+                        .requestMatchers(HttpMethod.GET, PRODUTOS_PATH_PATTERN)
                         .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR, ROLE_TOTEM)
-                        .requestMatchers("POST", PRODUTOS_PATH_PATTERN)
-                        .hasRole(ROLE_ADMINISTRADOR)
-                        .requestMatchers("PUT", PRODUTOS_PATH_PATTERN)
-                        .hasRole(ROLE_ADMINISTRADOR)
-                        .requestMatchers(HTTP_METHOD_DELETE, PRODUTOS_PATH_PATTERN)
-                        .hasRole(ROLE_ADMINISTRADOR)
-                        .requestMatchers("GET", CATEGORIAS_PATH_PATTERN)
+                        .requestMatchers(PRODUTOS_PATH_PATTERN).hasRole(ROLE_ADMINISTRADOR)
+                        .requestMatchers(HttpMethod.GET, CATEGORIAS_PATH_PATTERN)
                         .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR, ROLE_TOTEM)
-                        .requestMatchers("POST", CATEGORIAS_PATH_PATTERN)
-                        .hasRole(ROLE_ADMINISTRADOR)
-                        .requestMatchers("PUT", CATEGORIAS_PATH_PATTERN)
-                        .hasRole(ROLE_ADMINISTRADOR)
-                        .requestMatchers(HTTP_METHOD_DELETE, CATEGORIAS_PATH_PATTERN)
-                        .hasRole(ROLE_ADMINISTRADOR)
+                        .requestMatchers(CATEGORIAS_PATH_PATTERN).hasRole(ROLE_ADMINISTRADOR)
 
                         // Endpoints de pedidos - ADMINISTRADOR e OPERADOR
                         .requestMatchers(PEDIDOS_PATH_PATTERN).hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
@@ -133,13 +124,9 @@ public class SecurityConfig {
 
                         // Endpoints de sessões de trabalho - Leitura para ADMINISTRADOR e OPERADOR,
                         // escrita apenas ADMINISTRADOR
-                        .requestMatchers("GET", SESSOES_TRABALHO_PATH, SESSOES_TRABALHO_PATTERN)
+                        .requestMatchers(HttpMethod.GET, SESSOES_TRABALHO_PATH, SESSOES_TRABALHO_PATTERN)
                         .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
-                        .requestMatchers("POST", SESSOES_TRABALHO_PATH, SESSOES_TRABALHO_PATTERN)
-                        .hasRole(ROLE_ADMINISTRADOR)
-                        .requestMatchers("PUT", SESSOES_TRABALHO_PATH, SESSOES_TRABALHO_PATTERN)
-                        .hasRole(ROLE_ADMINISTRADOR)
-                        .requestMatchers(HTTP_METHOD_DELETE, SESSOES_TRABALHO_PATH, SESSOES_TRABALHO_PATTERN)
+                        .requestMatchers(SESSOES_TRABALHO_PATH, SESSOES_TRABALHO_PATTERN)
                         .hasRole(ROLE_ADMINISTRADOR)
 
                         // Endpoints de histórico de sessões - APENAS ADMINISTRADOR
@@ -157,14 +144,9 @@ public class SecurityConfig {
 
                         // Endpoints de mesas - Leitura para ADMINISTRADOR, OPERADOR e TOTEM (o totem
                         // usa o token de uma mesa para "mais pedidos"), escrita apenas ADMINISTRADOR
-                        .requestMatchers("GET", MESAS_PATH, MESAS_PATTERN)
+                        .requestMatchers(HttpMethod.GET, MESAS_PATH, MESAS_PATTERN)
                         .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR, ROLE_TOTEM)
-                        .requestMatchers("POST", MESAS_PATH, MESAS_PATTERN)
-                        .hasRole(ROLE_ADMINISTRADOR)
-                        .requestMatchers("PUT", MESAS_PATH, MESAS_PATTERN)
-                        .hasRole(ROLE_ADMINISTRADOR)
-                        .requestMatchers(HTTP_METHOD_DELETE, MESAS_PATH, MESAS_PATTERN)
-                        .hasRole(ROLE_ADMINISTRADOR)
+                        .requestMatchers(MESAS_PATH, MESAS_PATTERN).hasRole(ROLE_ADMINISTRADOR)
 
                         // Endpoints de clientes - ADMINISTRADOR e OPERADOR (necessário para criar
                         // pedidos)
@@ -173,13 +155,9 @@ public class SecurityConfig {
 
                         // Endpoints de configuração de animação - Leitura para ADMINISTRADOR e
                         // OPERADOR, escrita apenas ADMINISTRADOR
-                        .requestMatchers("GET", CONFIG_ANIMACAO_PATH, CONFIG_ANIMACAO_PATTERN)
+                        .requestMatchers(HttpMethod.GET, CONFIG_ANIMACAO_PATH, CONFIG_ANIMACAO_PATTERN)
                         .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
-                        .requestMatchers("POST", CONFIG_ANIMACAO_PATH, CONFIG_ANIMACAO_PATTERN)
-                        .hasRole(ROLE_ADMINISTRADOR)
-                        .requestMatchers("PUT", CONFIG_ANIMACAO_PATH, CONFIG_ANIMACAO_PATTERN)
-                        .hasRole(ROLE_ADMINISTRADOR)
-                        .requestMatchers(HTTP_METHOD_DELETE, CONFIG_ANIMACAO_PATH, CONFIG_ANIMACAO_PATTERN)
+                        .requestMatchers(CONFIG_ANIMACAO_PATH, CONFIG_ANIMACAO_PATTERN)
                         .hasRole(ROLE_ADMINISTRADOR)
 
                         // Endpoints de auto atendimento (totem) - ADMINISTRADOR, OPERADOR e TOTEM
@@ -188,13 +166,12 @@ public class SecurityConfig {
 
                         // Endpoints de impressão - Configuração apenas ADMINISTRADOR, impressão
                         // ADMINISTRADOR e OPERADOR; o TOTEM lê a configuração e formata o cupom
-                        .requestMatchers("GET", "/api/impressao/configuracao")
+                        .requestMatchers(HttpMethod.GET, "/api/impressao/configuracao")
                         .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR, ROLE_TOTEM)
-                        .requestMatchers("POST", "/api/impressao/configuracao")
-                        .hasRole(ROLE_ADMINISTRADOR)
-                        .requestMatchers("POST", "/api/impressao/cupom-fiscal")
+                        .requestMatchers("/api/impressao/configuracao").hasRole(ROLE_ADMINISTRADOR)
+                        .requestMatchers(HttpMethod.POST, "/api/impressao/cupom-fiscal")
                         .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
-                        .requestMatchers("POST", "/api/impressao/cupom-fiscal/formatar")
+                        .requestMatchers(HttpMethod.POST, "/api/impressao/cupom-fiscal/formatar")
                         .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR, ROLE_TOTEM)
 
                         // Qualquer outro endpoint exige autenticação por padrão

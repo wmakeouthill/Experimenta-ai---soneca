@@ -1065,7 +1065,6 @@ export class ChatIAFullscreenComponent implements AfterViewChecked {
     }
   }
 
-  /** O app não registra LOCALE_ID pt-BR, então o currency pipe saía "R$15.00". */
   formatarPreco(valor: number): string {
     return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }

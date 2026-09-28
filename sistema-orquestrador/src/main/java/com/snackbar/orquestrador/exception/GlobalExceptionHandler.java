@@ -3,12 +3,15 @@ package com.snackbar.orquestrador.exception;
 import com.snackbar.kernel.domain.exceptions.BusinessRuleException;
 import com.snackbar.kernel.domain.exceptions.DomainException;
 import com.snackbar.kernel.domain.exceptions.ValidationException;
+import com.snackbar.pedidos.domain.exceptions.MesaNaoEncontradaException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -43,6 +46,17 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(body);
     }
     
+    // QR code com token inválido/mesa excluída é recurso inexistente, não requisição malformada
+    @ExceptionHandler(MesaNaoEncontradaException.class)
+    public ResponseEntity<Map<String, Object>> handleMesaNaoEncontradaException(MesaNaoEncontradaException ex) {
+        Map<String, Object> body = criarRespostaErro(
+            HttpStatus.NOT_FOUND.value(),
+            "Recurso Não Encontrado",
+            ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
     @ExceptionHandler(DomainException.class)
     public ResponseEntity<Map<String, Object>> handleDomainException(DomainException ex) {
         Map<String, Object> body = criarRespostaErro(
@@ -135,23 +149,35 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(body);
     }
     
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, Object>> handleHttpMessageNotReadableException(
+            HttpMessageNotReadableException ex) {
+        logger.warn("Corpo da requisição ilegível: {}", ex.getMessage());
+        return ResponseEntity.badRequest().body(criarRespostaErro(
+            HttpStatus.BAD_REQUEST.value(),
+            "Requisição Inválida",
+            "Corpo da requisição inválido ou mal formatado."
+        ));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
-        // Log completo do erro para debug
+        // Exceções do Spring MVC (rota inexistente, método não suportado...) já trazem o status 4xx certo
+        if (ex instanceof ErrorResponse erroSpring) {
+            int status = erroSpring.getStatusCode().value();
+            logger.warn("Requisição rejeitada ({}): {}", status, ex.getMessage());
+            return ResponseEntity.status(status)
+                .body(criarRespostaErro(status, erroSpring.getBody().getTitle(), erroSpring.getBody().getDetail()));
+        }
+
+        // Detalhe (classe, SQL, causa) só no log: a resposta é pública
         logger.error("Erro inesperado: ", ex);
-        
+
         Map<String, Object> body = criarRespostaErro(
             HttpStatus.INTERNAL_SERVER_ERROR.value(),
             "Erro Interno do Servidor",
-            ex.getMessage() != null ? ex.getMessage() : "Ocorreu um erro inesperado. Tente novamente mais tarde."
+            "Ocorreu um erro inesperado. Tente novamente mais tarde."
         );
-        
-        // Em desenvolvimento, incluir detalhes do erro
-        body.put("exception", ex.getClass().getName());
-        if (ex.getCause() != null) {
-            body.put("cause", ex.getCause().getMessage());
-        }
-        
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }
     

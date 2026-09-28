@@ -112,19 +112,6 @@ export function useAutoAtendimentoCarrinho() {
         _observacaoTemp.set('');
         adicionaisSelecionados.set([]);
         adicionaisExpandido.set(false);
-
-        const itemExistente = itens().find(item => item.produto.id === produto.id);
-        if (itemExistente) {
-            quantidadeTemp.set(itemExistente.quantidade);
-            _observacaoTemp.set(itemExistente.observacao);
-            if (itemExistente.adicionais) {
-                adicionaisSelecionados.set([...itemExistente.adicionais]);
-                if (itemExistente.adicionais.length > 0) {
-                    adicionaisExpandido.set(true);
-                }
-            }
-        }
-
         mostrarDetalhes.set(true);
     }
 
@@ -213,49 +200,57 @@ export function useAutoAtendimentoCarrinho() {
         quantidadeTemp.update(q => Math.max(1, q - 1));
     }
 
+    const chaveAdicionais = (lista: ItemAdicionalTotem[] = []) =>
+        lista.map(a => `${a.adicional.id}x${a.quantidade}`).sort().join();
+
+    /** Mesma personalização soma na linha existente; diferente vira outra linha (igual à mesa). */
+    function adicionarLinha(novo: ItemCarrinhoTotem): void {
+        const lista = [...itens()];
+        const i = lista.findIndex(item =>
+            item.produto.id === novo.produto.id &&
+            item.observacao.trim() === novo.observacao.trim() &&
+            chaveAdicionais(item.adicionais) === chaveAdicionais(novo.adicionais));
+        if (i >= 0) {
+            lista[i] = { ...lista[i], quantidade: lista[i].quantidade + novo.quantidade };
+        } else {
+            lista.push(novo);
+        }
+        itens.set(lista);
+        persistirCarrinho(lista);
+    }
+
     function confirmarProduto(): void {
         const produto = produtoSelecionado();
         if (!produto) return;
 
-        const novoItem: ItemCarrinhoTotem = {
+        adicionarLinha({
             produto,
             quantidade: quantidadeTemp(),
             observacao: _observacaoTemp(),
             adicionais: [...adicionaisSelecionados()]
-        };
-
-        const itensAtuais = [...itens()];
-        const index = itensAtuais.findIndex(item => item.produto.id === produto.id);
-
-        if (index >= 0) {
-            itensAtuais[index] = novoItem;
-        } else {
-            itensAtuais.push(novoItem);
-        }
-
-        itens.set(itensAtuais);
-        persistirCarrinho(itensAtuais);
+        });
         fecharDetalhes();
     }
 
-    function removerItem(produtoId: string): void {
-        const novosItens = itens().filter(item => item.produto.id !== produtoId);
+    function adicionarRapido(produto: Produto): void {
+        adicionarLinha({ produto, quantidade: 1, observacao: '', adicionais: [] });
+    }
+
+    // Por índice: o mesmo produto pode estar em mais de uma linha
+    function removerItem(index: number): void {
+        const novosItens = itens().filter((_, i) => i !== index);
         itens.set(novosItens);
         persistirCarrinho(novosItens);
     }
 
-    function atualizarQuantidadeItem(produtoId: string, novaQuantidade: number): void {
+    function atualizarQuantidadeItem(index: number, novaQuantidade: number): void {
         if (novaQuantidade <= 0) {
-            removerItem(produtoId);
+            removerItem(index);
             return;
         }
 
-        const novosItens = itens().map(item => {
-            if (item.produto.id === produtoId) {
-                return { ...item, quantidade: novaQuantidade };
-            }
-            return item;
-        });
+        const novosItens = itens().map((item, i) =>
+            i === index ? { ...item, quantidade: novaQuantidade } : item);
 
         itens.set(novosItens);
         persistirCarrinho(novosItens);
@@ -314,6 +309,7 @@ export function useAutoAtendimentoCarrinho() {
         incrementarQuantidade,
         decrementarQuantidade,
         confirmarProduto,
+        adicionarRapido,
         removerItem,
         atualizarQuantidadeItem,
         abrirCarrinho,

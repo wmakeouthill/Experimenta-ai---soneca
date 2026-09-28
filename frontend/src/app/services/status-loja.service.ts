@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, NgZone } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError, map, retry } from 'rxjs/operators';
 
 /**
  * Status possíveis da loja para pedidos.
@@ -79,20 +79,18 @@ export class StatusLojaService {
         // Heartbeat - conexão ativa
       });
 
-      eventSource.onerror = error => {
-        this.zone.run(() => {
-          if (eventSource.readyState === EventSource.CLOSED) {
-            console.error('Conexão SSE fechada permanentemente.');
-          } else if (eventSource.readyState === EventSource.CONNECTING) {
-            console.warn('Conexão SSE perdida. Tentando reconectar...');
-          }
-        });
+      // CONNECTING: o próprio EventSource reconecta. CLOSED (ex.: 502 durante deploy):
+      // ele desiste de vez, então sinaliza erro e o retry abre uma conexão nova.
+      eventSource.onerror = () => {
+        if (eventSource.readyState === EventSource.CLOSED) {
+          observer.error(new Error('Conexão SSE de status da loja fechada'));
+        }
       };
 
       return () => {
         eventSource.close();
       };
-    });
+    }).pipe(retry({ delay: 5000 }));
   }
 
   /**

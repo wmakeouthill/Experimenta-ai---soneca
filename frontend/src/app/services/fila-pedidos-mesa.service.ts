@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { Observable, catchError, interval, of, startWith, switchMap, tap } from 'rxjs';
+import { EMPTY, Observable, catchError, interval, of, startWith, switchMap, tap } from 'rxjs';
 
 export interface AdicionalPedidoPendente {
   adicionalId: string;
@@ -149,12 +149,16 @@ export class FilaPedidosMesaService {
   iniciarPolling(intervaloMs: number = 5000): Observable<PedidoPendente[]> {
     return interval(intervaloMs).pipe(
       startWith(0),
-      switchMap(() => this.listarPedidosPendentes()),
-      tap(pedidos => this._pedidosPendentes.set(pedidos)),
-      catchError(err => {
-        console.error('Erro no polling de pedidos pendentes:', err);
-        return of([]);
-      })
+      // catchError dentro do switchMap: um erro pula o ciclo sem encerrar o polling
+      switchMap(() =>
+        this.listarPedidosPendentes().pipe(
+          catchError(err => {
+            console.error('Erro no polling de pedidos pendentes:', err);
+            return EMPTY;
+          })
+        )
+      ),
+      tap(pedidos => this._pedidosPendentes.set(pedidos))
     );
   }
 

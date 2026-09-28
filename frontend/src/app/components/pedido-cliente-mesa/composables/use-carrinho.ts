@@ -118,21 +118,6 @@ export function useCarrinho() {
         _observacaoTemp.set('');
         adicionaisSelecionados.set([]);
         adicionaisExpandido.set(false); // Começa recolhido
-
-        const itemExistente = itens().find(item => item.produto.id === produto.id);
-        if (itemExistente) {
-            quantidadeTemp.set(itemExistente.quantidade);
-            _observacaoTemp.set(itemExistente.observacao);
-            // Restaura adicionais selecionados anteriormente
-            if (itemExistente.adicionais) {
-                adicionaisSelecionados.set([...itemExistente.adicionais]);
-                // Se já tem adicionais, expande automaticamente
-                if (itemExistente.adicionais.length > 0) {
-                    adicionaisExpandido.set(true);
-                }
-            }
-        }
-
         mostrarDetalhes.set(true);
     }
 
@@ -214,31 +199,40 @@ export function useCarrinho() {
         }
     }
 
+    const chaveAdicionais = (lista: ItemAdicionalCarrinho[] = []) =>
+        lista.map(a => `${a.adicional.id}x${a.quantidade}`).sort().join();
+
+    /**
+     * Mesmo produto com a mesma observação e os mesmos adicionais soma na linha existente;
+     * personalização diferente (ex.: "sem cebola" e "com bacon") vira outra linha.
+     */
+    function adicionarLinha(novo: ItemCarrinho): void {
+        const lista = [...itens()];
+        const i = lista.findIndex(item =>
+            item.produto.id === novo.produto.id &&
+            item.observacao.trim() === novo.observacao.trim() &&
+            chaveAdicionais(item.adicionais) === chaveAdicionais(novo.adicionais));
+
+        if (i >= 0) {
+            lista[i] = { ...lista[i], quantidade: lista[i].quantidade + novo.quantidade };
+        } else {
+            lista.push(novo);
+        }
+
+        itens.set(lista);
+        persistirCarrinho(lista);
+    }
+
     function adicionarAoCarrinho(): void {
         const produto = produtoSelecionado();
         if (!produto) return;
 
-        const itensAtuais = [...itens()];
-        const indexExistente = itensAtuais.findIndex(item => item.produto.id === produto.id);
-
-        if (indexExistente >= 0) {
-            itensAtuais[indexExistente] = {
-                ...itensAtuais[indexExistente],
-                quantidade: quantidadeTemp(),
-                observacao: _observacaoTemp(),
-                adicionais: [...adicionaisSelecionados()]
-            };
-        } else {
-            itensAtuais.push({
-                produto,
-                quantidade: quantidadeTemp(),
-                observacao: _observacaoTemp(),
-                adicionais: [...adicionaisSelecionados()]
-            });
-        }
-
-        itens.set(itensAtuais);
-        persistirCarrinho(itensAtuais);
+        adicionarLinha({
+            produto,
+            quantidade: quantidadeTemp(),
+            observacao: _observacaoTemp(),
+            adicionais: [...adicionaisSelecionados()]
+        });
         fecharDetalhes();
     }
 
@@ -247,19 +241,7 @@ export function useCarrinho() {
      * Usado para adicionar rapidamente sem abrir detalhes.
      */
     function adicionarRapido(produto: Produto): void {
-        const existente = itens().find(item => item.produto.id === produto.id);
-        if (existente) {
-            alterarQuantidade(produto.id, 1);
-        } else {
-            const novoItem: ItemCarrinho = {
-                produto,
-                quantidade: 1,
-                observacao: '',
-                adicionais: []
-            };
-            itens.update(lista => [...lista, novoItem]);
-            persistirCarrinho(itens());
-        }
+        adicionarLinha({ produto, quantidade: 1, observacao: '', adicionais: [] });
     }
 
     /**
@@ -267,54 +249,33 @@ export function useCarrinho() {
      * Usado pelo chat IA para adicionar via comando de texto.
      */
     function adicionarComOpcoes(produto: Produto, quantidade: number, observacao: string): void {
-        const itensAtuais = [...itens()];
-        const indexExistente = itensAtuais.findIndex(item => item.produto.id === produto.id);
-
-        if (indexExistente >= 0) {
-            // Se já existe, soma a quantidade e concatena observação
-            const itemExistente = itensAtuais[indexExistente];
-            let novaObservacao = itemExistente.observacao;
-            if (observacao) {
-                novaObservacao = novaObservacao
-                    ? `${novaObservacao}; ${observacao}`
-                    : observacao;
-            }
-            itensAtuais[indexExistente] = {
-                ...itemExistente,
-                quantidade: itemExistente.quantidade + quantidade,
-                observacao: novaObservacao
-            };
-        } else {
-            itensAtuais.push({
-                produto,
-                quantidade,
-                observacao,
-                adicionais: []
-            });
-        }
-
-        itens.set(itensAtuais);
-        persistirCarrinho(itensAtuais);
+        adicionarLinha({ produto, quantidade, observacao, adicionais: [] });
     }
 
+    /** Remove todas as linhas do produto (comando do chat IA). */
     function removerDoCarrinho(produtoId: string): void {
         const novosItens = itens().filter(item => item.produto.id !== produtoId);
         itens.set(novosItens);
         persistirCarrinho(novosItens);
     }
 
-    function alterarQuantidade(produtoId: string, delta: number): void {
-        const novosItens = itens()
-            .map(item => {
-                if (item.produto.id === produtoId) {
-                    const novaQuantidade = item.quantidade + delta;
-                    if (novaQuantidade <= 0) return null;
-                    return { ...item, quantidade: novaQuantidade };
-                }
-                return item;
-            })
-            .filter((item): item is ItemCarrinho => item !== null);
+    function removerItem(index: number): void {
+        const novosItens = itens().filter((_, i) => i !== index);
+        itens.set(novosItens);
+        persistirCarrinho(novosItens);
+    }
 
+    function alterarQuantidade(index: number, delta: number): void {
+        const item = itens()[index];
+        if (!item) return;
+
+        const novaQuantidade = item.quantidade + delta;
+        if (novaQuantidade <= 0) {
+            removerItem(index);
+            return;
+        }
+
+        const novosItens = itens().map((it, i) => i === index ? { ...it, quantidade: novaQuantidade } : it);
         itens.set(novosItens);
         persistirCarrinho(novosItens);
     }
@@ -367,6 +328,7 @@ export function useCarrinho() {
         adicionarRapido,
         adicionarComOpcoes,
         removerDoCarrinho,
+        removerItem,
         alterarQuantidade,
         abrirCarrinho,
         fecharCarrinho,

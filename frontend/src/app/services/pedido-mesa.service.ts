@@ -183,14 +183,6 @@ export class PedidoMesaService {
     );
   }
 
-  buscarStatusPedidoAutenticado(pedidoId: string): Observable<StatusPedidoCliente> {
-    // Versão autenticada via /api/cliente para evitar 404 caso o público não exponha.
-    const noCache = `t=${Date.now()}`;
-    return this.http.get<StatusPedidoCliente>(
-      `/api/cliente/mesa/pedido/${pedidoId}/status?${noCache}`
-    );
-  }
-
   /**
    * Busca histórico de pedidos do cliente.
    * Headers são adicionados automaticamente pelo clienteAuthInterceptor

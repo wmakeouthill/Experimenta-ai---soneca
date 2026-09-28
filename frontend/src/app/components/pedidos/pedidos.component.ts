@@ -13,7 +13,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { catchError, of, Subscription, switchMap, takeWhile, timer } from 'rxjs';
+import { catchError, EMPTY, of, Subscription, switchMap, takeWhile, timer } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { FilaPedidosMesaService, PedidoPendente } from '../../services/fila-pedidos-mesa.service';
 import { FilaPedidosTotemService } from '../../services/fila-pedidos-totem.service';
@@ -170,11 +170,15 @@ export class PedidosComponent implements OnInit, OnDestroy {
       this.filaPollingSubscription = timer(0, 5000)
         .pipe(
           takeWhile(() => this.filaPollingAtivo),
-          switchMap(() => this.filaPedidosMesaService.listarPedidosPendentes()),
-          catchError(err => {
-            console.error('Erro ao carregar fila de mesa:', err);
-            return of([]);
-          })
+          // catchError dentro do switchMap: um erro pula o ciclo e mantém a fila na tela
+          switchMap(() =>
+            this.filaPedidosMesaService.listarPedidosPendentes().pipe(
+              catchError(err => {
+                console.error('Erro ao carregar fila de mesa:', err);
+                return EMPTY;
+              })
+            )
+          )
         )
         .subscribe(pedidos => {
           // Executa atualizações de estado dentro da zona Angular para trigger change detection
@@ -202,11 +206,14 @@ export class PedidosComponent implements OnInit, OnDestroy {
       this.filaTotemPollingSubscription = timer(0, 5000)
         .pipe(
           takeWhile(() => this.filaTotemPollingAtivo),
-          switchMap(() => this.filaPedidosTotemService.listarPedidosPendentes()),
-          catchError(err => {
-            console.error('Erro ao carregar fila totem:', err);
-            return of([]);
-          })
+          switchMap(() =>
+            this.filaPedidosTotemService.listarPedidosPendentes().pipe(
+              catchError(err => {
+                console.error('Erro ao carregar fila totem:', err);
+                return EMPTY;
+              })
+            )
+          )
         )
         .subscribe(pedidos => {
           this.ngZone.run(() => {

@@ -15,3 +15,19 @@
   }
 }
 
+
+/* Aviso de reconexão (retry-get.interceptor): a região live fica sempre no DOM e só aparece com conteúdo */
+.aviso-reconectando:not(:empty) {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  padding: 8px 16px;
+  border-radius: 0 0 8px 8px;
+  background: #b45309;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}

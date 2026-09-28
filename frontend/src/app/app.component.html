@@ -1,2 +1,7 @@
 <app-toast />
+<div class="aviso-reconectando" role="status" aria-live="polite">
+  @if (reconectando()) {
+    Conexão com o servidor instável. Reconectando…
+  }
+</div>
 <router-outlet />

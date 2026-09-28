@@ -22,13 +22,23 @@ export class PedidoPollingService {
   // Controle de pedidos já processados
   private readonly pedidosConhecidos = new Set<string>();
   private pollingSubscription: Subscription | null = null;
+  // Sessão do polling ativo: recarregar() sem argumento usa ela, senão listaria pedidos de todas as sessões
+  private sessaoIdAtual: string | undefined;
 
   iniciarPolling(sessaoId?: string) {
-    if (this.pollingAtivo()) {
-      console.log('Polling já está ativo.');
+    if (this.pollingAtivo() && sessaoId === this.sessaoIdAtual) {
       return;
     }
 
+    // Sessão mudou com polling ativo (ex.: caixa fechado e reaberto): reinicia com o novo filtro
+    this.pararPolling();
+    this.sessaoIdAtual = sessaoId;
+    // Sem sessão não há pedido em andamento (finalizar sessão exige fila vazia);
+    // listar sem filtro baixaria o histórico inteiro, sem paginação, a cada 5 s
+    if (!sessaoId) {
+      this.pedidos.set([]);
+      return;
+    }
     this.pollingAtivo.set(true);
     console.log('Iniciando polling global de pedidos...');
 
@@ -39,8 +49,7 @@ export class PedidoPollingService {
       this.pollingSubscription = timer(0, 5000).pipe(
         takeWhile(() => this.pollingAtivo()),
         switchMap(() => {
-          const filters = sessaoId ? { sessaoId } : undefined;
-          return this.pedidoService.listar(filters).pipe(
+          return this.pedidoService.listar({ sessaoId }).pipe(
             catchError(err => {
               console.error('Erro no polling global:', err);
               // Atualiza estado dentro da zona Angular
@@ -94,9 +103,12 @@ export class PedidoPollingService {
   }
 
   // Método para forçar recarga manual
-  recarregar(sessaoId?: string) {
-    const filters = sessaoId ? { sessaoId } : undefined;
-    this.pedidoService.listar(filters).subscribe({
+  recarregar(sessaoId: string | undefined = this.sessaoIdAtual) {
+    if (!sessaoId) {
+      this.pedidos.set([]);
+      return;
+    }
+    this.pedidoService.listar({ sessaoId }).subscribe({
       next: (resultado) => {
         this.processarNovosPedidos(resultado);
         // Força nova referência de array para garantir detecção de mudança

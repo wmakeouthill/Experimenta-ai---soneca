@@ -250,7 +250,7 @@
         @if (sessaoParaFinalizar()?.valorAbertura !== undefined) {
           <div class="info-caixa">
             <span class="info-label">Valor de Abertura:</span>
-            <span class="info-valor">R$ {{ sessaoParaFinalizar()?.valorAbertura?.toFixed(2) || '0,00' }}</span>
+            <span class="info-valor">{{ sessaoParaFinalizar()?.valorAbertura ?? 0 | currency: 'BRL' }}</span>
           </div>
         }
         <div class="form-grupo">

@@ -1,9 +1,21 @@
 import { signal, computed, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { PedidoMesaService, StatusCliente, StatusPedidoCliente } from '../../../services/pedido-mesa.service';
-import { interval, Subscription, switchMap, takeWhile, catchError, of } from 'rxjs';
+import { interval, Observable, Subscription, switchMap, takeWhile, catchError, of } from 'rxjs';
 
 const POLLING_INTERVAL_MS = 5000; // 5 segundos
+
+/** Estado final de um pedido que a loja nunca aceitou (a tela de sucesso o mostra como cancelado). */
+function naoConfirmado(pedidoId: string): StatusPedidoCliente {
+    return {
+        pedidoId,
+        status: 'CANCELADO',
+        statusDescricao: 'Pedido não confirmado',
+        dataHoraSolicitacao: '',
+        tempoEsperaSegundos: 0,
+        motivoCancelamento: 'A loja não confirmou este pedido. Fale com um atendente.',
+    };
+}
 
 /**
  * Tipo de retorno do composable useSucessoPedido
@@ -94,10 +106,20 @@ export function useSucessoPedido() {
         // ✅ Atrasa o início do polling para evitar problemas de hidratação
         // Aguarda a aplicação se tornar estável (após hidratação)
         setTimeout(() => {
-            if (pedidoId() === id) { // Verifica se ainda é o mesmo pedido
+            if (pedidoId() === id && !pedidoTerminado()) { // Mesmo pedido e ainda em andamento
                 iniciarPolling();
             }
         }, 100); // Delay de 100ms após a busca inicial
+    }
+
+    /**
+     * Consulta o status. 404 = o pedido saiu da fila sem virar pedido real (rejeitado
+     * pelo atendente ou expirado) → estado final. Outro erro → null (tenta no próximo ciclo).
+     */
+    function consultar(id: string): Observable<StatusPedidoCliente | null> {
+        return pedidoMesaService.buscarStatusPedido(id).pipe(
+            catchError((err: { status?: number }) => of(err.status === 404 ? naoConfirmado(id) : null))
+        );
     }
 
     /**
@@ -109,39 +131,16 @@ export function useSucessoPedido() {
 
         carregandoStatus.set(true);
 
-        // Primeiro tenta endpoint público; se 404, tenta autenticado.
-        pedidoMesaService.buscarStatusPedido(id).subscribe({
-            next: (status) => {
-                carregandoStatus.set(false);
-                statusPedido.set(status);
-                erroStatus.set(null);
-
-                if (status.status === 'FINALIZADO' || status.status === 'CANCELADO') {
-                    pararPolling();
-                }
-            },
-            error: (err) => {
-                if (err.status === 404) {
-                    // Fallback autenticado
-                    pedidoMesaService.buscarStatusPedidoAutenticado(id).subscribe({
-                        next: (status) => {
-                            carregandoStatus.set(false);
-                            statusPedido.set(status);
-                            erroStatus.set(null);
-                            if (status.status === 'FINALIZADO' || status.status === 'CANCELADO') {
-                                pararPolling();
-                            }
-                        },
-                        error: (innerErr) => {
-                            carregandoStatus.set(false);
-                            erroStatus.set('Pedido não encontrado');
-                            pararPolling();
-                        }
-                    });
-                } else {
-                    carregandoStatus.set(false);
-                    erroStatus.set('Erro ao buscar status');
-                }
+        consultar(id).subscribe((status) => {
+            carregandoStatus.set(false);
+            if (!status) {
+                erroStatus.set('Erro ao buscar status');
+                return;
+            }
+            statusPedido.set(status);
+            erroStatus.set(null);
+            if (pedidoTerminado()) {
+                pararPolling();
             }
         });
     }
@@ -158,20 +157,10 @@ export function useSucessoPedido() {
             .pipe(
                 switchMap(() => {
                     const id = pedidoId();
-                    if (!id) return of(null);
-                    return pedidoMesaService.buscarStatusPedido(id).pipe(
-                        catchError((err) => {
-                            if (err.status === 404) {
-                                return pedidoMesaService.buscarStatusPedidoAutenticado(id).pipe(catchError(() => of(null)));
-                            }
-                            return of(null);
-                        })
-                    );
+                    return id ? consultar(id) : of(null);
                 }),
-                takeWhile((status) => {
-                    if (!status) return true; // Continua tentando
-                    return status.status !== 'FINALIZADO' && status.status !== 'CANCELADO';
-                }, true)
+                // null (erro transitório) continua tentando
+                takeWhile((status) => status?.status !== 'FINALIZADO' && status?.status !== 'CANCELADO', true)
             )
             .subscribe({
                 next: (status) => {

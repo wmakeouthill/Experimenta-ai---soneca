@@ -426,7 +426,7 @@
           </div>
         } @else {
           <div class="carrinho-items">
-            @for (item of carrinho.itens(); track item.produto.id) {
+            @for (item of carrinho.itens(); track $index) {
               <div class="carrinho-item carrinho-item--totem">
                 <div class="item-imagem-carrinho">
                   @if (item.produto.foto) {
@@ -455,7 +455,7 @@
                       type="button"
                       (click)="
                         carrinho.atualizarQuantidadeItem(
-                          item.produto.id,
+                          $index,
                           Math.max(1, item.quantidade - 1)
                         )
                       "
@@ -466,14 +466,14 @@
                     <span>{{ item.quantidade }}</span>
                     <button
                       type="button"
-                      (click)="carrinho.atualizarQuantidadeItem(item.produto.id, item.quantidade + 1)"
+                      (click)="carrinho.atualizarQuantidadeItem($index, item.quantidade + 1)"
                       aria-label="Aumentar quantidade"
                     >
                       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
                     </button>
                   </div>
                   <span class="item-preco">{{ formatarPreco(calcularSubtotalItem(item)) }}</span>
-                  <button type="button" class="btn-remover-item" (click)="carrinho.removerItem(item.produto.id)">
+                  <button type="button" class="btn-remover-item" (click)="carrinho.removerItem($index)">
                     Remover
                   </button>
                 </div>
@@ -1017,10 +1017,10 @@
           }
 
           <div class="confirmacao-itens">
-            @for (item of carrinho.itens(); track item.produto.id) {
+            @for (item of carrinho.itens(); track $index) {
               <div class="confirmacao-item">
                 <span>{{ item.quantidade }}x {{ item.produto.nome }}</span>
-                <span>{{ formatarPreco(item.produto.preco * item.quantidade) }}</span>
+                <span>{{ formatarPreco(calcularSubtotalItem(item)) }}</span>
               </div>
             }
           </div>

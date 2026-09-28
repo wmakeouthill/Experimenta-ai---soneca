@@ -7,6 +7,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -89,7 +91,25 @@ public class StatusLojaRestController {
                 emitter.send(SseEmitter.event()
                         .name("status")
                         .data(status));
-            } catch (IOException e) {
+            } catch (IOException | IllegalStateException e) {
+                // IllegalState: emitter já encerrado; não pode derrubar quem mudou a sessão
+                emitters.remove(emitter);
+            }
+        }
+    }
+
+    /**
+     * Stream sem timeout segura o graceful shutdown até o SIGKILL (exit 137 no docker stop).
+     * ContextClosedEvent chega antes do Tomcat esperar as requisições abertas; @PreDestroy seria tarde.
+     */
+    @EventListener(ContextClosedEvent.class)
+    public void encerrarStreams() {
+        heartbeatExecutor.shutdownNow();
+        for (SseEmitter emitter : emitters) {
+            try {
+                emitter.complete();
+            } catch (IllegalStateException e) {
+                // Cliente saiu na mesma hora; não pode impedir de fechar os demais
                 emitters.remove(emitter);
             }
         }
@@ -101,7 +121,8 @@ public class StatusLojaRestController {
                 emitter.send(SseEmitter.event()
                         .name("ping")
                         .data(""));
-            } catch (IOException e) {
+            } catch (IOException | IllegalStateException e) {
+                // Exceção que escapa daqui cancela o scheduleAtFixedRate em silêncio
                 emitters.remove(emitter);
             }
         }

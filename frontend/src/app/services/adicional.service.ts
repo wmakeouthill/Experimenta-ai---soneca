@@ -81,11 +81,10 @@ export class AdicionalService {
     }
 
     /**
-     * Lista adicionais de um produto usando endpoint público (sem autenticação).
-     * Usado para contexto de balcão/cliente na mesa.
+     * Adicionais disponíveis de um produto para o cliente na mesa (público, validado pelo token da mesa).
      */
-    listarAdicionaisDoProdutoPublico(produtoId: string): Observable<Adicional[]> {
-        return this.http.get<Adicional[]>(`/api/public/delivery/produtos/${produtoId}/adicionais`);
+    listarAdicionaisDoProdutoMesa(mesaToken: string, produtoId: string): Observable<Adicional[]> {
+        return this.http.get<Adicional[]>(`/api/public/mesa/${mesaToken}/produtos/${produtoId}/adicionais`);
     }
 
     atualizarAdicionaisDoProduto(produtoId: string, adicionalIds: string[]): Observable<void> {

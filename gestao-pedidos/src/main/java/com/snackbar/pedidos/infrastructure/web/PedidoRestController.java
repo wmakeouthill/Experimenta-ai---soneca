@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.snackbar.pedidos.application.dto.*;
 import com.snackbar.pedidos.application.usecases.*;
@@ -72,14 +73,14 @@ public class PedidoRestController {
             pedidos = listarPedidosUseCase.executarPorDataInicioSessao(dataInicioSessao);
         } else if (status != null && dataInicio != null && dataFim != null) {
             pedidos = listarPedidosUseCase.executarPorStatusEData(status, dataInicio, dataFim);
-        } else if (status != null) {
-            pedidos = listarPedidosUseCase.executarPorStatus(status);
         } else if (clienteId != null) {
             pedidos = listarPedidosUseCase.executarPorClienteId(clienteId);
         } else if (dataInicio != null && dataFim != null) {
             pedidos = listarPedidosUseCase.executarPorDataPedido(dataInicio, dataFim);
         } else {
-            pedidos = listarPedidosUseCase.executar();
+            // Sem recorte a resposta seria o histórico inteiro da loja (sem paginação)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Informe sessaoId, dataInicioSessao, clienteId ou o período (dataInicio e dataFim)");
         }
 
         return ResponseEntity.ok(pedidos);

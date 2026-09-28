@@ -1,5 +1,6 @@
 package com.snackbar.pedidos.infrastructure.web;
 
+import com.snackbar.cardapio.application.dto.AdicionalDTO;
 import com.snackbar.pedidos.infrastructure.idempotency.IdempotencyService;
 import com.snackbar.pedidos.application.dto.CriarPedidoMesaRequest;
 import com.snackbar.pedidos.application.dto.MesaDTO;
@@ -19,6 +20,7 @@ import com.snackbar.pedidos.application.usecases.CriarPedidoMesaUseCase;
 import com.snackbar.pedidos.application.usecases.BuscarCardapioPublicoUseCase;
 import com.snackbar.pedidos.application.usecases.BuscarProdutosPopularesUseCase;
 import com.snackbar.pedidos.application.usecases.BuscarStatusPedidoClienteUseCase;
+import com.snackbar.pedidos.application.ports.CardapioServicePort;
 import com.snackbar.pedidos.application.ports.ClienteGatewayPort;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -57,6 +59,7 @@ public class PedidoMesaRestController {
     private final BuscarProdutosPopularesUseCase buscarProdutosPopularesUseCase;
     private final BuscarStatusPedidoClienteUseCase buscarStatusPedidoClienteUseCase;
     private final ClienteGatewayPort clienteGateway;
+    private final CardapioServicePort cardapioService;
     private final IdempotencyService idempotencyService;
 
     /**
@@ -79,6 +82,18 @@ public class PedidoMesaRestController {
         buscarMesaPorTokenUseCase.executar(token);
         CardapioPublicoDTO cardapio = buscarCardapioPublicoUseCase.executar();
         return ResponseEntity.ok(cardapio);
+    }
+
+    /**
+     * Adicionais disponíveis de um produto, para o cliente montar o item.
+     * A rota autenticada /api/produtos/{id}/adicionais dava 401 no celular do cliente.
+     */
+    @GetMapping("/{token}/produtos/{produtoId}/adicionais")
+    public ResponseEntity<List<AdicionalDTO>> listarAdicionaisDoProduto(
+            @NonNull @PathVariable String token,
+            @NonNull @PathVariable String produtoId) {
+        buscarMesaPorTokenUseCase.executar(token);
+        return ResponseEntity.ok(cardapioService.listarAdicionaisDisponiveisDoProduto(produtoId));
     }
 
     /**

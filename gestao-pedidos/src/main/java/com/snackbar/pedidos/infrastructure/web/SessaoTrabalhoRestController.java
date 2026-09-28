@@ -27,24 +27,28 @@ public class SessaoTrabalhoRestController {
     private final FinalizarSessaoTrabalhoUseCase finalizarSessaoUseCase;
     private final BuscarSessaoAtivaUseCase buscarSessaoAtivaUseCase;
     private final ListarSessoesTrabalhoUseCase listarSessoesUseCase;
+    private final StatusLojaRestController statusLoja;
 
     @PostMapping
     public ResponseEntity<SessaoTrabalhoDTO> iniciar(@Valid @RequestBody IniciarSessaoRequest request) {
         SessaoTrabalhoDTO sessao = iniciarSessaoUseCase.executar(
                 request.getUsuarioId(),
                 request.getValorAbertura());
+        statusLoja.notificarMudancaStatus();
         return ResponseEntity.status(HttpStatus.CREATED).body(sessao);
     }
 
     @PutMapping("/{id}/pausar")
     public ResponseEntity<SessaoTrabalhoDTO> pausar(@NonNull @PathVariable String id) {
         SessaoTrabalhoDTO sessao = pausarSessaoUseCase.executar(id);
+        statusLoja.notificarMudancaStatus();
         return ResponseEntity.ok(sessao);
     }
 
     @PutMapping("/{id}/retomar")
     public ResponseEntity<SessaoTrabalhoDTO> retomar(@NonNull @PathVariable String id) {
         SessaoTrabalhoDTO sessao = retomarSessaoUseCase.executar(id);
+        statusLoja.notificarMudancaStatus();
         return ResponseEntity.ok(sessao);
     }
 
@@ -54,6 +58,7 @@ public class SessaoTrabalhoRestController {
             @NonNull @PathVariable String id,
             @Valid @RequestBody FinalizarSessaoRequest request) {
         SessaoTrabalhoDTO sessao = finalizarSessaoUseCase.executar(id, request.getValorFechamento());
+        statusLoja.notificarMudancaStatus();
         return ResponseEntity.ok(sessao);
     }
 

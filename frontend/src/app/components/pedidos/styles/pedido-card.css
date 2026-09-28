@@ -220,6 +220,19 @@
   padding-left: 35px;
 }
 
+/* Observação do item (ex.: "sem cebola"): a cozinha precisa ler inteira, então quebra linha */
+.item-obs {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  margin: 0.15rem 0 0;
+  padding-left: 35px;
+  font-size: 0.75rem;
+  font-style: italic;
+  color: var(--delivery-text-secondary);
+  overflow-wrap: anywhere;
+}
+
 .adicional-badge {
   display: inline-block;
   background: var(--delivery-accent-pill);
