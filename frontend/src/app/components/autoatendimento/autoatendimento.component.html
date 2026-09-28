@@ -1020,7 +1020,7 @@
             @for (item of carrinho.itens(); track $index) {
               <div class="confirmacao-item">
                 <span>{{ item.quantidade }}x {{ item.produto.nome }}</span>
-                <span>{{ formatarPreco(item.produto.preco * item.quantidade) }}</span>
+                <span>{{ formatarPreco(calcularSubtotalItem(item)) }}</span>
               </div>
             }
           </div>

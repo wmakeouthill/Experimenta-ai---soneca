@@ -2123,9 +2123,7 @@
                         <span class="item-qtd-badge">{{ item.quantidade }}x</span>
                         <span class="item-nome-resumo">{{ item.produto.nome }}</span>
                       </div>
-                      <span class="item-valor-resumo">{{
-                        formatarPreco(item.produto.preco * item.quantidade)
-                      }}</span>
+                      <span class="item-valor-resumo">{{ formatarPrecoItemCarrinho(item) }}</span>
                     </div>
                   }
                 </div>
