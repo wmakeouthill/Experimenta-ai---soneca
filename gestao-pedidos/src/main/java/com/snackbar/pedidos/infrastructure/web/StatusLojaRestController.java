@@ -105,7 +105,14 @@ public class StatusLojaRestController {
     @EventListener(ContextClosedEvent.class)
     public void encerrarStreams() {
         heartbeatExecutor.shutdownNow();
-        emitters.forEach(SseEmitter::complete);
+        for (SseEmitter emitter : emitters) {
+            try {
+                emitter.complete();
+            } catch (IllegalStateException e) {
+                // Cliente saiu na mesma hora; não pode impedir de fechar os demais
+                emitters.remove(emitter);
+            }
+        }
     }
 
     private void enviarHeartbeat() {
