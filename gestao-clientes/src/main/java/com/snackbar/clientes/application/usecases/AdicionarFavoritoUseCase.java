@@ -25,7 +25,7 @@ public class AdicionarFavoritoUseCase {
 
         // Verificar se já é favorito
         if (favoritoRepository.existe(clienteId, request.getProdutoId())) {
-            throw new IllegalStateException("Produto já está nos favoritos");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Produto já está nos favoritos");
         }
 
         ClienteFavorito favorito = ClienteFavorito.criar(clienteId, request.getProdutoId());
