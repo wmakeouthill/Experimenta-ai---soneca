@@ -22,13 +22,17 @@ export class PedidoPollingService {
   // Controle de pedidos já processados
   private readonly pedidosConhecidos = new Set<string>();
   private pollingSubscription: Subscription | null = null;
+  // Sessão do polling ativo: recarregar() sem argumento usa ela, senão listaria pedidos de todas as sessões
+  private sessaoIdAtual: string | undefined;
 
   iniciarPolling(sessaoId?: string) {
-    if (this.pollingAtivo()) {
-      console.log('Polling já está ativo.');
+    if (this.pollingAtivo() && sessaoId === this.sessaoIdAtual) {
       return;
     }
 
+    // Sessão mudou com polling ativo (ex.: caixa fechado e reaberto): reinicia com o novo filtro
+    this.pararPolling();
+    this.sessaoIdAtual = sessaoId;
     this.pollingAtivo.set(true);
     console.log('Iniciando polling global de pedidos...');
 
@@ -94,7 +98,7 @@ export class PedidoPollingService {
   }
 
   // Método para forçar recarga manual
-  recarregar(sessaoId?: string) {
+  recarregar(sessaoId: string | undefined = this.sessaoIdAtual) {
     const filters = sessaoId ? { sessaoId } : undefined;
     this.pedidoService.listar(filters).subscribe({
       next: (resultado) => {
