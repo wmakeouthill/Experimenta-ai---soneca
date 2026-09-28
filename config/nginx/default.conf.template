@@ -69,13 +69,14 @@ server {
     # SPA Fallback - todas as rotas vão pro index.html
     location / {
         try_files $uri $uri/ /index.html;
-        limit_conn conn 20;
+        limit_conn conn 100;
     }
 
     # ==================== API PROXY ====================
+    # Limites por IP folgados: o WiFi do restaurante põe o salão todo atrás de um IP só
     location /api/ {
-        limit_req zone=api burst=20 nodelay;
-        limit_conn conn 10;
+        limit_req zone=api burst=100 nodelay;
+        limit_conn conn 50;
 
         proxy_pass http://backend;
         proxy_http_version 1.1;
