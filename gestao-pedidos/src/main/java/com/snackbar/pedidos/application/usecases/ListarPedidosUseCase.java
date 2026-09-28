@@ -16,18 +16,6 @@ public class ListarPedidosUseCase {
     
     private final PedidoRepositoryPort pedidoRepository;
     
-    public List<PedidoDTO> executar() {
-        return pedidoRepository.buscarTodos().stream()
-            .map(PedidoDTO::de)
-            .toList();
-    }
-    
-    public List<PedidoDTO> executarPorStatus(StatusPedido status) {
-        return pedidoRepository.buscarPorStatus(status).stream()
-            .map(PedidoDTO::de)
-            .toList();
-    }
-    
     public List<PedidoDTO> executarPorClienteId(String clienteId) {
         return pedidoRepository.buscarPorClienteId(clienteId).stream()
             .map(PedidoDTO::de)
