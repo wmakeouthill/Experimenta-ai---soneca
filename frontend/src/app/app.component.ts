@@ -6,6 +6,7 @@ import { of } from 'rxjs';
 import { catchError, filter } from 'rxjs/operators';
 import { ToastComponent } from './components/shared/toast/toast.component';
 import { ConexaoStatus } from './interceptors/retry-get.interceptor';
+import { AuthService } from './services/auth.service';
 import { ImpressaoService } from './services/impressao.service';
 import { NotificationService } from './services/notification.service';
 import { PedidoPollingService } from './services/pedido-polling.service';
@@ -27,6 +28,7 @@ export class AppComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly pollingService = inject(PedidoPollingService);
   private readonly sessaoService = inject(SessaoTrabalhoService);
+  private readonly authService = inject(AuthService);
   private readonly impressaoService = inject(ImpressaoService);
   private readonly notificationService = inject(NotificationService);
   private readonly destroyRef = inject(DestroyRef);
@@ -76,6 +78,11 @@ export class AppComponent implements OnInit {
   }
 
   private iniciarServicosGlobais() {
+    // Polling e impressão são do balcão: o TOTEM não lê sessões (403) e, fora de /autoatendimento,
+    // o 403 derrubava o login do quiosque
+    if (!this.authService.isAdministrador() && !this.authService.isOperador()) {
+      return;
+    }
     // Verifica se há sessão ativa para iniciar o polling
     this.sessaoService.buscarAtiva().subscribe({
       next: sessao => {
