@@ -33,10 +33,11 @@ public class ProdutoPopularGatewayAdapter implements ProdutoPopularGatewayPort {
     private final ClienteFavoritoRepositoryPort favoritoRepository;
 
     /**
-     * Verifica se a categoria deve ser excluída dos carrosséis.
+     * Bebidas saem dos carrosséis; produto desativado também (o cliente tocaria nele e o pedido
+     * seria recusado).
      */
-    private boolean isCategoriaBebida(String categoria) {
-        return categoria != null && categoria.equalsIgnoreCase(CATEGORIA_BEBIDAS);
+    private boolean foraDoCarrossel(ProdutoDTO produto) {
+        return !produto.isDisponivel() || CATEGORIA_BEBIDAS.equalsIgnoreCase(produto.getCategoria());
     }
 
     @Override
@@ -57,8 +58,7 @@ public class ProdutoPopularGatewayAdapter implements ProdutoPopularGatewayPort {
                 .map(entry -> {
                     try {
                         ProdutoDTO produto = buscarProdutoPorIdUseCase.executar(entry.getKey());
-                        // Exclui bebidas do carrossel
-                        if (isCategoriaBebida(produto.getCategoria())) {
+                        if (foraDoCarrossel(produto)) {
                             return null;
                         }
                         return ProdutoPopularDTO.maisPedido(
@@ -96,8 +96,7 @@ public class ProdutoPopularGatewayAdapter implements ProdutoPopularGatewayPort {
                 .map(entry -> {
                     try {
                         ProdutoDTO produto = buscarProdutoPorIdUseCase.executar(entry.getKey());
-                        // Exclui bebidas do carrossel
-                        if (isCategoriaBebida(produto.getCategoria())) {
+                        if (foraDoCarrossel(produto)) {
                             return null;
                         }
                         return ProdutoPopularDTO.maisPedido(
@@ -135,8 +134,7 @@ public class ProdutoPopularGatewayAdapter implements ProdutoPopularGatewayPort {
                     try {
                         ProdutoDTO produto = buscarProdutoPorIdUseCase.executar(produtoId);
 
-                        // Exclui bebidas do carrossel
-                        if (isCategoriaBebida(produto.getCategoria())) {
+                        if (foraDoCarrossel(produto)) {
                             return null;
                         }
 
@@ -184,8 +182,7 @@ public class ProdutoPopularGatewayAdapter implements ProdutoPopularGatewayPort {
                 .map(entry -> {
                     try {
                         ProdutoDTO produto = buscarProdutoPorIdUseCase.executar(entry.getKey());
-                        // Exclui bebidas do carrossel
-                        if (isCategoriaBebida(produto.getCategoria())) {
+                        if (foraDoCarrossel(produto)) {
                             return null;
                         }
                         return ProdutoPopularDTO.maisFavoritado(

@@ -1,5 +1,6 @@
 package com.snackbar.pedidos.application.services;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -14,8 +15,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.snackbar.cardapio.application.dto.ProdutoDTO;
 import com.snackbar.kernel.domain.exceptions.BusinessRuleException;
+import com.snackbar.kernel.domain.exceptions.ValidationException;
 import com.snackbar.pedidos.application.dto.CriarPedidoAutoAtendimentoRequest;
+import com.snackbar.pedidos.application.dto.ItemPedidoRequest;
 import com.snackbar.pedidos.application.ports.CardapioServicePort;
 import com.snackbar.pedidos.application.ports.PedidoPendenteRepositoryPort;
 
@@ -39,6 +43,20 @@ class FilaPedidosTotemServiceTest {
         request.setItens(List.of());
 
         assertThrows(BusinessRuleException.class, () -> service.adicionarPedido(request));
+        verify(pedidoPendenteRepository, never()).salvar(any());
+    }
+
+    @Test
+    void produtoDesativadoNaoEntraNaFilaEAMensagemCitaONome() {
+        ProdutoDTO xBacon = ProdutoDTO.builder().nome("X-Bacon").disponivel(false).build();
+        when(cardapioService.buscarProdutoPorId("p1")).thenReturn(xBacon);
+        when(cardapioService.buscarProdutoDisponivel("p1")).thenCallRealMethod();
+        CriarPedidoAutoAtendimentoRequest request = new CriarPedidoAutoAtendimentoRequest();
+        request.setItens(List.of(new ItemPedidoRequest("p1", 1, null, null)));
+
+        ValidationException erro = assertThrows(ValidationException.class, () -> service.adicionarPedido(request));
+
+        assertEquals("Produto indisponível no momento: X-Bacon", erro.getMessage());
         verify(pedidoPendenteRepository, never()).salvar(any());
     }
 }

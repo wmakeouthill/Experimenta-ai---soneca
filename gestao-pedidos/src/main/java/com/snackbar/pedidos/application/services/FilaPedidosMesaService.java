@@ -107,7 +107,7 @@ public class FilaPedidosMesaService {
         BigDecimal valorTotal = BigDecimal.ZERO;
 
         for (ItemPedidoRequest itemReq : request.getItens()) {
-            var produto = cardapioService.buscarProdutoPorId(itemReq.getProdutoId());
+            var produto = cardapioService.buscarProdutoDisponivel(itemReq.getProdutoId());
             BigDecimal precoUnitario = produto.getPreco();
 
             List<AdicionalPedidoPendenteDTO> adicionaisDTO = new ArrayList<>();

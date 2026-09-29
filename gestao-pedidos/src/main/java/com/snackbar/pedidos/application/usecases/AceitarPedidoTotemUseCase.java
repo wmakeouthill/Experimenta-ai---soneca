@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.snackbar.cardapio.domain.valueobjects.Preco;
 import com.snackbar.kernel.domain.exceptions.ValidationException;
 import com.snackbar.pedidos.application.dto.*;
+import com.snackbar.pedidos.application.ports.CardapioServicePort;
 import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
 import com.snackbar.pedidos.application.ports.SessaoTrabalhoRepositoryPort;
 import com.snackbar.pedidos.application.services.AuditoriaPagamentoService;
@@ -39,6 +40,7 @@ public class AceitarPedidoTotemUseCase {
     private final GeradorNumeroPedidoService geradorNumeroPedido;
     private final PedidoValidator pedidoValidator;
     private final AuditoriaPagamentoService auditoriaPagamentoService;
+    private final CardapioServicePort cardapioService;
 
     @Transactional
     public PedidoDTO executar(String pedidoPendenteId, String usuarioId, @Nullable ContextoRequisicao contexto) {
@@ -70,6 +72,9 @@ public class AceitarPedidoTotemUseCase {
             String usuarioId,
             String pedidoPendenteId,
             ContextoRequisicao contexto) {
+        // Desativado depois de entrar na fila: o aceite falha (rollback mantém o item na fila) e o
+        // operador rejeita. Antes de gerar o número, para não consumir a sequência.
+        pedidoPendente.getItens().forEach(item -> cardapioService.buscarProdutoDisponivel(item.getProdutoId()));
         NumeroPedido numeroPedido = geradorNumeroPedido.gerarProximoNumero();
         String nomeCliente = pedidoPendente.getNomeCliente() != null ? pedidoPendente.getNomeCliente()
                 : "Cliente Totem";

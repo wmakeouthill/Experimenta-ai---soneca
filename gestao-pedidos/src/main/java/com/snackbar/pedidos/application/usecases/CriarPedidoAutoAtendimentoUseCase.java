@@ -91,9 +91,7 @@ public class CriarPedidoAutoAtendimentoUseCase {
 
         // Processa os itens do pedido
         for (ItemPedidoRequest itemRequest : request.getItens()) {
-            validarProdutoDisponivel(itemRequest.getProdutoId());
-
-            var produtoDTO = cardapioService.buscarProdutoPorId(itemRequest.getProdutoId());
+            var produtoDTO = cardapioService.buscarProdutoDisponivel(itemRequest.getProdutoId());
             Preco precoUnitario = Preco.of(produtoDTO.getPreco());
 
             List<ItemPedidoAdicional> adicionais = processarAdicionais(itemRequest.getAdicionais());
@@ -149,12 +147,6 @@ public class CriarPedidoAutoAtendimentoUseCase {
                 .valorTotal(pedidoSalvo.getValorTotal().getAmount())
                 .dataPedido(pedidoSalvo.getDataPedido())
                 .build();
-    }
-
-    private void validarProdutoDisponivel(String produtoId) {
-        if (!cardapioService.produtoEstaDisponivel(produtoId)) {
-            throw new ValidationException("Produto não está disponível: " + produtoId);
-        }
     }
 
     private void validarTotalMeiosPagamento(Pedido pedido) {

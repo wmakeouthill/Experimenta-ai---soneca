@@ -3,7 +3,6 @@ package com.snackbar.pedidos.application.usecases;
 import com.snackbar.kernel.domain.exceptions.ValidationException;
 import com.snackbar.pedidos.application.dto.CriarPedidoMesaRequest;
 import com.snackbar.pedidos.application.dto.PedidoPendenteDTO;
-import com.snackbar.pedidos.application.ports.CardapioServicePort;
 import com.snackbar.pedidos.application.ports.MesaRepositoryPort;
 import com.snackbar.pedidos.application.services.FilaPedidosMesaService;
 import com.snackbar.pedidos.domain.entities.Mesa;
@@ -25,7 +24,6 @@ import org.springframework.stereotype.Service;
 public class CriarPedidoMesaUseCase {
 
     private final MesaRepositoryPort mesaRepository;
-    private final CardapioServicePort cardapioService;
     private final FilaPedidosMesaService filaPedidosMesa;
 
     /**
@@ -36,10 +34,7 @@ public class CriarPedidoMesaUseCase {
         // Valida mesa
         validarMesa(qrCodeToken);
 
-        // Valida produtos
-        request.getItens().forEach(item -> validarProdutoDisponivel(item.getProdutoId()));
-
-        // Adiciona à fila de pendentes
+        // Adiciona à fila de pendentes (a fila recusa produto indisponível)
         PedidoPendenteDTO pedidoPendente = filaPedidosMesa.adicionarPedido(request);
 
         log.info("Pedido adicionado à fila de espera - ID: {}, Mesa: {}, Cliente: {}",
@@ -56,12 +51,6 @@ public class CriarPedidoMesaUseCase {
 
         if (!mesa.isAtiva()) {
             throw new ValidationException("Esta mesa não está ativa para receber pedidos");
-        }
-    }
-
-    private void validarProdutoDisponivel(String produtoId) {
-        if (!cardapioService.produtoEstaDisponivel(produtoId)) {
-            throw new ValidationException("Produto não está disponível: " + produtoId);
         }
     }
 }

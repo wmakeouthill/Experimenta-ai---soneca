@@ -73,9 +73,7 @@ public class CriarPedidoUseCase {
         pedido.definirPiso(request.getPiso());
 
         for (ItemPedidoRequest itemRequest : request.getItens()) {
-            validarProdutoDisponivel(itemRequest.getProdutoId());
-
-            var produtoDTO = cardapioService.buscarProdutoPorId(itemRequest.getProdutoId());
+            var produtoDTO = cardapioService.buscarProdutoDisponivel(itemRequest.getProdutoId());
             Preco precoUnitario = Preco.of(produtoDTO.getPreco());
 
             // Processar adicionais do item
@@ -117,13 +115,6 @@ public class CriarPedidoUseCase {
         }
 
         return PedidoDTO.de(pedidoSalvo);
-    }
-
-    private void validarProdutoDisponivel(String produtoId) {
-        if (!cardapioService.produtoEstaDisponivel(produtoId)) {
-            throw new com.snackbar.kernel.domain.exceptions.ValidationException(
-                    "Produto não está disponível: " + produtoId);
-        }
     }
 
     private void validarTotalMeiosPagamento(Pedido pedido) {
