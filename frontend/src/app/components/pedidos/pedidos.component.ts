@@ -14,7 +14,18 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { catchError, EMPTY, of, Subscription, switchMap, takeWhile, timer } from 'rxjs';
+import {
+  catchError,
+  distinctUntilChanged,
+  EMPTY,
+  map,
+  of,
+  skip,
+  Subscription,
+  switchMap,
+  takeWhile,
+  timer,
+} from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { AvisoPedidoService } from '../../services/aviso-pedido.service';
 import { FilaPedidosMesaService, PedidoPendente } from '../../services/fila-pedidos-mesa.service';
@@ -23,6 +34,7 @@ import { ImpressaoService } from '../../services/impressao.service';
 import { NotificationService } from '../../services/notification.service';
 import { Pedido, PedidoService, Piso, StatusPedido } from '../../services/pedido.service';
 import { SessaoTrabalho, SessaoTrabalhoService, StatusSessao } from '../../services/sessao-trabalho.service';
+import { StatusLojaService } from '../../services/status-loja.service';
 import { gerarUuid } from '../../shared/utils/uuid';
 import { MenuContextoPedidoComponent } from './components/menu-contexto-pedido/menu-contexto-pedido.component';
 import { NovoPedidoModalComponent } from './components/novo-pedido-modal/novo-pedido-modal.component';
@@ -49,6 +61,7 @@ export class PedidosComponent implements OnInit, OnDestroy {
   private readonly isBrowser = isPlatformBrowser(this.platformId);
   private readonly pedidoService = inject(PedidoService);
   private readonly sessaoService = inject(SessaoTrabalhoService);
+  private readonly statusLojaService = inject(StatusLojaService);
   private readonly authService = inject(AuthService);
   private readonly impressaoService = inject(ImpressaoService);
   private readonly notificationService = inject(NotificationService);
@@ -133,6 +146,16 @@ export class PedidosComponent implements OnInit, OnDestroy {
     if (this.isBrowser) {
       // verificarSessaoAtiva já chama carregarDados internamente
       this.verificarSessaoAtiva();
+      // Sessão aberta, pausada ou finalizada em outra estação chega pelo SSE de status da loja
+      this.statusLojaService
+        .conectarStream()
+        .pipe(
+          map(status => status.status),
+          distinctUntilChanged(),
+          skip(1), // o 1º evento é o estado atual, já buscado acima
+          takeUntilDestroyed(this.destroyRef)
+        )
+        .subscribe(() => this.verificarSessaoAtiva());
       this.pedidosComposable.carregarProdutos();
       this.iniciarPollingFilaMesa();
       this.iniciarPollingFilaTotem();
