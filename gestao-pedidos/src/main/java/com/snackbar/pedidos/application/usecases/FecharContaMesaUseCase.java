@@ -27,6 +27,7 @@ import com.snackbar.pedidos.domain.entities.ModoPagamentoMesa;
 import com.snackbar.pedidos.domain.entities.Pagamento;
 import com.snackbar.pedidos.domain.entities.Pedido;
 import com.snackbar.pedidos.domain.valueobjects.DadosPix;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -65,14 +66,14 @@ public class FecharContaMesaUseCase {
         }
 
         Mesa mesa = mesaRepository.buscarPorQrCodeToken(mesaToken)
-                .orElseThrow(() -> new ValidationException("Mesa nao encontrada"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Mesa nao encontrada"));
 
         // Idempotencia: conta ABERTA existente reaproveita o pagamento pendente.
         var contaAberta = contaRepository.buscarAbertaPorMesaECliente(mesa.getId(), clienteId);
         if (contaAberta.isPresent()) {
             ContaMesa conta = contaAberta.get();
             var pagamento = pagamentoRepository.buscarPorCorrelationId(conta.getCorrelationId())
-                    .orElseThrow(() -> new ValidationException("Pagamento da conta nao encontrado"));
+                    .orElseThrow(() -> new RecursoNaoEncontradoException("Pagamento da conta nao encontrado"));
             return new ContaMesaComPixDTO(toDTO(conta), PixCobrancaCriadaDTO.de(pagamento));
         }
 

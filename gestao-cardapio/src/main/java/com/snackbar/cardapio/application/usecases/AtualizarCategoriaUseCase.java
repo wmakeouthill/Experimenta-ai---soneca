@@ -7,6 +7,7 @@ import com.snackbar.cardapio.application.dto.CategoriaDTO;
 import com.snackbar.cardapio.application.ports.CategoriaRepositoryPort;
 import com.snackbar.cardapio.domain.entities.Categoria;
 import com.snackbar.kernel.domain.exceptions.ValidationException;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,7 +24,7 @@ public class AtualizarCategoriaUseCase {
         }
 
         Categoria categoria = categoriaRepository.buscarPorId(id)
-                .orElseThrow(() -> new ValidationException("Categoria não encontrada com ID: " + id));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Categoria não encontrada com ID: " + id));
 
         if (request.getNome() != null) {
             categoria.atualizarNome(request.getNome());

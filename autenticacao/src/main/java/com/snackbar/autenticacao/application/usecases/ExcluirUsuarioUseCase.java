@@ -1,7 +1,7 @@
 package com.snackbar.autenticacao.application.usecases;
 
 import com.snackbar.autenticacao.domain.ports.UsuarioRepositoryPort;
-import com.snackbar.kernel.domain.exceptions.ValidationException;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
@@ -19,7 +19,7 @@ public class ExcluirUsuarioUseCase {
     
     private void validarUsuarioExiste(@NonNull String id) {
         if (!usuarioRepository.buscarPorId(id).isPresent()) {
-            throw new ValidationException("Usuário não encontrado");
+            throw new RecursoNaoEncontradoException("Usuário não encontrado");
         }
     }
 }

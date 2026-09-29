@@ -2,6 +2,7 @@ package com.snackbar.pedidos.application.usecases;
 
 import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
 import com.snackbar.kernel.domain.exceptions.ValidationException;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
@@ -18,7 +19,7 @@ public class ExcluirPedidoUseCase {
         }
         
         pedidoRepository.buscarPorId(id)
-            .orElseThrow(() -> new ValidationException("Pedido não encontrado com ID: " + id));
+            .orElseThrow(() -> new RecursoNaoEncontradoException("Pedido não encontrado com ID: " + id));
         
         pedidoRepository.excluir(id);
     }

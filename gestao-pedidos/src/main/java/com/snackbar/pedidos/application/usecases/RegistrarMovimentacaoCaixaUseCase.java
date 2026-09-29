@@ -6,6 +6,7 @@ import com.snackbar.pedidos.application.ports.MovimentacaoCaixaRepositoryPort;
 import com.snackbar.pedidos.application.ports.SessaoTrabalhoRepositoryPort;
 import com.snackbar.pedidos.domain.entities.MovimentacaoCaixa;
 import com.snackbar.pedidos.domain.entities.SessaoTrabalho;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
@@ -62,7 +63,7 @@ public class RegistrarMovimentacaoCaixaUseCase {
         Optional<SessaoTrabalho> sessaoOpt = sessaoRepository.buscarPorId(sessaoId);
         
         if (sessaoOpt.isEmpty()) {
-            throw new ValidationException("Sessão não encontrada: " + sessaoId);
+            throw new RecursoNaoEncontradoException("Sessão não encontrada: " + sessaoId);
         }
         
         SessaoTrabalho sessao = sessaoOpt.get();

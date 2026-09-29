@@ -5,6 +5,7 @@ import com.snackbar.clientes.application.dto.DefinirSenhaClienteRequest;
 import com.snackbar.clientes.application.ports.ClienteRepositoryPort;
 import com.snackbar.clientes.application.ports.ClienteSenhaServicePort;
 import com.snackbar.clientes.domain.entities.Cliente;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +24,7 @@ public class DefinirSenhaClienteUseCase {
 
         // Buscar cliente
         Cliente cliente = clienteRepository.buscarPorId(clienteId)
-                .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Cliente não encontrado"));
 
         // Gerar hash e definir senha
         String senhaHash = senhaService.hashSenha(request.getSenha());

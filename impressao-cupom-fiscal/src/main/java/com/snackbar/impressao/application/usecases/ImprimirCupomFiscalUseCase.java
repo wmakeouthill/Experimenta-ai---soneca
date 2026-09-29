@@ -19,6 +19,7 @@ import com.snackbar.pedidos.application.dto.MeioPagamentoDTO;
 import com.snackbar.pedidos.application.dto.PedidoDTO;
 import com.snackbar.pedidos.domain.entities.MeioPagamento;
 import com.snackbar.pedidos.domain.entities.StatusPedido;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -120,7 +121,7 @@ public class ImprimirCupomFiscalUseCase {
 
         PedidoDTO pedido = pedidoService.buscarPedidoPorId(pedidoId);
         if (pedido == null) {
-            throw new IllegalArgumentException("Pedido não encontrado: " + pedidoId);
+            throw new RecursoNaoEncontradoException("Pedido não encontrado: " + pedidoId);
         }
         return pedido;
     }

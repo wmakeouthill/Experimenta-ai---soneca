@@ -16,6 +16,7 @@ import com.snackbar.pedidos.domain.entities.MeioPagamento;
 import com.snackbar.pedidos.domain.entities.MeioPagamentoPedido;
 import com.snackbar.pedidos.domain.entities.Pagamento;
 import com.snackbar.pedidos.domain.entities.Pedido;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,7 +49,7 @@ public class AplicarPagamentoMesaAprovadoService {
 
     private void carimbarPedido(String pedidoId, long valorCentavos, MeioPagamento meioPedido) {
         Pedido pedido = pedidoRepository.buscarPorId(pedidoId)
-                .orElseThrow(() -> new ValidationException("Pedido nao encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Pedido nao encontrado"));
 
         if (pedido.getMeiosPagamento() != null && !pedido.getMeiosPagamento().isEmpty()) {
             throw new ValidationException("Pedido ja possui pagamento registrado");
@@ -61,7 +62,7 @@ public class AplicarPagamentoMesaAprovadoService {
 
     private void pagarConta(String contaMesaId, MeioPagamento meioPedido) {
         ContaMesa conta = contaMesaRepository.buscarPorId(contaMesaId)
-                .orElseThrow(() -> new ValidationException(
+                .orElseThrow(() -> new RecursoNaoEncontradoException(
                         "Conta de mesa nao encontrada: " + contaMesaId));
 
         conta.pagar();

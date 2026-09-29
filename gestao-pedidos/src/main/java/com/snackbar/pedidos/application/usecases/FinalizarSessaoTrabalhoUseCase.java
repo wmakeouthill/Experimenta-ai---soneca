@@ -1,6 +1,6 @@
 package com.snackbar.pedidos.application.usecases;
 
-import com.snackbar.kernel.domain.exceptions.ValidationException;
+import com.snackbar.kernel.domain.exceptions.BusinessRuleException;
 import com.snackbar.pedidos.application.dto.SessaoTrabalhoDTO;
 import com.snackbar.pedidos.application.ports.ObterNomeUsuarioPort;
 import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
@@ -10,6 +10,7 @@ import com.snackbar.pedidos.application.services.FilaPedidosTotemService;
 import com.snackbar.pedidos.domain.entities.Pedido;
 import com.snackbar.pedidos.domain.entities.SessaoTrabalho;
 import com.snackbar.pedidos.domain.entities.StatusPedido;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
@@ -61,7 +62,7 @@ public class FinalizarSessaoTrabalhoUseCase {
             pendencias.add(naFila + " na fila de aceite da mesa/totem");
         }
         if (!pendencias.isEmpty()) {
-            throw new ValidationException("Não é possível finalizar a sessão. Existem pedidos pendentes: "
+            throw new BusinessRuleException("Não é possível finalizar a sessão. Existem pedidos pendentes: "
                     + String.join(", ", pendencias) + ".");
         }
     }
@@ -69,7 +70,7 @@ public class FinalizarSessaoTrabalhoUseCase {
     private SessaoTrabalho buscarSessao(@NonNull String sessaoId) {
         Optional<SessaoTrabalho> sessao = repository.buscarPorId(sessaoId);
         if (sessao.isEmpty()) {
-            throw new ValidationException("Sessão não encontrada: " + sessaoId);
+            throw new RecursoNaoEncontradoException("Sessão não encontrada: " + sessaoId);
         }
         return sessao.get();
     }

@@ -14,6 +14,7 @@ import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
 import com.snackbar.pedidos.domain.entities.CanalPagamento;
 import com.snackbar.pedidos.domain.entities.GatewayPagamento;
 import com.snackbar.pedidos.domain.entities.Pagamento;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +39,7 @@ public class IniciarPagamentoCartaoPresencialUseCase {
         }
 
         var pedido = pedidoRepository.buscarPorId(request.pedidoId())
-                .orElseThrow(() -> new ValidationException("Pedido nao encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Pedido nao encontrado"));
 
         long valorCentavos = pedido.getValorTotal().getAmount()
                 .movePointRight(2)

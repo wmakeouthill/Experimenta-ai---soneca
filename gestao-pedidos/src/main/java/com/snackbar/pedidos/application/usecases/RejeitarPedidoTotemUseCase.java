@@ -3,6 +3,7 @@ package com.snackbar.pedidos.application.usecases;
 import com.snackbar.kernel.domain.exceptions.ValidationException;
 import com.snackbar.pedidos.application.dto.PedidoPendenteDTO;
 import com.snackbar.pedidos.application.services.FilaPedidosTotemService;
+import com.snackbar.kernel.domain.exceptions.ConflitoException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,7 @@ public class RejeitarPedidoTotemUseCase {
         }
 
         PedidoPendenteDTO pedidoPendente = filaPedidosTotem.buscarPorId(pedidoPendenteId)
-                .orElseThrow(() -> new ValidationException(
+                .orElseThrow(() -> new ConflitoException(
                         "Pedido pendente não encontrado ou já foi processado: " + pedidoPendenteId));
 
         filaPedidosTotem.removerPedido(pedidoPendenteId);

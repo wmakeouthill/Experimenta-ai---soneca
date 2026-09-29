@@ -16,7 +16,7 @@ import com.snackbar.pedidos.application.dto.ItemPedidoPendenteDTO;
 import com.snackbar.pedidos.application.dto.MeioPagamentoRequest;
 import com.snackbar.pedidos.application.dto.PedidoPendenteDTO;
 import com.snackbar.pedidos.application.ports.PedidoPendenteRepositoryPort;
-import com.snackbar.kernel.domain.exceptions.ValidationException;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -123,7 +123,7 @@ public class PedidoPendenteRepositoryAdapter implements PedidoPendenteRepository
     public void liberarPagamento(String pedidoPendenteId) {
         int atualizados = jpaRepository.liberarPagamento(pedidoPendenteId);
         if (atualizados == 0) {
-            throw new ValidationException("Pedido pendente aguardando pagamento nao encontrado: " + pedidoPendenteId);
+            throw new RecursoNaoEncontradoException("Pedido pendente aguardando pagamento nao encontrado: " + pedidoPendenteId);
         }
         log.info("Pedido pendente {} liberado para a fila apos pagamento", pedidoPendenteId);
     }

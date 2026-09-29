@@ -6,6 +6,7 @@ import com.snackbar.pedidos.application.dto.ItemEstoqueDTO;
 import com.snackbar.pedidos.application.ports.ItemEstoqueRepositoryPort;
 import com.snackbar.pedidos.domain.entities.ItemEstoque;
 import com.snackbar.pedidos.domain.entities.UnidadeMedida;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +21,7 @@ public class AtualizarItemEstoqueUseCase {
     
     public ItemEstoqueDTO executar(String id, AtualizarItemEstoqueRequest request) {
         ItemEstoque item = repository.buscarPorId(id)
-                .orElseThrow(() -> new ValidationException("Item de estoque não encontrado: " + id));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Item de estoque não encontrado: " + id));
         
         validarNomeUnico(request.getNome(), id);
         

@@ -7,10 +7,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.snackbar.cardapio.domain.valueobjects.Preco;
-import com.snackbar.kernel.domain.exceptions.ValidationException;
 import com.snackbar.pedidos.application.dto.PedidoDTO;
 import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
 import com.snackbar.pedidos.domain.entities.Pedido;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +39,7 @@ public class CorrigirTrocoPedidoUseCase {
     @Transactional
     public PedidoDTO executar(@NonNull String pedidoId, @NonNull BigDecimal valorPagoDinheiro) {
         Pedido pedido = pedidoRepository.buscarPorId(pedidoId)
-                .orElseThrow(() -> new ValidationException("Pedido não encontrado com ID: " + pedidoId));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Pedido não encontrado com ID: " + pedidoId));
 
         Preco novoValorPago = Preco.of(valorPagoDinheiro);
         pedido.corrigirTrocoDinheiro(novoValorPago);

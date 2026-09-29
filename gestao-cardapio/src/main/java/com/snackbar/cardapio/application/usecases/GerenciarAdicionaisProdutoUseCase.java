@@ -4,7 +4,7 @@ import com.snackbar.cardapio.application.dto.AdicionalDTO;
 import com.snackbar.cardapio.application.ports.ProdutoAdicionalRepositoryPort;
 import com.snackbar.cardapio.application.ports.ProdutoRepositoryPort;
 import com.snackbar.cardapio.domain.entities.Adicional;
-import com.snackbar.kernel.domain.exceptions.ValidationException;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -63,7 +63,7 @@ public class GerenciarAdicionaisProdutoUseCase {
 
     private void validarProdutoExiste(String produtoId) {
         if (!produtoRepository.existePorId(produtoId)) {
-            throw new ValidationException("Produto não encontrado com ID: " + produtoId);
+            throw new RecursoNaoEncontradoException("Produto não encontrado com ID: " + produtoId);
         }
     }
 }

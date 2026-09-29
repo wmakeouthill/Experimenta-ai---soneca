@@ -20,6 +20,7 @@ import com.snackbar.pedidos.application.services.AuditoriaPagamentoService.Conte
 import com.snackbar.pedidos.domain.entities.MeioPagamentoPedido;
 import com.snackbar.pedidos.domain.entities.Pedido;
 import com.snackbar.pedidos.domain.entities.StatusPedido;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -60,7 +61,7 @@ public class RegistrarPagamentoPedidoUseCase {
         }
 
         Pedido pedido = pedidoRepository.buscarPorId(pedidoId)
-                .orElseThrow(() -> new ValidationException("Pedido não encontrado com ID: " + pedidoId));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Pedido não encontrado com ID: " + pedidoId));
 
         // Valida que o status do pedido permite registro de pagamento
         StatusPedido statusAtual = pedido.getStatus();

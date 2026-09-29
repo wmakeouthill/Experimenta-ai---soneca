@@ -17,7 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.snackbar.kernel.domain.exceptions.ValidationException;
+import com.snackbar.kernel.domain.exceptions.BusinessRuleException;
 import com.snackbar.pedidos.application.ports.ObterNomeUsuarioPort;
 import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
 import com.snackbar.pedidos.application.ports.SessaoTrabalhoRepositoryPort;
@@ -49,7 +49,7 @@ class FinalizarSessaoTrabalhoUseCaseTest {
         when(filaPedidosMesa.quantidadePedidosPendentes()).thenReturn(0);
         when(filaPedidosTotem.quantidadePedidosPendentes()).thenReturn(1);
 
-        ValidationException erro = assertThrows(ValidationException.class,
+        BusinessRuleException erro = assertThrows(BusinessRuleException.class,
                 () -> useCase.executar("s1", BigDecimal.TEN));
 
         assertTrue(erro.getMessage().contains("1 na fila de aceite"));

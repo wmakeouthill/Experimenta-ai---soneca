@@ -1,7 +1,9 @@
 package com.snackbar.orquestrador.exception;
 
 import com.snackbar.kernel.domain.exceptions.BusinessRuleException;
+import com.snackbar.kernel.domain.exceptions.ConflitoException;
 import com.snackbar.kernel.domain.exceptions.DomainException;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 import com.snackbar.kernel.domain.exceptions.ValidationException;
 import com.snackbar.pedidos.domain.exceptions.MesaNaoEncontradaException;
 import org.slf4j.Logger;
@@ -47,14 +49,25 @@ public class GlobalExceptionHandler {
     }
     
     // QR code com token inválido/mesa excluída é recurso inexistente, não requisição malformada
-    @ExceptionHandler(MesaNaoEncontradaException.class)
-    public ResponseEntity<Map<String, Object>> handleMesaNaoEncontradaException(MesaNaoEncontradaException ex) {
+    @ExceptionHandler({RecursoNaoEncontradoException.class, MesaNaoEncontradaException.class})
+    public ResponseEntity<Map<String, Object>> handleRecursoNaoEncontrado(DomainException ex) {
         Map<String, Object> body = criarRespostaErro(
             HttpStatus.NOT_FOUND.value(),
             "Recurso Não Encontrado",
             ex.getMessage()
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    // Outro operador já aceitou/rejeitou o mesmo pedido da fila
+    @ExceptionHandler(ConflitoException.class)
+    public ResponseEntity<Map<String, Object>> handleConflitoException(ConflitoException ex) {
+        Map<String, Object> body = criarRespostaErro(
+            HttpStatus.CONFLICT.value(),
+            "Conflito",
+            ex.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
     @ExceptionHandler(DomainException.class)
@@ -166,6 +179,10 @@ public class GlobalExceptionHandler {
         if (ex instanceof ErrorResponse erroSpring) {
             int status = erroSpring.getStatusCode().value();
             logger.warn("Requisição rejeitada ({}): {}", status, ex.getMessage());
+            if (status == HttpStatus.NOT_FOUND.value()) {
+                return ResponseEntity.status(status)
+                    .body(criarRespostaErro(status, "Recurso Não Encontrado", "Recurso não encontrado."));
+            }
             return ResponseEntity.status(status)
                 .body(criarRespostaErro(status, erroSpring.getBody().getTitle(), erroSpring.getBody().getDetail()));
         }

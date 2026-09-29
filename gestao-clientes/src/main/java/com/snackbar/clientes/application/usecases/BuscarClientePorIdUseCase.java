@@ -3,6 +3,7 @@ package com.snackbar.clientes.application.usecases;
 import com.snackbar.clientes.application.dto.ClienteDTO;
 import com.snackbar.clientes.application.ports.ClienteRepositoryPort;
 import com.snackbar.kernel.domain.exceptions.ValidationException;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +20,7 @@ public class BuscarClientePorIdUseCase {
         
         return clienteRepository.buscarPorId(id)
             .map(ClienteDTO::de)
-            .orElseThrow(() -> new ValidationException("Cliente não encontrado com ID: " + id));
+            .orElseThrow(() -> new RecursoNaoEncontradoException("Cliente não encontrado com ID: " + id));
     }
 }
 

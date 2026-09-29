@@ -6,6 +6,7 @@ import com.snackbar.cardapio.application.ports.ProdutoRepositoryPort;
 import com.snackbar.cardapio.domain.entities.Produto;
 import com.snackbar.cardapio.domain.valueobjects.Preco;
 import com.snackbar.kernel.domain.exceptions.ValidationException;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +23,7 @@ public class AtualizarProdutoUseCase {
         }
 
         Produto produto = produtoRepository.buscarPorId(id)
-                .orElseThrow(() -> new ValidationException("Produto não encontrado com ID: " + id));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Produto não encontrado com ID: " + id));
 
         if (request.getNome() != null) {
             produto.atualizarNome(request.getNome());

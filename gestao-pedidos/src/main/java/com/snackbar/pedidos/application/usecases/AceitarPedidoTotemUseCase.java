@@ -20,6 +20,7 @@ import com.snackbar.pedidos.domain.entities.MeioPagamentoPedido;
 import com.snackbar.pedidos.domain.entities.Pedido;
 import com.snackbar.pedidos.domain.services.PedidoValidator;
 import com.snackbar.pedidos.domain.valueobjects.NumeroPedido;
+import com.snackbar.kernel.domain.exceptions.ConflitoException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -56,7 +57,7 @@ public class AceitarPedidoTotemUseCase {
         }
 
         PedidoPendenteDTO pedidoPendente = filaPedidosTotem.buscarERemoverAtomicamente(pedidoPendenteId)
-                .orElseThrow(() -> new ValidationException(
+                .orElseThrow(() -> new ConflitoException(
                         "Pedido pendente não encontrado ou já foi aceito/expirado: " + pedidoPendenteId));
 
         return criarPedidoReal(pedidoPendente, usuarioId, pedidoPendenteId, contexto);

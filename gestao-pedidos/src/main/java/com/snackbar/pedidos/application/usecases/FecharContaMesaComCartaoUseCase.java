@@ -30,6 +30,7 @@ import com.snackbar.pedidos.domain.entities.Pagamento;
 import com.snackbar.pedidos.domain.entities.Pedido;
 import com.snackbar.pedidos.domain.entities.StatusPagamento;
 import com.snackbar.pedidos.domain.valueobjects.DadosCartaoDigital;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -76,7 +77,7 @@ public class FecharContaMesaComCartaoUseCase {
         }
 
         Mesa mesa = mesaRepository.buscarPorQrCodeToken(request.getMesaToken())
-                .orElseThrow(() -> new ValidationException("Mesa nao encontrada"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Mesa nao encontrada"));
 
         if (contaRepository.buscarAbertaPorMesaECliente(mesa.getId(), clienteId).isPresent()) {
             throw new ValidationException("Ja existe uma conta em processamento para esta mesa");

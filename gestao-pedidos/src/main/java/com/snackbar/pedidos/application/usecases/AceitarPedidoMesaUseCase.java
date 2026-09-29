@@ -18,6 +18,7 @@ import com.snackbar.pedidos.domain.entities.ItemPedidoAdicional;
 import com.snackbar.pedidos.domain.entities.MeioPagamentoPedido;
 import com.snackbar.pedidos.domain.entities.Pedido;
 import com.snackbar.pedidos.domain.valueobjects.NumeroPedido;
+import com.snackbar.kernel.domain.exceptions.ConflitoException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -63,7 +64,7 @@ public class AceitarPedidoMesaUseCase {
         // Busca e remove atomicamente o pedido da fila (thread-safe)
         // Isso garante que apenas um funcionário consiga aceitar o mesmo pedido
         PedidoPendenteDTO pedidoPendente = filaPedidosMesa.buscarERemoverAtomicamente(pedidoPendenteId)
-                .orElseThrow(() -> new ValidationException(
+                .orElseThrow(() -> new ConflitoException(
                         "Pedido pendente não encontrado ou já foi aceito/expirado: " + pedidoPendenteId));
 
         // Cria o pedido real a partir do pendente
