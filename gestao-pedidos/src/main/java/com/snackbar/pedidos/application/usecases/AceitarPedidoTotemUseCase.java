@@ -77,9 +77,14 @@ public class AceitarPedidoTotemUseCase {
             String pedidoPendenteId,
             ContextoRequisicao contexto,
             String sessaoId) {
-        // Desativado depois de entrar na fila: o aceite falha (rollback mantém o item na fila) e o
-        // operador rejeita. Antes de gerar o número, para não consumir a sequência.
-        pedidoPendente.getItens().forEach(item -> cardapioService.buscarProdutoDisponivel(item.getProdutoId()));
+        // Produto ou adicional desativado depois de entrar na fila: o aceite falha (rollback mantém o item
+        // na fila) e o operador rejeita. Antes de gerar o número, para não consumir a sequência.
+        pedidoPendente.getItens().forEach(item -> {
+            cardapioService.buscarProdutoDisponivel(item.getProdutoId());
+            if (item.getAdicionais() != null) {
+                item.getAdicionais().forEach(adicional -> cardapioService.buscarAdicionalDisponivel(adicional.getAdicionalId()));
+            }
+        });
         NumeroPedido numeroPedido = geradorNumeroPedido.gerarProximoNumero();
         String nomeCliente = pedidoPendente.getNomeCliente() != null ? pedidoPendente.getNomeCliente()
                 : "Cliente Totem";
