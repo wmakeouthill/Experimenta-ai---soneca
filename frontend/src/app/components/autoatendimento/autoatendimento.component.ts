@@ -421,6 +421,15 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
     };
   }
 
+  /** Botão da tela de erro: cardápio que não carregou é recarregado. */
+  tentarNovamente(): void {
+    if (this.cardapio.produtos().length === 0) {
+      this.carregarCardapio();
+      return;
+    }
+    this.novoAtendimento();
+  }
+
   novoAtendimento(): void {
     // Limpa tudo e volta para tela inicial
     this.carrinho.limparCarrinho();

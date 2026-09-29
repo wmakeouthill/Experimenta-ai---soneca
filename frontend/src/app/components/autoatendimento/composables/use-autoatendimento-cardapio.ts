@@ -22,7 +22,6 @@ export function useAutoAtendimentoCardapio() {
   const categorias = signal<Categoria[]>([]);
   const produtos = signal<Produto[]>([]);
   const carregando = signal(false);
-  const erro = signal<string | null>(null);
   const categoriaSelecionada = signal<string | null>(null);
 
   // Computed
@@ -55,9 +54,9 @@ export function useAutoAtendimentoCardapio() {
   });
 
   // Ações
+  /** Falha propaga: quem chama mostra a tela de erro com "Tentar Novamente". */
   async function carregar(): Promise<void> {
     carregando.set(true);
-    erro.set(null);
 
     try {
       // Usa os services autenticados (operador logado)
@@ -68,9 +67,6 @@ export function useAutoAtendimentoCardapio() {
 
       categorias.set(categoriasResp);
       produtos.set(produtosResp);
-    } catch (e) {
-      erro.set('Erro ao carregar o cardápio');
-      console.error('Erro ao carregar cardápio:', e);
     } finally {
       carregando.set(false);
     }
@@ -89,7 +85,6 @@ export function useAutoAtendimentoCardapio() {
     categorias: categorias.asReadonly(),
     produtos: produtos.asReadonly(),
     carregando: carregando.asReadonly(),
-    erro: erro.asReadonly(),
     categoriaSelecionada: categoriaSelecionada.asReadonly(),
 
     // Computed
