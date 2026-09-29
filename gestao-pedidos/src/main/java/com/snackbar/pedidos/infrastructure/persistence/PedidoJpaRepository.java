@@ -18,6 +18,10 @@ public interface PedidoJpaRepository extends JpaRepository<PedidoEntity, String>
 
         List<PedidoEntity> findByClienteId(String clienteId);
 
+        // Carrosséis do totem/mesa: soma no banco; antes carregava todos os pedidos com itens a cada abertura
+        @Query("SELECT i.produtoId, SUM(i.quantidade) FROM ItemPedidoEntity i GROUP BY i.produtoId")
+        List<Object[]> somarQuantidadePorProduto();
+
         Page<PedidoEntity> findByClienteId(String clienteId, Pageable pageable);
 
         List<PedidoEntity> findByDataPedidoBetween(LocalDateTime dataInicio, LocalDateTime dataFim);

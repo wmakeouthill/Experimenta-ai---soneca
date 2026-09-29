@@ -42,15 +42,7 @@ public class ProdutoPopularGatewayAdapter implements ProdutoPopularGatewayPort {
 
     @Override
     public List<ProdutoPopularDTO> buscarMaisPedidos(int limite) {
-        // Busca todos os pedidos finalizados
-        List<PedidoEntity> pedidos = pedidoRepository.findAll();
-
-        // Conta quantas vezes cada produto foi pedido
-        Map<String, Long> contagem = pedidos.stream()
-                .flatMap(p -> p.getItens().stream())
-                .collect(Collectors.groupingBy(
-                        ItemPedidoEntity::getProdutoId,
-                        Collectors.summingLong(ItemPedidoEntity::getQuantidade)));
+        Map<String, Long> contagem = somarQuantidadePorProduto();
 
         // Ordena por quantidade, filtra bebidas e pega os top N
         return contagem.entrySet().stream()
@@ -118,15 +110,8 @@ public class ProdutoPopularGatewayAdapter implements ProdutoPopularGatewayPort {
 
     @Override
     public List<ProdutoPopularDTO> buscarBemAvaliados(int limite) {
-        // Busca todos os produtos que têm avaliação
-        // Como não temos endpoint para listar todos produtos, vamos usar os pedidos
-        // como base
-        List<PedidoEntity> pedidos = pedidoRepository.findAll();
-
-        Set<String> produtoIds = pedidos.stream()
-                .flatMap(p -> p.getItens().stream())
-                .map(ItemPedidoEntity::getProdutoId)
-                .collect(Collectors.toSet());
+        // Candidatos: produtos que já foram pedidos
+        Set<String> produtoIds = somarQuantidadePorProduto().keySet();
 
         // Para cada produto, busca as avaliações e calcula a média (excluindo bebidas)
         List<ProdutoComAvaliacao> produtosComAvaliacao = produtoIds.stream()
@@ -200,6 +185,11 @@ public class ProdutoPopularGatewayAdapter implements ProdutoPopularGatewayPort {
                 .filter(Objects::nonNull)
                 .limit(limite)
                 .toList();
+    }
+
+    private Map<String, Long> somarQuantidadePorProduto() {
+        return pedidoRepository.somarQuantidadePorProduto().stream()
+                .collect(Collectors.toMap(linha -> (String) linha[0], linha -> ((Number) linha[1]).longValue()));
     }
 
     private record ProdutoComAvaliacao(ProdutoDTO produto, double media, int totalAvaliacoes) {
