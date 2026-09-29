@@ -62,8 +62,10 @@ export class AppComponent implements OnInit {
           takeUntilDestroyed(this.destroyRef)
         )
         .subscribe(event => {
-          if (this.isRotaSemServicosGlobais(event.urlAfterRedirects)) {
-            // Rota pública ou totem - para os serviços
+          // Deslogado (logout ou 401) também para: senão o polling segue batendo 401 no login, cada 401
+          // desloga de novo e, no relogin, pollingAtivo() impede reiniciar com a sessão atual
+          if (this.isRotaSemServicosGlobais(event.urlAfterRedirects) || !this.authService.estaAutenticado()) {
+            // Rota pública, totem ou sem login - para os serviços
             this.pollingService.pararPolling();
           } else if (!this.pollingService.pollingAtivo()) {
             // Voltou para rota autenticada e polling não está ativo - reinicia
