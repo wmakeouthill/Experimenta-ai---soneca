@@ -2290,12 +2290,13 @@
                         [class.selecionado]="carrinho.isAdicionalSelecionado(adicional.id)"
                         (click)="carrinho.toggleAdicional(adicional)"
                       >
-                        <div class="adicional-info">
+                        <!-- botão nativo: teclado e leitor de tela; o clique sobe para o card -->
+                        <button type="button" class="adicional-info" [attr.aria-pressed]="carrinho.isAdicionalSelecionado(adicional.id)">
                           <span class="adicional-nome">{{ adicional.nome }}</span>
                           <span class="adicional-preco"
                             >+ {{ formatarPreco(adicional.preco) }}</span
                           >
-                        </div>
+                        </button>
                         @if (carrinho.isAdicionalSelecionado(adicional.id)) {
                           <div class="adicional-quantidade" (click)="$event.stopPropagation()">
                             <button
