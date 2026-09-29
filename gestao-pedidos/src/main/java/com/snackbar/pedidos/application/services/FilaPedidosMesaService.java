@@ -1,13 +1,10 @@
 package com.snackbar.pedidos.application.services;
 
-import com.snackbar.kernel.domain.exceptions.BusinessRuleException;
 import com.snackbar.pedidos.application.dto.*;
 import com.snackbar.pedidos.application.ports.CardapioServicePort;
 import com.snackbar.pedidos.application.ports.MesaRepositoryPort;
 import com.snackbar.pedidos.application.ports.PedidoPendenteRepositoryPort;
-import com.snackbar.pedidos.application.ports.SessaoTrabalhoRepositoryPort;
 import com.snackbar.pedidos.domain.entities.Mesa;
-import com.snackbar.pedidos.domain.entities.StatusSessao;
 import com.snackbar.pedidos.domain.exceptions.MesaNaoEncontradaException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +36,7 @@ public class FilaPedidosMesaService {
     private final MesaRepositoryPort mesaRepository;
     private final CardapioServicePort cardapioService;
     private final PedidoPendenteRepositoryPort pedidoPendenteRepository;
-    private final SessaoTrabalhoRepositoryPort sessaoTrabalhoRepository;
+    private final ValidadorStatusLoja validadorStatusLoja;
 
     // Tempo máximo que um pedido pode ficar na fila (30 minutos)
     private static final long TEMPO_MAXIMO_FILA_MINUTOS = 30;
@@ -91,20 +88,6 @@ public class FilaPedidosMesaService {
     }
 
     /**
-     * Todo pedido de mesa (manual, PIX, cartao) passa por aqui antes de cobrar: sem
-     * sessao ABERTA a loja nao recebe pedido, mesmo que o cliente ignore a tela de
-     * loja fechada.
-     */
-    private void validarLojaAberta() {
-        boolean aberta = sessaoTrabalhoRepository.buscarSessaoAtiva()
-                .filter(sessao -> sessao.getStatus() == StatusSessao.ABERTA)
-                .isPresent();
-        if (!aberta) {
-            throw new BusinessRuleException("A loja não está recebendo pedidos no momento. Tente novamente em instantes.");
-        }
-    }
-
-    /**
      * Monta o DTO do pedido pendente calculando itens e valor total a partir do
      * cardapio. Nao persiste.
      */
@@ -113,7 +96,8 @@ public class FilaPedidosMesaService {
             boolean aguardandoPagamento,
             String pagamentoCorrelationId,
             List<MeioPagamentoRequest> meiosPagamento) {
-        validarLojaAberta();
+        // Todo pedido de mesa (manual, PIX, cartao) passa por aqui antes de cobrar
+        validadorStatusLoja.exigirLojaAberta();
         Mesa mesa = mesaRepository.buscarPorQrCodeToken(request.getMesaToken())
                 .orElseThrow(() -> MesaNaoEncontradaException.porToken(request.getMesaToken()));
 

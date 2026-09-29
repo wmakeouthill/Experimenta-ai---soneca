@@ -12,10 +12,10 @@ import com.snackbar.kernel.domain.exceptions.ValidationException;
 import com.snackbar.pedidos.application.dto.*;
 import com.snackbar.pedidos.application.ports.CardapioServicePort;
 import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
-import com.snackbar.pedidos.application.ports.SessaoTrabalhoRepositoryPort;
 import com.snackbar.pedidos.application.services.AuditoriaPagamentoService;
 import com.snackbar.pedidos.application.services.AuditoriaPagamentoService.ContextoRequisicao;
 import com.snackbar.pedidos.application.services.GeradorNumeroPedidoService;
+import com.snackbar.pedidos.application.services.ValidadorStatusLoja;
 import com.snackbar.pedidos.domain.entities.ItemPedido;
 import com.snackbar.pedidos.domain.entities.ItemPedidoAdicional;
 import com.snackbar.pedidos.domain.entities.MeioPagamentoPedido;
@@ -42,7 +42,7 @@ public class CriarPedidoAutoAtendimentoUseCase {
     private final PedidoRepositoryPort pedidoRepository;
     private final CardapioServicePort cardapioService;
     private final PedidoValidator pedidoValidator;
-    private final SessaoTrabalhoRepositoryPort sessaoTrabalhoRepository;
+    private final ValidadorStatusLoja validadorStatusLoja;
     private final GeradorNumeroPedidoService geradorNumeroPedido;
     private final AuditoriaPagamentoService auditoriaPagamentoService;
 
@@ -71,6 +71,8 @@ public class CriarPedidoAutoAtendimentoUseCase {
             CriarPedidoAutoAtendimentoRequest request,
             String usuarioId,
             ContextoRequisicao contexto) {
+        // Totem é canal do cliente: loja pausada ou fechada recusa antes de gerar o número
+        String sessaoId = validadorStatusLoja.exigirLojaAberta().getId();
         NumeroPedido numeroPedido = geradorNumeroPedido.gerarProximoNumero();
 
         // Nome do cliente é opcional no auto atendimento - usado para chamar na tela de
@@ -120,7 +122,7 @@ public class CriarPedidoAutoAtendimentoUseCase {
         }
 
         pedidoValidator.validarCriacao(pedido);
-        vincularSessaoAtiva(pedido);
+        pedido.definirSessaoId(sessaoId);
 
         Pedido pedidoSalvo = pedidoRepository.salvar(pedido);
 
@@ -147,17 +149,6 @@ public class CriarPedidoAutoAtendimentoUseCase {
                 .valorTotal(pedidoSalvo.getValorTotal().getAmount())
                 .dataPedido(pedidoSalvo.getDataPedido())
                 .build();
-    }
-
-    private void vincularSessaoAtiva(Pedido pedido) {
-        sessaoTrabalhoRepository.buscarSessaoAtiva()
-                .ifPresentOrElse(
-                        sessao -> {
-                            pedido.definirSessaoId(sessao.getId());
-                            log.info("[AUTO-ATENDIMENTO] Pedido vinculado à sessão ativa: {}", sessao.getId());
-                        },
-                        () -> log.warn(
-                                "[AUTO-ATENDIMENTO] Nenhuma sessão ativa encontrada! Pedido será criado sem sessão."));
     }
 
     private void validarProdutoDisponivel(String produtoId) {

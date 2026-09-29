@@ -29,6 +29,7 @@ public class FilaPedidosTotemService {
 
     private final CardapioServicePort cardapioService;
     private final PedidoPendenteRepositoryPort pedidoPendenteRepository;
+    private final ValidadorStatusLoja validadorStatusLoja;
 
     private static final long TEMPO_MAXIMO_FILA_MINUTOS = 30;
 
@@ -37,6 +38,7 @@ public class FilaPedidosTotemService {
      */
     @Transactional
     public PedidoPendenteDTO adicionarPedido(CriarPedidoAutoAtendimentoRequest request) {
+        validadorStatusLoja.exigirLojaAberta();
         String pedidoId = UUID.randomUUID().toString();
         List<ItemPedidoPendenteDTO> itens = new ArrayList<>();
         BigDecimal valorTotal = BigDecimal.ZERO;
