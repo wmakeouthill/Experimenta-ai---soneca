@@ -2124,9 +2124,21 @@
                   <span class="resumo-secao-titulo">Itens ({{ carrinho.itens().length }})</span>
                   @for (item of carrinho.itens(); track $index) {
                     <div class="resumo-item-pedido">
-                      <div class="item-qtd-nome">
-                        <span class="item-qtd-badge">{{ item.quantidade }}x</span>
-                        <span class="item-nome-resumo">{{ item.produto.nome }}</span>
+                      <div>
+                        <div class="item-qtd-nome">
+                          <span class="item-qtd-badge">{{ item.quantidade }}x</span>
+                          <span class="item-nome-resumo">{{ item.produto.nome }}</span>
+                        </div>
+                        @if (item.adicionais && item.adicionais.length > 0) {
+                          <div class="item-adicionais">
+                            @for (ad of item.adicionais; track ad.adicional.id) {
+                              <span class="item-adicional-tag">+{{ ad.quantidade }}x {{ ad.adicional.nome }}</span>
+                            }
+                          </div>
+                        }
+                        @if (item.observacao) {
+                          <p class="item-obs">{{ item.observacao }}</p>
+                        }
                       </div>
                       <span class="item-valor-resumo">{{ formatarPrecoItemCarrinho(item) }}</span>
                     </div>
