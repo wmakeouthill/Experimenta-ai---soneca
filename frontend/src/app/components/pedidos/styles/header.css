@@ -129,6 +129,17 @@
   color: var(--balcao-pronto-text);
 }
 
+.sessao-pausada-badge {
+  background: var(--balcao-aguardando-bg);
+  color: var(--balcao-aguardando-text);
+}
+
+.sessao-ativa-header button.sessao-link-criar {
+  background: none;
+  border: none;
+  padding: 0;
+}
+
 .sessao-sem-sessao {
   background: var(--balcao-aguardando-bg);
 }

@@ -76,7 +76,8 @@ class SecurityConfigTest {
             "POST,   /api/mesas,                      OPERADOR,      403",
             "DELETE, /api/mesas/m1,                   OPERADOR,      403",
             "POST,   /api/sessoes-trabalho,           OPERADOR,      403",
-            "PUT,    /api/sessoes-trabalho/s1/pausar, OPERADOR,      403",
+            "PUT,    /api/sessoes-trabalho/s1/finalizar, OPERADOR,   403",
+            "PUT,    /api/sessoes-trabalho/s1/pausar, TOTEM,         403",
             "POST,   /api/config-animacao,            OPERADOR,      403",
             "POST,   /api/impressao/configuracao,     OPERADOR,      403",
             "DELETE, /api/pedidos/p1,                 OPERADOR,      403",
@@ -100,6 +101,8 @@ class SecurityConfigTest {
             // Leituras e ações do dia a dia continuam liberadas
             "GET,    /api/produtos,                   OPERADOR,      200",
             "GET,    /api/sessoes-trabalho/ativa,     OPERADOR,      200",
+            "PUT,    /api/sessoes-trabalho/s1/pausar, OPERADOR,      200",
+            "PUT,    /api/sessoes-trabalho/s1/retomar, OPERADOR,     200",
             "GET,    /api/mesas,                      OPERADOR,      200",
             "GET,    /api/config-animacao,            OPERADOR,      200",
             "POST,   /api/impressao/cupom-fiscal,     OPERADOR,      200",

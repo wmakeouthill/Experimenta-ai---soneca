@@ -134,6 +134,9 @@ public class SecurityConfig {
                         // escrita apenas ADMINISTRADOR
                         .requestMatchers(HttpMethod.GET, SESSOES_TRABALHO_PATH, SESSOES_TRABALHO_PATTERN)
                         .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
+                        // Pausar/retomar é operação do turno (tela de pedidos); abrir e finalizar seguem admin
+                        .requestMatchers(HttpMethod.PUT, "/api/sessoes-trabalho/*/pausar", "/api/sessoes-trabalho/*/retomar")
+                        .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
                         .requestMatchers(SESSOES_TRABALHO_PATH, SESSOES_TRABALHO_PATTERN)
                         .hasRole(ROLE_ADMINISTRADOR)
 

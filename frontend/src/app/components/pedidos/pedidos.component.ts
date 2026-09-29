@@ -2,6 +2,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   DestroyRef,
   inject,
   NgZone,
@@ -20,7 +21,7 @@ import { FilaPedidosTotemService } from '../../services/fila-pedidos-totem.servi
 import { ImpressaoService } from '../../services/impressao.service';
 import { NotificationService } from '../../services/notification.service';
 import { Pedido, PedidoService, Piso, StatusPedido } from '../../services/pedido.service';
-import { SessaoTrabalho, SessaoTrabalhoService } from '../../services/sessao-trabalho.service';
+import { SessaoTrabalho, SessaoTrabalhoService, StatusSessao } from '../../services/sessao-trabalho.service';
 import { gerarUuid } from '../../shared/utils/uuid';
 import { MenuContextoPedidoComponent } from './components/menu-contexto-pedido/menu-contexto-pedido.component';
 import { NovoPedidoModalComponent } from './components/novo-pedido-modal/novo-pedido-modal.component';
@@ -108,6 +109,8 @@ export class PedidosComponent implements OnInit, OnDestroy {
   // Sessão ativa
   readonly temSessaoAtiva = signal<boolean>(false);
   readonly sessaoAtiva = signal<SessaoTrabalho | null>(null);
+  readonly sessaoPausada = computed(() => this.sessaoAtiva()?.status === StatusSessao.PAUSADA);
+  readonly alterandoPausa = signal(false);
 
   // Fila de pedidos de mesa pendentes
   readonly pedidosPendentesMesa = signal<PedidoPendente[]>([]);
@@ -227,6 +230,25 @@ export class PedidosComponent implements OnInit, OnDestroy {
             }
           });
         });
+    });
+  }
+
+  alternarPausaLoja(): void {
+    const sessao = this.sessaoAtiva();
+    if (!sessao) return;
+    const acao = this.sessaoPausada()
+      ? this.sessaoService.retomar(sessao.id)
+      : this.sessaoService.pausar(sessao.id);
+    this.alterandoPausa.set(true);
+    acao.subscribe({
+      next: atualizada => {
+        this.sessaoAtiva.set(atualizada);
+        this.alterandoPausa.set(false);
+      },
+      error: error => {
+        this.notificationService.erro(error.error?.message || 'Erro ao alterar o status da loja');
+        this.alterandoPausa.set(false);
+      },
     });
   }
 
