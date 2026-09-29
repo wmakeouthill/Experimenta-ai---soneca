@@ -63,6 +63,7 @@ public class CriarPedidoUseCase {
     private PedidoDTO executarCriacao(CriarPedidoRequest request, ContextoRequisicao contexto) {
         // Antes de gerar o número: loja fechada não consome sequência; pausada ainda aceita balcão
         String sessaoId = validadorStatusLoja.exigirSessaoAtiva().getId();
+        List<ItemPedido> itens = montarItens(request.getItens());
         NumeroPedido numeroPedido = geradorNumeroPedido.gerarProximoNumero();
 
         Pedido pedido = Pedido.criar(
@@ -71,24 +72,7 @@ public class CriarPedidoUseCase {
                 request.getClienteNome(),
                 request.getUsuarioId());
         pedido.definirPiso(request.getPiso());
-
-        for (ItemPedidoRequest itemRequest : request.getItens()) {
-            var produtoDTO = cardapioService.buscarProdutoDisponivel(itemRequest.getProdutoId());
-            Preco precoUnitario = Preco.of(produtoDTO.getPreco());
-
-            // Processar adicionais do item
-            List<ItemPedidoAdicional> adicionais = processarAdicionais(itemRequest.getAdicionais());
-
-            ItemPedido item = ItemPedido.criar(
-                    itemRequest.getProdutoId(),
-                    produtoDTO.getNome(),
-                    itemRequest.getQuantidade(),
-                    precoUnitario,
-                    itemRequest.getObservacoes(),
-                    adicionais);
-
-            pedido.adicionarItem(item);
-        }
+        itens.forEach(pedido::adicionarItem);
 
         pedido.atualizarObservacoes(request.getObservacoes());
 
@@ -115,6 +99,29 @@ public class CriarPedidoUseCase {
         }
 
         return PedidoDTO.de(pedidoSalvo);
+    }
+
+    /**
+     * Monta os itens checando produto e adicional disponíveis. Roda antes de gerar o número: a sequência
+     * é REQUIRES_NEW, então uma recusa depois dela deixaria lacuna na numeração.
+     */
+    private List<ItemPedido> montarItens(List<ItemPedidoRequest> itensRequest) {
+        List<ItemPedido> itens = new ArrayList<>();
+        for (ItemPedidoRequest itemRequest : itensRequest) {
+            var produtoDTO = cardapioService.buscarProdutoDisponivel(itemRequest.getProdutoId());
+            Preco precoUnitario = Preco.of(produtoDTO.getPreco());
+
+            List<ItemPedidoAdicional> adicionais = processarAdicionais(itemRequest.getAdicionais());
+
+            itens.add(ItemPedido.criar(
+                    itemRequest.getProdutoId(),
+                    produtoDTO.getNome(),
+                    itemRequest.getQuantidade(),
+                    precoUnitario,
+                    itemRequest.getObservacoes(),
+                    adicionais));
+        }
+        return itens;
     }
 
     private void validarTotalMeiosPagamento(Pedido pedido) {

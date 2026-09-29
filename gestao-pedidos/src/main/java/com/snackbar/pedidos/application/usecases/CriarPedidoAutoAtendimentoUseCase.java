@@ -73,6 +73,7 @@ public class CriarPedidoAutoAtendimentoUseCase {
             ContextoRequisicao contexto) {
         // Totem é canal do cliente: loja pausada ou fechada recusa antes de gerar o número
         String sessaoId = validadorStatusLoja.exigirLojaAberta().getId();
+        List<ItemPedido> itens = montarItens(request.getItens());
         NumeroPedido numeroPedido = geradorNumeroPedido.gerarProximoNumero();
 
         // Nome do cliente é opcional no auto atendimento - usado para chamar na tela de
@@ -88,24 +89,7 @@ public class CriarPedidoAutoAtendimentoUseCase {
                 nomeCliente,
                 usuarioId);
         pedido.definirPiso(request.getPiso());
-
-        // Processa os itens do pedido
-        for (ItemPedidoRequest itemRequest : request.getItens()) {
-            var produtoDTO = cardapioService.buscarProdutoDisponivel(itemRequest.getProdutoId());
-            Preco precoUnitario = Preco.of(produtoDTO.getPreco());
-
-            List<ItemPedidoAdicional> adicionais = processarAdicionais(itemRequest.getAdicionais());
-
-            ItemPedido item = ItemPedido.criar(
-                    itemRequest.getProdutoId(),
-                    produtoDTO.getNome(),
-                    itemRequest.getQuantidade(),
-                    precoUnitario,
-                    itemRequest.getObservacoes(),
-                    adicionais);
-
-            pedido.adicionarItem(item);
-        }
+        itens.forEach(pedido::adicionarItem);
 
         pedido.atualizarObservacoes(request.getObservacao());
 
@@ -147,6 +131,29 @@ public class CriarPedidoAutoAtendimentoUseCase {
                 .valorTotal(pedidoSalvo.getValorTotal().getAmount())
                 .dataPedido(pedidoSalvo.getDataPedido())
                 .build();
+    }
+
+    /**
+     * Monta os itens checando produto e adicional disponíveis. Roda antes de gerar o número: a sequência
+     * é REQUIRES_NEW, então uma recusa depois dela deixaria lacuna na numeração.
+     */
+    private List<ItemPedido> montarItens(List<ItemPedidoRequest> itensRequest) {
+        List<ItemPedido> itens = new ArrayList<>();
+        for (ItemPedidoRequest itemRequest : itensRequest) {
+            var produtoDTO = cardapioService.buscarProdutoDisponivel(itemRequest.getProdutoId());
+            Preco precoUnitario = Preco.of(produtoDTO.getPreco());
+
+            List<ItemPedidoAdicional> adicionais = processarAdicionais(itemRequest.getAdicionais());
+
+            itens.add(ItemPedido.criar(
+                    itemRequest.getProdutoId(),
+                    produtoDTO.getNome(),
+                    itemRequest.getQuantidade(),
+                    precoUnitario,
+                    itemRequest.getObservacoes(),
+                    adicionais));
+        }
+        return itens;
     }
 
     private void validarTotalMeiosPagamento(Pedido pedido) {
