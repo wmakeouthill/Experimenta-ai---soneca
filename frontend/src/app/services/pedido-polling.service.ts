@@ -1,6 +1,6 @@
 import { Injectable, inject, signal, NgZone } from '@angular/core';
 import { catchError, switchMap, takeWhile } from 'rxjs/operators';
-import { of, timer, Subject, Subscription, Observable } from 'rxjs';
+import { EMPTY, timer, Subject, Subscription, Observable } from 'rxjs';
 import { PedidoService, Pedido } from './pedido.service';
 
 @Injectable({
@@ -58,7 +58,8 @@ export class PedidoPollingService {
               console.error('Erro no polling global:', err);
               // Atualiza estado dentro da zona Angular
               this.ngZone.run(() => this.erro.set('Erro ao buscar pedidos'));
-              return of([]); // Continua o polling mesmo com erro
+              // Pula o ciclo e mantém a última lista; of([]) apagava os pedidos da tela e o erro no mesmo instante
+              return EMPTY;
             })
           );
         })

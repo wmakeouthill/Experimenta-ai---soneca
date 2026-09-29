@@ -58,6 +58,25 @@ describe('PedidoPollingService', () => {
     discardPeriodicTasks();
   }));
 
+  it('erro no polling mantém a última lista até a próxima resposta', fakeAsync(() => {
+    service.iniciarPolling('s1');
+    tick(0);
+    doSessao('s1').flush([{ id: 'p1' }]);
+
+    tick(5000);
+    doSessao('s1').flush(null, { status: 500, statusText: 'Erro' });
+    expect(service.pedidos().map(p => p.id)).toEqual(['p1']);
+    expect(service.erro()).not.toBeNull();
+
+    tick(5000);
+    doSessao('s1').flush([{ id: 'p1' }, { id: 'p2' }]);
+    expect(service.pedidos()).toHaveSize(2);
+    expect(service.erro()).toBeNull();
+
+    service.pararPolling();
+    discardPeriodicTasks();
+  }));
+
   it('iniciarPolling com outra sessão reinicia o polling com o novo filtro', fakeAsync(() => {
     service.iniciarPolling('s1');
     tick(0);
