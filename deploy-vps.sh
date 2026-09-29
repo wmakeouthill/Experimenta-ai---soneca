@@ -38,7 +38,12 @@ check_env() {
 
 preparar_frontend() {
     mkdir -p releases/electron/balcao releases/electron/totem
-    if [ -n "${DOMAIN:-}" ] && [ -f "config/certbot/conf/live/${DOMAIN}/fullchain.pem" ]; then
+    # A pasta live/ costuma ser root:root 700; o deploy não consegue testar o bind mount no host.
+    # Consulte o Certbot (root dentro do container) sem abrir permissões da chave privada.
+    if [ -n "${DOMAIN:-}" ] && {
+        [ -f "config/certbot/conf/live/${DOMAIN}/fullchain.pem" ] ||
+        docker exec snackbar-certbot test -s "/etc/letsencrypt/live/${DOMAIN}/fullchain.pem" >/dev/null 2>&1
+    }; then
         export DOMAIN
         envsubst '${DOMAIN}' < config/nginx/default.conf.template > config/nginx/default.conf
     fi
@@ -242,15 +247,16 @@ configurar_ssl() {
         --agree-tos \
         --no-eff-email
     
+    # O container precisa estar ativo para preparar_frontend validar o certificado
+    # sem depender de permissões de leitura no diretório root-only do host.
+    docker compose -f docker-compose.prod.yml up -d certbot
+
     # Substituir config Nginx para HTTPS
     log "📝 Ativando configuração HTTPS no Nginx..."
     preparar_frontend
     
     # Reiniciar Nginx
     docker compose -f docker-compose.prod.yml restart frontend
-    
-    # Subir certbot para renovação automática
-    docker compose -f docker-compose.prod.yml up -d certbot
     
     log "✅ SSL configurado com sucesso!"
     log "🌐 Acesse: https://${DOMAIN}"
