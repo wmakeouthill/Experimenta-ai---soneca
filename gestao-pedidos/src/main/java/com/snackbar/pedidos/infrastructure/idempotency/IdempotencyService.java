@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.snackbar.kernel.domain.exceptions.ConflitoException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,15 +46,16 @@ public class IdempotencyService {
     /**
      * Executa uma operação de forma idempotente.
      * 
-     * Se a chave já existe e não expirou, retorna a resposta anterior.
-     * Caso contrário, executa a operação e salva a resposta.
+     * Reserva a chave (linha sem resposta) ANTES de executar: a constraint UNIQUE
+     * garante que só uma requisição com a mesma chave executa; as outras recebem
+     * a resposta salva ou 409 enquanto a primeira não termina. Se a operação
+     * falhar, a reserva é apagada e o cliente pode repetir com a mesma chave.
      * 
-     * IMPORTANTE: Este método NÃO é @Transactional propositalmente.
-     * A operação (operation.get()) gerencia sua própria transação,
-     * e o salvamento da chave de idempotência ocorre em transação separada.
-     * Isso evita UnexpectedRollbackException quando o save da chave
-     * falha por conflito de concorrência (DataIntegrityViolationException),
-     * pois a transação da operação principal já foi comitada.
+     * IMPORTANTE: Este método NÃO é @Transactional propositalmente: a reserva
+     * precisa estar comitada antes da operação, que gerencia a própria transação.
+     * ponytail: reserva órfã (queda do servidor no meio da operação) segura a chave
+     * até expirar (24 h); o front gera chave nova por clique, então só o reenvio
+     * da mesma chave recebe 409. Se isso pesar, tratar reserva velha como livre.
      * 
      * @param idempotencyKey Chave única da requisição
      * @param endpoint       Endpoint da API (para evitar colisão entre endpoints)
@@ -73,41 +75,43 @@ public class IdempotencyService {
             return ResponseEntity.status(HttpStatus.CREATED).body(result);
         }
 
-        // Verifica se já existe uma resposta para esta chave
         Optional<IdempotencyKeyEntity> existingKey = idempotencyKeyRepository
                 .findByKeyAndEndpoint(idempotencyKey, endpoint, LocalDateTime.now());
-
         if (existingKey.isPresent()) {
-            IdempotencyKeyEntity cached = existingKey.get();
-            log.info("[IDEMPOTENCY] Requisição duplicada detectada - Key: {}, Endpoint: {}",
-                    idempotencyKey, endpoint);
-
-            try {
-                T cachedResponse = objectMapper.readValue(cached.getResponseBody(), responseType);
-                return ResponseEntity
-                        .status(cached.getResponseStatus())
-                        .body(cachedResponse);
-            } catch (JsonProcessingException e) {
-                log.error("[IDEMPOTENCY] Erro ao deserializar resposta cached", e);
-                // Em caso de erro, executa a operação novamente
-            }
+            return responderDuplicada(existingKey.get(), responseType);
         }
 
-        // Executa a operação
-        T result = operation.get();
-        HttpStatus status = HttpStatus.CREATED;
-
-        // Salva a resposta para futuras requisições.
-        // Se outra thread inseriu a mesma chave concorrentemente (TOCTOU race),
-        // a constraint UNIQUE no banco garante que apenas uma inserção terá sucesso.
-        // Nesse caso, retornamos o resultado já computado (a operação já executou).
+        IdempotencyKeyEntity reserva;
         try {
-            saveIdempotencyKey(idempotencyKey, endpoint, result, status.value());
+            reserva = idempotencyKeyRepository.saveAndFlush(IdempotencyKeyEntity.builder()
+                    .idempotencyKey(idempotencyKey)
+                    .endpoint(endpoint)
+                    .expiresAt(LocalDateTime.now().plusHours(EXPIRATION_HOURS))
+                    .build());
         } catch (DataIntegrityViolationException e) {
-            log.warn("[IDEMPOTENCY] Chave já inserida por thread concorrente - Key: {}, Endpoint: {}. " +
-                    "Operação já foi executada, retornando resultado.", idempotencyKey, endpoint);
-            // A operação já executou nesta thread; retorna o resultado normalmente.
-            // A resposta cached da outra thread será usada em futuros retries.
+            // Outra requisição reservou a chave entre a consulta e o INSERT
+            return responderDuplicada(idempotencyKeyRepository
+                    .findByKeyAndEndpoint(idempotencyKey, endpoint, LocalDateTime.now())
+                    .orElseThrow(() -> new ConflitoException("Chave de idempotência já usada. Gere uma nova.")),
+                    responseType);
+        }
+
+        T result;
+        try {
+            result = operation.get();
+        } catch (RuntimeException e) {
+            idempotencyKeyRepository.deleteById(reserva.getId());
+            throw e;
+        }
+
+        HttpStatus status = HttpStatus.CREATED;
+        try {
+            reserva.setResponseBody(objectMapper.writeValueAsString(result));
+            reserva.setResponseStatus(status.value());
+            idempotencyKeyRepository.save(reserva);
+        } catch (JsonProcessingException | RuntimeException e) {
+            // A operação já executou: devolve o resultado; a reserva fica e o reenvio recebe 409, sem duplicar
+            log.error("[IDEMPOTENCY] Erro ao salvar resposta para idempotência - Key: {}", idempotencyKey, e);
         }
 
         log.debug("[IDEMPOTENCY] Nova chave registrada - Key: {}, Endpoint: {}",
@@ -116,31 +120,28 @@ public class IdempotencyService {
         return ResponseEntity.status(status).body(result);
     }
 
+    /** Devolve a resposta salva da chave, ou 409 se a primeira requisição ainda não terminou. */
+    private <T> ResponseEntity<T> responderDuplicada(IdempotencyKeyEntity cached, Class<T> responseType) {
+        log.info("[IDEMPOTENCY] Requisição duplicada detectada - Key: {}, Endpoint: {}",
+                cached.getIdempotencyKey(), cached.getEndpoint());
+        if (cached.getResponseStatus() == null) {
+            throw new ConflitoException("Este pedido ainda está sendo processado. Aguarde um instante.");
+        }
+        try {
+            return ResponseEntity
+                    .status(cached.getResponseStatus())
+                    .body(objectMapper.readValue(cached.getResponseBody(), responseType));
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Resposta idempotente ilegível - Key: " + cached.getIdempotencyKey(), e);
+        }
+    }
+
     /**
      * Limpa chaves expiradas do banco de dados.
      */
     @Transactional
     public void cleanupExpiredKeys() {
         idempotencyKeyRepository.deleteExpiredKeys(LocalDateTime.now());
-    }
-
-    @Transactional
-    public void saveIdempotencyKey(String key, String endpoint, Object response, int status) {
-        try {
-            String responseBody = objectMapper.writeValueAsString(response);
-
-            IdempotencyKeyEntity entity = IdempotencyKeyEntity.builder()
-                    .idempotencyKey(key)
-                    .endpoint(endpoint)
-                    .responseBody(responseBody)
-                    .responseStatus(status)
-                    .expiresAt(LocalDateTime.now().plusHours(EXPIRATION_HOURS))
-                    .build();
-
-            idempotencyKeyRepository.save(entity);
-        } catch (JsonProcessingException e) {
-            log.error("[IDEMPOTENCY] Erro ao serializar resposta para idempotência", e);
-        }
     }
 
     /**
