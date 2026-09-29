@@ -16,6 +16,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { catchError, EMPTY, of, Subscription, switchMap, takeWhile, timer } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
+import { AvisoPedidoService } from '../../services/aviso-pedido.service';
 import { FilaPedidosMesaService, PedidoPendente } from '../../services/fila-pedidos-mesa.service';
 import { FilaPedidosTotemService } from '../../services/fila-pedidos-totem.service';
 import { ImpressaoService } from '../../services/impressao.service';
@@ -54,6 +55,7 @@ export class PedidosComponent implements OnInit, OnDestroy {
   private readonly destroyRef = inject(DestroyRef);
   private readonly filaPedidosMesaService = inject(FilaPedidosMesaService);
   private readonly filaPedidosTotemService = inject(FilaPedidosTotemService);
+  private readonly avisoPedido = inject(AvisoPedidoService);
   private readonly ngZone = inject(NgZone);
 
   // Subscription para polling de fila de mesa e totem
@@ -167,6 +169,7 @@ export class PedidosComponent implements OnInit, OnDestroy {
 
     this.filaPollingAtivo = true;
     this.filaPollingSubscription?.unsubscribe();
+    let primeiraCarga = true; // o que já estava na fila ao abrir a tela não é anunciado
 
     // Executa fora da zona Angular para não bloquear hidratação/estabilidade
     this.ngZone.runOutsideAngular(() => {
@@ -188,6 +191,14 @@ export class PedidosComponent implements OnInit, OnDestroy {
           this.ngZone.run(() => {
             const pedidosAnteriores = this.pedidosPendentesMesa();
             this.pedidosPendentesMesa.set([...pedidos]); // Nova referência de array
+            if (!primeiraCarga) {
+              this.avisoPedido.anunciarNovos(
+                pedidosAnteriores,
+                pedidos,
+                p => `Chegou um novo pedido da mesa ${p.numeroMesa}`
+              );
+            }
+            primeiraCarga = false;
 
             // Notificar se há novos pedidos de mesa
             if (pedidos.length > pedidosAnteriores.length) {
@@ -205,6 +216,7 @@ export class PedidosComponent implements OnInit, OnDestroy {
     if (this.filaTotemPollingAtivo) return;
     this.filaTotemPollingAtivo = true;
     this.filaTotemPollingSubscription?.unsubscribe();
+    let primeiraCarga = true;
     this.ngZone.runOutsideAngular(() => {
       this.filaTotemPollingSubscription = timer(0, 5000)
         .pipe(
@@ -222,6 +234,10 @@ export class PedidosComponent implements OnInit, OnDestroy {
           this.ngZone.run(() => {
             const anteriores = this.pedidosPendentesTotem();
             this.pedidosPendentesTotem.set([...pedidos]);
+            if (!primeiraCarga) {
+              this.avisoPedido.anunciarNovos(anteriores, pedidos, () => 'Chegou um novo pedido do totem');
+            }
+            primeiraCarga = false;
             if (pedidos.length > anteriores.length) {
               const novos = pedidos.length - anteriores.length;
               this.notificationService.info(
