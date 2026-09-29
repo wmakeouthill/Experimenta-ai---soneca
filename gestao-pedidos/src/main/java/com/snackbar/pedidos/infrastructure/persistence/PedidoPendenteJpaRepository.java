@@ -25,7 +25,7 @@ public interface PedidoPendenteJpaRepository extends JpaRepository<PedidoPendent
     @Query("SELECT DISTINCT p FROM PedidoPendenteEntity p " +
             "LEFT JOIN FETCH p.itens " +
             "LEFT JOIN FETCH p.meiosPagamento " +
-            "WHERE p.pedidoRealId IS NULL AND p.aguardandoPagamento = false " +
+            "WHERE p.pedidoRealId IS NULL AND p.rejeitadoEm IS NULL AND p.aguardandoPagamento = false " +
             "ORDER BY p.dataHoraSolicitacao ASC")
     List<PedidoPendenteEntity> findPendentes();
 
@@ -35,7 +35,7 @@ public interface PedidoPendenteJpaRepository extends JpaRepository<PedidoPendent
     @Query("SELECT DISTINCT p FROM PedidoPendenteEntity p " +
             "LEFT JOIN FETCH p.itens " +
             "LEFT JOIN FETCH p.meiosPagamento " +
-            "WHERE p.pedidoRealId IS NULL AND p.aguardandoPagamento = false AND p.tipo = :tipo " +
+            "WHERE p.pedidoRealId IS NULL AND p.rejeitadoEm IS NULL AND p.aguardandoPagamento = false AND p.tipo = :tipo " +
             "ORDER BY p.dataHoraSolicitacao ASC")
     List<PedidoPendenteEntity> findPendentesPorTipo(@Param("tipo") String tipo);
 
@@ -43,14 +43,14 @@ public interface PedidoPendenteJpaRepository extends JpaRepository<PedidoPendent
      * Conta pedidos pendentes na fila.
      */
     @Query("SELECT COUNT(p) FROM PedidoPendenteEntity p " +
-            "WHERE p.pedidoRealId IS NULL AND p.aguardandoPagamento = false")
+            "WHERE p.pedidoRealId IS NULL AND p.rejeitadoEm IS NULL AND p.aguardandoPagamento = false")
     long countPendentes();
 
     /**
      * Conta pedidos pendentes por tipo.
      */
     @Query("SELECT COUNT(p) FROM PedidoPendenteEntity p " +
-            "WHERE p.pedidoRealId IS NULL AND p.aguardandoPagamento = false AND p.tipo = :tipo")
+            "WHERE p.pedidoRealId IS NULL AND p.rejeitadoEm IS NULL AND p.aguardandoPagamento = false AND p.tipo = :tipo")
     long countPendentesPorTipo(@Param("tipo") String tipo);
 
     /**
@@ -59,7 +59,7 @@ public interface PedidoPendenteJpaRepository extends JpaRepository<PedidoPendent
     @Query("SELECT p FROM PedidoPendenteEntity p " +
             "LEFT JOIN FETCH p.itens " +
             "LEFT JOIN FETCH p.meiosPagamento " +
-            "WHERE p.id = :id AND p.pedidoRealId IS NULL")
+            "WHERE p.id = :id AND p.pedidoRealId IS NULL AND p.rejeitadoEm IS NULL")
     Optional<PedidoPendenteEntity> findPendenteById(@Param("id") String id);
 
     /**
@@ -70,7 +70,7 @@ public interface PedidoPendenteJpaRepository extends JpaRepository<PedidoPendent
     @Query("SELECT p FROM PedidoPendenteEntity p " +
             "LEFT JOIN FETCH p.itens " +
             "LEFT JOIN FETCH p.meiosPagamento " +
-            "WHERE p.id = :id AND p.pedidoRealId IS NULL AND p.aguardandoPagamento = false")
+            "WHERE p.id = :id AND p.pedidoRealId IS NULL AND p.rejeitadoEm IS NULL AND p.aguardandoPagamento = false")
     Optional<PedidoPendenteEntity> findPendenteByIdComLock(@Param("id") String id);
 
     /**
@@ -94,6 +94,19 @@ public interface PedidoPendenteJpaRepository extends JpaRepository<PedidoPendent
     @Query("UPDATE PedidoPendenteEntity p SET p.pedidoRealId = :pedidoRealId, p.updatedAt = CURRENT_TIMESTAMP WHERE p.id = :pedidoPendenteId")
     int marcarComoAceito(@Param("pedidoPendenteId") String pedidoPendenteId,
             @Param("pedidoRealId") String pedidoRealId);
+
+    /**
+     * Rejeita um pedido que ainda está na fila. O UPDATE condicional espera o lock de um aceite
+     * em andamento e, depois dele, não acha mais a linha: aceite e rejeição nunca valem juntos.
+     */
+    @Modifying
+    @Query("UPDATE PedidoPendenteEntity p SET p.rejeitadoEm = CURRENT_TIMESTAMP, p.motivoRejeicao = :motivo, " +
+            "p.updatedAt = CURRENT_TIMESTAMP WHERE p.id = :id AND p.pedidoRealId IS NULL " +
+            "AND p.rejeitadoEm IS NULL AND p.aguardandoPagamento = false")
+    int marcarComoRejeitado(@Param("id") String id, @Param("motivo") String motivo);
+
+    @Query("SELECT p FROM PedidoPendenteEntity p WHERE p.id = :id AND p.rejeitadoEm IS NOT NULL")
+    Optional<PedidoPendenteEntity> findRejeitadoById(@Param("id") String id);
 
     /**
      * Torna um pedido pendente visivel na fila apos a aprovacao do pagamento PIX.

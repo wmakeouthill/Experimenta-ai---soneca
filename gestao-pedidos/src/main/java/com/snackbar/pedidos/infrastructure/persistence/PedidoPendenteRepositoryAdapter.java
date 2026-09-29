@@ -29,6 +29,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PedidoPendenteRepositoryAdapter implements PedidoPendenteRepositoryPort {
 
+    /** Tamanho da coluna motivo_rejeicao. */
+    private static final int TAMANHO_MOTIVO_REJEICAO = 500;
+
     private final PedidoPendenteJpaRepository jpaRepository;
 
     @Override
@@ -116,6 +119,22 @@ public class PedidoPendenteRepositoryAdapter implements PedidoPendenteRepository
             log.info("Pedido pendente {} marcado como aceito -> pedido real {}",
                     pedidoPendenteId, pedidoRealId);
         }
+    }
+
+    @Override
+    @Transactional
+    public boolean marcarComoRejeitado(String pedidoPendenteId, String motivo) {
+        String texto = motivo == null || motivo.isBlank() ? null : motivo.strip();
+        if (texto != null && texto.length() > TAMANHO_MOTIVO_REJEICAO) {
+            texto = texto.substring(0, TAMANHO_MOTIVO_REJEICAO);
+        }
+        return jpaRepository.marcarComoRejeitado(pedidoPendenteId, texto) > 0;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<PedidoPendenteDTO> buscarRejeitadoPorId(String pedidoPendenteId) {
+        return jpaRepository.findRejeitadoById(pedidoPendenteId).map(this::toDTO);
     }
 
     @Override
@@ -274,6 +293,7 @@ public class PedidoPendenteRepositoryAdapter implements PedidoPendenteRepository
                 .tempoEsperaSegundos(tempoEspera)
                 .aguardandoPagamento(entity.isAguardandoPagamento())
                 .pagamentoCorrelationId(entity.getPagamentoCorrelationId())
+                .motivoRejeicao(entity.getMotivoRejeicao())
                 .build();
     }
 }

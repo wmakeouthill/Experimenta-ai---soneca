@@ -238,17 +238,22 @@ public class FilaPedidosMesaService {
     }
 
     /**
-     * Remove um pedido da fila (quando aceito ou rejeitado).
+     * Tira o pedido da fila marcando-o como rejeitado; a linha fica para o cliente ver o motivo
+     * no status até expirar.
+     *
+     * @return false se o pedido já foi aceito, rejeitado ou expirou
      */
     @Transactional
-    public PedidoPendenteDTO removerPedido(String pedidoId) {
-        Optional<PedidoPendenteDTO> pedidoOpt = pedidoPendenteRepository.buscarPorId(pedidoId);
-        if (pedidoOpt.isPresent()) {
-            pedidoPendenteRepository.remover(pedidoId);
-            log.info("Pedido removido da fila - ID: {}", pedidoId);
-            return pedidoOpt.get();
-        }
-        return null;
+    public boolean rejeitarPedido(String pedidoId, String motivo) {
+        return pedidoPendenteRepository.marcarComoRejeitado(pedidoId, motivo);
+    }
+
+    /**
+     * Busca um pedido rejeitado pelo funcionário, com o motivo.
+     */
+    @Transactional(readOnly = true)
+    public Optional<PedidoPendenteDTO> buscarRejeitadoPorId(String pedidoId) {
+        return pedidoPendenteRepository.buscarRejeitadoPorId(pedidoId);
     }
 
     /**

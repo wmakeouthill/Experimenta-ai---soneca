@@ -53,7 +53,23 @@ public class BuscarStatusPedidoClienteUseCase {
             return pedidoRepository.buscarPorId(pedidoRealId.get()).map(this::fromPedido);
         }
 
-        return Optional.empty();
+        return filaPedidosMesa.buscarRejeitadoPorId(pedidoId).map(this::fromPedidoRejeitado);
+    }
+
+    private StatusPedidoClienteDTO fromPedidoRejeitado(PedidoPendenteDTO pedidoPendente) {
+        StatusCliente status = StatusCliente.CANCELADO;
+        String motivo = pedidoPendente.getMotivoRejeicao() != null
+                ? pedidoPendente.getMotivoRejeicao()
+                : "A loja recusou este pedido. Fale com um atendente.";
+
+        return StatusPedidoClienteDTO.builder()
+                .pedidoId(pedidoPendente.getId())
+                .status(status)
+                .statusDescricao(status.getDescricao())
+                .numeroMesa(pedidoPendente.getNumeroMesa())
+                .dataHoraSolicitacao(pedidoPendente.getDataHoraSolicitacao())
+                .motivoCancelamento(motivo)
+                .build();
     }
 
     private StatusPedidoClienteDTO fromPedidoPendente(PedidoPendenteDTO pedidoPendente) {

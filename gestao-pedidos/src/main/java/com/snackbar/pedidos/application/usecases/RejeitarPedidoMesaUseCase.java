@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * Use case para funcionário rejeitar um pedido pendente de mesa.
- * O pedido é simplesmente removido da fila sem criar pedido no sistema.
+ * O pedido sai da fila sem criar pedido no sistema; o cliente vê o motivo no status.
  */
 @Service
 @RequiredArgsConstructor
@@ -25,10 +25,12 @@ public class RejeitarPedidoMesaUseCase {
         }
 
         PedidoPendenteDTO pedidoPendente = filaPedidosMesa.buscarVisivelPorId(pedidoPendenteId)
-                .orElseThrow(() -> new ConflitoException(
-                        "Este pedido já foi aceito, rejeitado ou expirou."));
+                .orElseThrow(RejeitarPedidoMesaUseCase::jaTratado);
 
-        filaPedidosMesa.removerPedido(pedidoPendenteId);
+        // Aceite em andamento segura a linha; depois dele o UPDATE não acha o pedido e vira 409
+        if (!filaPedidosMesa.rejeitarPedido(pedidoPendenteId, motivo)) {
+            throw jaTratado();
+        }
 
         log.info("Pedido rejeitado - ID: {}, Mesa: {}, Usuário: {}, Motivo: {}",
                 pedidoPendenteId,
@@ -37,5 +39,9 @@ public class RejeitarPedidoMesaUseCase {
                 motivo != null ? motivo : "Não informado");
 
         return pedidoPendente;
+    }
+
+    private static ConflitoException jaTratado() {
+        return new ConflitoException("Este pedido já foi aceito, rejeitado ou expirou.");
     }
 }

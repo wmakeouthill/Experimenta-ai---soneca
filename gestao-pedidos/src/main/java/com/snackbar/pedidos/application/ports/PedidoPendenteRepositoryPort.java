@@ -79,6 +79,18 @@ public interface PedidoPendenteRepositoryPort {
     void marcarComoAceito(String pedidoPendenteId, String pedidoRealId);
 
     /**
+     * Rejeita um pedido que ainda está na fila, guardando o motivo para o status do cliente.
+     *
+     * @return false se o pedido já foi aceito, rejeitado ou expirou
+     */
+    boolean marcarComoRejeitado(String pedidoPendenteId, String motivo);
+
+    /**
+     * Busca um pedido rejeitado, com o motivo, para o status do cliente.
+     */
+    Optional<PedidoPendenteDTO> buscarRejeitadoPorId(String pedidoPendenteId);
+
+    /**
      * Libera um pedido pendente que estava aguardando pagamento digital,
      * tornando-o visivel na fila do funcionario.
      */

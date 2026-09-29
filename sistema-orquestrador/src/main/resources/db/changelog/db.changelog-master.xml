@@ -160,6 +160,9 @@
     <!-- Migration: Piso (terreo/andar) em pedidos, fila de pendentes e mesas -->
     <include file="changes/049-add-piso-pedidos-mesas.sql" relativeToChangelogFile="true"/>
 
+    <!-- Migration: Pedido pendente rejeitado guarda o motivo para o status do cliente -->
+    <include file="changes/050-add-rejeicao-pedidos-pendentes.sql" relativeToChangelogFile="true"/>
+
     <!--
     NOTA: O usuário administrador inicial é criado automaticamente via CommandLineRunner
     (UsuarioInicialConfig) na primeira execução da aplicação.

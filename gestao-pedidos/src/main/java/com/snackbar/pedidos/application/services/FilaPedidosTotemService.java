@@ -155,15 +155,14 @@ public class FilaPedidosTotemService {
         return Optional.empty();
     }
 
+    /**
+     * Tira o pedido da fila marcando-o como rejeitado.
+     *
+     * @return false se o pedido já foi aceito, rejeitado ou expirou
+     */
     @Transactional
-    public PedidoPendenteDTO removerPedido(String pedidoId) {
-        Optional<PedidoPendenteDTO> pedidoOpt = buscarPorId(pedidoId);
-        if (pedidoOpt.isPresent()) {
-            pedidoPendenteRepository.remover(pedidoId);
-            log.info("Pedido totem removido da fila - ID: {}", pedidoId);
-            return pedidoOpt.get();
-        }
-        return null;
+    public boolean rejeitarPedido(String pedidoId, String motivo) {
+        return pedidoPendenteRepository.marcarComoRejeitado(pedidoId, motivo);
     }
 
     @Transactional

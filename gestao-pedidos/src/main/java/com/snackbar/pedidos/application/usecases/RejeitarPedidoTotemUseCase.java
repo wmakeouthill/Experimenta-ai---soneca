@@ -25,10 +25,12 @@ public class RejeitarPedidoTotemUseCase {
         }
 
         PedidoPendenteDTO pedidoPendente = filaPedidosTotem.buscarPorId(pedidoPendenteId)
-                .orElseThrow(() -> new ConflitoException(
-                        "Este pedido já foi aceito, rejeitado ou expirou."));
+                .orElseThrow(RejeitarPedidoTotemUseCase::jaTratado);
 
-        filaPedidosTotem.removerPedido(pedidoPendenteId);
+        // Aceite em andamento segura a linha; depois dele o UPDATE não acha o pedido e vira 409
+        if (!filaPedidosTotem.rejeitarPedido(pedidoPendenteId, motivo)) {
+            throw jaTratado();
+        }
 
         log.info("Pedido totem rejeitado - ID: {}, Cliente: {}, Usuário: {}, Motivo: {}",
                 pedidoPendenteId,
@@ -37,5 +39,9 @@ public class RejeitarPedidoTotemUseCase {
                 motivo != null ? motivo : "Não informado");
 
         return pedidoPendente;
+    }
+
+    private static ConflitoException jaTratado() {
+        return new ConflitoException("Este pedido já foi aceito, rejeitado ou expirou.");
     }
 }

@@ -83,6 +83,13 @@ public class PedidoPendenteEntity implements Persistable<String> {
     @Column(name = "pagamento_correlation_id", length = 100)
     private String pagamentoCorrelationId;
 
+    /** Preenchido quando o funcionário rejeita: a linha sai da fila, mas o status do cliente mostra o motivo. */
+    @Column(name = "rejeitado_em")
+    private LocalDateTime rejeitadoEm;
+
+    @Column(name = "motivo_rejeicao", length = 500)
+    private String motivoRejeicao;
+
     @OneToMany(mappedBy = "pedidoPendente", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @Builder.Default
     private Set<ItemPedidoPendenteEntity> itens = new HashSet<>();

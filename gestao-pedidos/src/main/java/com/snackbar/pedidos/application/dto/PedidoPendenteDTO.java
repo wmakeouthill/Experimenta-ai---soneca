@@ -47,6 +47,9 @@ public class PedidoPendenteDTO {
     /** correlationId do pagamento PIX associado (fluxo pre-pago). */
     private String pagamentoCorrelationId;
 
+    /** Motivo informado pelo funcionário ao rejeitar (só em pedido rejeitado). */
+    private String motivoRejeicao;
+
     /**
      * Calcula o tempo de espera em segundos.
      */
