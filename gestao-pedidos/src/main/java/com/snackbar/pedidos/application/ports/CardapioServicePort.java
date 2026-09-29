@@ -23,7 +23,14 @@ public interface CardapioServicePort {
 
     AdicionalDTO buscarAdicionalPorId(String id);
 
-    boolean adicionalEstaDisponivel(String id);
+    /** Mesmo critério de buscarProdutoDisponivel, para os adicionais do item. */
+    default AdicionalDTO buscarAdicionalDisponivel(String id) {
+        AdicionalDTO adicional = buscarAdicionalPorId(id);
+        if (!adicional.isDisponivel()) {
+            throw new ValidationException("Adicional indisponível no momento: " + adicional.getNome());
+        }
+        return adicional;
+    }
 
     List<AdicionalDTO> listarAdicionaisDisponiveisDoProduto(String produtoId);
 }

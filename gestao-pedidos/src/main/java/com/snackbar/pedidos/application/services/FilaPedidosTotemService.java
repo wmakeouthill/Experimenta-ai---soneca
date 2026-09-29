@@ -52,7 +52,7 @@ public class FilaPedidosTotemService {
 
             if (itemReq.getAdicionais() != null && !itemReq.getAdicionais().isEmpty()) {
                 for (ItemPedidoAdicionalRequest adicionalReq : itemReq.getAdicionais()) {
-                    var adicional = cardapioService.buscarAdicionalPorId(adicionalReq.getAdicionalId());
+                    var adicional = cardapioService.buscarAdicionalDisponivel(adicionalReq.getAdicionalId());
                     BigDecimal precoAdicional = adicional.getPreco();
                     BigDecimal subtotalAdicional = precoAdicional
                             .multiply(BigDecimal.valueOf(adicionalReq.getQuantidade()));

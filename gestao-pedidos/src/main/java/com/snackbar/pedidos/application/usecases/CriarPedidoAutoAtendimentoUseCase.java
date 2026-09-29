@@ -167,11 +167,7 @@ public class CriarPedidoAutoAtendimentoUseCase {
 
         List<ItemPedidoAdicional> adicionais = new ArrayList<>();
         for (ItemPedidoAdicionalRequest adicionalRequest : adicionaisRequest) {
-            var adicionalDTO = cardapioService.buscarAdicionalPorId(adicionalRequest.getAdicionalId());
-
-            if (!adicionalDTO.isDisponivel()) {
-                throw new ValidationException("Adicional não está disponível: " + adicionalDTO.getNome());
-            }
+            var adicionalDTO = cardapioService.buscarAdicionalDisponivel(adicionalRequest.getAdicionalId());
 
             ItemPedidoAdicional adicional = ItemPedidoAdicional.criar(
                     adicionalRequest.getAdicionalId(),

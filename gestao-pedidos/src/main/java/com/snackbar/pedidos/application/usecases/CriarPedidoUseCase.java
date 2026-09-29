@@ -139,9 +139,7 @@ public class CriarPedidoUseCase {
 
         List<ItemPedidoAdicional> adicionais = new ArrayList<>();
         for (ItemPedidoAdicionalRequest adicionalRequest : adicionaisRequest) {
-            validarAdicionalDisponivel(adicionalRequest.getAdicionalId());
-
-            var adicionalDTO = cardapioService.buscarAdicionalPorId(adicionalRequest.getAdicionalId());
+            var adicionalDTO = cardapioService.buscarAdicionalDisponivel(adicionalRequest.getAdicionalId());
             Preco precoUnitario = Preco.of(adicionalDTO.getPreco());
 
             ItemPedidoAdicional adicional = ItemPedidoAdicional.criar(
@@ -153,13 +151,6 @@ public class CriarPedidoUseCase {
             adicionais.add(adicional);
         }
         return adicionais;
-    }
-
-    private void validarAdicionalDisponivel(String adicionalId) {
-        if (!cardapioService.adicionalEstaDisponivel(adicionalId)) {
-            throw new com.snackbar.kernel.domain.exceptions.ValidationException(
-                    "Adicional não está disponível: " + adicionalId);
-        }
     }
 
     private MeioPagamentoPedido criarMeioPagamentoComTroco(MeioPagamentoRequest request, Preco valor) {

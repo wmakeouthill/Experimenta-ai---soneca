@@ -30,16 +30,6 @@ public class CardapioServiceAdapter implements CardapioServicePort {
     }
 
     @Override
-    public boolean adicionalEstaDisponivel(String id) {
-        try {
-            AdicionalDTO adicional = buscarAdicionalPorIdUseCase.executar(id);
-            return adicional.isDisponivel();
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    @Override
     public List<AdicionalDTO> listarAdicionaisDisponiveisDoProduto(String produtoId) {
         return gerenciarAdicionaisProdutoUseCase.buscarAdicionaisDoProduto(produtoId).stream()
                 .filter(AdicionalDTO::isDisponivel)
