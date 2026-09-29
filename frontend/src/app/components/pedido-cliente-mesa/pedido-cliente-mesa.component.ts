@@ -718,6 +718,7 @@ export class PedidoClienteMesaComponent
   fecharCarrinho(): void {
     this.carrinho.fecharCarrinho();
     this.pagamento.resetarEtapa();
+    this.erroFinalizacao.set(null);
 
     // Se o carrinho foi aberto pelo chat, volta para o chat
     if (this.carrinhoAbertoPeloChat()) {
@@ -1092,15 +1093,20 @@ export class PedidoClienteMesaComponent
       },
       error: (err: { status?: number; error?: { message?: string } }) => {
         this.enviando.set(false);
-        this.erro.set(this.mensagemErroEnvio(err, 'Erro ao enviar o pedido. Tente novamente.'));
+        // Erro fica no carrinho (etapa de revisão): o cliente corrige e reenvia sem perder a tela
+        this.erroFinalizacao.set(this.mensagemErroEnvio(err, 'Erro ao enviar o pedido. Tente novamente.'));
       },
     });
   }
 
-  /** 422 = regra de negócio (ex.: a loja pausou): mostra o motivo do backend e reconsulta a loja. */
+  /**
+   * 4xx = o backend recusou com motivo (produto desativado, loja pausou...): mostra o motivo.
+   * 422 ainda reconsulta a loja. Rede/5xx: mensagem padrão.
+   */
   private mensagemErroEnvio(err: { status?: number; error?: { message?: string } }, padrao: string): string {
-    if (err.status !== 422) return padrao;
-    this.verificarStatusLoja();
+    const status = err.status ?? 0;
+    if (status < 400 || status >= 500) return padrao;
+    if (status === 422) this.verificarStatusLoja();
     return err.error?.message || padrao;
   }
 
