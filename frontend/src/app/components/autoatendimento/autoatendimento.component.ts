@@ -421,13 +421,17 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
     };
   }
 
-  /** Botão da tela de erro: cardápio que não carregou é recarregado. */
+  /**
+   * Botão da tela de erro: cardápio que não carregou é recarregado; erro no envio volta
+   * para a etapa em que o cliente estava, com o carrinho intacto.
+   */
   tentarNovamente(): void {
     if (this.cardapio.produtos().length === 0) {
       this.carregarCardapio();
       return;
     }
-    this.novoAtendimento();
+    this.erro.set(null);
+    this.resetarInatividade();
   }
 
   novoAtendimento(): void {
