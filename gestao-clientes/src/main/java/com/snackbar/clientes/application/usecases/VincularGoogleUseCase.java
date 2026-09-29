@@ -6,6 +6,7 @@ import com.snackbar.clientes.application.ports.ClienteRepositoryPort;
 import com.snackbar.clientes.application.ports.GoogleAuthServicePort;
 import com.snackbar.clientes.application.ports.GoogleUserInfo;
 import com.snackbar.clientes.domain.entities.Cliente;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +22,7 @@ public class VincularGoogleUseCase {
     public ClienteDTO executar(String clienteId, VincularGoogleRequest request) {
         // Buscar cliente
         Cliente cliente = clienteRepository.buscarPorId(clienteId)
-                .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Cliente não encontrado"));
 
         // Validar token do Google
         GoogleUserInfo googleUser = googleAuthService.validarTokenGoogle(request.getGoogleToken());

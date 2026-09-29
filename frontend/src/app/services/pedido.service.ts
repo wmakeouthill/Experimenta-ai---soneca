@@ -127,7 +127,8 @@ export class PedidoService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = '/api/pedidos';
 
-  listar(filters?: {
+  // Filtro obrigatório: sem ele o GET traria o histórico inteiro de pedidos
+  listar(filters: {
     status?: StatusPedido;
     clienteId?: string;
     dataInicio?: string;
@@ -135,11 +136,6 @@ export class PedidoService {
     sessaoId?: string;
     dataInicioSessao?: string;
   }): Observable<Pedido[]> {
-    // Se não há filtros, faz requisição sem parâmetros
-    if (!filters || Object.keys(filters).length === 0) {
-      return this.http.get<Pedido[]>(this.apiUrl);
-    }
-
     let params = new HttpParams();
 
     if (filters.status) {

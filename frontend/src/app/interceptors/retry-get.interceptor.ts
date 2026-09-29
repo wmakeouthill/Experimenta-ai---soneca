@@ -6,7 +6,8 @@ import { retry, tap, throwError, timer } from 'rxjs';
 /**
  * Liga na 1ª falha transitória de um GET e desliga quando o servidor volta a responder (qualquer
  * método, até 4xx); o app mostra "Reconectando…" enquanto true. Tela sem nenhuma requisição depois
- * de esgotar as tentativas mantém o aviso até a próxima resposta.
+ * de esgotar as tentativas mantém o aviso até a próxima resposta ou até o SSE de status da loja
+ * reconectar (StatusLojaService), que é o que acontece no totem parado.
  */
 @Injectable({ providedIn: 'root' })
 export class ConexaoStatus {

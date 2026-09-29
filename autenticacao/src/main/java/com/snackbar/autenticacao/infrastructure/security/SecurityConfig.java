@@ -32,6 +32,7 @@ public class SecurityConfig {
     private static final String ROLE_TOTEM = "TOTEM";
     private static final String PRODUTOS_PATH_PATTERN = "/api/produtos/**";
     private static final String CATEGORIAS_PATH_PATTERN = "/api/categorias/**";
+    private static final String ADICIONAIS_PATH_PATTERN = "/api/adicionais/**";
     private static final String PEDIDOS_PATH_PATTERN = "/api/pedidos/**";
     private static final String SESSOES_TRABALHO_PATH = "/api/sessoes-trabalho";
     private static final String SESSOES_TRABALHO_PATTERN = "/api/sessoes-trabalho/**";
@@ -114,8 +115,15 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, CATEGORIAS_PATH_PATTERN)
                         .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR, ROLE_TOTEM)
                         .requestMatchers(CATEGORIAS_PATH_PATTERN).hasRole(ROLE_ADMINISTRADOR)
+                        .requestMatchers(HttpMethod.GET, ADICIONAIS_PATH_PATTERN)
+                        .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR, ROLE_TOTEM)
+                        .requestMatchers(ADICIONAIS_PATH_PATTERN).hasRole(ROLE_ADMINISTRADOR)
+                        // Estoque só aparece na tela de gestão de estoque (admin)
+                        .requestMatchers("/api/estoque/**").hasRole(ROLE_ADMINISTRADOR)
 
-                        // Endpoints de pedidos - ADMINISTRADOR e OPERADOR
+                        // Endpoints de pedidos - ADMINISTRADOR e OPERADOR; apagar pedido (some do caixa)
+                        // só ADMINISTRADOR, pelo histórico de sessões
+                        .requestMatchers(HttpMethod.DELETE, PEDIDOS_PATH_PATTERN).hasRole(ROLE_ADMINISTRADOR)
                         .requestMatchers(PEDIDOS_PATH_PATTERN).hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
 
                         // Endpoints de lobby de pedidos - ADMINISTRADOR e OPERADOR
@@ -125,6 +133,9 @@ public class SecurityConfig {
                         // Endpoints de sessões de trabalho - Leitura para ADMINISTRADOR e OPERADOR,
                         // escrita apenas ADMINISTRADOR
                         .requestMatchers(HttpMethod.GET, SESSOES_TRABALHO_PATH, SESSOES_TRABALHO_PATTERN)
+                        .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
+                        // Pausar/retomar é operação do turno (tela de pedidos); abrir e finalizar seguem admin
+                        .requestMatchers(HttpMethod.PUT, "/api/sessoes-trabalho/*/pausar", "/api/sessoes-trabalho/*/retomar")
                         .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
                         .requestMatchers(SESSOES_TRABALHO_PATH, SESSOES_TRABALHO_PATTERN)
                         .hasRole(ROLE_ADMINISTRADOR)

@@ -10,9 +10,9 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -37,8 +37,14 @@ class FilaPedidosMesaServiceTest {
     @Mock
     private SessaoTrabalhoRepositoryPort sessaoTrabalhoRepository;
 
-    @InjectMocks
     private FilaPedidosMesaService service;
+
+    @BeforeEach
+    void setUp() {
+        // Validador real: o teste cobre a regra de loja aberta, não só a chamada
+        service = new FilaPedidosMesaService(mesaRepository, cardapioService, pedidoPendenteRepository,
+                new ValidadorStatusLoja(sessaoTrabalhoRepository));
+    }
 
     private CriarPedidoMesaRequest request() {
         CriarPedidoMesaRequest req = new CriarPedidoMesaRequest();

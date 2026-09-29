@@ -9,7 +9,6 @@ import { provideClientHydration, withNoHttpTransferCache } from '@angular/platfo
 import { authInterceptor } from './interceptors/auth.interceptor';
 import { authErrorInterceptor } from './interceptors/auth-error.interceptor';
 import { silent404Interceptor } from './interceptors/silent-404.interceptor';
-import { silent500ConfigInterceptor } from './interceptors/silent-500-config.interceptor';
 import { clienteAuthInterceptor } from './interceptors/cliente-auth.interceptor';
 import { clienteAuthErrorInterceptor } from './interceptors/cliente-auth-error.interceptor';
 import { retryGetInterceptor } from './interceptors/retry-get.interceptor';
@@ -46,7 +45,6 @@ export const appConfig: ApplicationConfig = {
         authInterceptor,           // Adiciona token JWT nas requisições (funcionários)
         authErrorInterceptor,      // Trata erros 401/403 e redireciona para login
         silent404Interceptor,      // Trata 404 silenciosamente para sessões
-        silent500ConfigInterceptor, // Trata 500 silenciosamente para config
         retryGetInterceptor        // Por último: os de erro acima só veem a falha depois das novas tentativas
       ])
     ),

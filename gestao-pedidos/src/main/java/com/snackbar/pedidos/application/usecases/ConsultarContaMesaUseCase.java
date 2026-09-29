@@ -16,6 +16,7 @@ import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
 import com.snackbar.pedidos.domain.entities.Mesa;
 import com.snackbar.pedidos.domain.entities.ModoPagamentoMesa;
 import com.snackbar.pedidos.domain.entities.Pedido;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -45,7 +46,7 @@ public class ConsultarContaMesaUseCase {
         }
 
         Mesa mesa = mesaRepository.buscarPorQrCodeToken(mesaToken)
-                .orElseThrow(() -> new ValidationException("Mesa nao encontrada"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Mesa nao encontrada"));
 
         List<Pedido> pedidos = pedidoRepository.buscarAbertosPorMesaESemPagamento(mesa.getId(), clienteId);
 

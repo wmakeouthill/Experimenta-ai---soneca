@@ -3,6 +3,7 @@ package com.snackbar.cardapio.application.usecases;
 import com.snackbar.cardapio.application.dto.ProdutoDTO;
 import com.snackbar.cardapio.application.ports.ProdutoRepositoryPort;
 import com.snackbar.kernel.domain.exceptions.ValidationException;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +20,7 @@ public class BuscarProdutoPorIdUseCase {
         
         return produtoRepository.buscarPorId(id)
             .map(ProdutoDTO::de)
-            .orElseThrow(() -> new ValidationException("Produto não encontrado com ID: " + id));
+            .orElseThrow(() -> new RecursoNaoEncontradoException("Produto não encontrado com ID: " + id));
     }
 }
 

@@ -3,6 +3,7 @@ package com.snackbar.pedidos.application.usecases;
 import com.snackbar.pedidos.application.dto.PedidoDTO;
 import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
 import com.snackbar.kernel.domain.exceptions.ValidationException;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
@@ -20,7 +21,7 @@ public class BuscarPedidoPorIdUseCase {
         
         return pedidoRepository.buscarPorId(id)
             .map(PedidoDTO::de)
-            .orElseThrow(() -> new ValidationException("Pedido não encontrado com ID: " + id));
+            .orElseThrow(() -> new RecursoNaoEncontradoException("Pedido não encontrado com ID: " + id));
     }
 }
 

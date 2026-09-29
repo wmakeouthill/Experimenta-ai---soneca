@@ -4,7 +4,7 @@ import com.snackbar.autenticacao.application.dtos.AtualizarUsuarioRequest;
 import com.snackbar.autenticacao.application.dtos.UsuarioDTO;
 import com.snackbar.autenticacao.domain.entities.Usuario;
 import com.snackbar.autenticacao.domain.ports.UsuarioRepositoryPort;
-import com.snackbar.kernel.domain.exceptions.ValidationException;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
@@ -26,7 +26,7 @@ public class AtualizarUsuarioUseCase {
 
     private Usuario buscarUsuario(@NonNull String id) {
         return usuarioRepository.buscarPorId(id)
-                .orElseThrow(() -> new ValidationException("Usuário não encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado"));
     }
 
     private void aplicarAtualizacoes(Usuario usuario, AtualizarUsuarioRequest request) {

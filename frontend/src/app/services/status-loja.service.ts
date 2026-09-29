@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, NgZone } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { catchError, map, retry } from 'rxjs/operators';
+import { ConexaoStatus } from '../interceptors/retry-get.interceptor';
 
 /**
  * Status possíveis da loja para pedidos.
@@ -34,6 +35,7 @@ export interface StatusLojaResponse {
 export class StatusLojaService {
   private readonly http = inject(HttpClient);
   private readonly zone = inject(NgZone);
+  private readonly conexao = inject(ConexaoStatus);
   private readonly apiUrl = '/api/public/status-loja';
 
   /**
@@ -73,6 +75,11 @@ export class StatusLojaService {
           }
         });
       });
+
+      // Totem parado não faz outra requisição: sem isto o "Reconectando…" ficava depois do backend voltar
+      eventSource.onopen = () => {
+        this.zone.run(() => this.conexao.reconectando.set(false));
+      };
 
       // Listener para ping (heartbeat) - apenas para manter conexão
       eventSource.addEventListener('ping', () => {

@@ -21,6 +21,7 @@ import com.snackbar.pedidos.domain.entities.MeioPagamentoGateway;
 import com.snackbar.pedidos.domain.entities.ModoPagamentoMesa;
 import com.snackbar.pedidos.domain.entities.Pagamento;
 import com.snackbar.pedidos.domain.valueobjects.DadosPix;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -59,7 +60,7 @@ public class CriarPedidoMesaComPixUseCase {
         if (existente.isPresent()) {
             var pagamento = existente.get();
             PedidoPendenteDTO pendente = filaPedidosMesa.buscarPorId(pagamento.getPedidoPendenteId())
-                    .orElseThrow(() -> new ValidationException("Pedido pendente nao encontrado"));
+                    .orElseThrow(() -> new RecursoNaoEncontradoException("Pedido pendente nao encontrado"));
             return new PedidoMesaComPixDTO(pendente, PixCobrancaCriadaDTO.de(pagamento));
         }
 

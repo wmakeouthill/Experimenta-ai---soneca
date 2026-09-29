@@ -10,6 +10,7 @@ import { LobbyInterludeComponent } from './components/lobby-interlude/lobby-inte
 import { ConfigAnimacaoModalComponent, ConfigAnimacao } from './components/config-animacao-modal/config-animacao-modal.component';
 import { ConfigAnimacaoService } from '../../services/config-animacao.service';
 import { AuthService } from '../../services/auth.service';
+import { NotificationService } from '../../services/notification.service';
 import { LobbyPiso, LobbyTema } from './models/lobby-ui.types';
 import {
   carregarReelsLocalStorage,
@@ -39,6 +40,7 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly injector = inject(Injector);
   private readonly authService = inject(AuthService);
+  private readonly notificationService = inject(NotificationService);
   private readonly ngZone = inject(NgZone);
 
   readonly pedidosAnteriores = signal<Pedido[]>([]);
@@ -173,7 +175,9 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
           video2Url: config.video2Url || null
         });
         this.iniciarAnimacaoPeriodica();
-      }
+      },
+      // Sem a config do servidor, segue com a padrão
+      error: () => this.iniciarAnimacaoPeriodica()
     });
   }
 
@@ -267,8 +271,10 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
       video2Url: apiUrls.video2Url,
       reels: config.reels,
     }).subscribe({
-      next: () => {},
-      error: () => {},
+      error: () =>
+        this.notificationService.erro(
+          'Configuração aplicada só nesta tela: não foi possível salvar no servidor.'
+        ),
     });
   }
 

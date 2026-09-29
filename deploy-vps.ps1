@@ -45,6 +45,8 @@ try {
     $atualizar = @(
         'set -e'
         "cd $PastaDeploy"
+        # O script suja os dois (envsubst do default.conf, chmod +x) e o git pull aborta quando o main os altera
+        'git checkout -- config/nginx/default.conf deploy-vps.sh'
         # Rollback: TAG=anterior docker compose -f docker-compose.prod.yml up -d --no-deps backend frontend
         'for s in backend frontend; do docker tag $(docker inspect -f ''{{.Image}}'' snackbar-$s) ghcr.io/wmakeouthill/snackbar-${s}:anterior; done'
         'bash ./deploy-vps.sh backup'

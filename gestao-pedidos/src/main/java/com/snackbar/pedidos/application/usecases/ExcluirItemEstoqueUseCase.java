@@ -1,7 +1,7 @@
 package com.snackbar.pedidos.application.usecases;
 
-import com.snackbar.kernel.domain.exceptions.ValidationException;
 import com.snackbar.pedidos.application.ports.ItemEstoqueRepositoryPort;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +16,7 @@ public class ExcluirItemEstoqueUseCase {
     
     public void executar(String id) {
         if (repository.buscarPorId(id).isEmpty()) {
-            throw new ValidationException("Item de estoque não encontrado: " + id);
+            throw new RecursoNaoEncontradoException("Item de estoque não encontrado: " + id);
         }
         
         repository.remover(id);

@@ -1,6 +1,7 @@
 package com.snackbar.clientes.application.usecases;
 
 import com.snackbar.clientes.application.ports.ClienteFavoritoRepositoryPort;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,7 +15,7 @@ public class RemoverFavoritoUseCase {
     @Transactional
     public void executar(String clienteId, String produtoId) {
         if (!favoritoRepository.existe(clienteId, produtoId)) {
-            throw new IllegalArgumentException("Favorito não encontrado");
+            throw new RecursoNaoEncontradoException("Favorito não encontrado");
         }
 
         favoritoRepository.remover(clienteId, produtoId);

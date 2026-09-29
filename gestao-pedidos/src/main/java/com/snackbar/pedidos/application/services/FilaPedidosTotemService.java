@@ -29,6 +29,7 @@ public class FilaPedidosTotemService {
 
     private final CardapioServicePort cardapioService;
     private final PedidoPendenteRepositoryPort pedidoPendenteRepository;
+    private final ValidadorStatusLoja validadorStatusLoja;
 
     private static final long TEMPO_MAXIMO_FILA_MINUTOS = 30;
 
@@ -37,12 +38,13 @@ public class FilaPedidosTotemService {
      */
     @Transactional
     public PedidoPendenteDTO adicionarPedido(CriarPedidoAutoAtendimentoRequest request) {
+        validadorStatusLoja.exigirLojaAberta();
         String pedidoId = UUID.randomUUID().toString();
         List<ItemPedidoPendenteDTO> itens = new ArrayList<>();
         BigDecimal valorTotal = BigDecimal.ZERO;
 
         for (ItemPedidoRequest itemReq : request.getItens()) {
-            var produto = cardapioService.buscarProdutoPorId(itemReq.getProdutoId());
+            var produto = cardapioService.buscarProdutoDisponivel(itemReq.getProdutoId());
             BigDecimal precoUnitario = produto.getPreco();
 
             List<AdicionalPedidoPendenteDTO> adicionaisDTO = new ArrayList<>();
@@ -50,7 +52,7 @@ public class FilaPedidosTotemService {
 
             if (itemReq.getAdicionais() != null && !itemReq.getAdicionais().isEmpty()) {
                 for (ItemPedidoAdicionalRequest adicionalReq : itemReq.getAdicionais()) {
-                    var adicional = cardapioService.buscarAdicionalPorId(adicionalReq.getAdicionalId());
+                    var adicional = cardapioService.buscarAdicionalDisponivel(adicionalReq.getAdicionalId());
                     BigDecimal precoAdicional = adicional.getPreco();
                     BigDecimal subtotalAdicional = precoAdicional
                             .multiply(BigDecimal.valueOf(adicionalReq.getQuantidade()));

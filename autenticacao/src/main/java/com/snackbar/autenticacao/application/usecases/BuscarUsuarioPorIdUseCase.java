@@ -3,7 +3,7 @@ package com.snackbar.autenticacao.application.usecases;
 import com.snackbar.autenticacao.application.dtos.UsuarioDTO;
 import com.snackbar.autenticacao.domain.entities.Usuario;
 import com.snackbar.autenticacao.domain.ports.UsuarioRepositoryPort;
-import com.snackbar.kernel.domain.exceptions.ValidationException;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
@@ -17,7 +17,7 @@ public class BuscarUsuarioPorIdUseCase {
     @SuppressWarnings("null") // .orElseThrow() nunca retorna null
     public UsuarioDTO executar(@NonNull String id) {
         Usuario usuario = usuarioRepository.buscarPorId(id)
-            .orElseThrow(() -> new ValidationException("Usuário não encontrado"));
+            .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado"));
         
         return UsuarioDTO.de(usuario);
     }

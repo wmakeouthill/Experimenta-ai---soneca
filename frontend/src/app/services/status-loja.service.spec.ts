@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 
+import { ConexaoStatus } from '../interceptors/retry-get.interceptor';
 import { StatusLoja, StatusLojaResponse, StatusLojaService } from './status-loja.service';
 
 /** Dobra do EventSource: guarda as instâncias para o teste simular queda e evento. */
@@ -12,6 +13,7 @@ class FakeEventSource {
 
   readyState = FakeEventSource.CONNECTING;
   onerror: (() => void) | null = null;
+  onopen: (() => void) | null = null;
   private readonly listeners = new Map<string, (e: MessageEvent) => void>();
 
   constructor(readonly url: string) {
@@ -64,4 +66,15 @@ describe('StatusLojaService.conectarStream', () => {
     sub.unsubscribe();
     expect(FakeEventSource.instancias[1].readyState).toBe(FakeEventSource.CLOSED);
   }));
+
+  it('conexão reaberta desliga o aviso "Reconectando…"', () => {
+    const conexao = TestBed.inject(ConexaoStatus);
+    conexao.reconectando.set(true);
+    const sub = TestBed.inject(StatusLojaService).conectarStream().subscribe();
+
+    FakeEventSource.instancias[0].onopen?.();
+
+    expect(conexao.reconectando()).toBeFalse();
+    sub.unsubscribe();
+  });
 });

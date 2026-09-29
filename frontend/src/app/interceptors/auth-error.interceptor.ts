@@ -31,9 +31,10 @@ export const authErrorInterceptor: HttpInterceptorFn = (req, next) => {
       // Verificar se a requisição é para endpoint público
       const isEndpointPublico = req.url.includes('/api/public/');
 
-      // Totem: 403 fica com o componente. 401 (token expirado/usuário desativado) cai no fluxo
-      // abaixo e volta ao login com returnUrl — senão o quiosque trava sem ter como relogar.
-      if (error.status === 403 && isRotaTotem) {
+      // Totem: 403 fica com o componente (em qualquer rota: o quiosque pode abrir fora de
+      // /autoatendimento). 401 (token expirado/usuário desativado) cai no fluxo abaixo e volta
+      // ao login com returnUrl — senão o quiosque trava sem ter como relogar.
+      if (error.status === 403 && (isRotaTotem || authService.isTotem())) {
         console.warn('[AUTH] Acesso negado no totem - confira as permissões do perfil');
         return throwError(() => error);
       }

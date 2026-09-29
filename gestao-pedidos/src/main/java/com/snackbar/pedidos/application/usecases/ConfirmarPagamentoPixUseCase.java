@@ -8,6 +8,7 @@ import com.snackbar.pedidos.application.dto.PagamentoDTO;
 import com.snackbar.pedidos.application.ports.PagamentoRepositoryPort;
 import com.snackbar.pedidos.application.services.AplicarPagamentoMesaAprovadoService;
 import com.snackbar.pedidos.domain.entities.MeioPagamento;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +27,7 @@ public class ConfirmarPagamentoPixUseCase {
         validarObrigatorio(endToEndId, "endToEndId");
 
         var pagamento = pagamentoRepository.buscarPorTxidPix(txid)
-                .orElseThrow(() -> new ValidationException("Pagamento PIX nao encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Pagamento PIX nao encontrado"));
 
         if (pagamento.estaFinalizado()) {
             return PagamentoDTO.de(pagamento);

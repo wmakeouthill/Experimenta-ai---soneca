@@ -1,10 +1,10 @@
 package com.snackbar.pedidos.application.usecases;
 
-import com.snackbar.kernel.domain.exceptions.ValidationException;
 import com.snackbar.pedidos.application.dto.SessaoTrabalhoDTO;
 import com.snackbar.pedidos.application.ports.ObterNomeUsuarioPort;
 import com.snackbar.pedidos.application.ports.SessaoTrabalhoRepositoryPort;
 import com.snackbar.pedidos.domain.entities.SessaoTrabalho;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
@@ -34,7 +34,7 @@ public class RetomarSessaoTrabalhoUseCase {
     private SessaoTrabalho buscarSessao(@NonNull String sessaoId) {
         Optional<SessaoTrabalho> sessao = repository.buscarPorId(sessaoId);
         if (sessao.isEmpty()) {
-            throw new ValidationException("Sessão não encontrada: " + sessaoId);
+            throw new RecursoNaoEncontradoException("Sessão não encontrada: " + sessaoId);
         }
         return sessao.get();
     }

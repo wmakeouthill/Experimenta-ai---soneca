@@ -4,6 +4,7 @@ import com.snackbar.clientes.application.dto.AtualizarTelefoneRequest;
 import com.snackbar.clientes.application.dto.ClienteDTO;
 import com.snackbar.clientes.application.ports.ClienteRepositoryPort;
 import com.snackbar.clientes.domain.entities.Cliente;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +16,7 @@ public class AtualizarTelefoneClienteUseCase {
 
     public ClienteDTO executar(String clienteId, AtualizarTelefoneRequest request) {
         Cliente cliente = clienteRepository.buscarPorId(clienteId)
-                .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Cliente não encontrado"));
 
         cliente.atualizarTelefone(request.getTelefone());
         clienteRepository.salvar(cliente);

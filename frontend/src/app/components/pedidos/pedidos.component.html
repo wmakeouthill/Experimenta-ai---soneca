@@ -26,7 +26,20 @@
             <div class="sessao-ativa-header">
               <span class="sessao-ativa-label">Sessão:</span>
               <span class="sessao-ativa-nome">{{ sessaoAtiva()!.nome }}</span>
-              <span class="sessao-ativa-status sessao-aberta-badge">● ABERTA</span>
+              @if (sessaoPausada()) {
+                <span class="sessao-ativa-status sessao-pausada-badge">● PAUSADA</span>
+              } @else {
+                <span class="sessao-ativa-status sessao-aberta-badge">● ABERTA</span>
+              }
+              <!-- Pausada: mesa e totem recusam pedido, balcão segue -->
+              <button
+                type="button"
+                class="sessao-link-criar"
+                [disabled]="alterandoPausa()"
+                (click)="alternarPausaLoja()"
+              >
+                {{ sessaoPausada() ? 'Retomar' : 'Pausar' }}
+              </button>
             </div>
           } @else {
             <div class="sessao-ativa-header sessao-sem-sessao">

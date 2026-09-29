@@ -23,10 +23,8 @@ export function usePedidos() {
     // Força nova referência de array para garantir detecção de mudança
     pedidos.set([...pollingService.pedidos()]);
 
-    // Se recebeu dados (mesmo vazio), atualiza estado para sucesso se não houver erro
-    if (estado() !== 'erro') {
-      estado.set('sucesso');
-    }
+    // Recebeu dados (mesmo vazio): sucesso; também sai da tela de erro quando o backend volta
+    estado.set('sucesso');
   }, { allowSignalWrites: true });
 
   // Sincroniza erro global

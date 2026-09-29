@@ -1,4 +1,5 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -385,7 +386,9 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
       }, 10000);
     } catch (e) {
       console.error('Erro ao criar pedido:', e);
-      this.erro.set('Erro ao criar pedido. Tente novamente.');
+      // Recusa de regra (loja pausada, produto indisponível) traz o motivo; queda de rede e 5xx não
+      const motivo = e instanceof HttpErrorResponse && e.status < 500 ? e.error?.message : undefined;
+      this.erro.set(motivo ?? 'Erro ao criar pedido. Tente novamente.');
     } finally {
       this.enviando.set(false);
     }

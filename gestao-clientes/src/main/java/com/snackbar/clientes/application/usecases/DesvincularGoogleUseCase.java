@@ -3,6 +3,7 @@ package com.snackbar.clientes.application.usecases;
 import com.snackbar.clientes.application.dto.ClienteDTO;
 import com.snackbar.clientes.application.ports.ClienteRepositoryPort;
 import com.snackbar.clientes.domain.entities.Cliente;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +16,7 @@ public class DesvincularGoogleUseCase {
     public ClienteDTO executar(String clienteId) {
         // Buscar cliente
         Cliente cliente = clienteRepository.buscarPorId(clienteId)
-                .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Cliente não encontrado"));
 
         // Verificar se tem Google vinculado
         if (!cliente.temGoogleVinculado()) {

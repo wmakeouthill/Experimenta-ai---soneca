@@ -2,6 +2,7 @@ package com.snackbar.cardapio.application.usecases;
 
 import com.snackbar.cardapio.application.ports.ProdutoRepositoryPort;
 import com.snackbar.kernel.domain.exceptions.ValidationException;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +18,7 @@ public class ExcluirProdutoUseCase {
         }
         
         if (!produtoRepository.existePorId(id)) {
-            throw new ValidationException("Produto não encontrado com ID: " + id);
+            throw new RecursoNaoEncontradoException("Produto não encontrado com ID: " + id);
         }
         
         produtoRepository.excluir(id);

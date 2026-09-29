@@ -15,6 +15,7 @@ import com.snackbar.pedidos.domain.entities.MeioPagamento;
 import com.snackbar.pedidos.domain.entities.MeioPagamentoGateway;
 import com.snackbar.pedidos.domain.entities.MeioPagamentoPedido;
 import com.snackbar.pedidos.domain.valueobjects.DadosTef;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +31,7 @@ public class ConfirmarPagamentoCartaoPresencialUseCase {
     @Transactional
     public PagamentoDTO executar(ConfirmarPagamentoCartaoPresencialRequest request) {
         var pagamento = pagamentoRepository.buscarPorCorrelationId(request.correlationId())
-                .orElseThrow(() -> new ValidationException("Pagamento nao encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Pagamento nao encontrado"));
 
         if (pagamento.estaFinalizado()) {
             return PagamentoDTO.de(pagamento);
@@ -58,7 +59,7 @@ public class ConfirmarPagamentoCartaoPresencialUseCase {
     private void registrarMeioPagamentoNoPedido(String pedidoId, MeioPagamentoGateway meioGateway,
             long valorCentavos) {
         var pedido = pedidoRepository.buscarPorId(pedidoId)
-                .orElseThrow(() -> new ValidationException("Pedido nao encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Pedido nao encontrado"));
 
         if (pedido.getMeiosPagamento() != null && !pedido.getMeiosPagamento().isEmpty()) {
             throw new ValidationException("Pedido ja possui pagamento registrado");

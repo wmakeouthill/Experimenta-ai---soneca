@@ -11,10 +11,10 @@ import com.snackbar.cardapio.domain.valueobjects.Preco;
 import com.snackbar.pedidos.application.dto.*;
 import com.snackbar.pedidos.application.ports.CardapioServicePort;
 import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
-import com.snackbar.pedidos.application.ports.SessaoTrabalhoRepositoryPort;
 import com.snackbar.pedidos.application.services.AuditoriaPagamentoService;
 import com.snackbar.pedidos.application.services.AuditoriaPagamentoService.ContextoRequisicao;
 import com.snackbar.pedidos.application.services.GeradorNumeroPedidoService;
+import com.snackbar.pedidos.application.services.ValidadorStatusLoja;
 import com.snackbar.pedidos.domain.entities.ItemPedido;
 import com.snackbar.pedidos.domain.entities.ItemPedidoAdicional;
 import com.snackbar.pedidos.domain.entities.MeioPagamentoPedido;
@@ -39,7 +39,7 @@ public class CriarPedidoUseCase {
     private final PedidoRepositoryPort pedidoRepository;
     private final CardapioServicePort cardapioService;
     private final PedidoValidator pedidoValidator;
-    private final SessaoTrabalhoRepositoryPort sessaoTrabalhoRepository;
+    private final ValidadorStatusLoja validadorStatusLoja;
     private final GeradorNumeroPedidoService geradorNumeroPedido;
     private final AuditoriaPagamentoService auditoriaPagamentoService;
 
@@ -61,6 +61,8 @@ public class CriarPedidoUseCase {
     }
 
     private PedidoDTO executarCriacao(CriarPedidoRequest request, ContextoRequisicao contexto) {
+        // Antes de gerar o número: loja fechada não consome sequência; pausada ainda aceita balcão
+        String sessaoId = validadorStatusLoja.exigirSessaoAtiva().getId();
         NumeroPedido numeroPedido = geradorNumeroPedido.gerarProximoNumero();
 
         Pedido pedido = Pedido.criar(
@@ -71,9 +73,7 @@ public class CriarPedidoUseCase {
         pedido.definirPiso(request.getPiso());
 
         for (ItemPedidoRequest itemRequest : request.getItens()) {
-            validarProdutoDisponivel(itemRequest.getProdutoId());
-
-            var produtoDTO = cardapioService.buscarProdutoPorId(itemRequest.getProdutoId());
+            var produtoDTO = cardapioService.buscarProdutoDisponivel(itemRequest.getProdutoId());
             Preco precoUnitario = Preco.of(produtoDTO.getPreco());
 
             // Processar adicionais do item
@@ -101,7 +101,7 @@ public class CriarPedidoUseCase {
         validarTotalMeiosPagamento(pedido);
         pedidoValidator.validarCriacao(pedido);
 
-        vincularSessaoAtiva(pedido);
+        pedido.definirSessaoId(sessaoId);
 
         Pedido pedidoSalvo = pedidoRepository.salvar(pedido);
 
@@ -115,23 +115,6 @@ public class CriarPedidoUseCase {
         }
 
         return PedidoDTO.de(pedidoSalvo);
-    }
-
-    private void vincularSessaoAtiva(Pedido pedido) {
-        sessaoTrabalhoRepository.buscarSessaoAtiva()
-                .ifPresentOrElse(
-                        sessao -> {
-                            pedido.definirSessaoId(sessao.getId());
-                            log.info("[PEDIDO] Pedido vinculado à sessão ativa: {}", sessao.getId());
-                        },
-                        () -> log.warn("[PEDIDO] Nenhuma sessão ativa encontrada! Pedido será criado sem sessão."));
-    }
-
-    private void validarProdutoDisponivel(String produtoId) {
-        if (!cardapioService.produtoEstaDisponivel(produtoId)) {
-            throw new com.snackbar.kernel.domain.exceptions.ValidationException(
-                    "Produto não está disponível: " + produtoId);
-        }
     }
 
     private void validarTotalMeiosPagamento(Pedido pedido) {
@@ -156,9 +139,7 @@ public class CriarPedidoUseCase {
 
         List<ItemPedidoAdicional> adicionais = new ArrayList<>();
         for (ItemPedidoAdicionalRequest adicionalRequest : adicionaisRequest) {
-            validarAdicionalDisponivel(adicionalRequest.getAdicionalId());
-
-            var adicionalDTO = cardapioService.buscarAdicionalPorId(adicionalRequest.getAdicionalId());
+            var adicionalDTO = cardapioService.buscarAdicionalDisponivel(adicionalRequest.getAdicionalId());
             Preco precoUnitario = Preco.of(adicionalDTO.getPreco());
 
             ItemPedidoAdicional adicional = ItemPedidoAdicional.criar(
@@ -170,13 +151,6 @@ public class CriarPedidoUseCase {
             adicionais.add(adicional);
         }
         return adicionais;
-    }
-
-    private void validarAdicionalDisponivel(String adicionalId) {
-        if (!cardapioService.adicionalEstaDisponivel(adicionalId)) {
-            throw new com.snackbar.kernel.domain.exceptions.ValidationException(
-                    "Adicional não está disponível: " + adicionalId);
-        }
     }
 
     private MeioPagamentoPedido criarMeioPagamentoComTroco(MeioPagamentoRequest request, Preco valor) {

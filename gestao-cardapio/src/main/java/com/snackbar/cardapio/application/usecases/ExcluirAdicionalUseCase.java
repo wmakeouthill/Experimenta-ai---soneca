@@ -1,7 +1,7 @@
 package com.snackbar.cardapio.application.usecases;
 
 import com.snackbar.cardapio.application.ports.AdicionalRepositoryPort;
-import com.snackbar.kernel.domain.exceptions.ValidationException;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +13,7 @@ public class ExcluirAdicionalUseCase {
 
     public void executar(String id) {
         if (!adicionalRepository.existePorId(id)) {
-            throw new ValidationException("Adicional não encontrado com ID: " + id);
+            throw new RecursoNaoEncontradoException("Adicional não encontrado com ID: " + id);
         }
 
         adicionalRepository.excluir(id);

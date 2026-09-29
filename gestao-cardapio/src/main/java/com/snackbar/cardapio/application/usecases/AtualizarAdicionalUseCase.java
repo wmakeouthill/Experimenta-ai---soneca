@@ -5,7 +5,7 @@ import com.snackbar.cardapio.application.dto.AdicionalDTO;
 import com.snackbar.cardapio.application.ports.AdicionalRepositoryPort;
 import com.snackbar.cardapio.domain.entities.Adicional;
 import com.snackbar.cardapio.domain.valueobjects.Preco;
-import com.snackbar.kernel.domain.exceptions.ValidationException;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +17,7 @@ public class AtualizarAdicionalUseCase {
 
     public AdicionalDTO executar(String id, AtualizarAdicionalRequest request) {
         Adicional adicional = adicionalRepository.buscarPorId(id)
-                .orElseThrow(() -> new ValidationException("Adicional não encontrado com ID: " + id));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Adicional não encontrado com ID: " + id));
 
         if (request.getNome() != null) {
             adicional.atualizarNome(request.getNome());

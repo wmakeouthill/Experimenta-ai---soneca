@@ -1,6 +1,7 @@
 package com.snackbar.clientes.application.usecases;
 
 import com.snackbar.clientes.application.ports.ClienteAvaliacaoRepositoryPort;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -12,7 +13,7 @@ public class RemoverAvaliacaoUseCase {
 
     public void executar(String clienteId, String produtoId) {
         var avaliacao = avaliacaoRepository.buscarPorClienteProduto(clienteId, produtoId)
-                .orElseThrow(() -> new IllegalArgumentException("Avaliação não encontrada"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Avaliação não encontrada"));
 
         avaliacaoRepository.remover(avaliacao.getId());
     }

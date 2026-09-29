@@ -2,7 +2,7 @@ package com.snackbar.cardapio.application.usecases;
 
 import com.snackbar.cardapio.application.dto.AdicionalDTO;
 import com.snackbar.cardapio.application.ports.AdicionalRepositoryPort;
-import com.snackbar.kernel.domain.exceptions.ValidationException;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +15,6 @@ public class BuscarAdicionalPorIdUseCase {
     public AdicionalDTO executar(String id) {
         return adicionalRepository.buscarPorId(id)
                 .map(AdicionalDTO::de)
-                .orElseThrow(() -> new ValidationException("Adicional não encontrado com ID: " + id));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Adicional não encontrado com ID: " + id));
     }
 }

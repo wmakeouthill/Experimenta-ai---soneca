@@ -5,6 +5,7 @@ import com.snackbar.clientes.application.dto.ClienteAvaliacaoDTO;
 import com.snackbar.clientes.application.ports.ClienteAvaliacaoRepositoryPort;
 import com.snackbar.clientes.application.ports.ClienteRepositoryPort;
 import com.snackbar.clientes.domain.entities.ClienteAvaliacao;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +21,7 @@ public class AvaliarProdutoUseCase {
     public ClienteAvaliacaoDTO executar(String clienteId, AvaliarProdutoRequest request) {
         // Validar se cliente existe
         clienteRepository.buscarPorId(clienteId)
-                .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado: " + clienteId));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Cliente não encontrado: " + clienteId));
 
         // Verificar se já avaliou este produto neste pedido específico
         Optional<ClienteAvaliacao> avaliacaoExistente = avaliacaoRepository.buscar(

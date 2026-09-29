@@ -33,23 +33,16 @@ public class ProdutoPopularGatewayAdapter implements ProdutoPopularGatewayPort {
     private final ClienteFavoritoRepositoryPort favoritoRepository;
 
     /**
-     * Verifica se a categoria deve ser excluída dos carrosséis.
+     * Bebidas saem dos carrosséis; produto desativado também (o cliente tocaria nele e o pedido
+     * seria recusado).
      */
-    private boolean isCategoriaBebida(String categoria) {
-        return categoria != null && categoria.equalsIgnoreCase(CATEGORIA_BEBIDAS);
+    private boolean foraDoCarrossel(ProdutoDTO produto) {
+        return !produto.isDisponivel() || CATEGORIA_BEBIDAS.equalsIgnoreCase(produto.getCategoria());
     }
 
     @Override
     public List<ProdutoPopularDTO> buscarMaisPedidos(int limite) {
-        // Busca todos os pedidos finalizados
-        List<PedidoEntity> pedidos = pedidoRepository.findAll();
-
-        // Conta quantas vezes cada produto foi pedido
-        Map<String, Long> contagem = pedidos.stream()
-                .flatMap(p -> p.getItens().stream())
-                .collect(Collectors.groupingBy(
-                        ItemPedidoEntity::getProdutoId,
-                        Collectors.summingLong(ItemPedidoEntity::getQuantidade)));
+        Map<String, Long> contagem = somarQuantidadePorProduto();
 
         // Ordena por quantidade, filtra bebidas e pega os top N
         return contagem.entrySet().stream()
@@ -57,8 +50,7 @@ public class ProdutoPopularGatewayAdapter implements ProdutoPopularGatewayPort {
                 .map(entry -> {
                     try {
                         ProdutoDTO produto = buscarProdutoPorIdUseCase.executar(entry.getKey());
-                        // Exclui bebidas do carrossel
-                        if (isCategoriaBebida(produto.getCategoria())) {
+                        if (foraDoCarrossel(produto)) {
                             return null;
                         }
                         return ProdutoPopularDTO.maisPedido(
@@ -96,8 +88,7 @@ public class ProdutoPopularGatewayAdapter implements ProdutoPopularGatewayPort {
                 .map(entry -> {
                     try {
                         ProdutoDTO produto = buscarProdutoPorIdUseCase.executar(entry.getKey());
-                        // Exclui bebidas do carrossel
-                        if (isCategoriaBebida(produto.getCategoria())) {
+                        if (foraDoCarrossel(produto)) {
                             return null;
                         }
                         return ProdutoPopularDTO.maisPedido(
@@ -119,15 +110,8 @@ public class ProdutoPopularGatewayAdapter implements ProdutoPopularGatewayPort {
 
     @Override
     public List<ProdutoPopularDTO> buscarBemAvaliados(int limite) {
-        // Busca todos os produtos que têm avaliação
-        // Como não temos endpoint para listar todos produtos, vamos usar os pedidos
-        // como base
-        List<PedidoEntity> pedidos = pedidoRepository.findAll();
-
-        Set<String> produtoIds = pedidos.stream()
-                .flatMap(p -> p.getItens().stream())
-                .map(ItemPedidoEntity::getProdutoId)
-                .collect(Collectors.toSet());
+        // Candidatos: produtos que já foram pedidos
+        Set<String> produtoIds = somarQuantidadePorProduto().keySet();
 
         // Para cada produto, busca as avaliações e calcula a média (excluindo bebidas)
         List<ProdutoComAvaliacao> produtosComAvaliacao = produtoIds.stream()
@@ -135,8 +119,7 @@ public class ProdutoPopularGatewayAdapter implements ProdutoPopularGatewayPort {
                     try {
                         ProdutoDTO produto = buscarProdutoPorIdUseCase.executar(produtoId);
 
-                        // Exclui bebidas do carrossel
-                        if (isCategoriaBebida(produto.getCategoria())) {
+                        if (foraDoCarrossel(produto)) {
                             return null;
                         }
 
@@ -184,8 +167,7 @@ public class ProdutoPopularGatewayAdapter implements ProdutoPopularGatewayPort {
                 .map(entry -> {
                     try {
                         ProdutoDTO produto = buscarProdutoPorIdUseCase.executar(entry.getKey());
-                        // Exclui bebidas do carrossel
-                        if (isCategoriaBebida(produto.getCategoria())) {
+                        if (foraDoCarrossel(produto)) {
                             return null;
                         }
                         return ProdutoPopularDTO.maisFavoritado(
@@ -203,6 +185,11 @@ public class ProdutoPopularGatewayAdapter implements ProdutoPopularGatewayPort {
                 .filter(Objects::nonNull)
                 .limit(limite)
                 .toList();
+    }
+
+    private Map<String, Long> somarQuantidadePorProduto() {
+        return pedidoRepository.somarQuantidadePorProduto().stream()
+                .collect(Collectors.toMap(linha -> (String) linha[0], linha -> ((Number) linha[1]).longValue()));
     }
 
     private record ProdutoComAvaliacao(ProdutoDTO produto, double media, int totalAvaliacoes) {

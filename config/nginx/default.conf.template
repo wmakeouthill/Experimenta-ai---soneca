@@ -72,6 +72,13 @@ server {
         limit_conn conn 100;
     }
 
+    # 429 do rate limit em JSON (o padrão é HTML e o front mostrava "Unexpected token '<'")
+    error_page 429 = @muitas_requisicoes;
+    location @muitas_requisicoes {
+        default_type application/json;
+        return 429 '{"status":429,"error":"Muitas Requisições","message":"Muitas requisições em pouco tempo. Aguarde alguns segundos e tente novamente."}';
+    }
+
     # ==================== API PROXY ====================
     # Variável = resolução pelo resolver do nginx.conf. Connect curto: backend parado vira 502/504
     # em até 2 s (antes que o polling de 5 s cancele) em vez de pendurar no IP do container morto.

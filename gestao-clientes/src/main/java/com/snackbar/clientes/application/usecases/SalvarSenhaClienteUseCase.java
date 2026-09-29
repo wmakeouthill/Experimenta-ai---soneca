@@ -4,6 +4,7 @@ import com.snackbar.clientes.application.dto.SalvarSenhaRequest;
 import com.snackbar.clientes.application.ports.ClienteRepositoryPort;
 import com.snackbar.clientes.application.ports.ClienteSenhaServicePort;
 import com.snackbar.clientes.domain.entities.Cliente;
+import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +27,7 @@ public class SalvarSenhaClienteUseCase {
 
         // Buscar cliente
         Cliente cliente = clienteRepository.buscarPorId(clienteId)
-                .orElseThrow(() -> new IllegalArgumentException("Cliente não encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Cliente não encontrado"));
 
         // Se cliente já tem senha, validar senha atual
         if (cliente.temSenha()) {
