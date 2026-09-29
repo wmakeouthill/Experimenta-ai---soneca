@@ -43,6 +43,21 @@ describe('PedidoPollingService', () => {
     expect(service.pollingAtivo()).toBeFalse();
   }));
 
+  it('sessão aberta vazia: o primeiro pedido é notificado', fakeAsync(() => {
+    const notificados: string[] = [];
+    service.onNovoPedido.subscribe(p => notificados.push(p.id));
+    service.iniciarPolling('s1');
+    tick(0);
+    doSessao('s1').flush([]);
+
+    tick(5000);
+    doSessao('s1').flush([{ id: 'p1', dataPedido: new Date().toISOString() }]);
+
+    expect(notificados).toEqual(['p1']);
+    service.pararPolling();
+    discardPeriodicTasks();
+  }));
+
   it('iniciarPolling com outra sessão reinicia o polling com o novo filtro', fakeAsync(() => {
     service.iniciarPolling('s1');
     tick(0);

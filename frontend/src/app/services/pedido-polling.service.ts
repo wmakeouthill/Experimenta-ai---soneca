@@ -21,6 +21,9 @@ export class PedidoPollingService {
 
   // Controle de pedidos já processados
   private readonly pedidosConhecidos = new Set<string>();
+  // Flag e não o tamanho do Set: sessão aberta com zero pedidos deixava o Set vazio,
+  // e o primeiro pedido do dia caía de novo em "primeira carga" (sem aviso nem impressão)
+  private primeiraCargaFeita = false;
   private pollingSubscription: Subscription | null = null;
   // Sessão do polling ativo: recarregar() sem argumento usa ela, senão listaria pedidos de todas as sessões
   private sessaoIdAtual: string | undefined;
@@ -33,6 +36,7 @@ export class PedidoPollingService {
     // Sessão mudou com polling ativo (ex.: caixa fechado e reaberto): reinicia com o novo filtro
     this.pararPolling();
     this.sessaoIdAtual = sessaoId;
+    this.primeiraCargaFeita = false;
     // Sem sessão não há pedido em andamento (finalizar sessão exige fila vazia);
     // listar sem filtro baixaria o histórico inteiro, sem paginação, a cada 5 s
     if (!sessaoId) {
@@ -78,8 +82,9 @@ export class PedidoPollingService {
   }
 
   private processarNovosPedidos(novosPedidos: Pedido[]) {
-    // Se é a primeira carga (pedidosConhecidos vazio), apenas popula o Set
-    if (this.pedidosConhecidos.size === 0) {
+    // Primeira carga só registra o que já existe, para não reimprimir ao abrir a tela
+    if (!this.primeiraCargaFeita) {
+      this.primeiraCargaFeita = true;
       console.log('Primeira carga global de pedidos. Total:', novosPedidos.length);
       novosPedidos.forEach(p => this.pedidosConhecidos.add(p.id));
       return;
