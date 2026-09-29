@@ -43,8 +43,13 @@ public class SessaoTrabalhoRepositoryAdapter implements SessaoTrabalhoRepository
 
     @Override
     public Optional<SessaoTrabalho> buscarSessaoAtivaComLock() {
-        return jpaRepository.findByStatusInComLock(List.of(StatusSessao.ABERTA, StatusSessao.PAUSADA)).stream()
+        // Trava pela PK, não pelo índice de status: o FOR UPDATE por status pegava gap lock no índice e dava
+        // deadlock com o UPDATE do fechamento (MySQL 1213 → 500). A leitura travada lê o último commit e
+        // confere o status de novo: se o fechamento venceu, volta vazio.
+        List<StatusSessao> statusesAtivos = List.of(StatusSessao.ABERTA, StatusSessao.PAUSADA);
+        return jpaRepository.findIdsByStatusIn(statusesAtivos).stream()
                 .findFirst()
+                .flatMap(id -> jpaRepository.findByIdAndStatusInComLock(id, statusesAtivos))
                 .map(mapper::paraDomain);
     }
 
