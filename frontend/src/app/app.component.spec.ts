@@ -30,11 +30,11 @@ describe('AppComponent', () => {
 
   it('operador inicia os serviços globais buscando a sessão ativa', () => {
     const http = configurar('OPERADOR');
-    http.expectOne(r => r.url.includes('/api/sessoes-trabalho/ativa'));
+    expect(http.match(r => r.url.includes('/api/sessoes-trabalho/ativa')).length).toBe(1);
   });
 
   it('totem não busca sessão (403 derrubava o login do quiosque)', () => {
     const http = configurar('TOTEM');
-    http.expectNone(r => r.url.includes('/api/sessoes-trabalho'));
+    expect(http.match(r => r.url.includes('/api/sessoes-trabalho'))).toEqual([]);
   });
 });
