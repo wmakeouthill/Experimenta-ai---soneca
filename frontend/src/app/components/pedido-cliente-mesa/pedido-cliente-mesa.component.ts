@@ -133,6 +133,8 @@ export class PedidoClienteMesaComponent
   readonly erro = signal<string | null>(null);
   // Erro inline exibido na etapa de confirmação (não é a tela cheia de `erro`).
   readonly erroFinalizacao = signal<string | null>(null);
+  /** Mesa não carregou por rede/servidor (não por token inválido): a tela de erro oferece tentar de novo. */
+  readonly falhaConexaoMesa = signal(false);
   readonly etapaAtual = signal<EtapaPrincipal>('identificacao');
   readonly abaAtual = signal<AbaCliente>('inicio');
   readonly enviando = signal(false);
@@ -592,6 +594,7 @@ export class PedidoClienteMesaComponent
   private carregarMesa(token: string): void {
     this.carregando.set(true);
     this.erro.set(null);
+    this.falhaConexaoMesa.set(false);
 
     this.pedidoMesaService.buscarMesa(token).subscribe({
       next: mesa => {
@@ -608,11 +611,23 @@ export class PedidoClienteMesaComponent
           this.irParaCardapio();
         }
       },
-      error: () => {
-        this.erro.set('Mesa não encontrada ou indisponível');
+      error: (err: { status?: number }) => {
+        const status = err.status ?? 0;
+        const semConexao = status === 0 || status >= 500;
+        this.falhaConexaoMesa.set(semConexao);
+        this.erro.set(
+          semConexao
+            ? 'Não foi possível falar com a loja. Verifique a internet e tente novamente.'
+            : 'Mesa não encontrada ou indisponível'
+        );
         this.carregando.set(false);
       },
     });
+  }
+
+  tentarCarregarMesa(): void {
+    const token = this.route.snapshot.paramMap.get('token');
+    if (token) this.carregarMesa(token);
   }
 
   // ========== Ações de Identificação ==========

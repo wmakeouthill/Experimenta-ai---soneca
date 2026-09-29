@@ -74,6 +74,11 @@
         <div class="error-icon">⚠️</div>
         <h2>Oops!</h2>
         <p>{{ erro() }}</p>
+        @if (falhaConexaoMesa()) {
+          <button class="btn-verificar-status" style="margin-top: 1.5rem;" (click)="tentarCarregarMesa()">
+            Tentar novamente
+          </button>
+        }
       </div>
     }
 
