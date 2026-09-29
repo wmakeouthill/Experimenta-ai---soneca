@@ -26,7 +26,7 @@ public class RejeitarPedidoTotemUseCase {
 
         PedidoPendenteDTO pedidoPendente = filaPedidosTotem.buscarPorId(pedidoPendenteId)
                 .orElseThrow(() -> new ConflitoException(
-                        "Pedido pendente não encontrado ou já foi processado: " + pedidoPendenteId));
+                        "Este pedido já foi aceito, rejeitado ou expirou."));
 
         filaPedidosTotem.removerPedido(pedidoPendenteId);
 

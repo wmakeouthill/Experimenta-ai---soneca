@@ -61,7 +61,7 @@ public class AceitarPedidoTotemUseCase {
 
         PedidoPendenteDTO pedidoPendente = filaPedidosTotem.buscarERemoverAtomicamente(pedidoPendenteId)
                 .orElseThrow(() -> new ConflitoException(
-                        "Pedido pendente não encontrado ou já foi aceito/expirado: " + pedidoPendenteId));
+                        "Este pedido já foi aceito, rejeitado ou expirou."));
 
         return criarPedidoReal(pedidoPendente, usuarioId, pedidoPendenteId, contexto, sessaoId);
     }
