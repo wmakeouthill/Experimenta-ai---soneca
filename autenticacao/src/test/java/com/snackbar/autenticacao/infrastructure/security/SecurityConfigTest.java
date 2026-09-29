@@ -79,6 +79,8 @@ class SecurityConfigTest {
             "PUT,    /api/sessoes-trabalho/s1/pausar, OPERADOR,      403",
             "POST,   /api/config-animacao,            OPERADOR,      403",
             "POST,   /api/impressao/configuracao,     OPERADOR,      403",
+            "DELETE, /api/pedidos/p1,                 OPERADOR,      403",
+            "DELETE, /api/pedidos/p1,                 ADMINISTRADOR, 200",
             "POST,   /api/produtos,                   TOTEM,         403",
             "PUT,    /api/categorias/c1,              TOTEM,         403",
             "POST,   /api/mesas,                      TOTEM,         403",

@@ -115,7 +115,9 @@ public class SecurityConfig {
                         .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR, ROLE_TOTEM)
                         .requestMatchers(CATEGORIAS_PATH_PATTERN).hasRole(ROLE_ADMINISTRADOR)
 
-                        // Endpoints de pedidos - ADMINISTRADOR e OPERADOR
+                        // Endpoints de pedidos - ADMINISTRADOR e OPERADOR; apagar pedido (some do caixa)
+                        // só ADMINISTRADOR, pelo histórico de sessões
+                        .requestMatchers(HttpMethod.DELETE, PEDIDOS_PATH_PATTERN).hasRole(ROLE_ADMINISTRADOR)
                         .requestMatchers(PEDIDOS_PATH_PATTERN).hasAnyRole(ROLE_ADMINISTRADOR, ROLE_OPERADOR)
 
                         // Endpoints de lobby de pedidos - ADMINISTRADOR e OPERADOR
