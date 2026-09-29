@@ -35,10 +35,13 @@ public interface PedidoJpaRepository extends JpaRepository<PedidoEntity, String>
         @Query("SELECT DISTINCT p FROM PedidoEntity p LEFT JOIN FETCH p.meiosPagamento LEFT JOIN FETCH p.itens WHERE p.sessaoId = :sessaoId ORDER BY p.numeroPedido ASC, p.dataPedido ASC")
         List<PedidoEntity> findBySessaoId(@Param("sessaoId") String sessaoId);
 
+        // Mesma regra do caixa (pedidos da sessão menos cancelados). Sem sessão só entra o legado
+        // FINALIZADO: pedido sem sessão parado em PENDENTE nunca foi atendido e inflava o total
         @Query(value = "SELECT p.* FROM pedidos p " +
                         "LEFT JOIN sessoes_trabalho st ON st.id = p.sessao_id " +
                         "WHERE COALESCE(st.data_inicio, DATE(p.data_pedido)) = :dataInicio " +
                         "AND p.status <> 'CANCELADO' " +
+                        "AND (p.sessao_id IS NOT NULL OR p.status = 'FINALIZADO') " +
                         "ORDER BY p.numero_pedido ASC, p.data_pedido ASC", nativeQuery = true)
         List<PedidoEntity> findByDataInicioSessao(@Param("dataInicio") java.sql.Date dataInicio);
 
