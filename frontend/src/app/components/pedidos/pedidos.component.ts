@@ -104,6 +104,7 @@ export class PedidosComponent implements OnInit, OnDestroy {
 
   // Modal/Formulário states
   readonly mostrarFormulario = signal(false);
+  readonly criandoPedido = signal(false);
 
   // Menu de contexto
   readonly menuContexto = signal<{ pedidoId: string; x: number; y: number } | null>(null);
@@ -474,6 +475,8 @@ export class PedidosComponent implements OnInit, OnDestroy {
     observacoes?: string;
     piso: Piso;
   }): void {
+    if (this.criandoPedido()) return;
+
     // Validar se usuário está logado
     const usuario = this.authService.usuarioAtual();
     if (!usuario?.id) {
@@ -495,8 +498,10 @@ export class PedidosComponent implements OnInit, OnDestroy {
     // Gera chave de idempotência UMA VEZ para esta operação de criação
     const idempotencyKey = this.pedidoService.gerarChaveIdempotencia();
 
+    this.criandoPedido.set(true);
     this.pedidoService.criar(requestComUsuario, idempotencyKey).subscribe({
       next: pedidoCriado => {
+        this.criandoPedido.set(false);
         this.pedidosComposable.atualizarPedidoNoSignal(pedidoCriado);
         setTimeout(() => {
           const sessaoId = this.sessaoAtiva()?.id;
@@ -505,6 +510,7 @@ export class PedidosComponent implements OnInit, OnDestroy {
         this.fecharFormulario();
       },
       error: error => {
+        this.criandoPedido.set(false);
         console.error('Erro ao criar pedido:', error);
         let mensagem =
           'Erro ao criar pedido. Verifique se todos os campos estão preenchidos corretamente.';

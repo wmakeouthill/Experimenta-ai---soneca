@@ -43,6 +43,8 @@ export class NovoPedidoModalComponent implements OnDestroy {
 
   readonly aberto = input.required<boolean>();
   readonly produtos = input.required<Produto[]>();
+  /** Pedido em envio: segura o botão para não criar duas vezes. */
+  readonly enviando = input(false);
   readonly onFechar = output<void>();
   readonly onCriarPedido = output<{
     clienteId: string;
@@ -104,6 +106,11 @@ export class NovoPedidoModalComponent implements OnDestroy {
         }
       }
     });
+
+    // Limpa só ao fechar: se a criação falhar o modal segue aberto com o pedido montado
+    effect(() => {
+      if (!this.aberto()) this.resetar();
+    }, { allowSignalWrites: true });
   }
 
   ngOnDestroy(): void {
@@ -197,7 +204,6 @@ export class NovoPedidoModalComponent implements OnDestroy {
 
   fechar(): void {
     this.onFechar.emit();
-    this.resetar();
   }
 
   criarPedido(): void {
@@ -239,7 +245,6 @@ export class NovoPedidoModalComponent implements OnDestroy {
     }
 
     this.onCriarPedido.emit(request);
-    this.resetar();
   }
 
   selecionarPiso(piso: Piso): void {

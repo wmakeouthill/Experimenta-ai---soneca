@@ -79,9 +79,9 @@
               <button
                 class="btn-primary btn-criar"
                 (click)="criarPedido()"
-                [disabled]="!podeCriarPedido()"
+                [disabled]="!podeCriarPedido() || enviando()"
               >
-                Criar Pedido
+                {{ enviando() ? 'Criando...' : 'Criar Pedido' }}
               </button>
             </div>
           </div>

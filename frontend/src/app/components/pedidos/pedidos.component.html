@@ -656,6 +656,7 @@
   <app-novo-pedido-modal
     [aberto]="mostrarFormulario()"
     [produtos]="produtos()"
+    [enviando]="criandoPedido()"
     (onFechar)="fecharFormulario()"
     (onCriarPedido)="onPedidoCriado($event)"
   />
