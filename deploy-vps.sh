@@ -44,6 +44,12 @@ preparar_frontend() {
     fi
 }
 
+# O preparar_frontend regenera o default.conf e a VPS dá chmod +x neste script: sem descartar, o pull aborta
+puxar_main() {
+    git checkout -- config/nginx/default.conf deploy-vps.sh
+    git pull origin main
+}
+
 # ==================== LOGIN GHCR ====================
 login_ghcr() {
     source .env.prod
@@ -258,7 +264,7 @@ atualizar() {
     log "🔄 Atualizando aplicação..."
     
     # Pull do código mais recente (configs, nginx, etc.)
-    git pull origin main
+    puxar_main
     preparar_frontend
     
     # Login no registry
@@ -286,7 +292,7 @@ atualizar_backend() {
     
     log "🔄 Atualizando apenas o BACKEND..."
     
-    git pull origin main
+    puxar_main
     login_ghcr
     
     log "📥 Baixando imagem do backend..."
@@ -308,7 +314,7 @@ atualizar_frontend() {
     
     log "🔄 Atualizando apenas o FRONTEND..."
     
-    git pull origin main
+    puxar_main
     preparar_frontend
     login_ghcr
     
