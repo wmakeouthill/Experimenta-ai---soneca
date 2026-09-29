@@ -15,6 +15,14 @@ public interface SessaoTrabalhoRepositoryPort {
     Optional<SessaoTrabalho> buscarPorId(@NonNull String id);
     
     Optional<SessaoTrabalho> buscarSessaoAtiva();
+
+    /**
+     * SELECT ... FOR UPDATE: exige transação. Serializa pedido/fila com o fechamento da sessão.
+     */
+    Optional<SessaoTrabalho> buscarSessaoAtivaComLock();
+
+    /** SELECT ... FOR UPDATE: exige transação. */
+    Optional<SessaoTrabalho> buscarPorIdComLock(@NonNull String id);
     
     List<SessaoTrabalho> buscarPorDataInicio(LocalDate dataInicio);
     

@@ -36,7 +36,7 @@ class ValidadorStatusLojaTest {
 
     @Test
     void lojaFechadaRecusaTodosOsCanais() {
-        when(sessaoTrabalhoRepository.buscarSessaoAtiva()).thenReturn(Optional.empty());
+        when(sessaoTrabalhoRepository.buscarSessaoAtivaComLock()).thenReturn(Optional.empty());
 
         assertThrows(BusinessRuleException.class, validador::exigirSessaoAtiva);
         assertThrows(BusinessRuleException.class, validador::exigirLojaAberta);
@@ -44,7 +44,7 @@ class ValidadorStatusLojaTest {
 
     @Test
     void lojaPausadaAceitaBalcaoERecusaMesaETotem() {
-        when(sessaoTrabalhoRepository.buscarSessaoAtiva()).thenReturn(Optional.of(sessao(true)));
+        when(sessaoTrabalhoRepository.buscarSessaoAtivaComLock()).thenReturn(Optional.of(sessao(true)));
 
         assertDoesNotThrow(validador::exigirSessaoAtiva);
         assertThrows(BusinessRuleException.class, validador::exigirLojaAberta);
@@ -52,7 +52,7 @@ class ValidadorStatusLojaTest {
 
     @Test
     void lojaAbertaAceitaTodosOsCanais() {
-        when(sessaoTrabalhoRepository.buscarSessaoAtiva()).thenReturn(Optional.of(sessao(false)));
+        when(sessaoTrabalhoRepository.buscarSessaoAtivaComLock()).thenReturn(Optional.of(sessao(false)));
 
         assertDoesNotThrow(validador::exigirSessaoAtiva);
         assertDoesNotThrow(validador::exigirLojaAberta);

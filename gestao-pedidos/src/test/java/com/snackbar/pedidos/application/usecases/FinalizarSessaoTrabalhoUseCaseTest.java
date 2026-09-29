@@ -44,7 +44,7 @@ class FinalizarSessaoTrabalhoUseCaseTest {
 
     @Test
     void pedidoNaFilaDeAceiteImpedeFinalizar() {
-        when(repository.buscarPorId("s1")).thenReturn(Optional.of(SessaoTrabalho.criar(1, "usuario-1", BigDecimal.ZERO)));
+        when(repository.buscarPorIdComLock("s1")).thenReturn(Optional.of(SessaoTrabalho.criar(1, "usuario-1", BigDecimal.ZERO)));
         when(pedidoRepository.buscarPorSessaoId("s1")).thenReturn(List.of());
         when(filaPedidosMesa.quantidadePedidosPendentes()).thenReturn(0);
         when(filaPedidosTotem.quantidadePedidosPendentes()).thenReturn(1);

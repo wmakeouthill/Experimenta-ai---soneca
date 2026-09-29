@@ -14,6 +14,7 @@ import com.snackbar.kernel.domain.exceptions.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -31,6 +32,9 @@ public class FinalizarSessaoTrabalhoUseCase {
     private final FilaPedidosMesaService filaPedidosMesa;
     private final FilaPedidosTotemService filaPedidosTotem;
 
+    // Trava a sessão ANTES de qualquer leitura: pedido/fila travam a mesma linha (ValidadorStatusLoja),
+    // e no REPEATABLE READ o snapshot nasce na 1ª leitura comum — depois da trava ele já vê o que entrou.
+    @Transactional
     @SuppressWarnings("null") // repository.salvar() nunca retorna null, .get() nunca retorna null porque validamos antes
     public SessaoTrabalhoDTO executar(@NonNull String sessaoId, @NonNull BigDecimal valorFechamento) {
         SessaoTrabalho sessao = buscarSessao(sessaoId);
@@ -68,7 +72,7 @@ public class FinalizarSessaoTrabalhoUseCase {
     }
 
     private SessaoTrabalho buscarSessao(@NonNull String sessaoId) {
-        Optional<SessaoTrabalho> sessao = repository.buscarPorId(sessaoId);
+        Optional<SessaoTrabalho> sessao = repository.buscarPorIdComLock(sessaoId);
         if (sessao.isEmpty()) {
             throw new RecursoNaoEncontradoException("Sessão não encontrada: " + sessaoId);
         }

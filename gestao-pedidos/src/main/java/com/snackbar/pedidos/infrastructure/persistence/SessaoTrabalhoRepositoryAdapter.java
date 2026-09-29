@@ -42,6 +42,19 @@ public class SessaoTrabalhoRepositoryAdapter implements SessaoTrabalhoRepository
     }
 
     @Override
+    public Optional<SessaoTrabalho> buscarSessaoAtivaComLock() {
+        return jpaRepository.findByStatusInComLock(List.of(StatusSessao.ABERTA, StatusSessao.PAUSADA)).stream()
+                .findFirst()
+                .map(mapper::paraDomain);
+    }
+
+    @Override
+    public Optional<SessaoTrabalho> buscarPorIdComLock(@NonNull String id) {
+        return jpaRepository.findByIdComLock(id)
+                .map(mapper::paraDomain);
+    }
+
+    @Override
     public List<SessaoTrabalho> buscarPorDataInicio(LocalDate dataInicio) {
         return jpaRepository.findByDataInicioOrderByNumeroSessaoDesc(dataInicio).stream()
                 .map(mapper::paraDomain)

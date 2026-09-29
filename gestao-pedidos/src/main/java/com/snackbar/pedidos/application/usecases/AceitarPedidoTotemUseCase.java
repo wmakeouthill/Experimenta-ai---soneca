@@ -9,11 +9,11 @@ import com.snackbar.kernel.domain.exceptions.ValidationException;
 import com.snackbar.pedidos.application.dto.*;
 import com.snackbar.pedidos.application.ports.CardapioServicePort;
 import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
-import com.snackbar.pedidos.application.ports.SessaoTrabalhoRepositoryPort;
 import com.snackbar.pedidos.application.services.AuditoriaPagamentoService;
 import com.snackbar.pedidos.application.services.AuditoriaPagamentoService.ContextoRequisicao;
 import com.snackbar.pedidos.application.services.FilaPedidosTotemService;
 import com.snackbar.pedidos.application.services.GeradorNumeroPedidoService;
+import com.snackbar.pedidos.application.services.ValidadorStatusLoja;
 import com.snackbar.pedidos.domain.entities.ItemPedido;
 import com.snackbar.pedidos.domain.entities.ItemPedidoAdicional;
 import com.snackbar.pedidos.domain.entities.MeioPagamentoPedido;
@@ -37,7 +37,7 @@ public class AceitarPedidoTotemUseCase {
 
     private final FilaPedidosTotemService filaPedidosTotem;
     private final PedidoRepositoryPort pedidoRepository;
-    private final SessaoTrabalhoRepositoryPort sessaoTrabalhoRepository;
+    private final ValidadorStatusLoja validadorStatusLoja;
     private final GeradorNumeroPedidoService geradorNumeroPedido;
     private final PedidoValidator pedidoValidator;
     private final AuditoriaPagamentoService auditoriaPagamentoService;
@@ -56,11 +56,14 @@ public class AceitarPedidoTotemUseCase {
             throw new ValidationException("ID do usuário é obrigatório");
         }
 
+        // Sem sessão o pedido nasceria órfão: 422 e o item fica na fila. Sessão antes da fila (ordem do fechamento).
+        String sessaoId = validadorStatusLoja.exigirSessaoAtiva().getId();
+
         PedidoPendenteDTO pedidoPendente = filaPedidosTotem.buscarERemoverAtomicamente(pedidoPendenteId)
                 .orElseThrow(() -> new ConflitoException(
                         "Pedido pendente não encontrado ou já foi aceito/expirado: " + pedidoPendenteId));
 
-        return criarPedidoReal(pedidoPendente, usuarioId, pedidoPendenteId, contexto);
+        return criarPedidoReal(pedidoPendente, usuarioId, pedidoPendenteId, contexto, sessaoId);
     }
 
     @Transactional
@@ -72,7 +75,8 @@ public class AceitarPedidoTotemUseCase {
             PedidoPendenteDTO pedidoPendente,
             String usuarioId,
             String pedidoPendenteId,
-            ContextoRequisicao contexto) {
+            ContextoRequisicao contexto,
+            String sessaoId) {
         // Desativado depois de entrar na fila: o aceite falha (rollback mantém o item na fila) e o
         // operador rejeita. Antes de gerar o número, para não consumir a sequência.
         pedidoPendente.getItens().forEach(item -> cardapioService.buscarProdutoDisponivel(item.getProdutoId()));
@@ -119,8 +123,7 @@ public class AceitarPedidoTotemUseCase {
             }
         }
 
-        sessaoTrabalhoRepository.buscarSessaoAtiva()
-                .ifPresent(sessao -> pedido.definirSessaoId(sessao.getId()));
+        pedido.definirSessaoId(sessaoId);
 
         pedidoValidator.validarCriacao(pedido);
 

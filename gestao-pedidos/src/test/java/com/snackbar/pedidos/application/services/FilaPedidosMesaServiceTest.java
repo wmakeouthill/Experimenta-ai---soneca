@@ -57,7 +57,7 @@ class FilaPedidosMesaServiceTest {
 
     @Test
     void recusaPedidoComLojaFechada() {
-        when(sessaoTrabalhoRepository.buscarSessaoAtiva()).thenReturn(Optional.empty());
+        when(sessaoTrabalhoRepository.buscarSessaoAtivaComLock()).thenReturn(Optional.empty());
 
         assertThrows(BusinessRuleException.class, () -> service.adicionarPedido(request()));
         verify(pedidoPendenteRepository, never()).salvar(any());
@@ -67,7 +67,7 @@ class FilaPedidosMesaServiceTest {
     void recusaPedidoPrePagoComLojaPausadaAntesDeCobrar() {
         SessaoTrabalho pausada = SessaoTrabalho.criar(1, "usuario-1", BigDecimal.ZERO);
         pausada.pausar();
-        when(sessaoTrabalhoRepository.buscarSessaoAtiva()).thenReturn(Optional.of(pausada));
+        when(sessaoTrabalhoRepository.buscarSessaoAtivaComLock()).thenReturn(Optional.of(pausada));
 
         assertThrows(BusinessRuleException.class,
                 () -> service.adicionarPedidoAguardandoPagamento(request(), "corr-1"));
@@ -76,7 +76,7 @@ class FilaPedidosMesaServiceTest {
 
     @Test
     void lojaAbertaSegueParaValidarMesa() {
-        when(sessaoTrabalhoRepository.buscarSessaoAtiva())
+        when(sessaoTrabalhoRepository.buscarSessaoAtivaComLock())
                 .thenReturn(Optional.of(SessaoTrabalho.criar(1, "usuario-1", BigDecimal.ZERO)));
         when(mesaRepository.buscarPorQrCodeToken("token-1")).thenReturn(Optional.empty());
 

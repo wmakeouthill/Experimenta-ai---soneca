@@ -8,11 +8,11 @@ import com.snackbar.cardapio.domain.valueobjects.Preco;
 import com.snackbar.kernel.domain.exceptions.ValidationException;
 import com.snackbar.pedidos.application.dto.*;
 import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
-import com.snackbar.pedidos.application.ports.SessaoTrabalhoRepositoryPort;
 import com.snackbar.pedidos.application.services.AuditoriaPagamentoService;
 import com.snackbar.pedidos.application.services.AuditoriaPagamentoService.ContextoRequisicao;
 import com.snackbar.pedidos.application.services.FilaPedidosMesaService;
 import com.snackbar.pedidos.application.services.GeradorNumeroPedidoService;
+import com.snackbar.pedidos.application.services.ValidadorStatusLoja;
 import com.snackbar.pedidos.domain.entities.ItemPedido;
 import com.snackbar.pedidos.domain.entities.ItemPedidoAdicional;
 import com.snackbar.pedidos.domain.entities.MeioPagamentoPedido;
@@ -43,7 +43,7 @@ public class AceitarPedidoMesaUseCase {
 
     private final FilaPedidosMesaService filaPedidosMesa;
     private final PedidoRepositoryPort pedidoRepository;
-    private final SessaoTrabalhoRepositoryPort sessaoTrabalhoRepository;
+    private final ValidadorStatusLoja validadorStatusLoja;
     private final GeradorNumeroPedidoService geradorNumeroPedido;
     private final AuditoriaPagamentoService auditoriaPagamentoService;
 
@@ -61,6 +61,10 @@ public class AceitarPedidoMesaUseCase {
             throw new ValidationException("ID do usuário é obrigatório");
         }
 
+        // Sem sessão o pedido nasceria órfão (fora do caixa e do fechamento): 422 e o item fica na fila.
+        // Trava a sessão antes da linha da fila — mesma ordem do fechamento, sem deadlock.
+        String sessaoId = validadorStatusLoja.exigirSessaoAtiva().getId();
+
         // Busca e remove atomicamente o pedido da fila (thread-safe)
         // Isso garante que apenas um funcionário consiga aceitar o mesmo pedido
         PedidoPendenteDTO pedidoPendente = filaPedidosMesa.buscarERemoverAtomicamente(pedidoPendenteId)
@@ -68,7 +72,7 @@ public class AceitarPedidoMesaUseCase {
                         "Pedido pendente não encontrado ou já foi aceito/expirado: " + pedidoPendenteId));
 
         // Cria o pedido real a partir do pendente
-        return criarPedidoReal(pedidoPendente, usuarioId, pedidoPendenteId, contexto);
+        return criarPedidoReal(pedidoPendente, usuarioId, pedidoPendenteId, contexto, sessaoId);
     }
 
     /**
@@ -83,7 +87,8 @@ public class AceitarPedidoMesaUseCase {
             PedidoPendenteDTO pedidoPendente,
             String usuarioId,
             String pedidoPendenteId,
-            ContextoRequisicao contexto) {
+            ContextoRequisicao contexto,
+            String sessaoId) {
         // Gera número do pedido usando o serviço dedicado
         NumeroPedido numeroPedido = geradorNumeroPedido.gerarProximoNumero();
 
@@ -140,9 +145,7 @@ public class AceitarPedidoMesaUseCase {
                     pedidoPendente.getMeiosPagamento().size());
         }
 
-        // Vincula sessão de trabalho ativa
-        sessaoTrabalhoRepository.buscarSessaoAtiva()
-                .ifPresent(sessao -> pedido.definirSessaoId(sessao.getId()));
+        pedido.definirSessaoId(sessaoId);
 
         // Salva o pedido
         Pedido pedidoSalvo = pedidoRepository.salvar(pedido);
