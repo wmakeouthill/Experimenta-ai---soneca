@@ -22,16 +22,32 @@ function sanitizarComandosProblematicos(buffer, tipoImpressora) {
   const listaBytes = [];
   let i = 0;
 
-  // Normaliza o tipo para comparação (não mais usado para filtro de imagem)
+  // Mantém o tratamento já usado pela Diebold e pelo perfil genérico.
   const tipo = (tipoImpressora || '').toUpperCase();
+  if (tipo === 'EPSON_TM_T20' || tipo === 'EPSON_TM_T20X') return buffer;
 
   while (i < buffer.length) {
+    if (tipo === 'DARUMA_800' && i + 2 < buffer.length && buffer[i] === 0x1B && buffer[i + 1] === 0x21) {
+      const modo = buffer[i + 2];
+      // O backend envia ESC !; a Daruma usa comandos separados para altura, largura e negrito.
+      listaBytes.push(0x1B, 0x77, modo & 0x20 ? 1 : 0,
+        0x1B, 0x0E, modo & 0x10 ? 1 : 0, 0x1B, modo & 0x08 ? 0x45 : 0x46);
+      i += 3;
+      continue;
+    }
     // Detecta ESC a (0x1B 0x61 n) - Alinhamento
     // Algumas impressoras (ex: Diebold) podem ter problemas com este comando
     // Mantemos o filtro apenas para o comando de alinhamento
     if (i + 2 < buffer.length &&
       buffer[i] === 0x1B &&
       buffer[i + 1] === 0x61) {
+
+      if (tipo === 'DARUMA_800') {
+        // ESC j n: alinhamento Daruma (mesmo comando usado por node-thermal-printer).
+        listaBytes.push(0x1B, 0x6A, buffer[i + 2]);
+        i += 3;
+        continue;
+      }
 
       console.log(`⚠️ Removendo comando ESC a ${buffer[i + 2]} (Alinhamento) na posição ${i}`);
       i += 3; // Pula os 3 bytes (1B 61 n)
@@ -83,7 +99,11 @@ function converterParaEscPos(dadosCupom, tipoImpressora) {
       let cp850 = null;
 
       // Mapeamento manual das sequências UTF-8 mais comuns para CP850
-      if (b1 === 0xC3) {
+      if (b1 === 0xC2) {
+        if (b2 === 0xBA) cp850 = 0xA7; // º
+        else if (b2 === 0xAA) cp850 = 0xA6; // ª
+        else if (b2 === 0xB0) cp850 = 0xF8; // °
+      } else if (b1 === 0xC3) {
         if (b2 === 0xA1) cp850 = 0xA0; // á
         else if (b2 === 0xA9) cp850 = 0x82; // é
         else if (b2 === 0xAD) cp850 = 0xA1; // í
@@ -129,7 +149,9 @@ function converterParaEscPos(dadosCupom, tipoImpressora) {
   // IMPORTANTE: Usar EXATAMENTE a mesma sequência do teste simples que funcionou:
   // Reset → Conteúdo → 2x LF → Corte
   const linhas = Buffer.from([0x0A, 0x0A]); // 2x LF
-  const corte = Buffer.from([0x1D, 0x56, 66, 0]); // GS V 66 0 - Corte completo
+  const corte = (tipoImpressora || '').toUpperCase() === 'DARUMA_800'
+    ? Buffer.from([0x1B, 0x6D]) // ESC m: corte Daruma, conforme node-thermal-printer.
+    : Buffer.from([0x1D, 0x56, 66, 0]); // GS V 66 0 - mantém Diebold/Epson
 
   console.log(`🔄 Adicionando finalização: ${linhas.length + corte.length} bytes (2 LF + corte)`);
 
@@ -144,5 +166,6 @@ function converterParaEscPos(dadosCupom, tipoImpressora) {
 }
 
 module.exports = {
-  converterParaEscPos
+  converterParaEscPos,
+  sanitizarComandosProblematicos
 };

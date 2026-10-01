@@ -5,7 +5,7 @@
 
 const express = require('express');
 const { validarEMapearDevicePath } = require('../../../core/printer/printer-validator');
-const { converterParaEscPos } = require('../../../core/print/escpos-converter');
+const { converterParaEscPos, sanitizarComandosProblematicos } = require('../../../core/print/escpos-converter');
 const { imprimirLocalmente } = require('../../../core/print/print-executor');
 const { converterLogoParaBuffer } = require('../../../core/print/thermal-printer-service');
 
@@ -245,7 +245,9 @@ router.post('/imprimir/cupom-fiscal', async (req, res) => {
       ]);
 
       // Reset → Center → Logo → Transição → Dados do cupom (limpos)
-      bufferFinal = Buffer.concat([resetCmd, centerCmd, logoEscPos, transicao, dadosLimpos]);
+      const transicaoModelo = tipoImpressora === 'DARUMA_800'
+        ? sanitizarComandosProblematicos(transicao, tipoImpressora) : transicao;
+      bufferFinal = Buffer.concat([resetCmd, centerCmd, logoEscPos, transicaoModelo, dadosLimpos]);
       console.log(`✅ Buffer final com logo: ${bufferFinal.length} bytes (logo: ${logoEscPos.length}, transição: ${transicao.length}, dados: ${dadosLimpos.length})`);
     } else {
       bufferFinal = dadosEscPos;

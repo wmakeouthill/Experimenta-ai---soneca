@@ -49,14 +49,14 @@ export class ConfigImpressoraComponent implements OnInit {
   readonly formImpressora: FormGroup;
   
   readonly tiposImpressora = [
-    { value: TipoImpressora.EPSON_TM_T20, label: 'EPSON TM-T20' },
+    { value: TipoImpressora.EPSON_TM_T20, label: 'EPSON TM-T20 / TM-T20X' },
     { value: TipoImpressora.DARUMA_800, label: 'DARUMA DR-800' },
+    { value: TipoImpressora.DIEBOLD_IM693H, label: 'Diebold Nixdorf' },
     { value: TipoImpressora.GENERICA_ESCPOS, label: 'Genérica ESC/POS' }
   ];
 
   constructor() {
-    // No Electron, usa GENÉRICA_ESCPOS como padrão (funciona com a maioria das impressoras)
-    // No Web, mantém EPSON_TM_T20 como padrão para compatibilidade
+    // Preserva o padrão das instalações existentes (incluindo Diebold).
     const tipoPadrao = TipoImpressora.GENERICA_ESCPOS;
     
     this.formImpressora = this.fb.group({
@@ -82,6 +82,10 @@ export class ConfigImpressoraComponent implements OnInit {
     // Validação em tempo real do devicePath
     this.formImpressora.get('devicePath')?.valueChanges.subscribe(value => {
       if (value && value.trim().length > 0) {
+        if (this.impressorasDisponiveis().some(p => p.tipo === 'windows' && p.name === value.trim())) {
+          this.erroDevicePath.set(null);
+          return;
+        }
         const validacao = ImpressoraUtil.validarDevicePath(value);
         if (!validacao.valido) {
           this.erroDevicePath.set(validacao.erro || 'Formato inválido');
@@ -93,8 +97,6 @@ export class ConfigImpressoraComponent implements OnInit {
       }
     });
 
-    // No Electron, carrega impressoras automaticamente ao inicializar
-    // Não precisa mais mudar baseado no tipo, pois todas usam ESC/POS genérico
   }
 
   readonly instrucoes = ImpressoraUtil.obterInstrucoesDevicePath();
@@ -107,11 +109,7 @@ export class ConfigImpressoraComponent implements OnInit {
     this.impressaoService.buscarConfiguracao().subscribe({
       next: async (config) => {
         if (config) {
-          // No Electron, sempre usa GENERICA_ESCPOS (padrão)
-          // No Web, mantém o tipo configurado ou usa padrão
-          const tipoParaUsar = this.estaNoElectron() 
-            ? TipoImpressora.GENERICA_ESCPOS 
-            : (config.tipoImpressora || TipoImpressora.GENERICA_ESCPOS);
+          const tipoParaUsar = config.tipoImpressora || TipoImpressora.GENERICA_ESCPOS;
           
           // Aplica valores no formulário
           this.formImpressora.patchValue({
@@ -134,10 +132,12 @@ export class ConfigImpressoraComponent implements OnInit {
             
             // Verifica se a impressora configurada está na lista
             const impressoraConfigurada = this.impressorasDisponiveis().find(
-              p => p.devicePath === config.devicePath
+              p => p.name === config.devicePath || p.devicePath === config.devicePath
             );
             
             if (impressoraConfigurada) {
+              // Configurações antigas por porta continuam válidas; novos salvamentos usam o nome.
+              this.formImpressora.patchValue({ devicePath: this.caminhoImpressora(impressoraConfigurada) });
               // Mostra mensagem informando que a impressora foi carregada
               this.mensagemImpressao.set(`✅ Impressora "${impressoraConfigurada.name}" carregada da configuração salva.`);
               setTimeout(() => this.mensagemImpressao.set(null), 3000);
@@ -209,13 +209,7 @@ export class ConfigImpressoraComponent implements OnInit {
     this.mensagemImpressao.set(null);
 
     const config = this.formImpressora.value;
-    
-    // No Electron, sempre salva como GENERICA_ESCPOS
-    // No Web, mantém o tipo selecionado
-    const tipoParaSalvar = this.estaNoElectron() 
-      ? TipoImpressora.GENERICA_ESCPOS 
-      : config.tipoImpressora;
-    
+
     // Valida se devicePath foi preenchido (obrigatório)
     if (!config.devicePath || config.devicePath.trim().length === 0) {
       this.mensagemImpressao.set('❌ Selecione uma impressora ou informe o caminho do dispositivo');
@@ -224,7 +218,7 @@ export class ConfigImpressoraComponent implements OnInit {
     }
     
     this.impressaoService.salvarConfiguracao({
-      tipoImpressora: tipoParaSalvar,
+      tipoImpressora: config.tipoImpressora,
       devicePath: config.devicePath?.trim() || undefined,
       larguraPapel: config.larguraPapel || 80,
       tamanhoFonte: config.tamanhoFonte || 'NORMAL',
@@ -264,13 +258,8 @@ export class ConfigImpressoraComponent implements OnInit {
     this.estaImprimindo.set(true);
     this.mensagemImpressao.set(null);
 
-    // No Electron, sempre usa GENERICA_ESCPOS
-    const tipoParaTeste = this.estaNoElectron() 
-      ? TipoImpressora.GENERICA_ESCPOS 
-      : config.tipoImpressora;
-    
     this.impressaoService.imprimirCupomTeste({
-      tipoImpressora: tipoParaTeste,
+      tipoImpressora: config.tipoImpressora,
       devicePath: config.devicePath, // Passa o devicePath configurado
       nomeEstabelecimento: config.nomeEstabelecimento,
       enderecoEstabelecimento: config.enderecoEstabelecimento,
@@ -447,7 +436,7 @@ export class ConfigImpressoraComponent implements OnInit {
     const select = event.target as HTMLSelectElement;
     const devicePath = select.value;
     if (devicePath) {
-      const impressora = this.impressorasDisponiveis().find(p => p.devicePath === devicePath);
+      const impressora = this.impressorasDisponiveis().find(p => this.caminhoImpressora(p) === devicePath);
       if (impressora) {
         this.selecionarImpressora(impressora);
       }
@@ -455,18 +444,7 @@ export class ConfigImpressoraComponent implements OnInit {
   }
 
   selecionarImpressora(impressora: ImpressoraSistema): void {
-    // Salva o devicePath e também armazena o nome da impressora em um campo hidden
-    // O nome será usado na impressão (Windows precisa do nome, não do devicePath)
-    this.formImpressora.patchValue({ 
-      devicePath: impressora.devicePath,
-      // Armazena o nome da impressora no próprio devicePath se for Windows e não for COM/IP
-      // Ou usa um formato que inclui o nome: "NOME_IMPRESSORA|devicePath"
-      // Mas melhor: salvar o nome separadamente ou usar o devicePath para buscar o nome na impressão
-    });
-    
-    // Para Windows, se não for COM nem IP:PORTA, precisamos do nome da impressora
-    // Vamos salvar no formato: "nomeImpressora|devicePath" ou apenas usar o devicePath e buscar o nome na impressão
-    // Por enquanto, vamos salvar apenas o devicePath e buscar o nome na hora de imprimir (já está implementado)
+    this.formImpressora.patchValue({ devicePath: this.caminhoImpressora(impressora) });
     
     const mensagem = impressora.padrao 
       ? `✅ Impressora padrão "${impressora.name}" selecionada! (${impressora.devicePath})`
@@ -478,6 +456,10 @@ export class ConfigImpressoraComponent implements OnInit {
         this.mensagemImpressao.set(null);
       }
     }, 4000);
+  }
+
+  caminhoImpressora(impressora: ImpressoraSistema): string {
+    return impressora.tipo === 'windows' ? impressora.name : impressora.devicePath;
   }
 }
 

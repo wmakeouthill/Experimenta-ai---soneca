@@ -9,8 +9,6 @@
   @if (estaExpandido()) {
     <div class="config-impressora-content">
       <form [formGroup]="formImpressora" class="config-impressora-form">
-        @if (!estaNoElectron()) {
-          <!-- Apenas mostra o tipo quando NÃO está no Electron (modo Web) -->
           <div class="form-row">
             <label for="tipoImpressora"> Tipo de Impressora: </label>
             <select id="tipoImpressora" formControlName="tipoImpressora" class="form-input-compact">
@@ -22,11 +20,6 @@
               💡 Escolha o tipo de impressora que você está usando
             </small>
           </div>
-        } @else {
-          <!-- No Electron, tipo é definido automaticamente (GENERICA_ESCPOS) -->
-          <!-- Campo hidden para manter o valor no formulário -->
-          <input type="hidden" formControlName="tipoImpressora" />
-        }
 
         <div class="form-row">
           <label for="devicePath">
@@ -69,7 +62,7 @@
                 >
                   <option value="">-- Selecione uma impressora --</option>
                   @for (impressora of impressorasDisponiveis(); track impressora.name) {
-                    <option [value]="impressora.devicePath">
+                    <option [value]="caminhoImpressora(impressora)">
                       @if (impressora.padrao) {
                         ⭐
                       }
@@ -109,7 +102,7 @@
               formControlName="devicePath"
               class="form-input-compact"
               [class.invalid]="erroDevicePath()"
-              placeholder="Ou digite manualmente (ex: COM3, /dev/usb/lp0, 192.168.1.100:9100)"
+              placeholder="Nome da impressora no Windows, COM3 ou IP:PORTA"
               style="margin-top: 8px"
             />
           } @else {

@@ -8,6 +8,7 @@ const { app, BrowserWindow, ipcMain, screen, Menu, dialog } = require('electron'
 const { autoUpdater } = require('electron-updater');
 const { criarAtualizador, avisarVersaoAtualizada } = require('./atualizacao');
 const path = require('path');
+const { listarImpressorasWindows } = require('./core/printer/platforms/windows-detector');
 
 // Biblioteca para detectar impressoras (usa APIs nativas do sistema)
 const { exec } = require('child_process');
@@ -543,33 +544,6 @@ async function listarImpressorasSistema() {
     return await listarImpressorasMacOS();
   } else {
     throw new Error(`Plataforma não suportada: ${plataforma}`);
-  }
-}
-
-/**
- * Lista impressoras no Windows usando PowerShell
- */
-async function listarImpressorasWindows() {
-  try {
-    // Usa WMI (Windows Management Instrumentation) via PowerShell
-    const comando = `powershell -Command "Get-WmiObject -Class Win32_Printer | Select-Object Name, PortName, Default, Status | ConvertTo-Json"`;
-    const { stdout } = await execPromise(comando, { timeout: 5000, maxBuffer: 1024 * 1024 });
-    const impressoras = JSON.parse(stdout);
-
-    // Normaliza para array
-    const lista = Array.isArray(impressoras) ? impressoras : [impressoras];
-
-    return lista.map(imp => ({
-      name: imp.Name || '',
-      devicePath: imp.PortName || `COM${lista.indexOf(imp)}`,
-      status: imp.Status || 'Desconhecido',
-      padrao: imp.Default || false,
-      tipo: 'windows',
-    }));
-  } catch (error) {
-    console.error('Erro ao listar impressoras Windows:', error);
-    // Fallback: tenta usar lpstat se estiver disponível
-    return [];
   }
 }
 
