@@ -1,6 +1,6 @@
 {
   "name": "experimenta-ai-soneca-delivery",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "description": "Experimenta aí do Soneca Delivery - Sistema de Gestão para Lanchonetes",
   "main": "main.js",
   "scripts": {
@@ -71,7 +71,10 @@
           ]
         }
       ],
-      "publisherName": "Experimenta aí do Soneca Delivery"
+      "publisherName": [
+        "Experimenta aí do Soneca Delivery",
+        "Experimenta aÃ­ do Soneca Delivery"
+      ]
     },
     "nsis": {
       "oneClick": false,

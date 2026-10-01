@@ -23,7 +23,7 @@ if (-not (Test-Path -LiteralPath $metadata -PathType Leaf)) {
     throw 'latest.yml não encontrado. Rode npm.cmd run build:release:win antes de publicar.'
 }
 
-$package = Get-Content -LiteralPath (Join-Path $appDir 'package.json') -Raw | ConvertFrom-Json
+$package = Get-Content -LiteralPath (Join-Path $appDir 'package.json') -Raw -Encoding UTF8 | ConvertFrom-Json
 $packageVersion = $package.version
 $versionLine = Select-String -LiteralPath $metadata -Pattern '^version: (.+)$'
 $installerLine = Select-String -LiteralPath $metadata -Pattern '^  - url: (.+\.exe)$'
@@ -60,7 +60,7 @@ $publisherName = if ($package.build.win.signtoolOptions) {
 } else {
     $package.build.win.publisherName
 }
-if ($signerName -ne $publisherName) {
+if ($signerName -notin @($publisherName)) {
     throw "O publicador do certificado ($signerName) difere de package.json ($publisherName)."
 }
 

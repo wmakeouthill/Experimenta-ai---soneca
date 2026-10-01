@@ -1,7 +1,7 @@
 {
   "name": "experimenta-ai-soneca-totem",
   "productName": "Experimenta ai do Soneca Totem",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "Electron dedicado ao totem de autoatendimento",
   "main": "main.js",
   "private": true,
@@ -65,7 +65,10 @@
         }
       ],
       "signtoolOptions": {
-        "publisherName": "Experimenta aí do Soneca Delivery"
+        "publisherName": [
+          "Experimenta aí do Soneca Delivery",
+          "Experimenta aÃ­ do Soneca Delivery"
+        ]
       }
     },
     "nsis": {

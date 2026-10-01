@@ -40,6 +40,8 @@ Para o totem, invoque o mesmo build assinado com `-App totem`. Os dois aplicativ
 
 O `publisherName` em `package.json` não assina o instalador. O `electron-updater` verifica a assinatura Windows do instalador recebido; o script de publicação recusa arquivos sem assinatura válida. Não coloque certificado privado ou senha no repositório nem na VPS.
 
+O certificado existente foi criado com o nome acentuado codificado incorretamente. Balcão 1.0.6 e Totem 1.0.5 reconhecem esse nome legado e mantêm o mesmo certificado. Apps anteriores podem rejeitar o publicador durante a atualização: nesse caso, instale o novo EXE manualmente uma vez; depois, o feed funciona com a configuração corrigida. Não desative a validação de assinatura nem substitua o certificado para contornar esse erro. A publicação lê o JSON como UTF-8 e aceita somente os nomes explicitamente configurados.
+
 ### Certificado gratuito para as máquinas próprias
 
 Crie **uma vez** um certificado autoassinado na máquina de build, com destino fora do repositório:
