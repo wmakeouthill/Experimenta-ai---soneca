@@ -29,6 +29,7 @@
   /* Tudo que usa --delivery-font dentro da tela herda a fonte embutida */
   --delivery-font: var(--fonte-app);
   font-family: var(--delivery-font);
+  font-variant-emoji: normal;
 }
 
 .autoatendimento-container {
@@ -527,8 +528,11 @@
 }
 
 .numero-pedido .numero {
+  font-family: var(--fonte-app, 'Inter Variable', system-ui, sans-serif);
   font-size: 3rem;
   font-weight: 700;
+  font-variant-emoji: normal;
+  font-variant-numeric: lining-nums tabular-nums;
   color: var(--success-color);
 }
 

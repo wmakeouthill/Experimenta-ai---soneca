@@ -48,8 +48,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: var(--fonte-texto, 'Plus Jakarta Sans', 'Inter Variable', system-ui, sans-serif);
   font-size: 42px;
   font-weight: 800;
+  font-variant-emoji: normal;
+  font-variant-numeric: lining-nums tabular-nums;
   color: var(--lobby-pronto-numero-text);
   box-shadow: 0 12px 32px rgba(31, 169, 113, 0.5);
 }

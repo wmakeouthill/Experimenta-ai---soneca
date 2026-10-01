@@ -24,8 +24,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: var(--fonte-texto, 'Plus Jakarta Sans', 'Inter Variable', system-ui, sans-serif);
   font-size: 19px;
   font-weight: 800;
+  font-variant-emoji: normal;
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 .card-pedido.preparando {

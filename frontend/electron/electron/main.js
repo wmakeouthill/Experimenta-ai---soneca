@@ -102,40 +102,14 @@ function createWindow() {
         // Configura limites de zoom visual
         mainWindow.webContents.setVisualZoomLevelLimits(1, 3);
 
-        // Injeta CSS para melhorar renderização de texto E emojis
+        // Suaviza o texto sem trocar a fonte. Forçar Segoe UI Emoji / Noto Color Emoji
+        // em todo elemento desenha 0–9 dentro de um quadrado (keycap) no Windows 10.
         mainWindow.webContents.insertCSS(`
           * {
             -webkit-font-smoothing: antialiased !important;
             -moz-osx-font-smoothing: grayscale !important;
             text-rendering: optimizeLegibility !important;
-          }
-
-          /* Melhora renderização de emojis - especialmente no Windows 10 */
-          body, * {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI Emoji", "Segoe UI Symbol",
-                         "Segoe UI", "Noto Color Emoji", "Apple Color Emoji", "EmojiOne Color",
-                         "Segoe UI Emoji", "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
-          }
-
-          /* Força renderização nativa de emojis (fina e nítida - igual Windows 11) */
-          emoji, [data-emoji], * {
-            font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji" !important;
-            font-style: normal !important;
-            font-weight: 400 !important; /* 400 = normal (não bold) - evita emojis grossos */
-            -webkit-font-smoothing: auto !important;
-            text-rendering: optimizeLegibility !important; /* Melhor que 'auto' para emojis */
-          }
-
-          /* Remove qualquer peso extra de emojis (evita traços grossos) */
-          emoji, [data-emoji] {
-            font-weight: 400 !important;
-            text-shadow: none !important;
-            -webkit-text-stroke: 0 !important;
-          }
-
-          /* Emojis em texto - força renderização suave */
-          *:not(script):not(style) {
-            font-variant-emoji: emoji;
+            font-variant-emoji: normal !important;
           }
         `);
       } catch (error) {

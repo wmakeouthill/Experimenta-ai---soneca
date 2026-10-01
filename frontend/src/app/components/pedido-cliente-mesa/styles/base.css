@@ -26,6 +26,7 @@
   /* Tudo que usa --delivery-font dentro da tela herda a fonte embutida */
   --delivery-font: var(--fonte-app);
   font-family: var(--delivery-font);
+  font-variant-emoji: normal;
 }
 
 /* ========== Buttons ========== */

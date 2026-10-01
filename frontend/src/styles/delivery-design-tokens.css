@@ -3,7 +3,7 @@
  * Referência: Refinamento design telas delivery/
  */
 :root {
-  --delivery-font: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --delivery-font: 'Plus Jakarta Sans', 'Inter Variable', system-ui, sans-serif;
 
   --delivery-primary: #ff6b35;
   --delivery-secondary: #f7931e;

@@ -76,7 +76,7 @@
   --lobby-floor-andar-bg: linear-gradient(135deg, #2e7db0, #1e5a8c);
   --lobby-floor-andar-shadow: rgba(46, 125, 176, 0.4);
   --lobby-topbar-titulo: #e8b84b;
-  --lobby-font: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --lobby-font: var(--fonte-texto, 'Plus Jakarta Sans', 'Inter Variable', system-ui, sans-serif);
 }
 
 /* ========== Tema claro ========== */

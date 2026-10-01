@@ -6,6 +6,7 @@
   width: 100vw;
   overflow: hidden;
   font-family: var(--lobby-font);
+  font-variant-emoji: normal;
   background: var(--lobby-body-bg);
 }
 

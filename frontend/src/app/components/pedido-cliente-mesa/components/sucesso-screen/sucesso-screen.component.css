@@ -96,7 +96,10 @@
     padding: 0.4rem 1rem;
     background: rgba(255, 255, 255, 0.2);
     border-radius: 20px;
+    font-family: var(--fonte-app, 'Inter Variable', system-ui, sans-serif);
     font-size: 0.9rem;
+    font-variant-emoji: normal;
+    font-variant-numeric: lining-nums tabular-nums;
     margin-bottom: 0.75rem;
 }
 
