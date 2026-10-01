@@ -51,8 +51,24 @@ preparar_frontend() {
 
 # O preparar_frontend regenera o default.conf e a VPS dá chmod +x neste script: sem descartar, o pull aborta
 puxar_main() {
+    local script_anterior
+    script_anterior=$(sha256sum deploy-vps.sh)
     git checkout -- config/nginx/default.conf deploy-vps.sh
-    git pull origin main
+    git pull --ff-only origin main
+    # O pull pode trocar este arquivo; reinicie para carregar as funções atualizadas.
+    if [ "$script_anterior" != "$(sha256sum deploy-vps.sh)" ]; then
+        exec bash ./deploy-vps.sh "${1:?Informe o comando de atualização}"
+    fi
+    preparar_frontend
+}
+
+validar_frontend() {
+    docker exec snackbar-frontend nginx -t
+    if [ -n "${DOMAIN:-}" ]; then
+        curl --fail --silent --show-error --retry 5 --retry-connrefused --retry-delay 1 \
+            --connect-timeout 5 --max-time 10 --resolve "${DOMAIN}:443:127.0.0.1" \
+            "https://${DOMAIN}/health"
+    fi
 }
 
 # ==================== LOGIN GHCR ====================
@@ -270,8 +286,7 @@ atualizar() {
     log "🔄 Atualizando aplicação..."
     
     # Pull do código mais recente (configs, nginx, etc.)
-    puxar_main
-    preparar_frontend
+    puxar_main atualizar
     
     # Login no registry
     login_ghcr
@@ -284,6 +299,7 @@ atualizar() {
     log "🚀 Reiniciando com imagens novas..."
     docker compose -f docker-compose.prod.yml up -d --no-deps backend
     docker compose -f docker-compose.prod.yml up -d --no-deps frontend
+    validar_frontend
     
     # Limpar imagens antigas
     docker image prune -f
@@ -298,7 +314,7 @@ atualizar_backend() {
     
     log "🔄 Atualizando apenas o BACKEND..."
     
-    puxar_main
+    puxar_main atualizar-backend
     login_ghcr
     
     log "📥 Baixando imagem do backend..."
@@ -306,6 +322,7 @@ atualizar_backend() {
     
     log "🚀 Reiniciando backend (MySQL e Frontend não serão afetados)..."
     docker compose -f docker-compose.prod.yml up -d --no-deps backend
+    validar_frontend
     
     docker image prune -f
     
@@ -320,8 +337,7 @@ atualizar_frontend() {
     
     log "🔄 Atualizando apenas o FRONTEND..."
     
-    puxar_main
-    preparar_frontend
+    puxar_main atualizar-frontend
     login_ghcr
     
     log "📥 Baixando imagem do frontend..."
@@ -329,6 +345,7 @@ atualizar_frontend() {
     
     log "🚀 Reiniciando frontend (MySQL e Backend não serão afetados)..."
     docker compose -f docker-compose.prod.yml up -d --no-deps frontend
+    validar_frontend
     
     docker image prune -f
     
