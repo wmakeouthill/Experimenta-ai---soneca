@@ -153,7 +153,7 @@
 /* Item com imagem (específico do totem) */
 .carrinho-item--totem {
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
+  grid-template-columns: 100px minmax(0, 1fr);
   gap: 12px;
   align-items: start;
 }
@@ -170,8 +170,9 @@
 
 .item-imagem-carrinho {
   position: relative;
-  width: 72px;
-  height: 72px;
+  width: 100px;
+  height: auto;
+  aspect-ratio: 140 / 88;
   border-radius: var(--delivery-radius-sm, 14px);
   overflow: hidden;
   background: var(--delivery-placeholder-bg, #f5ede6);
@@ -198,7 +199,6 @@
   height: 100%;
   object-fit: cover;
   object-position: center;
-  transform: scale(1.22);
 }
 
 .item-preco-unitario {

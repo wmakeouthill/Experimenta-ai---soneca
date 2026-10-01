@@ -464,7 +464,7 @@
 
 .aba-carrinho .carrinho-item {
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr) auto;
+  grid-template-columns: 100px minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
 }
@@ -488,15 +488,17 @@
 .aba-carrinho .carrinho-item .item-imagem-carrinho {
   grid-column: 1;
   grid-row: 1;
-  width: 72px;
-  height: 72px;
+  width: 100px;
+  height: auto;
+  aspect-ratio: 140 / 88;
   border-radius: 14px;
   font-size: 1.4rem;
 }
 
 .modal-carrinho .carrinho-item .item-imagem-carrinho {
-  width: 64px;
-  height: 64px;
+  width: 96px;
+  height: auto;
+  aspect-ratio: 140 / 88;
   border-radius: 12px;
   font-size: 1.35rem;
 }
@@ -523,7 +525,6 @@
   height: 100%;
   object-fit: cover;
   object-position: center;
-  transform: scale(1.22);
 }
 
 .aba-carrinho .carrinho-item .item-info {
