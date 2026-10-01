@@ -2,6 +2,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   inject,
   OnInit,
   PLATFORM_ID,
@@ -11,6 +12,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { RouterModule } from '@angular/router';
 import { Mesa } from '../../services/mesa.service';
 import { useMesas } from './composables/use-mesas';
+import { CartaoMesa, imprimirCartoesMesa, qrDataUrl } from './utils/cartao-mesa.util';
 
 @Component({
   selector: 'app-gestao-mesas',
@@ -38,6 +40,17 @@ export class GestaoMesasComponent implements OnInit {
   readonly mesaQrCode = signal<Mesa | null>(null);
   readonly linkTotemCopiado = signal(false);
   readonly linkMesaCopiado = signal(false);
+
+  readonly mesasAtivas = computed(() =>
+    this.mesas()
+      .filter(mesa => mesa.ativa)
+      .sort((a, b) => a.numero - b.numero)
+  );
+
+  readonly qrCodeModal = computed(() => {
+    const mesa = this.mesaQrCode();
+    return mesa ? qrDataUrl(this.obterUrlQrCode(mesa)) : '';
+  });
 
   readonly form: FormGroup;
 
@@ -155,71 +168,15 @@ export class GestaoMesasComponent implements OnInit {
   }
 
   imprimirQrCode(mesa: Mesa): void {
-    const url = this.obterUrlQrCode(mesa);
-    // Abre janela de impressão com o QR code
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>QR Code Mesa ${mesa.numero}</title>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              text-align: center;
-              padding: 40px;
-            }
-            .container {
-              max-width: 400px;
-              margin: 0 auto;
-              padding: 30px;
-              border: 3px solid #FF6B35;
-              border-radius: 20px;
-            }
-            h1 {
-              color: #FF6B35;
-              font-size: 2.5em;
-              margin-bottom: 10px;
-            }
-            h2 {
-              color: #333;
-              font-size: 1.5em;
-              margin-bottom: 30px;
-            }
-            .qr-code {
-              margin: 30px 0;
-            }
-            .qr-code img {
-              width: 250px;
-              height: 250px;
-            }
-            .instructions {
-              color: #666;
-              font-size: 1.2em;
-              margin-top: 30px;
-            }
-            @media print {
-              body { padding: 0; }
-              .no-print { display: none; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <h1>Mesa ${mesa.numero}</h1>
-            <h2>${mesa.nome}</h2>
-            <div class="qr-code">
-              <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}" alt="QR Code">
-            </div>
-            <p class="instructions">📱 Escaneie o QR Code para fazer seu pedido!</p>
-          </div>
-          <button class="no-print" onclick="window.print();" style="margin-top:20px;padding:10px 20px;font-size:16px;">Imprimir</button>
-        </body>
-        </html>
-      `);
-      printWindow.document.close();
-    }
+    imprimirCartoesMesa([this.cartaoDaMesa(mesa)]);
+  }
+
+  imprimirTodas(): void {
+    imprimirCartoesMesa(this.mesasAtivas().map(mesa => this.cartaoDaMesa(mesa)));
+  }
+
+  private cartaoDaMesa(mesa: Mesa): CartaoMesa {
+    return { numero: mesa.numero, nome: mesa.nome, url: this.obterUrlQrCode(mesa) };
   }
 
   // ========== Totem Auto-Atendimento ==========

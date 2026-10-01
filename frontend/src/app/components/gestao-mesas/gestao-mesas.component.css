@@ -72,6 +72,12 @@
   transform: translateY(-2px);
 }
 
+.btn-header:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
 /* Resumo */
 .resumo-mesas {
   display: flex;

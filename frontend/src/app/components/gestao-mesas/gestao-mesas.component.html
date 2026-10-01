@@ -12,6 +12,14 @@
       <div class="header-actions">
         <button class="btn-header btn-primary" (click)="abrirModalCriar()">➕ Nova Mesa</button>
         <button
+          class="btn-header"
+          (click)="imprimirTodas()"
+          [disabled]="mesasAtivas().length === 0"
+          title="Imprime os cartões das mesas ativas, 4 por folha A4"
+        >
+          🖨️ Imprimir todas
+        </button>
+        <button
           class="btn-voltar"
           routerLink="/administracao"
           aria-label="Voltar para administração"
@@ -113,7 +121,7 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="5" class="empty">
+              <td colspan="6" class="empty">
                 Nenhuma mesa cadastrada. Clique em "Nova Mesa" para adicionar.
               </td>
             </tr>
@@ -210,13 +218,7 @@
           </div>
 
           <div class="qrcode-image">
-            <img
-              [src]="
-                'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' +
-                obterUrlQrCode(mesaQrCode()!)
-              "
-              alt="QR Code da Mesa"
-            />
+            <img [src]="qrCodeModal()" alt="QR Code da Mesa" />
           </div>
 
           <div class="qrcode-url">
