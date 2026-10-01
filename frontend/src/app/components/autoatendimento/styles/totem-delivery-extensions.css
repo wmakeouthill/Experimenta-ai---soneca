@@ -169,6 +169,7 @@
 }
 
 .item-imagem-carrinho {
+  position: relative;
   width: 72px;
   height: 72px;
   border-radius: var(--delivery-radius-sm, 14px);
@@ -181,7 +182,18 @@
   font-size: 1.4rem;
 }
 
+.item-imagem-carrinho span {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .item-imagem-carrinho img {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
   width: 100%;
   height: 100%;
   object-fit: cover;

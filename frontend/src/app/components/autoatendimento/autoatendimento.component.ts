@@ -535,6 +535,13 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
     return '';
   }
 
+  ocultarFotoQuebrada(event: Event): void {
+    const img = event.target;
+    if (img instanceof HTMLImageElement) {
+      img.style.display = 'none';
+    }
+  }
+
   // ========== Pagamento ==========
   selecionarMeioPagamento(tipo: MeioPagamentoTipo): void {
     if (this.checkoutPagamento()) {

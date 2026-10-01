@@ -429,10 +429,13 @@
             @for (item of carrinho.itens(); track $index) {
               <div class="carrinho-item carrinho-item--totem">
                 <div class="item-imagem-carrinho">
+                  <span aria-hidden="true">🍽️</span>
                   @if (item.produto.foto) {
-                    <img [src]="getImagemProduto(item.produto)" [alt]="item.produto.nome" />
-                  } @else {
-                    <span aria-hidden="true">🍽️</span>
+                    <img
+                      [src]="getImagemProduto(item.produto)"
+                      [alt]="item.produto.nome"
+                      (error)="ocultarFotoQuebrada($event)"
+                    />
                   }
                 </div>
                 <div class="item-info">

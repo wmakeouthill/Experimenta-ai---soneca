@@ -461,3 +461,91 @@
     font-size: 1.5rem;
   }
 }
+
+.aba-carrinho .carrinho-item {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-carrinho .carrinho-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.aba-carrinho .carrinho-item .item-imagem-carrinho,
+.modal-carrinho .carrinho-item .item-imagem-carrinho {
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--delivery-placeholder-bg, #f5ede6);
+  color: var(--delivery-text-dim, #b8a99c);
+}
+
+.aba-carrinho .carrinho-item .item-imagem-carrinho {
+  grid-column: 1;
+  grid-row: 1;
+  width: 72px;
+  height: 72px;
+  border-radius: 14px;
+  font-size: 1.4rem;
+}
+
+.modal-carrinho .carrinho-item .item-imagem-carrinho {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  font-size: 1.35rem;
+}
+
+.aba-carrinho .carrinho-item .item-imagem-carrinho span,
+.modal-carrinho .carrinho-item .item-imagem-carrinho span,
+.aba-carrinho .carrinho-item .item-imagem-carrinho img,
+.modal-carrinho .carrinho-item .item-imagem-carrinho img {
+  position: absolute;
+  inset: 0;
+}
+
+.aba-carrinho .carrinho-item .item-imagem-carrinho span,
+.modal-carrinho .carrinho-item .item-imagem-carrinho span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.aba-carrinho .carrinho-item .item-imagem-carrinho img,
+.modal-carrinho .carrinho-item .item-imagem-carrinho img {
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.aba-carrinho .carrinho-item .item-info {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+}
+
+.aba-carrinho .carrinho-item .item-controls {
+  grid-column: 3;
+  grid-row: 1;
+  align-self: center;
+  margin-top: 0;
+}
+
+.modal-carrinho .carrinho-item .item-info {
+  flex: 1;
+  grid-column: auto;
+  grid-row: auto;
+  min-width: 0;
+}
+
+.modal-carrinho .carrinho-item .item-controles,
+.modal-carrinho .carrinho-item .btn-remover {
+  grid-column: auto;
+  grid-row: auto;
+}

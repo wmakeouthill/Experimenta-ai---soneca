@@ -731,6 +731,16 @@
               <div class="carrinho-items">
                 @for (item of carrinho.itens(); track i; let i = $index) {
                   <div class="carrinho-item">
+                    <div class="item-imagem-carrinho">
+                      <span aria-hidden="true">🍽️</span>
+                      @if (item.produto.foto) {
+                        <img
+                          [src]="item.produto.foto"
+                          [alt]="item.produto.nome"
+                          (error)="onImageError($event)"
+                        />
+                      }
+                    </div>
                     <div class="item-info">
                       <h4>{{ item.produto.nome }}</h4>
                       @if (formatarAdicionais(item.adicionais)) {
@@ -1735,6 +1745,16 @@
                 <div class="carrinho-itens">
                   @for (item of carrinho.itens(); track i; let i = $index) {
                     <div class="carrinho-item">
+                      <div class="item-imagem-carrinho">
+                        <span aria-hidden="true">🍽️</span>
+                        @if (item.produto.foto) {
+                          <img
+                            [src]="item.produto.foto"
+                            [alt]="item.produto.nome"
+                            (error)="onImageError($event)"
+                          />
+                        }
+                      </div>
                       <div class="item-info">
                         <h4>{{ item.produto.nome }}</h4>
                         @if (item.adicionais && item.adicionais.length > 0) {
