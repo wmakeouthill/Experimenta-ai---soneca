@@ -275,3 +275,10 @@ auttar/
 .claude/skills/graphify/
 # Snapshots/logs do Playwright MCP (testes manuais)
 /.playwright-mcp/
+
+# Operação local do balcão: scripts e artes do cardápio.
+# Ficam na pasta de quem opera. O procedimento está no ai-memory.
+/cardapio/
+/zerar-operacao.sql
+/limpar-dados-pedidos.sql
+/limpar-todo-banco-exceto-configuracoes.sql
