@@ -5,10 +5,13 @@
     (contextmenu)="$event.preventDefault(); fechar()"
   >
     <div
+      #menu
       class="context-menu"
-      [style.left.px]="posicao()!.x"
-      [style.top.px]="posicao()!.y"
+      [style.left.px]="esquerda()"
+      [style.top.px]="topo()"
+      [style.max-height.px]="alturaMaxima()"
       (click)="$event.stopPropagation()"
+      (wheel)="$event.stopPropagation()"
     >
       <div class="context-menu-header">
         <span>Opções do Pedido</span>

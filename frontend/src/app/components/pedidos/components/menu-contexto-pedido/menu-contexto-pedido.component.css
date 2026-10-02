@@ -17,12 +17,15 @@
   min-width: 180px;
   max-width: 250px;
   z-index: 1001;
-  overflow: hidden;
-  transform: translate(-10px, -10px);
+  overflow: auto;
+  overscroll-behavior: contain;
   font-family: var(--delivery-font);
 }
 
 .context-menu-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   padding: 0.75rem 1rem;
   background: var(--delivery-bg);
   border-bottom: 1px solid var(--delivery-border);
