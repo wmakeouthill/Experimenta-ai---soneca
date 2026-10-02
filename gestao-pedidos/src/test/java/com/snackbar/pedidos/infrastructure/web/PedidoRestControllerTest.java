@@ -29,6 +29,7 @@ class PedidoRestControllerTest {
     @Mock private ExcluirPedidoUseCase excluirPedido;
     @Mock private RegistrarPagamentoPedidoUseCase registrarPagamentoPedido;
     @Mock private CorrigirTrocoPedidoUseCase corrigirTrocoPedido;
+    @Mock private AtualizarPisoPedidoUseCase atualizarPisoPedido;
     @Mock private IdempotencyService idempotencyService;
 
     @InjectMocks private PedidoRestController controller;

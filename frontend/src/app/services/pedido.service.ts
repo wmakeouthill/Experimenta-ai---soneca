@@ -209,4 +209,11 @@ export class PedidoService {
   corrigirTroco(pedidoId: string, valorPagoDinheiro: number): Observable<Pedido> {
     return this.http.patch<Pedido>(`${this.apiUrl}/${pedidoId}/troco`, { valorPagoDinheiro });
   }
+
+  /**
+   * Move o pedido para o painel do térreo ou do 1º andar.
+   */
+  atualizarPiso(pedidoId: string, piso: Piso): Observable<Pedido> {
+    return this.http.patch<Pedido>(`${this.apiUrl}/${pedidoId}/piso`, { piso });
+  }
 }

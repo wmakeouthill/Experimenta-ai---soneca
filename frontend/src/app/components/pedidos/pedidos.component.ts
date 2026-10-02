@@ -651,6 +651,25 @@ export class PedidosComponent implements OnInit, OnDestroy {
     }
   }
 
+  onPisoAlteradoViaMenu(event: { pedidoId: string; piso: Piso }): void {
+    this.fecharMenuContexto();
+    this.pedidoService.atualizarPiso(event.pedidoId, event.piso).subscribe({
+      next: pedidoAtualizado => {
+        this.pedidosComposable.atualizarPedidoNoSignal(pedidoAtualizado);
+        const painel = event.piso === 'TERREO' ? 'térreo' : '1º andar';
+        this.notificationService.sucesso(`Pedido movido para o ${painel}`);
+      },
+      error: error => {
+        console.error('Erro ao mover pedido de painel:', error);
+        const mensagem =
+          error.error?.message || error.message || 'Erro ao mover o pedido de painel. Tente novamente.';
+        if (this.isBrowser) {
+          alert(mensagem);
+        }
+      },
+    });
+  }
+
   /**
    * Abre um prompt para o operador informar/corrigir o valor pago em dinheiro.
    * Calcula e exibe o troco antes de confirmar.

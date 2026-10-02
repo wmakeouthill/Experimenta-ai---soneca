@@ -99,6 +99,30 @@
   margin: 0.25rem 0;
 }
 
+.context-menu-hint {
+  margin: 0;
+  padding: 0 1rem 0.35rem;
+  font-size: 0.75rem;
+  color: var(--delivery-text-muted);
+}
+
+.context-menu-item:disabled {
+  cursor: default;
+  font-weight: 700;
+  color: var(--balcao-text-strong);
+}
+
+.context-menu-item:disabled:hover {
+  background: var(--delivery-surface);
+}
+
+.context-menu-atual {
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--delivery-text-muted);
+}
+
 .context-menu-item-impressao {
   color: var(--delivery-primary);
   font-weight: 500;

@@ -32,6 +32,7 @@ public class PedidoRestController {
     private final ExcluirPedidoUseCase excluirPedidoUseCase;
     private final RegistrarPagamentoPedidoUseCase registrarPagamentoPedidoUseCase;
     private final CorrigirTrocoPedidoUseCase corrigirTrocoPedidoUseCase;
+    private final AtualizarPisoPedidoUseCase atualizarPisoPedidoUseCase;
     private final IdempotencyService idempotencyService;
 
     /**
@@ -134,6 +135,18 @@ public class PedidoRestController {
             @NonNull @PathVariable String id,
             @Valid @RequestBody CorrigirTrocoRequest request) {
         PedidoDTO pedido = corrigirTrocoPedidoUseCase.executar(id, request.getValorPagoDinheiro());
+        return ResponseEntity.ok(pedido);
+    }
+
+    /**
+     * Move o pedido para o painel do térreo ou do 1º andar.
+     * A TV daquele piso passa a exibir o pedido no próximo ciclo do lobby.
+     */
+    @PatchMapping("/{id}/piso")
+    public ResponseEntity<PedidoDTO> atualizarPiso(
+            @NonNull @PathVariable String id,
+            @Valid @RequestBody AtualizarPisoPedidoRequest request) {
+        PedidoDTO pedido = atualizarPisoPedidoUseCase.executar(id, request.getPiso());
         return ResponseEntity.ok(pedido);
     }
 }

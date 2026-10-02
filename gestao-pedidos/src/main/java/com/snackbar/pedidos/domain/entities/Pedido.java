@@ -243,6 +243,7 @@ public class Pedido extends BaseEntity {
      */
     public void definirPiso(Piso piso) {
         this.piso = piso;
+        touch();
     }
 
     /**

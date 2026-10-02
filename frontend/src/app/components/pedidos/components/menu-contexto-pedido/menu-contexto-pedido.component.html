@@ -25,6 +25,26 @@
           </div>
           <div class="context-menu-divider"></div>
           <div class="context-menu-section">
+            <div class="context-menu-section-title">Painel</div>
+            @if (!pedidoAtual.piso) {
+              <p class="context-menu-hint">Aparece nos dois painéis</p>
+            }
+            @for (piso of pisos; track piso) {
+              <button
+                class="context-menu-item"
+                [class.context-menu-item-atual]="pedidoAtual.piso === piso"
+                [disabled]="pedidoAtual.piso === piso"
+                (click)="alterarPiso(piso)"
+              >
+                {{ nomePiso(piso) }}
+                @if (pedidoAtual.piso === piso) {
+                  <span class="context-menu-atual">atual</span>
+                }
+              </button>
+            }
+          </div>
+          <div class="context-menu-divider"></div>
+          <div class="context-menu-section">
             <button
               class="context-menu-item context-menu-item-impressao"
               (click)="imprimirSegundaVia()"

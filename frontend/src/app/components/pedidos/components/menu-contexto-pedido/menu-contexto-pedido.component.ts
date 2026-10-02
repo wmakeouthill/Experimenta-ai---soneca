@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
-import { MeioPagamento, Pedido, StatusPedido } from '../../../../services/pedido.service';
+import { MeioPagamento, Pedido, Piso, StatusPedido } from '../../../../services/pedido.service';
 import { IconeComponent } from '../../../shared/icone/icone.component';
 
 @Component({
@@ -20,6 +20,9 @@ export class MenuContextoPedidoComponent {
   readonly onCancelar = output<string>();
   readonly onImprimirSegundaVia = output<string>();
   readonly onCorrigirTroco = output<string>();
+  readonly onPisoAlterado = output<{ pedidoId: string; piso: Piso }>();
+
+  readonly pisos: readonly Piso[] = ['TERREO', 'ANDAR'];
 
   readonly StatusPedido = StatusPedido;
 
@@ -100,6 +103,28 @@ export class MenuContextoPedidoComponent {
     if (pedido) {
       this.onCorrigirTroco.emit(pedido.id);
     }
+    this.fechar();
+  }
+
+  nomePiso(piso: Piso): string {
+    switch (piso) {
+      case 'TERREO':
+        return 'Térreo';
+      case 'ANDAR':
+        return '1º Andar';
+      default: {
+        const nunca: never = piso;
+        return nunca;
+      }
+    }
+  }
+
+  alterarPiso(piso: Piso): void {
+    const pedido = this.pedido();
+    if (!pedido || pedido.piso === piso) {
+      return;
+    }
+    this.onPisoAlterado.emit({ pedidoId: pedido.id, piso });
     this.fechar();
   }
 }
