@@ -102,6 +102,7 @@ public class BuscarStatusPedidoClienteUseCase {
                 .tempoEsperaSegundos(tempoEspera)
                 .numeroPedido(pedido.getNumeroPedido() != null ? Integer.parseInt(pedido.getNumeroPedido().getNumero())
                         : null)
+                .numeroExibicao(pedido.getNumeroExibicao())
                 .build();
     }
 

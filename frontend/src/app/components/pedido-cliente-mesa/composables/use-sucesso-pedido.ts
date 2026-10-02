@@ -43,7 +43,11 @@ export function useSucessoPedido() {
     // Computed
     const statusAtual = computed(() => statusPedido()?.status ?? 'AGUARDANDO_ACEITACAO');
     const statusDescricao = computed(() => statusPedido()?.statusDescricao ?? 'Aguardando confirmação');
-    const numeroPedido = computed(() => statusPedido()?.numeroPedido);
+    const numeroPedido = computed(() => {
+      const status = statusPedido();
+      if (!status) return undefined;
+      return status.numeroExibicao ?? status.numeroPedido;
+    });
     const tempoEspera = computed(() => statusPedido()?.tempoEsperaSegundos ?? 0);
 
     // Mapeia o status para os passos visuais

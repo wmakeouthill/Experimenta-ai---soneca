@@ -52,6 +52,7 @@ export interface PedidoTotemNaFilaResponse {
 export interface PedidoAutoAtendimentoResponse {
   id: string;
   numeroPedido: number | string;
+  numeroExibicao?: string;
   nomeCliente?: string;
   status: string;
   valorTotal: number;

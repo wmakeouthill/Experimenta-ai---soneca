@@ -59,6 +59,7 @@ public class BuscarHistoricoPedidosClienteUseCase {
                                 .numeroPedido(pedido.getNumeroPedido() != null
                                                 ? Integer.parseInt(pedido.getNumeroPedido().getNumero())
                                                 : null)
+                                .numeroExibicao(pedido.getNumeroExibicao())
                                 .status(pedido.getStatus().name())
                                 .statusDescricao(pedido.getStatus().getDescricao())
                                 .dataHoraPedido(pedido.getDataPedido())

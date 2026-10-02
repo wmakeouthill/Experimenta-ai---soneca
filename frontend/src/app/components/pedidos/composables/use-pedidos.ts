@@ -52,6 +52,7 @@ export function usePedidos() {
       const texto = pesquisaTexto().toLowerCase();
       resultado = resultado.filter(p =>
         p.numeroPedido.toLowerCase().includes(texto) ||
+        (p.numeroExibicao?.toLowerCase().includes(texto) ?? false) ||
         p.clienteNome.toLowerCase().includes(texto)
       );
     }

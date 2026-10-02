@@ -88,6 +88,7 @@ export interface StatusPedidoCliente {
   dataHoraSolicitacao: string;
   tempoEsperaSegundos: number;
   numeroPedido?: number;
+  numeroExibicao?: string;
   motivoCancelamento?: string;
 }
 
@@ -111,6 +112,7 @@ export interface ItemHistoricoPedido {
 export interface HistoricoPedidoCliente {
   id: string;
   numeroPedido: number;
+  numeroExibicao?: string;
   status: string;
   statusDescricao: string;
   dataHoraPedido: string;

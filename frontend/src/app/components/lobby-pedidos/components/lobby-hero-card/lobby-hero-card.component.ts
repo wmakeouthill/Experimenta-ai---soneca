@@ -12,7 +12,10 @@ import { FormatoUtil } from '../../../../utils/formato.util';
 export class LobbyHeroCardComponent {
   readonly pedido = input.required<Pedido>();
 
-  readonly numeroExibicao = computed(() => this.formatarNumero(this.pedido().numeroPedido));
+  readonly numeroExibicao = computed(() => {
+    const daSessao = this.pedido().numeroExibicao;
+    return daSessao ? daSessao : this.formatarNumero(this.pedido().numeroPedido);
+  });
 
   readonly nomeCliente = computed(() =>
     FormatoUtil.limitarPalavras(this.pedido().clienteNome, 3).toUpperCase()

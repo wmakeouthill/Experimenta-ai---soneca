@@ -89,9 +89,17 @@ public class FormatoCupomFiscal {
         return cabecalho;
     }
 
+    private static String numeroParaImpressao(CupomFiscal cupomFiscal) {
+        String exibicao = cupomFiscal.getPedido().getNumeroExibicao();
+        if (exibicao != null && !exibicao.isBlank()) {
+            return exibicao;
+        }
+        return cupomFiscal.getPedido().getNumeroPedido();
+    }
+
     private static byte[] formatarDadosPedido(CupomFiscal cupomFiscal) {
         StringBuilder dados = new StringBuilder();
-        dados.append("Pedido: #").append(cupomFiscal.getPedido().getNumeroPedido()).append("\n");
+        dados.append("Pedido: #").append(numeroParaImpressao(cupomFiscal)).append("\n");
         dados.append("Cliente: ").append(cupomFiscal.getPedido().getClienteNome()).append("\n");
         dados.append("Data: ").append(cupomFiscal.getDataFormatada()).append("\n");
 
@@ -321,7 +329,7 @@ public class FormatoCupomFiscal {
 
     private static String formatarDadosPedidoLegivel(CupomFiscal cupomFiscal) {
         StringBuilder dados = new StringBuilder();
-        dados.append("Pedido: #").append(cupomFiscal.getPedido().getNumeroPedido()).append("\n");
+        dados.append("Pedido: #").append(numeroParaImpressao(cupomFiscal)).append("\n");
         dados.append("Cliente: ").append(cupomFiscal.getPedido().getClienteNome()).append("\n");
         dados.append("Data: ").append(cupomFiscal.getDataFormatada()).append("\n");
 

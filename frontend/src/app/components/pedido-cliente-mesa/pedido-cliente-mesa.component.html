@@ -1156,7 +1156,7 @@
                 <div class="modal-overlay" (click)="meusPedidos.fecharDetalhes()">
                   <div class="modal-detalhes-pedido" (click)="$event.stopPropagation()">
                     <div class="modal-header">
-                      <h3>Pedido #{{ meusPedidos.pedidoSelecionado()?.numeroPedido }}</h3>
+                      <h3>Pedido #{{ meusPedidos.pedidoSelecionado()?.numeroExibicao || meusPedidos.pedidoSelecionado()?.numeroPedido }}</h3>
                       <button class="btn-fechar-modal" (click)="meusPedidos.fecharDetalhes()">
                         ✕
                       </button>

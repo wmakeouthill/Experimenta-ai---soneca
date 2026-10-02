@@ -103,13 +103,14 @@ export class AppComponent implements OnInit {
     this.pollingService.onNovoPedido.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(pedido => {
       console.log(
         '🖨️ Detectado novo pedido no AppComponent. Iniciando impressão...',
-        pedido.numeroPedido
+        pedido.numeroExibicao || pedido.numeroPedido
       );
 
       // Notificação Global - suprimida em certas rotas (autoatendimento, mesa)
       const rotaAtual = this.router.url;
+      const numeroChamada = pedido.numeroExibicao || pedido.numeroPedido;
       if (!this.rotasSemNotificacao.some(r => rotaAtual.includes(r))) {
-        this.notificationService.sucesso(`🔔 Novo pedido recebido: ${pedido.numeroPedido}`);
+        this.notificationService.sucesso(`🔔 Novo pedido recebido: ${numeroChamada}`);
       }
 
       this.imprimirCupomAutomatico(pedido.id);

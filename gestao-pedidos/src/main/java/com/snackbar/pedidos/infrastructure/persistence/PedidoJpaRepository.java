@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -62,4 +63,6 @@ public interface PedidoJpaRepository extends JpaRepository<PedidoEntity, String>
                         @Param("mesaId") String mesaId,
                         @Param("clienteId") String clienteId,
                         @Param("statusAbertos") java.util.Collection<StatusPedido> statusAbertos);
+
+        List<ReferenciaPosicaoPedido> findBySessaoIdIn(Collection<String> sessaoIds);
 }

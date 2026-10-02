@@ -20,6 +20,8 @@ public class HistoricoPedidoClienteDTO {
 
     private String id;
     private Integer numeroPedido;
+    /** Posição de chamada na sessão, no formato 01, 02. */
+    private String numeroExibicao;
     private String status;
     private String statusDescricao;
     private LocalDateTime dataHoraPedido;

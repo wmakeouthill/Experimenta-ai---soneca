@@ -126,6 +126,7 @@ public class CriarPedidoAutoAtendimentoUseCase {
         return PedidoAutoAtendimentoResponse.builder()
                 .id(pedidoSalvo.getId())
                 .numeroPedido(pedidoSalvo.getNumeroPedido().getNumero())
+                .numeroExibicao(pedidoSalvo.getNumeroExibicao())
                 .nomeCliente(nomeCliente)
                 .status(pedidoSalvo.getStatus().name())
                 .valorTotal(pedidoSalvo.getValorTotal().getAmount())

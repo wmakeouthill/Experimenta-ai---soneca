@@ -18,6 +18,8 @@ import java.time.LocalDateTime;
 public class PedidoAutoAtendimentoResponse {
     private String id;
     private String numeroPedido;
+    /** Posição de chamada na sessão, no formato 01, 02. */
+    private String numeroExibicao;
     private String nomeCliente;
     private String status;
     private BigDecimal valorTotal;

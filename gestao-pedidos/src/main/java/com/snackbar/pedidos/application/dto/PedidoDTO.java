@@ -19,6 +19,8 @@ import java.util.List;
 public class PedidoDTO {
         private String id;
         private String numeroPedido;
+        /** Posição de chamada na sessão (01, 02). O numeroPedido global continua intacto. */
+        private String numeroExibicao;
         private String clienteId;
         private String clienteNome;
         private StatusPedido status;
@@ -41,6 +43,7 @@ public class PedidoDTO {
                 return PedidoDTO.builder()
                                 .id(pedido.getId())
                                 .numeroPedido(pedido.getNumeroPedido().getNumero())
+                                .numeroExibicao(pedido.getNumeroExibicao())
                                 .clienteId(pedido.getClienteId())
                                 .clienteNome(pedido.getClienteNome())
                                 .status(pedido.getStatus())

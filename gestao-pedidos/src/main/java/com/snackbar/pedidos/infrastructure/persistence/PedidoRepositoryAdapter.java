@@ -3,9 +3,11 @@ package com.snackbar.pedidos.infrastructure.persistence;
 import com.snackbar.pedidos.application.ports.PedidoRepositoryPort;
 import com.snackbar.pedidos.domain.entities.Pedido;
 import com.snackbar.pedidos.domain.entities.StatusPedido;
+import com.snackbar.pedidos.domain.services.PosicaoNaSessao;
 import com.snackbar.pedidos.infrastructure.mappers.PedidoMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
@@ -13,8 +15,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -27,69 +32,56 @@ public class PedidoRepositoryAdapter implements PedidoRepositoryPort {
     @SuppressWarnings("null") // jpaRepository.save() nunca retorna null
     public Pedido salvar(@NonNull Pedido pedido) {
         PedidoEntity entity = mapper.paraEntity(pedido);
-        PedidoEntity salvo = jpaRepository.save(entity);
-        return mapper.paraDomain(salvo);
+        PedidoEntity salvo = jpaRepository.saveAndFlush(entity);
+        return mapear(salvo);
     }
 
     @Override
     public Optional<Pedido> buscarPorId(@NonNull String id) {
         return jpaRepository.findById(id)
-                .map(mapper::paraDomain);
+                .map(this::mapear);
     }
 
     @Override
     public List<Pedido> buscarTodos() {
-        return jpaRepository.findAll().stream()
-                .map(mapper::paraDomain)
-                .toList();
+        return mapear(jpaRepository.findAll());
     }
 
     @Override
     public List<Pedido> buscarPorStatus(StatusPedido status) {
-        return jpaRepository.findByStatus(status).stream()
-                .map(mapper::paraDomain)
-                .toList();
+        return mapear(jpaRepository.findByStatus(status));
     }
 
     @Override
     public List<Pedido> buscarPorClienteId(String clienteId) {
-        return jpaRepository.findByClienteId(clienteId).stream()
-                .map(mapper::paraDomain)
-                .toList();
+        return mapear(jpaRepository.findByClienteId(clienteId));
     }
 
     @Override
     public Page<Pedido> buscarPorClienteId(String clienteId, Pageable pageable) {
-        return jpaRepository.findByClienteId(clienteId, pageable)
-                .map(mapper::paraDomain);
+        Page<PedidoEntity> page = jpaRepository.findByClienteId(clienteId, pageable);
+        List<Pedido> pedidos = mapear(page.getContent());
+        return new PageImpl<>(pedidos, pageable, page.getTotalElements());
     }
 
     @Override
     public List<Pedido> buscarPorDataPedido(LocalDateTime dataInicio, LocalDateTime dataFim) {
-        return jpaRepository.findByDataPedidoBetween(dataInicio, dataFim).stream()
-                .map(mapper::paraDomain)
-                .toList();
+        return mapear(jpaRepository.findByDataPedidoBetween(dataInicio, dataFim));
     }
 
     @Override
     public List<Pedido> buscarPorStatusEData(StatusPedido status, LocalDateTime dataInicio, LocalDateTime dataFim) {
-        return jpaRepository.findByStatusAndDataPedidoBetween(status, dataInicio, dataFim).stream()
-                .map(mapper::paraDomain)
-                .toList();
+        return mapear(jpaRepository.findByStatusAndDataPedidoBetween(status, dataInicio, dataFim));
     }
 
     @Override
     public List<Pedido> buscarPorSessaoId(String sessaoId) {
-        return jpaRepository.findBySessaoId(sessaoId).stream()
-                .map(mapper::paraDomain)
-                .toList();
+        return mapear(jpaRepository.findBySessaoId(sessaoId));
     }
 
     @Override
     public List<Pedido> buscarPorDataInicioSessao(LocalDate dataInicio) {
-        return jpaRepository.findByDataInicioSessao(java.sql.Date.valueOf(dataInicio)).stream()
-                .map(mapper::paraDomain)
-                .toList();
+        return mapear(jpaRepository.findByDataInicioSessao(java.sql.Date.valueOf(dataInicio)));
     }
 
     @Override
@@ -108,8 +100,45 @@ public class PedidoRepositoryAdapter implements PedidoRepositoryPort {
     public List<Pedido> buscarAbertosPorMesaESemPagamento(String mesaId, String clienteId) {
         List<StatusPedido> statusAbertos = List.of(
                 StatusPedido.PENDENTE, StatusPedido.PREPARANDO, StatusPedido.PRONTO);
-        return jpaRepository.findAbertosSemPagamento(mesaId, clienteId, statusAbertos).stream()
-                .map(mapper::paraDomain)
+        return mapear(jpaRepository.findAbertosSemPagamento(mesaId, clienteId, statusAbertos));
+    }
+
+    private Pedido mapear(PedidoEntity entity) {
+        Pedido pedido = mapper.paraDomain(entity);
+        preencherNumeroExibicao(List.of(pedido));
+        return pedido;
+    }
+
+    private List<Pedido> mapear(List<PedidoEntity> entities) {
+        List<Pedido> pedidos = entities.stream().map(mapper::paraDomain).toList();
+        preencherNumeroExibicao(pedidos);
+        return pedidos;
+    }
+
+    private void preencherNumeroExibicao(List<Pedido> pedidos) {
+        Set<String> sessoes = new HashSet<>();
+        for (Pedido pedido : pedidos) {
+            if (pedido.getSessaoId() != null && !pedido.getSessaoId().isBlank()) {
+                sessoes.add(pedido.getSessaoId());
+            }
+        }
+        if (sessoes.isEmpty()) {
+            return;
+        }
+
+        List<PosicaoNaSessao.Marcador> marcadores = jpaRepository.findBySessaoIdIn(sessoes).stream()
+                .map(referencia -> new PosicaoNaSessao.Marcador(
+                        referencia.getId(),
+                        referencia.getSessaoId(),
+                        referencia.getDataPedido(),
+                        referencia.getNumeroPedido()))
                 .toList();
+        Map<String, String> posicoes = PosicaoNaSessao.calcular(marcadores);
+        for (Pedido pedido : pedidos) {
+            String exibicao = posicoes.get(pedido.getId());
+            if (exibicao != null) {
+                pedido.definirNumeroExibicao(exibicao);
+            }
+        }
     }
 }

@@ -27,7 +27,10 @@ export class OrderCardComponent {
     FormatoUtil.limitarPalavras(this.pedido().clienteNome, 3).toUpperCase()
   );
 
-  readonly numeroExibicao = computed(() => this.formatarNumero(this.pedido().numeroPedido));
+  readonly numeroExibicao = computed(() => {
+    const daSessao = this.pedido().numeroExibicao;
+    return daSessao ? daSessao : this.formatarNumero(this.pedido().numeroPedido);
+  });
 
   readonly minutosDecorridos = computed(() => {
     const referencia = this.pedido().createdAt || this.pedido().dataPedido;

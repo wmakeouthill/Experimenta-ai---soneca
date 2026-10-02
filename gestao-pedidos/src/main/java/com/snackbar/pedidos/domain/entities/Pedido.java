@@ -23,6 +23,8 @@ public class Pedido extends BaseEntity {
     private List<MeioPagamentoPedido> meiosPagamento;
     private String usuarioId; // Para futuro login
     private String sessaoId; // ID da sessão de trabalho
+    /** Número de chamada na sessão (01, 02). Não é gravado; o repositório preenche na leitura. */
+    private String numeroExibicao;
     private String mesaId; // ID da mesa (para pedidos via QR code)
     private Integer numeroMesa; // Número da mesa (para exibição)
     private String nomeClienteMesa; // Nome do cliente informado na mesa
@@ -223,6 +225,10 @@ public class Pedido extends BaseEntity {
 
     public void definirSessaoId(String sessaoId) {
         this.sessaoId = sessaoId;
+    }
+
+    public void definirNumeroExibicao(String numeroExibicao) {
+        this.numeroExibicao = numeroExibicao;
     }
 
     /**

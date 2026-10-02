@@ -57,8 +57,11 @@ public class StatusPedidoClienteDTO {
     private LocalDateTime dataHoraSolicitacao;
     private long tempoEsperaSegundos;
 
-    /** Número do pedido (só existe após aceito) */
+    /** Número global do pedido (só existe após aceito). */
     private Integer numeroPedido;
+
+    /** Posição de chamada na sessão, no formato 01, 02. */
+    private String numeroExibicao;
 
     /** Motivo do cancelamento/rejeição (quando aplicável) */
     private String motivoCancelamento;

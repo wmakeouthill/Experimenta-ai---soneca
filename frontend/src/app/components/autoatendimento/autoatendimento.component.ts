@@ -375,7 +375,11 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
                 'Aguarde a confirmação do atendente.',
               naFila: true,
             }
-          : { numeroPedido: (response as unknown as { numeroPedido: number }).numeroPedido }),
+          : {
+              numeroPedido:
+                (response as { numeroExibicao?: string }).numeroExibicao ||
+                (response as unknown as { numeroPedido: number }).numeroPedido,
+            }),
       });
 
       this.etapaAtual.set('sucesso');
@@ -772,7 +776,7 @@ export class AutoatendimentoComponent implements OnInit, OnDestroy {
   private concluirPedidoPago(pedido: PedidoAutoAtendimentoResponse): void {
     this.pedidoCriado.set({
       id: pedido.id,
-      numeroPedido: pedido.numeroPedido,
+      numeroPedido: pedido.numeroExibicao || pedido.numeroPedido,
     });
     const viaDoCliente = this.comprovanteTef();
     this.limparCheckoutPagamento();

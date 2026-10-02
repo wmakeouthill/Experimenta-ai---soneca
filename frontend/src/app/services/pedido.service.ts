@@ -60,6 +60,8 @@ export type Piso = 'TERREO' | 'ANDAR';
 export interface Pedido {
   id: string;
   numeroPedido: string;
+  /** Posição de chamada na sessão (01, 02). Ausente em pedido sem sessão. */
+  numeroExibicao?: string;
   clienteId: string;
   clienteNome: string;
   status: StatusPedido;

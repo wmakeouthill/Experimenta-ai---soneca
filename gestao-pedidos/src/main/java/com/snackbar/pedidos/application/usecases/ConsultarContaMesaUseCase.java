@@ -53,7 +53,7 @@ public class ConsultarContaMesaUseCase {
         List<ItemContaDTO> itens = pedidos.stream()
                 .map(p -> new ItemContaDTO(
                         p.getId(),
-                        p.getNumeroPedido().getNumero(),
+                        p.getNumeroExibicao() != null ? p.getNumeroExibicao() : p.getNumeroPedido().getNumero(),
                         p.getValorTotal().getAmount()
                                 .movePointRight(2).setScale(0, RoundingMode.HALF_UP).longValueExact()))
                 .toList();
