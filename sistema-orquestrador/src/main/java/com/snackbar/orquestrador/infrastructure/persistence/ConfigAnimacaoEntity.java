@@ -34,6 +34,9 @@ public class ConfigAnimacaoEntity implements Persistable<String> {
     
     @Column(name = "video2_url", columnDefinition = "LONGTEXT")
     private String video2Url;
+
+    @Column(name = "reels_json", columnDefinition = "LONGTEXT")
+    private String reelsJson;
     
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

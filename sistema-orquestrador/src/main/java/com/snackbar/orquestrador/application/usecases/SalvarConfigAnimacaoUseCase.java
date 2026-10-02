@@ -3,6 +3,7 @@ package com.snackbar.orquestrador.application.usecases;
 import com.snackbar.orquestrador.application.dto.ConfigAnimacaoDTO;
 import com.snackbar.orquestrador.application.dto.SalvarConfigAnimacaoRequest;
 import com.snackbar.orquestrador.application.ports.ConfigAnimacaoRepositoryPort;
+import com.snackbar.orquestrador.application.services.ReelsJsonCodec;
 import com.snackbar.orquestrador.domain.entities.ConfigAnimacao;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 public class SalvarConfigAnimacaoUseCase {
     
     private final ConfigAnimacaoRepositoryPort repository;
+    private final ReelsJsonCodec reelsJsonCodec;
     
     public ConfigAnimacaoDTO executar(SalvarConfigAnimacaoRequest request) {
         ConfigAnimacao config = repository.buscar()
@@ -28,11 +30,16 @@ public class SalvarConfigAnimacaoUseCase {
             request.getVideo1Url(),
             request.getVideo2Url()
         );
+        if (request.getReels() != null) {
+            config.definirReelsJson(reelsJsonCodec.escrever(request.getReels()));
+        }
         
         @SuppressWarnings("null")
         ConfigAnimacao salva = repository.salvar(config);
         
-        return ConfigAnimacaoDTO.de(salva);
+        ConfigAnimacaoDTO dto = ConfigAnimacaoDTO.de(salva);
+        dto.setReels(reelsJsonCodec.ler(salva.getReelsJson()));
+        return dto;
     }
 }
 

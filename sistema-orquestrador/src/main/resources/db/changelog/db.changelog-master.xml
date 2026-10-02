@@ -163,6 +163,9 @@
     <!-- Migration: Pedido pendente rejeitado guarda o motivo para o status do cliente -->
     <include file="changes/050-add-rejeicao-pedidos-pendentes.sql" relativeToChangelogFile="true"/>
 
+    <!-- Migration: Reels promocionais do lobby -->
+    <include file="changes/051-add-reels-json-config-animacao.sql" relativeToChangelogFile="true"/>
+
     <!--
     NOTA: O usuário administrador inicial é criado automaticamente via CommandLineRunner
     (UsuarioInicialConfig) na primeira execução da aplicação.

@@ -1,5 +1,7 @@
 package com.snackbar.orquestrador.application.dto;
 
+import java.util.List;
+
 import com.snackbar.kernel.application.dto.BaseDTO;
 import com.snackbar.orquestrador.domain.entities.ConfigAnimacao;
 import lombok.Data;
@@ -15,6 +17,7 @@ public class ConfigAnimacaoDTO extends BaseDTO {
     private int duracaoAnimacao;
     private String video1Url;
     private String video2Url;
+    private List<LobbyReelDTO> reels;
     
     public static ConfigAnimacaoDTO de(ConfigAnimacao config) {
         return ConfigAnimacaoDTO.builder()

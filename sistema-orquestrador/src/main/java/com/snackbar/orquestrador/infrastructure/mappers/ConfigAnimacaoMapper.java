@@ -21,6 +21,7 @@ public class ConfigAnimacaoMapper implements Mapper<ConfigAnimacao, ConfigAnimac
             .duracaoAnimacao(config.getDuracaoAnimacao())
             .video1Url(config.getVideo1Url())
             .video2Url(config.getVideo2Url())
+            .reelsJson(config.getReelsJson())
             .createdAt(config.getCreatedAt())
             .updatedAt(config.getUpdatedAt())
             .build();
@@ -46,6 +47,7 @@ public class ConfigAnimacaoMapper implements Mapper<ConfigAnimacao, ConfigAnimac
             entity.getVideo2Url()
         );
         
+        config.definirReelsJson(entity.getReelsJson());
         config.restaurarDoBanco(entity.getId(), entity.getCreatedAt(), entity.getUpdatedAt());
         
         return config;

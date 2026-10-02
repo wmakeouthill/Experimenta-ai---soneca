@@ -159,12 +159,19 @@ export class LobbyPedidosComponent implements OnInit, OnDestroy {
   private carregarConfigAnimacao() {
     this.configAnimacaoService.carregar().subscribe({
       next: (config) => {
-        const reelsLocal = carregarReelsLocalStorage();
+        const reelsDoServidor = config.reels?.some(
+          (reel) => reel.titulo?.trim() || reel.imagemUrl || reel.videoUrl
+        )
+          ? config.reels
+          : null;
         const reels = migrarReelsDeApi(
           config.video1Url,
           config.video2Url,
-          reelsLocal ?? config.reels
+          reelsDoServidor ?? carregarReelsLocalStorage()
         );
+        if (reelsDoServidor && this.isBrowser) {
+          salvarReelsLocalStorage(reels);
+        }
 
         this.animations.animacaoConfig.set({
           animacaoAtivada: config.animacaoAtivada,

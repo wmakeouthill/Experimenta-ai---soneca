@@ -1,5 +1,7 @@
 package com.snackbar.orquestrador.application.dto;
 
+import java.util.List;
+
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -25,5 +27,6 @@ public class SalvarConfigAnimacaoRequest {
     
     private String video1Url;
     private String video2Url;
+    private List<LobbyReelDTO> reels;
 }
 

@@ -10,6 +10,7 @@ public class ConfigAnimacao extends BaseEntity {
     private int duracaoAnimacao;
     private String video1Url;
     private String video2Url;
+    private String reelsJson;
     
     private ConfigAnimacao() {
         super();
@@ -33,6 +34,10 @@ public class ConfigAnimacao extends BaseEntity {
         this.video1Url = video1Url;
         this.video2Url = video2Url;
         touch();
+    }
+
+    public void definirReelsJson(String reelsJson) {
+        this.reelsJson = reelsJson;
     }
     
     public void restaurarDoBanco(String id, java.time.LocalDateTime createdAt, java.time.LocalDateTime updatedAt) {
